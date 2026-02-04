@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="4ed379dd-8b58-4da4-90ae-27c988ad8fdb" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Apps/Core/Services/AuthService.swift" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Apps/Core/Services/AuthSession.swift" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Apps/Modules/Auth/Login/LoginScreen.swift" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Apps/Modules/Auth/Login/LoginViewModel.swift" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Assets.xcassets/Images/Contents.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Assets.xcassets/Images/apple-fill.imageset/Contents.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Assets.xcassets/Images/apple-fill.imageset/apple-fill.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Assets.xcassets/Images/google-fill.imageset/Contents.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Assets.xcassets/Images/google-fill.imageset/google-fill.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Assets.xcassets/Images/shield-user-fill.imageset/Contents.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Assets.xcassets/Images/shield-user-fill.imageset/shield-user-fill.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Assets.xcassets/Logo/Contents.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Assets.xcassets/Logo/logo.imageset/Contents.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Assets.xcassets/Logo/logo.imageset/logo.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Assets.xcassets/Logo/logo.imageset/logo.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Gobals/DesignSystem/AppTextStyle.swift" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Gobals/DesignSystem/M3TextStyle.swift" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/Gobals/Theme/AppTheme.swift" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/GoogleService-Info.plist" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/terrariumidle_ios/terrariumidle_ios.entitlements" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/terrariumidle_ios.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/terrariumidle_ios.xcodeproj/project.pbxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/terrariumidle_ios/ContentView.swift" beforeDir="false" afterPath="$PROJECT_DIR$/terrariumidle_ios/ContentView.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/terrariumidle_ios/terrariumidle_iosApp.swift" beforeDir="false" afterPath="$PROJECT_DIR$/terrariumidle_ios/terrariumidle_iosApp.swift" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_/Users/vuongquanghuy/code/prj_ios/terrariumidle_ios" value="38yIeo6FYue19SuXgWcK2yA34mP" />
+    </persistenceIdMap>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="38yIeo6FYue19SuXgWcK2yA34mP" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4ed379dd-8b58-4da4-90ae-27c988ad8fdb" name="Changes" comment="" />
+      <created>1769765482246</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1769765482246</updated>
+      <workItem from="1769765488755" duration="25000" />
+      <workItem from="1769765539980" duration="164000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnityCheckinConfiguration" checkUnsavedScenes="true" />
+  <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
+  <component name="VcsManagerConfiguration">
+    <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.OperationCanceledException" breakIfHandledByOtherCode="false" displayValue="System.OperationCanceledException" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.Threading.Tasks.TaskCanceledException" breakIfHandledByOtherCode="false" displayValue="System.Threading.Tasks.TaskCanceledException" />
+          <option name="timeStamp" value="2" />
+        </breakpoint>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.Threading.ThreadAbortException" breakIfHandledByOtherCode="false" displayValue="System.Threading.ThreadAbortException" />
+          <option name="timeStamp" value="3" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>
