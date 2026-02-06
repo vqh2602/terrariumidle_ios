@@ -44,49 +44,69 @@ final class LoginViewModel: ObservableObject {
 
     /// Đăng nhập bằng Apple ID
     /// Hàm này GỌI AuthService.startSignInWithAppleFlow với completion handler
-    func loginWithApple() {
-        print("📱 [LoginViewModel] loginWithApple() called")
+    ///
+    func loginWithApple() async -> User? {
+      hasError = false
+      errorMessage = nil
+      isLoading = true
+      defer { isLoading = false }
 
-        // Reset error state
-        hasError = false
-        errorMessage = nil
-        isLoading = true
-
-        print("📱 [LoginViewModel] Calling AuthService.startSignInWithAppleFlow...")
-
-        // Gọi AuthService với completion handler
-        auth.startSignInWithAppleFlow { [weak self] result in
-            print("📱 [LoginViewModel] Received callback from AuthService")
-
-            // Callback được gọi trên background thread, cần chuyển về main thread
-            Task { @MainActor in
-                self?.isLoading = false
-
-                switch result {
-                case let .success(user):
-                    // Đăng nhập thành công
-                    print("✅ [LoginViewModel] Apple Sign-In thành công!")
-                    print("   UID: \(user.uid)")
-                    print("   Email: \(user.email ?? "N/A")")
-                    print("   Display Name: \(user.displayName ?? "N/A")")
-
-                    self?.currentUser = user
-                    self?.isAuthenticated = true
-
-                    // (Optional) Lấy token để gọi API backend
-                    self?.fetchUserToken()
-
-                case let .failure(error):
-                    // Đăng nhập thất bại
-                    print("❌ [LoginViewModel] Apple Sign-In thất bại: \(error.localizedDescription)")
-
-                    self?.hasError = true
-                    self?.errorMessage = error.localizedDescription
-                    self?.isAuthenticated = false
-                }
-            }
-        }
+      do {
+        let user = try await auth.startSignInWithAppleFlowAsync()
+        currentUser = user
+        isAuthenticated = true
+        fetchUserToken()
+        return user
+      } catch {
+        hasError = true
+        errorMessage = error.localizedDescription
+        isAuthenticated = false
+        return nil
+      }
     }
+//    func  loginWithApple() {
+//        print("📱 [LoginViewModel] loginWithApple() called")
+//
+//        // Reset error state
+//        hasError = false
+//        errorMessage = nil
+//        isLoading = true
+//
+//        print("📱 [LoginViewModel] Calling AuthService.startSignInWithAppleFlow...")
+//
+//        // Gọi AuthService với completion handler
+//        auth.startSignInWithAppleFlow { [weak self] result in
+//            print("📱 [LoginViewModel] Received callback from AuthService")
+//
+//            // Callback được gọi trên background thread, cần chuyển về main thread
+//            Task { @MainActor in
+//                self?.isLoading = false
+//
+//                switch result {
+//                case let .success(user):
+//                    // Đăng nhập thành công
+//                    print("✅ [LoginViewModel] Apple Sign-In thành công!")
+//                    print("   UID: \(user.uid)")
+//                    print("   Email: \(user.email ?? "N/A")")
+//                    print("   Display Name: \(user.displayName ?? "N/A")")
+//
+//                    self?.currentUser = user
+//                    self?.isAuthenticated = true
+//
+//                    // (Optional) Lấy token để gọi API backend
+//                    self?.fetchUserToken()
+//
+//                case let .failure(error):
+//                    // Đăng nhập thất bại
+//                    print("❌ [LoginViewModel] Apple Sign-In thất bại: \(error.localizedDescription)")
+//
+//                    self?.hasError = true
+//                    self?.errorMessage = error.localizedDescription
+//                    self?.isAuthenticated = false
+//                }
+//            }
+//        }
+//    }
 
     // MARK: - Email/Password Login
 

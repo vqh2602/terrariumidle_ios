@@ -7,9 +7,9 @@
 
 import Foundation
 
+import Combine
 @_spi(RiveExperimental) import RiveRuntime
 import SwiftUI
-import Combine
 
 // struct PlantRiveView: View {
 //  var geometry: GeometryProxy
@@ -61,19 +61,36 @@ import Combine
 struct PlantRiveView: View {
     var width: Double?
     var height: Double?
-    
+    var plantId: String // ID của plant (ví dụ: "plant1", "plant24", "sticker1")
+    var plantLevel: Int // Level của plant (ví dụ: 1, 3, 5)
+
     @StateObject private var vm: RiveViewModel
-    
-    init(width: Double, height: Double? = nil) {
+
+    /// Khởi tạo PlantRiveView với các tham số động
+    /// - Parameters:
+    ///   - width: Chiều rộng của view
+    ///   - height: Chiều cao của view (optional)
+    ///   - plantId: ID của plant để load animation tương ứng (mặc định "plant1")
+    ///   - plantLevel: Level của plant để hiển thị trạng thái phù hợp (mặc định 1)
+    init(width: Double, height: Double? = nil, plantId: String = "plant1", plantLevel: Int = 1) {
         self.width = width
         self.height = height
-        _vm = StateObject(wrappedValue:RiveViewModel(
-            fileName: "plant24",
-            stateMachineName: "plant",
+        self.plantId = plantId
+        self.plantLevel = plantLevel
+
+        // Kiểm tra xem có phải là plant hay không (sticker, decoration, etc.)
+        let isPlant = plantId.lowercased().contains("plant")
+
+        // Tạo RiveViewModel với fileName từ plantId
+        // Chỉ gắn stateMachine "plant" nếu ID là plant, không gắn cho sticker
+        _vm = StateObject(wrappedValue: RiveViewModel(
+            fileName: plantId, // Sử dụng plantId làm fileName (ví dụ: "plant24", "sticker1")
+            stateMachineName: isPlant ? "plant" : nil, // nil cho sticker/decoration
             fit: .contain,
             alignment: .bottomCenter
         ))
     }
+
     var body: some View {
         VStack {
             vm.view()
@@ -83,12 +100,15 @@ struct PlantRiveView: View {
                     //                //                vm.play()
                     //                var    riveFile = RiveFile(httpUrl:"https://vqh2602.github.io/terrarium_data.github.io/rive/plants/plant24.riv" , loadCdn: true, with: .self)
                     //                vm.riveFileDidLoad(riveFile)
-                  
+
                 }.task {
-                     print("ℹ️ View did appear")
+                    print("ℹ️ Plant View did appear - ID: \(plantId), Level: \(plantLevel)")
                     try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
-                        // code chạy sau 500ms
-                    vm.setInput("level", value: 3.0)
+
+                    // Chỉ set level cho plant, không set cho sticker/decoration
+                    if plantId.lowercased().contains("plant") {
+                        vm.setInput("level", value: Double(plantLevel))
+                    }
                     vm.setPreferredFramesPerSecond(preferredFramesPerSecond: 120)
                 }
 //            Button( "Text2")
@@ -104,10 +124,8 @@ struct PlantRiveView: View {
 //                vm.setInput("level", value: 3.0)
 //            }
         }
-        
     }
 }
-
 
 #Preview {
     PlantRiveView(width: 100)

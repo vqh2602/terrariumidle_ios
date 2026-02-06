@@ -8,21 +8,26 @@
 import SwiftUI
 
 struct SplashView: View {
-    @EnvironmentObject private var router: AppRouter
+    @ObservedObject var router: AppRouter
+    @StateObject private var splashViewModel: SplashViewModel
+
+    init(router: AppRouter, auth: AuthService = .shared) {
+        self.router = router
+        _splashViewModel = StateObject(wrappedValue: SplashViewModel(auth: auth, router: router))
+    }
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-        Button("Nút trang chủ") {
-            router.push(.homeView)
+        Group {
+            Text("Splash")
         }
-        Button("Nút trang chủ") {
-            router.replaceRoot(.homeView)
-        }
-        Button("Nút trang chủ") {
-            router.push(.loginView(id: ""))
+        .onAppear {
+            Task {
+                await splashViewModel.checkAuthAndNavigate()
+            }
         }
     }
 }
 
 #Preview {
-    SplashView()
+    SplashView(router: AppRouter())
 }

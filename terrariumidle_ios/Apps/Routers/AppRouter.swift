@@ -5,9 +5,9 @@
 //  Created by vương quang huy on 4/2/26.
 //
 
-import SwiftUI
 import Combine
 import Foundation
+import SwiftUI
 
 enum AppRoute: Hashable {
     case loginView(id: String)
@@ -17,8 +17,6 @@ enum AppRoute: Hashable {
 
 @MainActor
 final class AppRouter: ObservableObject {
-   
-    
     @Published var path = NavigationPath()
 
     func push(_ route: AppRoute) {
@@ -36,10 +34,12 @@ final class AppRouter: ObservableObject {
 
     func setStack(_ routes: [AppRoute]) {
         var p = NavigationPath()
-        for r in routes { p.append(r) }
+        for r in routes {
+            p.append(r)
+        }
         path = p
     }
-    
+
     func replaceRoot(_ route: AppRoute) {
         var p = NavigationPath()
         p.append(route)
@@ -49,24 +49,25 @@ final class AppRouter: ObservableObject {
 
 struct AppRouterView: View {
     @StateObject private var router = AppRouter()
-    
+
     var body: some View {
         NavigationStack(path: $router.path) {
-            SplashView()
+            SplashView(router: router)
                 .navigationDestination(for: AppRoute.self) { route in
                     switch route {
-                    case .loginView(_):
+                    case let .loginView(id):
                         LoginView()
                     case .splashView:
-                        SplashView()
+                        EmptyView()
                     case .homeView:
                         HomeView()
                     }
-                }.environmentObject(router)
+                }
         }
+        .environmentObject(router)
     }
 }
 
-#Preview{
+#Preview {
     AppRouterView()
 }

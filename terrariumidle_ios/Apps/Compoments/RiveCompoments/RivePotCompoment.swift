@@ -61,15 +61,23 @@ import SwiftUI
 struct PotRiveView: View {
     var width: Double
     var height: Double?
-    
+    var potId: String // ID của pot (ví dụ: "pot1", "pot4", "sticker1")
+
     @StateObject private var vm: RiveViewModel
-    
-    init(width: Double, height: Double? = nil) {
+
+    /// Khởi tạo PotRiveView với các tham số động
+    /// - Parameters:
+    ///   - width: Chiều rộng của view
+    ///   - height: Chiều cao của view (optional)
+    ///   - potId: ID của pot để load animation tương ứng (mặc định "pot1")
+    init(width: Double, height: Double? = nil, potId: String = "pot1") {
         self.width = width
         self.height = height
-        _vm = StateObject(wrappedValue:RiveViewModel(
-            fileName: "pot4",
-//            stateMachineName: "",
+        self.potId = potId
+
+        // Tạo RiveViewModel với fileName từ potId
+        _vm = StateObject(wrappedValue: RiveViewModel(
+            fileName: potId, // Sử dụng potId làm fileName (ví dụ: "pot4", "pot7")
             fit: .fitHeight
         ))
     }
@@ -80,11 +88,12 @@ struct PotRiveView: View {
             .background(Color.black.opacity(0.1))
             .onAppear {
 //                vm.play()
-            }.task{
-                print("ℹ️ View did appear")
-               try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
-                   // code chạy sau 500ms
-               vm.pause()
+            }.task {
+                print("ℹ️ Pot View did appear - ID: \(potId)")
+                try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
+
+                // Play pot animation
+                vm.pause()
                 vm.play()
             }
     }

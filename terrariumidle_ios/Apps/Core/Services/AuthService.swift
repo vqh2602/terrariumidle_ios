@@ -316,3 +316,20 @@ extension AuthService: ASAuthorizationControllerDelegate {
     signInCompletion?(.failure(AuthError.appleSignInFailed))
   }
 }
+
+@available(iOS 13, *)
+extension AuthService {
+  @MainActor
+  func startSignInWithAppleFlowAsync() async throws -> User {
+    try await withCheckedThrowingContinuation { continuation in
+      self.startSignInWithAppleFlow { result in
+        switch result {
+        case .success(let user):
+          continuation.resume(returning: user)
+        case .failure(let error):
+          continuation.resume(throwing: error)
+        }
+      }
+    }
+  }
+}
