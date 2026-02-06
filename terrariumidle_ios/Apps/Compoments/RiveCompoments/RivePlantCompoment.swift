@@ -63,9 +63,9 @@ struct PlantRiveView: View {
     var height: Double?
     var plantId: String // ID của plant (ví dụ: "plant1", "plant24", "sticker1")
     var plantLevel: Int // Level của plant (ví dụ: 1, 3, 5)
-
+    
     @StateObject private var vm: RiveViewModel
-
+    
     /// Khởi tạo PlantRiveView với các tham số động
     /// - Parameters:
     ///   - width: Chiều rộng của view
@@ -77,10 +77,10 @@ struct PlantRiveView: View {
         self.height = height
         self.plantId = plantId
         self.plantLevel = plantLevel
-
+        
         // Kiểm tra xem có phải là plant hay không (sticker, decoration, etc.)
         let isPlant = plantId.lowercased().contains("plant")
-
+        
         // Tạo RiveViewModel với fileName từ plantId
         // Chỉ gắn stateMachine "plant" nếu ID là plant, không gắn cho sticker
         _vm = StateObject(wrappedValue: RiveViewModel(
@@ -90,7 +90,7 @@ struct PlantRiveView: View {
             alignment: .bottomCenter
         ))
     }
-
+    
     var body: some View {
         VStack {
             vm.view()
@@ -100,29 +100,29 @@ struct PlantRiveView: View {
                     //                //                vm.play()
                     //                var    riveFile = RiveFile(httpUrl:"https://vqh2602.github.io/terrarium_data.github.io/rive/plants/plant24.riv" , loadCdn: true, with: .self)
                     //                vm.riveFileDidLoad(riveFile)
-
+                    
                 }.task {
                     print("ℹ️ Plant View did appear - ID: \(plantId), Level: \(plantLevel)")
                     try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
-
+                    
                     // Chỉ set level cho plant, không set cho sticker/decoration
                     if plantId.lowercased().contains("plant") {
                         vm.setInput("level", value: Double(plantLevel))
                     }
                     vm.setPreferredFramesPerSecond(preferredFramesPerSecond: 120)
                 }
-//            Button( "Text2")
-//            {
-//                vm.setInput("level", value: 2.0)
-//            }
-//            Button( "Text1")
-//            {
-//                vm.setInput("level", value: 1.0)
-//            }
-//            Button( "Text3")
-//            {
-//                vm.setInput("level", value: 3.0)
-//            }
+            //            Button( "Text2")
+            //            {
+            //                vm.setInput("level", value: 2.0)
+            //            }
+            //            Button( "Text1")
+            //            {
+            //                vm.setInput("level", value: 1.0)
+            //            }
+            //            Button( "Text3")
+            //            {
+            //                vm.setInput("level", value: 3.0)
+            //            }
         }
     }
 }
