@@ -17,7 +17,7 @@ import FirebaseAuth
 struct PlantPosition {
     let row: Int
     let column: Int
-    
+
     /// Parse từ string "row,column" (ví dụ: "12,1" -> row=12, column=1)
     init?(from positionString: String) {
         let components = positionString.split(separator: ",")
@@ -36,132 +36,110 @@ struct HomeView: View {
     @StateObject private var loginViewModel: LoginViewModel = .init(auth: AuthService.shared)
     @StateObject private var fireStoreService: FireStoreService = .init(auth: AuthService.shared)
     @EnvironmentObject var router: AppRouter
-    
+    init() {
+        print("play sound tap")
+        //            AudioPlayer.shared.playBGM(fileName:"peacefulgarden" )
+        BackgroundAudioManager.shared.startBGM(fileName: "peacefulgarden", title: "Relax...")
+    }
+
     var body: some View {
-        GeometryReader { geometry in
-            let itemWidth = (geometry.size.width - 32) / 3.0
-            ZStack {
-                HStack(spacing: 0) {
-                    Image("r1").resizable()
-                        .scaledToFill().frame(
-                            width: 16, // 30% chiều rộng màn hình
-                            height: geometry.size.height // 30% chiều rộng màn hình
-                        )
+        ZStack(alignment:.bottomTrailing) {
+            // MARK: - Layout plant
+            GeometryReader { geometry in
+                let itemWidth = (geometry.size.width - 32) / 3.0
+                ZStack {
+                    RiveViewModel(
+                        fileName: "sky_sun_day", // Sử dụng plantId làm fileName (ví dụ: "plant24", "sticker1")
+                        //                    stateMachineName: isPlant ? "plant" : nil, // nil cho sticker/decoration
+                        fit: .cover,
+                        
+                    ).view().frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height) // Chiếm toàn bộ không gian
                     
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            let userFloors: Int = (fireStoreService.gradenModel?.user.userFloor) ?? 1
-                            
-                            // MARK: - Main Loop: Iterate through each floor/row
-                            
-                            ForEach(0 ... userFloors, id: \.self) { rowIndex in
-                                VStack(spacing: 0) {
-                                    HStack(spacing: 4) {
-                                        // MARK: - Column Loop: 3 columns per row
-                                        
-                                        ForEach(1 ... 3, id: \.self) { columnIndex in
-                                            // Lấy dữ liệu plant tại vị trí (rowIndex, columnIndex)
-                                            let plantData = getPlantData(at: rowIndex, column: columnIndex, from: fireStoreService.gradenModel)
+                    HStack(spacing: 0) {
+                        Image("r1").resizable()
+                            .scaledToFill().frame(
+                                width: 16, // 30% chiều rộng màn hình
+                                height: geometry.size.height // 30% chiều rộng màn hình
+                            )
+                        
+                        ScrollView {
+                            LazyVStack(spacing: 0) {
+                                let userFloors: Int = (fireStoreService.gradenModel?.user.userFloor) ?? 1
+                                
+                                // MARK: - Main Loop: Iterate through each floor/row
+                                
+                                ForEach(0 ... userFloors, id: \.self) { rowIndex in
+                                    VStack(spacing: 0) {
+                                        HStack(spacing: 4) {
+                                            // MARK: - Column Loop: 3 columns per row
                                             
-                                            // Kiểm tra xem có phải sticker không
-                                            let isSticker = (plantData?.idPlant.contains("sticker") == true &&
-                                                             plantData?.idPlant == plantData?.idPot)
-                                            
-                                            // Kiểm tra xem cây có treo không (isHanging = 1)
-                                                                                        let isHanging = plantData?.isHanging == 1
-                                            
-//                                            let isHanging = columnIndex == 2
-                                            
-                                            // MARK: - Layout Logic
-                                            
-                                            // isHanging = 0 (Normal): VStack với Plant trên, Pot dưới
-                                            // isHanging = 1 (Hanging): ZStack với Pot ở top, Plant phủ lên
-                                                                                        if !isSticker && isHanging {
-//                                            if isHanging {
-                                                // HANGING LAYOUT - Cây treo
-                                                // Pot ở trên, Plant phủ xuống dưới với spacing âm
-                                                ZStack(alignment: .top) {
-                                                    // Pot ở trên cùng (topCenter) - nhỏ hơn
-                                                    PotRiveView(
-                                                        width: itemWidth * 1.0, // 75% width
-                                                        height: itemWidth + itemWidth * 0.2, // Fixed height cho pot treo
-                                                        potId: plantData?.idPot ?? "pot15"
+                                            ForEach(1 ... 3, id: \.self) { columnIndex in
+                                                // Lấy dữ liệu plant tại vị trí (rowIndex, columnIndex)
+                                                let plantData = getPlantData(at: rowIndex, column: columnIndex, from: fireStoreService.gradenModel)
+                                                
+                                                TouchScaleMenu {
+                                                    PlantItemView(
+                                                        itemWidth: itemWidth,
+                                                        plantData: plantData,
+                                                        rowIndex: rowIndex,
+                                                        columnIndex: columnIndex
                                                     )
-                                                    .frame(maxWidth: .infinity)
-                                                    
-                                                    // Plant phủ xuống - full width
-                                                    PlantRiveView(
-                                                        width: itemWidth, // full width
-                                                        height: itemWidth + itemWidth * 0.5, // Chiều cao như normal plant
-                                                        plantId: plantData?.idPlant ?? "plant12",
-                                                        plantLevel: plantData?.plantLevel ?? 3
-                                                    )
+                                                    .id("\(rowIndex)-\(columnIndex)")
                                                 }
-                                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // Căn top trong HStack
-                                                .id("\(rowIndex)-\(columnIndex)")
-                                            } else {
-                                                // NORMAL LAYOUT (giống code cũ)
-                                                VStack(spacing: 0) {
-                                                    // Hiển thị Plant với idPlant từ data
-                                                    PlantRiveView(
-                                                        width: itemWidth,
-                                                        height: itemWidth + itemWidth * 0.35,
-                                                        plantId: plantData?.idPlant ?? "plant1",
-                                                        
-                                                        plantLevel: plantData?.plantLevel ?? 1
-                                                    )
-                                                    
-                                                    // Hiển thị Pot với idPot từ data
-                                                    PotRiveView(
-                                                        width: itemWidth,
-                                                        height: itemWidth * 0.6,
-                                                        potId: plantData?.idPot ?? "pot1"
-                                                    )
-                                                }
-                                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // Căn top trong HStack
-                                                .id("\(rowIndex)-\(columnIndex)")
                                             }
                                         }
+                                        .frame(maxWidth: .infinity, alignment: .center)
+                                        
+                                        Image("r2")
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(
+                                                width: geometry.size.width - 32,
+                                                height: 16
+                                            )
                                     }
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                    
-                                    Image("r2")
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(
-                                            width: geometry.size.width - 32,
-                                            height: 16
-                                        )
+                                    .rotationEffect(.degrees(180))
                                 }
-                                .rotationEffect(.degrees(180))
                             }
                         }
+                        .rotationEffect(.degrees(180))
+                        Image("r1").resizable()
+                            .scaledToFill().frame(
+                                width: 16, // 30% chiều rộng màn hình
+                                height: geometry.size.height // 30% chiều rộng màn hình
+                            ).scaleEffect(x: -1, y: 1) // 👈 lật ngang
+                    }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    //                    .background(AppColors.backgroundLogin)
+                    
+                    //                RiveUIView(rive: {
+                    //                    let worker = Worker()
+                    //                    let file = try await File(source: .local("overlay1", Bundle.main), worker: worker)
+                    //                    return try await Rive(file: file)
+                    //                }).view()
+                    //                    .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height) // Chiếm toàn bộ không gian
+                    //                    .ignoresSafeArea(.all) // Full màn hình, bao gồm status bar
+                    //                    .allowsHitTesting(false) // Chỉ hiển thị, không cho phép thao tác
+                    //
+                    Button("lôgut") {
+                        loginViewModel.logout()
+                        router.replaceRoot(.loginView(id: ""))
                     }
-                    .rotationEffect(.degrees(180))
-                    Image("r1").resizable()
-                        .scaledToFill().frame(
-                            width: 16, // 30% chiều rộng màn hình
-                            height: geometry.size.height // 30% chiều rộng màn hình
-                        ).scaleEffect(x: -1, y: 1) // 👈 lật ngang
-                }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    .background(AppColors.backgroundLogin)
-                    .navigationBarHidden(true) // Ẩn thanh navigation
-                    .ignoresSafeArea(.all) // Full màn hình, bao gồm status bar
-                Button("lôgut") {
-                    loginViewModel.logout()
-                    router.replaceRoot(.loginView(id: ""))
-                }
-            }.frame(alignment: .leading)
-        }
-        .task {
-            let userId = fireStoreService.currentUser?.uid ?? ""
-            await fireStoreService.getDataById(userId: userId)
-        }
-        .ignoresSafeArea(.all) // Full màn hình, bao gồm status bar
+                }.frame(alignment: .leading)
+            }
+            .task {
+                let userId = fireStoreService.currentUser?.uid ?? ""
+                await fireStoreService.getDataById(userId: userId)
+            }
+            
+            .navigationBarHidden(true) // Ẩn thanh navigation
+            .ignoresSafeArea(.all)
+
+            SpeedDial()
+        } // Full màn hình, bao gồm status bar
     }
-    
+
     // MARK: - Helper Function
-    
+
     /// Hàm lấy dữ liệu plant tại vị trí cụ thể (row, column)
     /// - Parameters:
     ///   - row: Số hàng (ví dụ: 12)
@@ -170,14 +148,14 @@ struct HomeView: View {
     /// - Returns: Plant data hoặc nil nếu không tìm thấy
     private func getPlantData(at row: Int, column: Int, from gardenModel: GardenModel?) -> GardenModel.Plant? {
         guard let plants = gardenModel?.plants else { return nil }
-        
+
         // Tìm plant có position khớp với row,column
         return plants.first { plant in
             // Parse position từ string "row,column"
             guard let position = PlantPosition(from: plant.position) else {
                 return false
             }
-            
+
             // So sánh row và column
             return position.row == row && position.column == column
         }
