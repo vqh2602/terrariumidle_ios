@@ -33,6 +33,7 @@ struct PlantPosition {
 }
 
 struct HomeView: View {
+    @State private var authService: AuthService = AuthService.shared
     @StateObject private var loginViewModel: LoginViewModel = .init(auth: AuthService.shared)
     @StateObject private var fireStoreService: FireStoreService = .init(auth: AuthService.shared)
     @EnvironmentObject var router: AppRouter
@@ -124,11 +125,20 @@ struct HomeView: View {
                         loginViewModel.logout()
                         router.replaceRoot(.loginView(id: ""))
                     }
+                  
                 }.frame(alignment: .leading)
+            }.overlay(alignment: .top) {
+                GeometryReader { geo in
+                    UserInfoCompoment()
+                        .padding(.top, geo.safeAreaInsets.top + 40)
+                        .padding(.horizontal)
+                }
             }
             .task {
-                let userId = fireStoreService.currentUser?.uid ?? ""
-                await fireStoreService.getDataById(userId: userId)
+                guard let userId = authService.currentUser?.uid  else {
+                    print("HomeView: chưa có userid")
+                    return }
+                _ = await fireStoreService.getDataById(userId: userId)
             }
             
             .navigationBarHidden(true) // Ẩn thanh navigation
@@ -162,6 +172,7 @@ struct HomeView: View {
     }
 }
 
-#Preview {
-    HomeView()
-}
+//#Preview {
+//    HomeView()
+//}
+

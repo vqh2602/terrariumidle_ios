@@ -31,14 +31,17 @@ final class LoginViewModel: ObservableObject {
     // MARK: - Dependencies
 
     private let auth: AuthService
+    private let fireStore: FireStoreService
 
     // MARK: - Init
 
     init(auth: AuthService) {
-          self.auth = auth
-          self.currentUser = auth.currentUser
-          print("user hiện tại: \(currentUser?.email ?? "n/a")")
-      }
+        self.auth = auth
+        currentUser = auth.currentUser
+        fireStore = FireStoreService(auth: auth)
+    
+        print("user hiện tại: \(currentUser?.email ?? "n/a")")
+    }
 
     // MARK: - Apple Sign-In
 
@@ -46,67 +49,69 @@ final class LoginViewModel: ObservableObject {
     /// Hàm này GỌI AuthService.startSignInWithAppleFlow với completion handler
     ///
     func loginWithApple() async -> User? {
-      hasError = false
-      errorMessage = nil
-      isLoading = true
-      defer { isLoading = false }
+        hasError = false
+        errorMessage = nil
+        isLoading = true
+        defer { isLoading = false }
 
-      do {
-        let user = try await auth.startSignInWithAppleFlowAsync()
-        currentUser = user
-        isAuthenticated = true
-        fetchUserToken()
-        return user
-      } catch {
-        hasError = true
-        errorMessage = error.localizedDescription
-        isAuthenticated = false
-        return nil
-      }
+        do {
+            let user = try await auth.startSignInWithAppleFlowAsync()
+            currentUser = user
+            isAuthenticated = true
+            fetchUserToken()
+            fetchCurrentUser()
+            return user
+        } catch {
+            hasError = true
+            errorMessage = error.localizedDescription
+            isAuthenticated = false
+            return nil
+        }
     }
-//    func  loginWithApple() {
-//        print("📱 [LoginViewModel] loginWithApple() called")
-//
-//        // Reset error state
-//        hasError = false
-//        errorMessage = nil
-//        isLoading = true
-//
-//        print("📱 [LoginViewModel] Calling AuthService.startSignInWithAppleFlow...")
-//
-//        // Gọi AuthService với completion handler
-//        auth.startSignInWithAppleFlow { [weak self] result in
-//            print("📱 [LoginViewModel] Received callback from AuthService")
-//
-//            // Callback được gọi trên background thread, cần chuyển về main thread
-//            Task { @MainActor in
-//                self?.isLoading = false
-//
-//                switch result {
-//                case let .success(user):
-//                    // Đăng nhập thành công
-//                    print("✅ [LoginViewModel] Apple Sign-In thành công!")
-//                    print("   UID: \(user.uid)")
-//                    print("   Email: \(user.email ?? "N/A")")
-//                    print("   Display Name: \(user.displayName ?? "N/A")")
-//
-//                    self?.currentUser = user
-//                    self?.isAuthenticated = true
-//
-//                    // (Optional) Lấy token để gọi API backend
-//                    self?.fetchUserToken()
-//
-//                case let .failure(error):
-//                    // Đăng nhập thất bại
-//                    print("❌ [LoginViewModel] Apple Sign-In thất bại: \(error.localizedDescription)")
-//
-//                    self?.hasError = true
-//                    self?.errorMessage = error.localizedDescription
-//                    self?.isAuthenticated = false
-//                }
-//            }
-//        }
-//    }
+
+    //    func  loginWithApple() {
+    //        print("📱 [LoginViewModel] loginWithApple() called")
+    //
+    //        // Reset error state
+    //        hasError = false
+    //        errorMessage = nil
+    //        isLoading = true
+    //
+    //        print("📱 [LoginViewModel] Calling AuthService.startSignInWithAppleFlow...")
+    //
+    //        // Gọi AuthService với completion handler
+    //        auth.startSignInWithAppleFlow { [weak self] result in
+    //            print("📱 [LoginViewModel] Received callback from AuthService")
+    //
+    //            // Callback được gọi trên background thread, cần chuyển về main thread
+    //            Task { @MainActor in
+    //                self?.isLoading = false
+    //
+    //                switch result {
+    //                case let .success(user):
+    //                    // Đăng nhập thành công
+    //                    print("✅ [LoginViewModel] Apple Sign-In thành công!")
+    //                    print("   UID: \(user.uid)")
+    //                    print("   Email: \(user.email ?? "N/A")")
+    //                    print("   Display Name: \(user.displayName ?? "N/A")")
+    //
+    //                    self?.currentUser = user
+    //                    self?.isAuthenticated = true
+    //
+    //                    // (Optional) Lấy token để gọi API backend
+    //                    self?.fetchUserToken()
+    //
+    //                case let .failure(error):
+    //                    // Đăng nhập thất bại
+    //                    print("❌ [LoginViewModel] Apple Sign-In thất bại: \(error.localizedDescription)")
+    //
+    //                    self?.hasError = true
+    //                    self?.errorMessage = error.localizedDescription
+    //                    self?.isAuthenticated = false
+    //                }
+    //            }
+    //        }
+    //    }
 
     // MARK: - Email/Password Login
 
@@ -178,6 +183,21 @@ final class LoginViewModel: ObservableObject {
 
             } catch {
                 print("⚠️ Không thể lấy token: \(error.localizedDescription)")
+            }
+        }
+    }
+///lấy dữ liệu user, nếu chưa có thì sẽ tạo mới
+    private func fetchCurrentUser() {
+        Task {
+            do {
+                guard let uid = currentUser?.uid else { return }
+                //                let data =  await fireStore.getDataById(userId: uid)
+                guard (await fireStore.getDataById(userId: uid)) != nil else {
+                    print("‼️ User chưa có đang tạo mới: \(currentUser?.uid ?? "")")
+                    try await fireStore.createDataUser(email: currentUser?.email ?? "", name: currentUser?.displayName, id: uid)
+                    return
+                }
+                print("✅ User đã có k cần tạo mới")
             }
         }
     }
