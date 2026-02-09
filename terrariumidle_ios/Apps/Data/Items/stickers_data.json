@@ -1,0 +1,54 @@
+[
+    {
+        "id": "sticker1",
+        "name": "Chuông gió hồng",
+        "description": "Chuông gió cầu nguyện",
+        "image": "https://i.imgur.com/tpg2XEH.png",
+        "priceStore": 30000,
+        "priceOxygen": 25000,
+        "currencyUnit": "oxygen",
+        "type": "sticker",
+        "effect": "N.A",
+        "itemTypeAttribute": "hanging",
+        "levelUnlock": 50
+    },
+    {
+        "id": "sticker2",
+        "name": "Tượng người lùn hoa hướng dương",
+        "description": "Tượng người lùn hoa hướng dương",
+        "image": "https://i.imgur.com/FVRkr9L.png",
+        "priceStore": 30000,
+        "priceOxygen": 25000,
+        "currencyUnit": "oxygen",
+        "type": "sticker",
+        "effect": "N.A",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 50
+    },
+    {
+        "id": "sticker3",
+        "name": "Tượng người lùn cà rốt",
+        "description": "Tượng người lùn cà rốt",
+        "image": "https://i.imgur.com/qycI2xZ.png",
+        "priceStore": 30000,
+        "priceOxygen": 25000,
+        "currencyUnit": "oxygen",
+        "type": "sticker",
+        "effect": "N.A",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 50
+    },
+    {
+        "id": "sticker4",
+        "name": "Tượng người lùn hoa cúc",
+        "description": "Tượng người lùn hoa cúc",
+        "image": "https://i.imgur.com/JRiiJn8.png",
+        "priceStore": 30000,
+        "priceOxygen": 25000,
+        "currencyUnit": "oxygen",
+        "type": "sticker",
+        "effect": "N.A",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 50
+    }
+]

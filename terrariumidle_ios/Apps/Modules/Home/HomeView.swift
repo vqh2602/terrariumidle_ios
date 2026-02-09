@@ -88,6 +88,7 @@ struct HomeView: View {
                                                         plantData: plantData,
                                                         rowIndex: rowIndex,
                                                         columnIndex: columnIndex,
+                                                        cartPlants: fireStoreService.gradenModel?.cart.cartPlants ?? [],
                                                         isEditing: $isEdit
                                                     )
                                                     .id("\(rowIndex)-\(columnIndex)")

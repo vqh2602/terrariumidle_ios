@@ -1,0 +1,93 @@
+[
+    {
+        "id": "landscape1",
+        "name": "Ban công quang đãng",
+        "description": "",
+        "image": "sky_sun_day",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "landscape",
+        "effect": "Ban công quang đãng",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "landscape2",
+        "name": "Ban công chiều tà",
+        "description": "Ban công chiều tà",
+        "image": "sky_sun_set",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "landscape",
+        "effect": "Ban công chiều tà",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "landscape3",
+        "name": "Ban công mưa bão",
+        "description": "Ban công mưa bão",
+        "image": "sky_rain",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "landscape",
+        "effect": "Ban công mưa bão",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "landscape4",
+        "name": "Ban công trời sao",
+        "description": "Ban công trời sao",
+        "image": "sky_moon_night",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "landscape",
+        "effect": "Ban công trời sao",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "landscape5",
+        "name": "Đêm muộn trời sao",
+        "description": "Đêm muộn trời sao",
+        "image": "sky_moon_star",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "landscape",
+        "effect": "Ban công trời sao",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "landscape6",
+        "name": "Minamoto no Yuuhi",
+        "description": "源の夕陽 - Origin of the Sunset",
+        "image": "landscape6",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "landscape",
+        "effect": "Minamoto no Yuuhi",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "landscape7",
+        "name": "Thần Sơn Huyễn Cảnh",
+        "description": "神山幻境 - Divine Mountain Illusory Realm",
+        "image": "landscape7",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "landscape",
+        "effect": "Thần Sơn Huyễn Cảnh",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    }
+]

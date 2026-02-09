@@ -14,8 +14,9 @@ struct PlantItemView: View {
     let plantData: GardenModel.Plant?
     let rowIndex: Int
     let columnIndex: Int
+    let cartPlants: [String]
     @Binding var isEditing: Bool
-    
+
     @State private var showSheet = false
     var body: some View {
         // Kiểm tra xem có phải sticker không
@@ -145,9 +146,12 @@ struct PlantItemView: View {
                 print("remove at \(rowIndex),\(columnIndex)")
             },
         ]).sheet(isPresented: $showSheet) {
-            // Normal mode: Transparent widget
-            Color.clear
-                .frame(width:.infinity, height: 150)
+            SelectItemSheet(
+                isPresented: $showSheet,
+                cartPlants: cartPlants,
+                rowIndex: rowIndex,
+                columnIndex: columnIndex
+            )
         }
     }
 }
