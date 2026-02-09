@@ -43,7 +43,7 @@ struct UserInfoCompoment : View{
         }.frame(
             width: .infinity,
             height: .infinity
-        )     .padding(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+        )     .padding(EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8))
     }
 }
 

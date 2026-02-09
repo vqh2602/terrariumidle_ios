@@ -10,6 +10,8 @@ import SwiftUI
 
 struct SpeedDial: View {
     @State private var isOpen = false
+    @Binding var isEditing: Bool
+  
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -27,12 +29,24 @@ struct SpeedDial: View {
                         print("water")
                         close()
                     }
-                    DialItem(title: "Bón phân", systemImage: "leaf.fill", color: Color.yellow) {
+                    DialItem(title: "Phong cảnh", systemImage: "leaf.fill", color: Color.yellow) {
                         print("fertilize")
                         close()
                     }
-                    DialItem(title: "Thu hoạch", systemImage: "scissors", color: Color.orange) {
+                    DialItem(title: "Hiệu ứng", systemImage: "scissors", color: Color.orange) {
                         print("harvest")
+                        close()
+                    }
+                    DialItem(title: "Cửa hàng", systemImage: "scissors", color: Color.orange) {
+                        print("harvest")
+                        close()
+                    }
+                    DialItem(title: "Sự kiện", systemImage: "scissors", color: Color.orange) {
+                        print("harvest")
+                        close()
+                    }
+                    DialItem(title: "Bố cục", systemImage: "scissors", color: Color.orange) {
+                        isEditing.toggle()
                         close()
                     }
                 }

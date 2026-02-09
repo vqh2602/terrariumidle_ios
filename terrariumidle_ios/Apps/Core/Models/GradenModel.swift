@@ -78,8 +78,8 @@ enum ParseError: Error, CustomStringConvertible {
 
     var description: String {
         switch self {
-        case .missing(let k): return "Missing key: \(k)"
-        case .type(let k): return "Type mismatch for key: \(k)"
+        case let .missing(k): return "Missing key: \(k)"
+        case let .type(k): return "Type mismatch for key: \(k)"
         }
     }
 }
@@ -88,16 +88,16 @@ enum ParseError: Error, CustomStringConvertible {
 
 extension GardenModel {
     init(dict: [String: Any]) throws {
-        self.isBan = dict.int("isBan")
-        self.isServerUpdate = dict.int("isServerUpdate")
+        isBan = dict.int("isBan")
+        isServerUpdate = dict.int("isServerUpdate")
 
-        self.item = try Item(dict: try dict.dict("item"))
-        self.cart = try Cart(dict: try dict.dict("cart"))
-        self.money = try Money(dict: try dict.dict("money"))
-        self.user = try UserProfile(dict: try dict.dict("user"))
+        item = try Item(dict: dict.dict("item"))
+        cart = try Cart(dict: dict.dict("cart"))
+        money = try Money(dict: dict.dict("money"))
+        user = try UserProfile(dict: dict.dict("user"))
 
         let plantsAny = dict.array("plants")
-        self.plants = try plantsAny.map { any in
+        plants = try plantsAny.map { any in
             guard let p = any as? [String: Any] else { throw ParseError.type("plants[]") }
             return try Plant(dict: p)
         }
@@ -171,7 +171,6 @@ extension GardenModel.Plant {
 // MARK: - Dictionary Helpers (typed getters)
 
 private extension Dictionary where Key == String, Value == Any {
-
     func dict(_ key: String) throws -> [String: Any] {
         guard let d = self[key] as? [String: Any] else { throw ParseError.type(key) }
         return d
@@ -227,6 +226,88 @@ private extension Dictionary where Key == String, Value == Any {
         if let n = self[key] as? NSNumber { return n.uint64Value }
         if let s = self[key] as? String, let n = UInt64(s) { return n }
         return 0
+    }
+}
+
+// MARK: - Convert to Dictionary (for Firestore updates)
+
+extension GardenModel {
+    func toDictionary() -> [String: Any] {
+        return [
+            "isBan": isBan,
+            "isServerUpdate": isServerUpdate,
+            "item": item.toDictionary(),
+            "cart": cart.toDictionary(),
+            "money": money.toDictionary(),
+            "user": user.toDictionary(),
+            "plants": plants.map { $0.toDictionary() },
+        ]
+    }
+}
+
+extension GardenModel.Item {
+    func toDictionary() -> [String: Any] {
+        return [
+            "fertilizer": fertilizer,
+            "shovel": shovel,
+        ]
+    }
+}
+
+extension GardenModel.Cart {
+    func toDictionary() -> [String: Any] {
+        return [
+            "cartPlants": cartPlants,
+            "cartPots": cartPots,
+            "cartStickers": cartStickers,
+        ]
+    }
+}
+
+extension GardenModel.Money {
+    func toDictionary() -> [String: Any] {
+        return [
+            "gemstone": gemstone,
+            "oxygen": oxygen,
+            "ticket": ticket,
+        ]
+    }
+}
+
+extension GardenModel.UserProfile {
+    func toDictionary() -> [String: Any] {
+        return [
+            "bag": bag.map { [
+                "colorBag": $0.colorBag,
+                "idBag": $0.idBag,
+                "nameBag": $0.nameBag,
+            ] },
+            "identifier": identifier ?? NSNull(),
+            "latestPurchaseDate": latestPurchaseDate ?? NSNull(),
+            "userAvatar": userAvatar ?? NSNull(),
+            "userEmail": userEmail ?? NSNull(),
+            "userFloor": userFloor,
+            "userID": userID,
+            "userImageBackground": userImageBackground ?? NSNull(),
+            "userLevel": userLevel,
+            "userLevelEXP": userLevelEXP,
+            "userName": userName,
+            "userTotalLike": userTotalLike,
+        ]
+    }
+}
+
+extension GardenModel.Plant {
+    func toDictionary() -> [String: Any] {
+        return [
+            "harvestTime": harvestTime,
+            "idPlant": idPlant,
+            "idPot": idPot,
+            "isHanging": isHanging,
+            "plantLevel": plantLevel,
+            "platLevelExp": platLevelExp,
+            "position": position,
+        ]
     }
 }
 

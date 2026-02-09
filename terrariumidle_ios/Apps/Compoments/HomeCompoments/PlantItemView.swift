@@ -14,31 +14,57 @@ struct PlantItemView: View {
     let plantData: GardenModel.Plant?
     let rowIndex: Int
     let columnIndex: Int
+    @Binding var isEditing: Bool
     
+    @State private var showSheet = false
     var body: some View {
         // Kiểm tra xem có phải sticker không
         let isSticker = (plantData?.idPlant.contains("sticker") == true &&
-                         plantData?.idPlant == plantData?.idPot)
-        
+            plantData?.idPlant == plantData?.idPot)
+
         // Kiểm tra xem cây có treo không (isHanging = 1)
         let isHanging = plantData?.isHanging == 1
-        
+
         // Nếu KHÔNG phải sticker, check xem có plantId hoặc potId trống không
         let hasEmptyIds = !isSticker && (
             plantData?.idPlant.isEmpty == true ||
-            plantData?.idPot.isEmpty == true ||
-            plantData?.idPlant == nil ||
-            plantData?.idPot == nil
+                plantData?.idPot.isEmpty == true ||
+                plantData?.idPlant == nil ||
+                plantData?.idPot == nil
         )
-        
+
         Group {
-            
             // MARK: - Layout Logic
-            
+
+            // nếu isedit = true thì hiện widget có icon thêm plant với những ô không có cây hay trang trí nào
             // Nếu không phải sticker và có ID trống → hiển thị widget trong suốt chiều cao 150
             if hasEmptyIds {
-                Color.clear
-                    .frame(width: itemWidth, height: 150)
+                if isEditing {
+                    // Edit mode: Hiển thị nút thêm plant
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.gray.opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [8, 4]))
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(12)
+
+                        VStack(spacing: 8) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 32))
+                                .foregroundColor(.green.opacity(0.7))
+
+                            Text("Thêm cây")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .frame(width: itemWidth, height: 150).onTapGesture {
+                        showSheet.toggle()
+                    }
+                } else {
+                    // Normal mode: Transparent widget
+                    Color.clear
+                        .frame(width: itemWidth, height: 150)
+                }
             } else if isSticker {
                 // STICKER LAYOUT
                 if isHanging {
@@ -74,7 +100,7 @@ struct PlantItemView: View {
                         potId: plantData?.idPot ?? "pot15"
                     )
                     .frame(maxWidth: .infinity)
-                    
+
                     // Plant phủ xuống - full width
                     PlantRiveView(
                         width: itemWidth, // full width
@@ -94,7 +120,7 @@ struct PlantItemView: View {
                         plantId: plantData?.idPlant ?? "plant1",
                         plantLevel: plantData?.plantLevel ?? 1
                     )
-                    
+
                     // Hiển thị Pot với idPot từ data
                     PotRiveView(
                         width: itemWidth,
@@ -105,7 +131,7 @@ struct PlantItemView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
-        .customContextMenu(menuItems: isSticker ? [] : [
+        .customContextMenu(menuItems: isSticker || isEditing ? [] : [
             MenuItem(title: "Tưới cây", icon: "drop.fill") {
                 print("water at \(rowIndex),\(columnIndex)")
             },
@@ -118,6 +144,10 @@ struct PlantItemView: View {
             MenuItem(title: "Xóa", icon: "trash", role: .destructive) {
                 print("remove at \(rowIndex),\(columnIndex)")
             },
-        ])
+        ]).sheet(isPresented: $showSheet) {
+            // Normal mode: Transparent widget
+            Color.clear
+                .frame(width:.infinity, height: 150)
+        }
     }
 }

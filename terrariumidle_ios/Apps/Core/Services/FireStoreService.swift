@@ -28,10 +28,11 @@ class FireStoreService: ObservableObject {
 //        super.init()
         print("user hiện tại: \(currentUser?.email ?? "n/a")")
     }
+
     /// lấy dữ liệu khu vườn theo id user
     /// pb03Q3R93naRsjiAuyTGz0BPHI92 -> app flutter
     /// 0pMij25JsAV4lMkshYzAFLisdpz2 -> app ios
-    func getDataById(userId: String) async  -> GardenModel? {
+    func getDataById(userId: String) async -> GardenModel? {
         let docRef = db.collection("users").document(userId)
         print("userIdLoad: \(userId)")
         do {
@@ -46,7 +47,6 @@ class FireStoreService: ObservableObject {
             print("Error loading garden: \(error)")
             return nil
         }
-        
     }
 
     // MARK: - Create User Data
@@ -103,6 +103,47 @@ class FireStoreService: ObservableObject {
             // Đăng xuất nếu tạo tài khoản thất bại
             try? Auth.auth().signOut()
             throw error
+        }
+    }
+
+    // MARK: - Update User Data
+
+    /// Update dữ liệu user lên Firestore
+    /// - Parameters:
+    ///   - gardenModel: GardenModel cần update
+    /// - Returns: GardenModel đã update hoặc nil nếu lỗi
+    func updateDataUser(gardenModel: GardenModel?) async -> GardenModel? {
+        guard let gardenModel = gardenModel else {
+            print("❌ Lỗi: Không tìm thấy thông tin tài khoản")
+            return nil
+        }
+
+        let userId = gardenModel.user.userID
+
+        do {
+            // Check xem document có tồn tại không
+            let docRef = db.collection("users").document(userId)
+            let snapshot = try await docRef.getDocument()
+
+            guard snapshot.exists else {
+                print("❌ Lỗi: Document không tồn tại cho userID: \(userId)")
+                return nil
+            }
+
+            // Convert GardenModel sang Dictionary để update
+            let updateData = gardenModel.toDictionary()
+
+            // Update document
+            try await docRef.updateData(updateData)
+            print("✅ Update thành công cho user: \(gardenModel.user.userName)")
+
+            // Update published property
+            gradenModel = gardenModel
+
+            return gardenModel
+        } catch {
+            print("❌ Lỗi khi update user: \(error.localizedDescription)")
+            return nil
         }
     }
 }
