@@ -19,6 +19,8 @@ class FireStoreService: ObservableObject {
 
     private let auth: AuthService
     private let db = Firestore.firestore()
+    
+    
 
     // MARK: - Init
 
@@ -147,3 +149,4 @@ class FireStoreService: ObservableObject {
         }
     }
 }
+

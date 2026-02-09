@@ -48,12 +48,12 @@ class ItemDataManager {
 
     /// Load tất cả items từ JSON files
     private func loadItems() {
-        allPlants = loadItemsFromFile(named: "plants_data", folder: "Items")
-        allPots = loadItemsFromFile(named: "pots_data", folder: "Items")
-        allDecorations = loadItemsFromFile(named: "stickers_data", folder: "Items")
-        allEffects = loadItemsFromFile(named: "effects_data", folder: "Items")
-        allShopItems = loadItemsFromFile(named: "shop_items_data", folder: "Items")
-        allLandscapes = loadItemsFromFile(named: "landscapes_data", folder: "Items")
+        allPlants = loadItemsFromFile(named: "plants_data", )
+        allPots = loadItemsFromFile(named: "pots_data",)
+        allDecorations = loadItemsFromFile(named: "stickers_data", )
+        allEffects = loadItemsFromFile(named: "effects_data", )
+        allShopItems = loadItemsFromFile(named: "shop_items_data", )
+        allLandscapes = loadItemsFromFile(named: "landscapes_data", )
 
         print("✅ Đã load \(allPlants.count) plants, \(allPots.count) pots, \(allDecorations.count) stickers, \(allEffects.count) effects, \(allShopItems.count) shop items, \(allLandscapes.count) landscapes")
     }

@@ -11,7 +11,8 @@ import SwiftUI
 struct SpeedDial: View {
     @State private var isOpen = false
     @Binding var isEditing: Bool
-  
+    @EnvironmentObject var router: AppRouter
+    
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -39,6 +40,7 @@ struct SpeedDial: View {
                     }
                     DialItem(title: "Cửa hàng", systemImage: "scissors", color: Color.orange) {
                         print("harvest")
+                        router.push(.storeView)
                         close()
                     }
                     DialItem(title: "Sự kiện", systemImage: "scissors", color: Color.orange) {
