@@ -107,7 +107,7 @@ struct PlantItemRow: View {
         Button(action: onSelect) {
             HStack(spacing: 12) {
                 // Plant Image
-                AsyncImage(url: URL(string: plant.image)) { image in
+                CachedAsyncImage(url: URL(string: plant.image)) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)

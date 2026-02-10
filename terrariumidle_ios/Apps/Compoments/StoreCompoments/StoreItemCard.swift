@@ -17,7 +17,7 @@ struct StoreItemCard: View {
     var body: some View {
         HStack(spacing: 12) {
             // Item Image
-            AsyncImage(url: URL(string: item.image)) { image in
+            CachedAsyncImage(url: URL(string: item.image)) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -70,7 +70,7 @@ struct StoreItemCard: View {
         if isOwned {
             // Already owned
             Text("Đã sở hữu")
-                .font(.system(size: 14, weight: .medium))
+                .textStyle(.bodyMedium)
                 .foregroundColor(.gray)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)

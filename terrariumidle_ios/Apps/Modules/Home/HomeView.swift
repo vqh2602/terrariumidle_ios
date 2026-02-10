@@ -35,7 +35,7 @@ struct PlantPosition {
 struct HomeView: View {
     @State private var authService: AuthService = .shared
     @StateObject private var loginViewModel: LoginViewModel = .init(auth: AuthService.shared)
-    @StateObject private var fireStoreService: FireStoreService = .init(auth: AuthService.shared)
+    @StateObject private var fireStoreService: FireStoreService = .shared
     @EnvironmentObject var router: AppRouter
 
     @State private var isEdit: Bool = false

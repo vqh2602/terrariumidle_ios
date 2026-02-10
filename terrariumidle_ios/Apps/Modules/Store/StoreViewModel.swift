@@ -6,8 +6,8 @@
 //
 
 import Combine
-import Foundation
 import FirebaseAuth
+import Foundation
 
 enum StoreTab: String, CaseIterable {
     case pots = "Chậu"
@@ -39,10 +39,10 @@ final class StoreViewModel: ObservableObject {
     var filteredItems: [ItemData] {
         guard let gardenModel = fireStore.gradenModel else {
             print("Không có data gradenModel trong StoreViewModel")
-            return [] }
+            return []
+        }
 
         var items = availableItems
-        
 
         // Filter by search text
         if !searchText.isEmpty {
@@ -66,8 +66,8 @@ final class StoreViewModel: ObservableObject {
 
     init(auth: AuthService) {
         self.auth = auth
-        fireStore = FireStoreService.init(auth: auth)
-        Task{
+        fireStore = FireStoreService.shared
+        Task {
             await fireStore.getDataById(userId: auth.currentUser?.uid ?? "")
         }
     }
@@ -209,16 +209,11 @@ final class StoreViewModel: ObservableObject {
             )
 
             // Update Firestore
-//            _ = await fireStore.updateDataUser(gardenModel: updatedModel)
+            _ = await fireStore.updateDataUser(gardenModel: updatedModel)
 
             // Reload items to reflect purchase
             loadItems(for: selectedTab)
 
-            isLoading = false
-
-        } catch {
-            hasError = true
-            errorMessage = "Lỗi khi mua: \(error.localizedDescription)"
             isLoading = false
         }
     }

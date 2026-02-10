@@ -5,17 +5,16 @@
 //  Created by AI on 9/2/26.
 //
 
-import SwiftUI
 import FirebaseAuth
+import SwiftUI
 
 struct StoreView: View {
     @EnvironmentObject var router: AppRouter
     @StateObject private var viewModel: StoreViewModel
-    @StateObject private var fireStore: FireStoreService
+    @StateObject private var fireStore: FireStoreService = .shared
 
     init(auth: AuthService = AuthService.shared) {
         _viewModel = StateObject(wrappedValue: StoreViewModel(auth: auth))
-        _fireStore = StateObject(wrappedValue: FireStoreService(auth: auth))
     }
 
     var body: some View {
@@ -133,18 +132,23 @@ struct StoreView: View {
                     value: formatNumber(gardenModel.money.ticket)
                 )
 
-                // Level
+                // shovel
                 statBadge(
-                    icon: "star.fill",
+                    icon: "shovel",
                     iconColor: .yellow,
-                    value: "\(gardenModel.user.userLevel)"
+                    value: "\(gardenModel.item.shovel)"
+                )
+                statBadge(
+                    icon: "fertilizer",
+                    iconColor: .yellow,
+                    value: "\(gardenModel.item.fertilizer)"
                 )
             }
         }
     }
 
     private func statBadge(icon: String, iconColor: Color, value: String) -> some View {
-        HStack(spacing: 4) {
+        VStack(spacing: 4) {
             Image(icon)
                 .resizable()
                 .frame(width: 20, height: 20)
@@ -231,6 +235,6 @@ struct TabButton: View {
     }
 }
 
-//#Preview {
+// #Preview {
 //    StoreView()
-//}
+// }

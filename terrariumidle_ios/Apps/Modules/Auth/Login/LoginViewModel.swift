@@ -38,7 +38,7 @@ final class LoginViewModel: ObservableObject {
     init(auth: AuthService) {
         self.auth = auth
         currentUser = auth.currentUser
-        fireStore = FireStoreService(auth: auth)
+        fireStore = .shared
     
         print("user hiện tại: \(currentUser?.email ?? "n/a")")
     }

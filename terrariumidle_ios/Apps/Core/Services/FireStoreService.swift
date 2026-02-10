@@ -8,29 +8,37 @@
 import Combine
 import FirebaseAuth
 import FirebaseFirestore
+import Foundation
 
 class FireStoreService: ObservableObject {
+    static let shared = FireStoreService()
     /// Thông tin user hiện tại
-    @Published var currentUser: User?
+    private var currentUser: User?
     private var dataGraden: [String: Any]?
+    
     @Published var gradenModel: GardenModel?
 
     // MARK: - Dependencies
 
-    private let auth: AuthService
+    private let auth: AuthService = AuthService.shared
     private let db = Firestore.firestore()
     
     
 
     // MARK: - Init
 
-    init(auth: AuthService) {
-        self.auth = auth
-        currentUser = auth.currentUser
-//        super.init()
-        print("user hiện tại: \(currentUser?.email ?? "n/a")")
+//    init(auth: AuthService) {
+//        self.auth = auth
+//        currentUser = auth.currentUser
+////        super.init()
+//        print("user hiện tại: \(currentUser?.email ?? "n/a")")
+//    }
+    /// Private init để ngăn tạo instance mới từ bên ngoài (enforcing Singleton)
+    private init() {}
+    
+    var currentGradenModel: GardenModel? {
+      return gradenModel
     }
-
     /// lấy dữ liệu khu vườn theo id user
     /// pb03Q3R93naRsjiAuyTGz0BPHI92 -> app flutter
     /// 0pMij25JsAV4lMkshYzAFLisdpz2 -> app ios
@@ -99,6 +107,7 @@ class FireStoreService: ObservableObject {
 
         do {
             try await db.collection("users").document(id).setData(userData)
+           _ = await getDataById(userId: id)
             print("✅ Tạo tài khoản thành công cho user: \(userName)")
         } catch {
             print("❌ Lỗi tạo tài khoản: \(error.localizedDescription)")
@@ -141,6 +150,7 @@ class FireStoreService: ObservableObject {
 
             // Update published property
             gradenModel = gardenModel
+            _ = await getDataById(userId: gardenModel.user.userID)
 
             return gardenModel
         } catch {
