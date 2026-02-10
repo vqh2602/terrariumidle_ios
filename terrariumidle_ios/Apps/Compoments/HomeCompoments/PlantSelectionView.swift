@@ -12,6 +12,7 @@ struct PlantSelectionView: View {
     let rowIndex: Int
     let columnIndex: Int
     let onSelect: (String) -> Void
+    @Binding var selectedPlantId: String?
 
     @State private var selectedCategory: String = "Tất cả"
     @State private var searchText: String = "" // Tìm kiếm
@@ -85,9 +86,14 @@ struct PlantSelectionView: View {
             ScrollView {
                 LazyVStack(spacing: 8) {
                     ForEach(availablePlants) { plant in
-                        PlantItemRow(plant: plant, onSelect: {
-                            onSelect(plant.id)
-                        })
+                        PlantItemRow(
+                            plant: plant,
+                            isSelected: selectedPlantId == plant.id,
+                            onSelect: {
+                                selectedPlantId = plant.id
+                                onSelect(plant.id)
+                            }
+                        )
                     }
                 }
                 .padding(.horizontal)
@@ -101,6 +107,7 @@ struct PlantSelectionView: View {
 
 struct PlantItemRow: View {
     let plant: PlantItemData
+    let isSelected: Bool
     let onSelect: () -> Void
 
     var body: some View {
@@ -140,9 +147,9 @@ struct PlantItemRow: View {
 
                 // Price
                 HStack(spacing: 4) {
-                    Image(systemName: "leaf.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(.green)
+                    Image("oxygen")
+                        .resizable()
+                        .frame(width: 16, height: 16)
 
                     Text("\(plant.priceOxygen)")
                         .font(.system(size: 16, weight: .bold))
@@ -152,7 +159,11 @@ struct PlantItemRow: View {
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.05))
+                    .fill(isSelected ? Color.green.opacity(0.15) : Color.gray.opacity(0.05))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.green : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(PlainButtonStyle())

@@ -8,17 +8,126 @@
 import SwiftUI
 
 struct PotSelectionView: View {
-    var body: some View {
-        VStack {
-            Spacer()
-            Text("Chức năng chọn chậu")
-                .font(.title3)
-                .foregroundColor(.gray)
-            Text("Đang phát triển...")
-                .font(.caption)
-                .foregroundColor(.gray.opacity(0.7))
-            Spacer()
+    let cartPots: [String]
+    let onSelect: (String) -> Void
+    @Binding var selectedPotId: String?
+
+    @State private var searchText: String = ""
+
+    private var availablePots: [ItemData] {
+        let allPots = ItemDataManager.shared.getAllPots()
+        var filtered = allPots.filter { cartPots.contains($0.id) }
+
+        if !searchText.isEmpty {
+            filtered = filtered.filter {
+                $0.name.localizedCaseInsensitiveContains(searchText) ||
+                    $0.description.localizedCaseInsensitiveContains(searchText)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+        return filtered
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Search Bar
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.gray)
+                TextField("Tìm kiếm", text: $searchText)
+                    .foregroundColor(.primary)
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+            )
+            .padding(.horizontal)
+
+            // Pots List
+            ScrollView {
+                LazyVStack(spacing: 8) {
+                    ForEach(availablePots) { pot in
+                        PotItemRow(
+                            pot: pot,
+                            isSelected: selectedPotId == pot.id,
+                            onSelect: {
+                                selectedPotId = pot.id
+                                onSelect(pot.id)
+                            }
+                        )
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top, 12)
+            }
+        }
+    }
+}
+
+// MARK: - Pot Item Row
+
+struct PotItemRow: View {
+    let pot: ItemData
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: 12) {
+                // Pot Image
+                CachedAsyncImage(url: URL(string: pot.image)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } placeholder: {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.2))
+                }
+                .frame(width: 60, height: 60)
+                .cornerRadius(8)
+
+                // Pot Info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(pot.name)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+
+                    Text(pot.description)
+                        .font(.system(size: 13))
+                        .foregroundColor(.gray)
+                        .lineLimit(2)
+
+                    if pot.effect != "N.A" && !pot.effect.isEmpty {
+                        Text("Hiệu ứng: \(pot.effect)")
+                            .font(.system(size: 12))
+                            .foregroundColor(.blue)
+                    }
+                }
+
+                Spacer()
+
+                // Price
+                HStack(spacing: 4) {
+                    Image("oxygen")
+                        .resizable()
+                        .frame(width: 16, height: 16)
+
+                    Text("\(pot.priceOxygen)")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.primary)
+                }
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? Color.green.opacity(0.15) : Color.gray.opacity(0.05))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.green : Color.clear, lineWidth: 2)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }

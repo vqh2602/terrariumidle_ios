@@ -63,7 +63,7 @@ struct GardenModel {
         let harvestTime: Int64
         let idPlant: String
         let idPot: String
-        let isHanging: Int
+        let isHanging: Bool
         let plantLevel: Int
         let platLevelExp: Int
         let position: String
@@ -131,7 +131,7 @@ extension GardenModel.UserProfile {
     init(dict: [String: Any]) throws {
         // bag: [ {colorBag, idBag, nameBag}, ...]
         let bagAny = dict.array("bag")
-        bag = try bagAny.compactMap { any in
+        bag = bagAny.compactMap { any in
             guard let b = any as? [String: Any] else { return nil }
             return BagItem(
                 colorBag: b.uInt64("colorBag"),
@@ -161,7 +161,7 @@ extension GardenModel.Plant {
         harvestTime = dict.int64("harvestTime")
         idPlant = dict.string("idPlant")
         idPot = dict.string("idPot")
-        isHanging = dict.int("isHanging")
+        isHanging = dict["isHanging"] as? Bool ?? false
         plantLevel = dict.int("plantLevel")
         platLevelExp = dict.int("platLevelExp")
         position = dict.string("position")

@@ -39,6 +39,31 @@ class FireStoreService: ObservableObject {
     var currentGradenModel: GardenModel? {
       return gradenModel
     }
+    
+    func realtimeChangeDataGraden(userId: String?){
+        guard let userId else { return }
+        db.collection("users").document(userId)
+          .addSnapshotListener { documentSnapshot, error in
+            guard let document = documentSnapshot else {
+              print("Error fetching document: \(error?.localizedDescription ?? "unknown error")")
+              return
+            }
+            guard let data = document.data() else {
+              print("Document data was empty.")
+              return
+            }
+            self.dataGraden = data
+            do {
+                let model = try GardenModel(dict: data)
+                DispatchQueue.main.async {
+                    self.gradenModel = model
+                    print("User realtime:", model.user.userName, "Plants:", model.user.userFloor)
+                }
+            } catch {
+                print("Failed to parse GardenModel: \(error)")
+            }
+          }
+    }
     /// lấy dữ liệu khu vườn theo id user
     /// pb03Q3R93naRsjiAuyTGz0BPHI92 -> app flutter
     /// 0pMij25JsAV4lMkshYzAFLisdpz2 -> app ios

@@ -15,6 +15,8 @@ struct PlantItemView: View {
     let rowIndex: Int
     let columnIndex: Int
     let cartPlants: [String]
+    let cartPots: [String]
+    let cartStickers: [String]
     @Binding var isEditing: Bool
 
     @State private var showSheet = false
@@ -24,7 +26,7 @@ struct PlantItemView: View {
             plantData?.idPlant == plantData?.idPot)
 
         // Kiểm tra xem cây có treo không (isHanging = 1)
-        let isHanging = plantData?.isHanging == 1
+        let isHanging = plantData?.isHanging ?? false
 
         // Nếu KHÔNG phải sticker, check xem có plantId hoặc potId trống không
         let hasEmptyIds = !isSticker && (
@@ -149,6 +151,8 @@ struct PlantItemView: View {
             SelectItemSheet(
                 isPresented: $showSheet,
                 cartPlants: cartPlants,
+                cartPots: cartPots,
+                cartStickers: cartStickers,
                 rowIndex: rowIndex,
                 columnIndex: columnIndex
             )
