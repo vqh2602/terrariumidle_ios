@@ -13,10 +13,10 @@ struct GardenModel {
     let isBan: Int
     let isServerUpdate: Int
 
-    let item: Item
-    let cart: Cart
-    let money: Money
-    let user: UserProfile
+    var item: Item
+    var cart: Cart
+    var money: Money
+    var user: UserProfile
     var plants: [Plant]
 
     struct Item {
@@ -31,9 +31,9 @@ struct GardenModel {
     }
 
     struct Money {
-        let gemstone: Int
-        let oxygen: Int
-        let ticket: Int
+        var gemstone: Int
+        var oxygen: Int // Made mutable for tap rewards
+        var ticket: Int
     }
 
     struct UserProfile {
@@ -49,12 +49,12 @@ struct GardenModel {
         let userAvatar: String?
         let userEmail: String?
 
-        let userFloor: Int
+        var userFloor: Int // Made mutable for user leveling
         let userID: String
         let userImageBackground: String?
 
-        let userLevel: Int
-        let userLevelEXP: Int
+        var userLevel: Int // Made mutable for user leveling
+        var userLevelEXP: Int // Made mutable for EXP progression
         let userName: String
         let userTotalLike: Int
     }
@@ -64,8 +64,8 @@ struct GardenModel {
         let idPlant: String
         let idPot: String
         let isHanging: Bool
-        let plantLevel: Int
-        let platLevelExp: Int
+        var plantLevel: Int // Made mutable for leveling
+        var platLevelExp: Int // Made mutable for EXP progression
         var position: String // Made mutable for drag-and-drop
     }
 }
