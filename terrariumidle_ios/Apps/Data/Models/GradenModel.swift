@@ -17,7 +17,7 @@ struct GardenModel {
     let cart: Cart
     let money: Money
     let user: UserProfile
-    let plants: [Plant]
+    var plants: [Plant]
 
     struct Item {
         let fertilizer: Int
@@ -66,7 +66,7 @@ struct GardenModel {
         let isHanging: Bool
         let plantLevel: Int
         let platLevelExp: Int
-        let position: String
+        var position: String // Made mutable for drag-and-drop
     }
 }
 

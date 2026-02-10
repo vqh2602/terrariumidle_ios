@@ -8,6 +8,8 @@
 @_spi(RiveExperimental) import RiveRuntime
 import SwiftUI
 
+import UniformTypeIdentifiers
+
 /// Widget hiển thị plant/pot với logic cho hanging và normal layout
 struct PlantItemView: View {
     let itemWidth: CGFloat
@@ -18,6 +20,8 @@ struct PlantItemView: View {
     let cartPots: [String]
     let cartStickers: [String]
     @Binding var isEditing: Bool
+    @Binding var draggedPlant: DraggedPlantData?
+    let onDrop: (Int, Int) -> Void
 
     @State private var showSheet = false
     var body: some View {
@@ -64,9 +68,8 @@ struct PlantItemView: View {
                         showSheet.toggle()
                     }
                 } else {
-                    // Normal mode: Transparent widget
-                    Color.clear
-                        .frame(width: itemWidth, height: 150)
+                    // Normal mode: Completely hidden, no UI, no tap
+                    EmptyView()
                 }
             } else if isSticker {
                 // STICKER LAYOUT
@@ -156,6 +159,82 @@ struct PlantItemView: View {
                 rowIndex: rowIndex,
                 columnIndex: columnIndex
             )
+        }
+
+        // MARK: - Drag and Drop (Edit Mode Only - Conditionally Applied)
+
+        .modifier(DragDropModifier(
+            isEditing: isEditing,
+            plantData: plantData,
+            hasEmptyIds: hasEmptyIds,
+            rowIndex: rowIndex,
+            columnIndex: columnIndex,
+            draggedPlant: $draggedPlant,
+            onDrop: onDrop
+        ))
+
+        // MARK: - Visual Feedback
+
+        .overlay(
+            // Blue overlay on source plant being dragged
+            draggedPlant?.sourceRow == rowIndex &&
+                draggedPlant?.sourceColumn == columnIndex ?
+                Color.blue.opacity(0.3).cornerRadius(12) : nil
+        )
+        .overlay(
+            // Green border on potential drop zones (when dragging)
+            isEditing && draggedPlant != nil &&
+                !(draggedPlant?.sourceRow == rowIndex && draggedPlant?.sourceColumn == columnIndex) ?
+                RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.green.opacity(0.6), lineWidth: 3)
+                : nil
+        )
+    }
+}
+
+// MARK: - Conditional Drag Drop Modifier
+
+struct DragDropModifier: ViewModifier {
+    let isEditing: Bool
+    let plantData: GardenModel.Plant?
+    let hasEmptyIds: Bool
+    let rowIndex: Int
+    let columnIndex: Int
+    @Binding var draggedPlant: DraggedPlantData?
+    let onDrop: (Int, Int) -> Void
+
+    func body(content: Content) -> some View {
+        if isEditing {
+            // Apply onDrop to ALL slots (empty or not) in edit mode
+            let droppableContent = content
+                .onDrop(of: [.text], isTargeted: nil) { _, _ in
+                    if draggedPlant != nil {
+                        onDrop(rowIndex, columnIndex)
+                        draggedPlant = nil
+                        return true
+                    }
+                    return false
+                }
+
+            // Apply onDrag ONLY to slots with plants
+            if plantData != nil && !hasEmptyIds {
+                droppableContent
+                    .onDrag {
+                        if let plant = plantData {
+                            draggedPlant = DraggedPlantData(
+                                sourceRow: rowIndex,
+                                sourceColumn: columnIndex,
+                                plant: plant
+                            )
+                            return NSItemProvider(object: "\(rowIndex),\(columnIndex)" as NSString)
+                        }
+                        return NSItemProvider()
+                    }
+            } else {
+                droppableContent
+            }
+        } else {
+            content
         }
     }
 }

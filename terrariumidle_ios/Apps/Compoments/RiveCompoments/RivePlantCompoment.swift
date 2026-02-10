@@ -95,7 +95,7 @@ struct PlantRiveView: View {
         VStack {
             vm.view()
                 .frame(width: width ?? 100, height: height ?? 200, alignment: .bottomLeading)
-                .background(.black.opacity(0.1))
+                .background(.black.opacity(0.0))
                 .onAppear {
                     //                //                vm.play()
                     //                var    riveFile = RiveFile(httpUrl:"https://vqh2602.github.io/terrarium_data.github.io/rive/plants/plant24.riv" , loadCdn: true, with: .self)

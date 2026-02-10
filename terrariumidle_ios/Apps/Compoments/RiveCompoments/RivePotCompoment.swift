@@ -85,7 +85,7 @@ struct PotRiveView: View {
     var body: some View {
         vm.view()
             .frame(width: width, height: height ?? 100)
-            .background(Color.black.opacity(0.1))
+            .background(Color.black.opacity(0.0))
             .onAppear {
 //                vm.play()
             }.task {
