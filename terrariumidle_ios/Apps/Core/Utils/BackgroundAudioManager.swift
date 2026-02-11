@@ -5,33 +5,35 @@
 //  Created by vương quang huy on 7/2/26.
 //
 
-
-import Foundation
 import AVFoundation
-import MediaPlayer
 import Combine
+import Foundation
+import MediaPlayer
 
 @MainActor
 final class BackgroundAudioManager: ObservableObject {
-    
     static let shared = BackgroundAudioManager()
 
     @Published private(set) var isPlaying: Bool = false
+    @Published var currentBGMId: String? = nil
+    @Published var activeSFXIds: Set<String> = []
+    @Published var bgmVolume: Float = 0.6
 
     private var player: AVAudioPlayer?
+    private var sfxPlayers: [String: AVAudioPlayer] = [:]
 
     private init() {
         setupRemoteCommands()
     }
 
+    // MARK: - BGM
+
     func startBGM(fileName: String, ext: String = "mp3", title: String = "Terrarium Idle") {
         do {
-            // 1) Audio session cho background playback
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .default, options: [])
+            try session.setCategory(.playback, mode: .default, options: .mixWithOthers)
             try session.setActive(true)
 
-            // 2) Load file
             guard let url = Bundle.main.url(forResource: fileName, withExtension: ext) else {
                 print("❌ Missing BGM: \(fileName).\(ext)")
                 return
@@ -39,6 +41,7 @@ final class BackgroundAudioManager: ObservableObject {
 
             player = try AVAudioPlayer(contentsOf: url)
             player?.numberOfLoops = -1
+            player?.volume = bgmVolume
             player?.prepareToPlay()
             player?.play()
 
@@ -48,6 +51,13 @@ final class BackgroundAudioManager: ObservableObject {
         } catch {
             print("❌ startBGM error:", error)
         }
+    }
+
+    /// Switch to a different BGM track by item id
+    func switchBGM(id: String, fileName: String, title: String = "Terrarium Idle") {
+        stop()
+        currentBGMId = id
+        startBGM(fileName: fileName, title: title)
     }
 
     func pause() {
@@ -70,7 +80,49 @@ final class BackgroundAudioManager: ObservableObject {
         player?.stop()
         player = nil
         isPlaying = false
+        currentBGMId = nil
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+    }
+
+    func setBGMVolume(_ vol: Float) {
+        bgmVolume = vol
+        player?.volume = vol
+    }
+
+    // MARK: - SFX (layered ambient sounds, looping)
+
+    func toggleSFX(id: String, fileName: String, ext: String = "mp3") {
+        if activeSFXIds.contains(id) {
+            // Stop this SFX
+            sfxPlayers[id]?.stop()
+            sfxPlayers.removeValue(forKey: id)
+            activeSFXIds.remove(id)
+            print("🔇 SFX stopped: \(id)")
+        } else {
+            // Start this SFX
+            guard let url = Bundle.main.url(forResource: fileName, withExtension: ext) else {
+                print("❌ Missing SFX: \(fileName).\(ext)")
+                return
+            }
+            do {
+                let p = try AVAudioPlayer(contentsOf: url)
+                p.numberOfLoops = -1
+                p.volume = bgmVolume
+                p.prepareToPlay()
+                p.play()
+                sfxPlayers[id] = p
+                activeSFXIds.insert(id)
+                print("🔊 SFX playing: \(id)")
+            } catch {
+                print("❌ SFX error:", error)
+            }
+        }
+    }
+
+    func stopAllSFX() {
+        sfxPlayers.values.forEach { $0.stop() }
+        sfxPlayers.removeAll()
+        activeSFXIds.removeAll()
     }
 
     // MARK: - Now Playing
@@ -79,7 +131,7 @@ final class BackgroundAudioManager: ObservableObject {
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: title,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
-            MPNowPlayingInfoPropertyElapsedPlaybackTime: player?.currentTime ?? 0
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: player?.currentTime ?? 0,
         ]
 
         if let duration = player?.duration {

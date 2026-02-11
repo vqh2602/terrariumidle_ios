@@ -1,0 +1,93 @@
+[
+    {
+        "id": "m0",
+        "name": "Mặc định",
+        "description": "",
+        "image": "m1",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "music",
+        "effect": "",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "m1",
+        "name": "Một ngày thư thái",
+        "description": "",
+        "image": "m1",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "music",
+        "effect": "",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "m2",
+        "name": "Kết thúc mùa xuân",
+        "description": "",
+        "image": "m2",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "music",
+        "effect": "",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "m3",
+        "name": "Mong một ngày mưa",
+        "description": "",
+        "image": "m3",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "music",
+        "effect": "",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "m4",
+        "name": "Đêm dài",
+        "description": "",
+        "image": "m4",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "music",
+        "effect": "",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "m5",
+        "name": "Ngày dông bão",
+        "description": "",
+        "image": "m5",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "music",
+        "effect": "",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "m6",
+        "name": "Lạc lõng khoảng trời",
+        "description": "",
+        "image": "m6",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "music",
+        "effect": "",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    }
+]

@@ -17,7 +17,7 @@ struct ItemData: Codable, Identifiable {
     let priceStore: Int
     let priceOxygen: Int
     let currencyUnit: String
-    let type: String // "plant", "pot", "decoration"
+    let type: String // "plant", "pot", "decoration", "music", "overlay"
     let effect: String
     let itemTypeAttribute: ItemTypeAttribute
     let levelUnlock: Int
@@ -41,6 +41,8 @@ class ItemDataManager {
     private var allEffects: [ItemData] = []
     private var allShopItems: [ItemData] = []
     private var allLandscapes: [ItemData] = []
+    private var allMusics: [ItemData] = []
+    private var allMusicsSFX: [ItemData] = []
 
     private init() {
         loadItems()
@@ -48,12 +50,14 @@ class ItemDataManager {
 
     /// Load tất cả items từ JSON files
     private func loadItems() {
-        allPlants = loadItemsFromFile(named: "plants_data", )
+        allPlants = loadItemsFromFile(named: "plants_data",)
         allPots = loadItemsFromFile(named: "pots_data",)
-        allDecorations = loadItemsFromFile(named: "stickers_data", )
-        allEffects = loadItemsFromFile(named: "effects_data", )
-        allShopItems = loadItemsFromFile(named: "shop_items_data", )
-        allLandscapes = loadItemsFromFile(named: "landscapes_data", )
+        allDecorations = loadItemsFromFile(named: "stickers_data",)
+        allEffects = loadItemsFromFile(named: "effects_data",)
+        allShopItems = loadItemsFromFile(named: "shop_items_data",)
+        allLandscapes = loadItemsFromFile(named: "landscapes_data",)
+        allMusics = loadItemsFromFile(named: "music_data",)
+        allMusicsSFX = loadItemsFromFile(named: "music_sfx_data",)
 
         print("✅ Đã load \(allPlants.count) plants, \(allPots.count) pots, \(allDecorations.count) stickers, \(allEffects.count) effects, \(allShopItems.count) shop items, \(allLandscapes.count) landscapes")
     }
@@ -109,10 +113,18 @@ class ItemDataManager {
         return allLandscapes
     }
 
+    func getAllMusics() -> [ItemData] {
+        return allMusics
+    }
+
+    func getAllMusicsSFX() -> [ItemData] {
+        return allMusicsSFX
+    }
+
     // MARK: - Get Item by ID
 
     func getItem(byId id: String) -> ItemData? {
-        return (allPlants + allPots + allDecorations + allEffects + allShopItems + allLandscapes).first { $0.id == id }
+        return (allPlants + allPots + allDecorations + allEffects + allShopItems + allLandscapes + allMusics + allMusicsSFX).first { $0.id == id }
     }
 
     func getPlant(byId id: String) -> ItemData? {
@@ -155,6 +167,14 @@ class ItemDataManager {
 
     func getDecorations(byCurrency currency: String) -> [ItemData] {
         return allDecorations.filter { $0.currencyUnit == currency }
+    }
+
+    func getMusics(byCurrency currency: String) -> [ItemData] {
+        return allMusics.filter { $0.currencyUnit == currency }
+    }
+
+    func getMusicsSFX(byCurrency currency: String) -> [ItemData] {
+        return allMusicsSFX.filter { $0.currencyUnit == currency }
     }
 
     // MARK: - Search

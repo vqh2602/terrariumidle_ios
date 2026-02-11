@@ -13,45 +13,6 @@
         "levelUnlock": 0
     },
     {
-        "id": "m1",
-        "name": "Một ngày thư thái",
-        "description": "",
-        "image": "m1",
-        "priceStore": 0,
-        "priceOxygen": 0,
-        "currencyUnit": "",
-        "type": "music",
-        "effect": "Một ngày thư thái",
-        "itemTypeAttribute": "none",
-        "levelUnlock": 0
-    },
-    {
-        "id": "m2",
-        "name": "Kết thúc mùa xuân",
-        "description": "",
-        "image": "m2",
-        "priceStore": 0,
-        "priceOxygen": 0,
-        "currencyUnit": "",
-        "type": "music",
-        "effect": "Kết thúc mùa xuân",
-        "itemTypeAttribute": "none",
-        "levelUnlock": 0
-    },
-    {
-        "id": "m3",
-        "name": "Mong một ngày mưa",
-        "description": "",
-        "image": "m3",
-        "priceStore": 0,
-        "priceOxygen": 0,
-        "currencyUnit": "",
-        "type": "music",
-        "effect": "Mong một ngày mưa",
-        "itemTypeAttribute": "none",
-        "levelUnlock": 0
-    },
-    {
         "id": "overlay2",
         "name": "Lá rơi mùa thu",
         "description": "",
@@ -91,19 +52,6 @@
         "levelUnlock": 0
     },
     {
-        "id": "m4",
-        "name": "Đêm dài",
-        "description": "",
-        "image": "m4",
-        "priceStore": 0,
-        "priceOxygen": 0,
-        "currencyUnit": "",
-        "type": "music",
-        "effect": "Đêm dài",
-        "itemTypeAttribute": "none",
-        "levelUnlock": 0
-    },
-    {
         "id": "overlay5",
         "name": "Hoa đào rơi",
         "description": "",
@@ -113,32 +61,6 @@
         "currencyUnit": "",
         "type": "overlay",
         "effect": "Hoa đào rơi",
-        "itemTypeAttribute": "none",
-        "levelUnlock": 0
-    },
-    {
-        "id": "m5",
-        "name": "Ngày dông bão",
-        "description": "",
-        "image": "m5",
-        "priceStore": 0,
-        "priceOxygen": 0,
-        "currencyUnit": "",
-        "type": "music",
-        "effect": "Ngày dông bão",
-        "itemTypeAttribute": "none",
-        "levelUnlock": 0
-    },
-    {
-        "id": "m6",
-        "name": "Lạc lõng khoảng trời",
-        "description": "",
-        "image": "m6",
-        "priceStore": 0,
-        "priceOxygen": 0,
-        "currencyUnit": "",
-        "type": "music",
-        "effect": "",
         "itemTypeAttribute": "none",
         "levelUnlock": 0
     }

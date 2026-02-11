@@ -5,28 +5,26 @@
 //  Created by vương quang huy on 8/2/26.
 //
 
-
 import SwiftUI
 
 struct SpeedDial: View {
     @State private var isOpen = false
+    @State private var showMusicSheet = false
     @Binding var isEditing: Bool
     @EnvironmentObject var router: AppRouter
-    
-    
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            
             // nền mờ để bấm ra ngoài đóng lại
             if isOpen {
                 Color.black.opacity(0.25)
                     .ignoresSafeArea()
                     .onTapGesture { withAnimation(.spring()) { isOpen = false } }
             }
-            
+
             VStack(alignment: .trailing, spacing: 12) {
                 if isOpen {
-                    DialItem(title: "Tưới cây", systemImage: "drop.fill",color: Color.blue) {
+                    DialItem(title: "Tưới cây", systemImage: "drop.fill", color: Color.blue) {
                         print("water")
                         close()
                     }
@@ -36,6 +34,10 @@ struct SpeedDial: View {
                     }
                     DialItem(title: "Hiệu ứng", systemImage: "scissors", color: Color.orange) {
                         print("harvest")
+                        close()
+                    }
+                    DialItem(title: "Âm nhạc", systemImage: "music.note", color: Color.orange) {
+                        showMusicSheet = true
                         close()
                     }
                     DialItem(title: "Cửa hàng", systemImage: "scissors", color: Color.orange) {
@@ -52,7 +54,7 @@ struct SpeedDial: View {
                         close()
                     }
                 }
-                
+
                 Button {
                     withAnimation(.spring(response: 0.25, dampingFraction: 0.75)) {
                         isOpen.toggle()
@@ -68,9 +70,12 @@ struct SpeedDial: View {
                 }
             }
             .padding(16)
+            .sheet(isPresented: $showMusicSheet) {
+                MusicSheetView()
+            }
         }
     }
-    
+
     private func close() {
         withAnimation(.spring()) { isOpen = false }
     }
@@ -81,7 +86,7 @@ private struct DialItem: View {
     let systemImage: String
     let color: Color?
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
