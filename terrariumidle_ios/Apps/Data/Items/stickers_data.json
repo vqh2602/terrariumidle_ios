@@ -8,7 +8,7 @@
         "priceOxygen": 25000,
         "currencyUnit": "oxygen",
         "type": "sticker",
-        "effect": "N.A",
+        "effect": "Tiếng gió - sfx4",
         "itemTypeAttribute": "hanging",
         "levelUnlock": 50
     },
@@ -21,7 +21,7 @@
         "priceOxygen": 25000,
         "currencyUnit": "oxygen",
         "type": "sticker",
-        "effect": "N.A",
+        "effect": "Tiếng chim - sfx1",
         "itemTypeAttribute": "none",
         "levelUnlock": 50
     },
@@ -34,7 +34,7 @@
         "priceOxygen": 25000,
         "currencyUnit": "oxygen",
         "type": "sticker",
-        "effect": "N.A",
+        "effect": "Tiếng ếch - sfx2",
         "itemTypeAttribute": "none",
         "levelUnlock": 50
     },
@@ -47,7 +47,7 @@
         "priceOxygen": 25000,
         "currencyUnit": "oxygen",
         "type": "sticker",
-        "effect": "N.A",
+        "effect": "Tiếng mưa - sfx3",
         "itemTypeAttribute": "none",
         "levelUnlock": 50
     }

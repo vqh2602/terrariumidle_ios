@@ -8,7 +8,7 @@
         "priceOxygen": 200,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "Relax - m0",
         "itemTypeAttribute": "none",
         "levelUnlock": 1
     },
@@ -34,7 +34,7 @@
         "priceOxygen": 1000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "Tiếng nước chảy - sfx5",
         "itemTypeAttribute": "none",
         "levelUnlock": 2
     },
@@ -164,7 +164,7 @@
         "priceOxygen": 7500,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "Tiếng sóng biển - sfx6",
         "itemTypeAttribute": "hanging",
         "levelUnlock": 17
     },
@@ -190,7 +190,7 @@
         "priceOxygen": 15500,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "Tiếng bão - sfx7",
         "itemTypeAttribute": "hanging",
         "levelUnlock": 20
     },

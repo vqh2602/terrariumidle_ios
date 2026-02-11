@@ -1,9 +1,9 @@
 [
     {
         "id": "m0",
-        "name": "Mặc định",
+        "name": "Relax...",
         "description": "",
-        "image": "m1",
+        "image": "m0",
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",

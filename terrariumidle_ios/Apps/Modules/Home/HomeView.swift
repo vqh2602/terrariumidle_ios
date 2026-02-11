@@ -58,7 +58,7 @@ struct HomeView: View {
     init() {
         print("play sound tap")
         //            AudioPlayer.shared.playBGM(fileName:"peacefulgarden" )
-        BackgroundAudioManager.shared.startBGM(fileName: "peacefulgarden", title: "Relax...")
+        BackgroundAudioManager.shared.switchBGM(id: "m0", fileName: "peacefulgarden", title: "Mặc định")
     }
 
     var body: some View {
@@ -200,7 +200,7 @@ struct HomeView: View {
                         .padding(.horizontal)
                 }
             }
-          
+
             .task {
                 guard let userId = authService.currentUser?.uid else {
                     print("HomeView: chưa có userid")

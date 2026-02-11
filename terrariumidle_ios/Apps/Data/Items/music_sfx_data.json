@@ -1,9 +1,9 @@
 [
     {
-        "id": "m1",
-        "name": "Một ngày thư thái",
+        "id": "sfx1",
+        "name": "Tiếng chim",
         "description": "",
-        "image": "m1",
+        "image": "sfx1",
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
@@ -13,10 +13,10 @@
         "levelUnlock": 0
     },
     {
-        "id": "m2",
-        "name": "Kết thúc mùa xuân",
+        "id": "sfx2",
+        "name": "Tiếng ếch",
         "description": "",
-        "image": "m2",
+        "image": "sfx2",
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
@@ -26,10 +26,10 @@
         "levelUnlock": 0
     },
     {
-        "id": "m3",
-        "name": "Mong một ngày mưa",
+        "id": "sfx3",
+        "name": "Tiếng mưa",
         "description": "",
-        "image": "m3",
+        "image": "sfx3",
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
@@ -39,10 +39,10 @@
         "levelUnlock": 0
     },
     {
-        "id": "m4",
-        "name": "Đêm dài",
+        "id": "sfx4",
+        "name": "Tiếng gió",
         "description": "",
-        "image": "m4",
+        "image": "sfx4",
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
@@ -52,23 +52,36 @@
         "levelUnlock": 0
     },
     {
-        "id": "m5",
-        "name": "Ngày dông bão",
+        "id": "sfx5",
+        "name": "Tiếng nước chảy",
         "description": "",
-        "image": "m5",
+        "image": "sfx5",
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
         "type": "music",
-        "effect": "Ngày dông bão",
+        "effect": "",
         "itemTypeAttribute": "none",
         "levelUnlock": 0
     },
     {
-        "id": "m6",
-        "name": "Lạc lõng khoảng trời",
+        "id": "sfx6",
+        "name": "Tiếng sóng biển",
         "description": "",
-        "image": "m6",
+        "image": "sfx6",
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "music",
+        "effect": "",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "sfx7",
+        "name": "Tiếng bão",
+        "description": "",
+        "image": "sfx7",
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",

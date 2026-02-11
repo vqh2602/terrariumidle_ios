@@ -18,6 +18,7 @@ final class BackgroundAudioManager: ObservableObject {
     @Published var currentBGMId: String? = nil
     @Published var activeSFXIds: Set<String> = []
     @Published var bgmVolume: Float = 0.6
+    @Published var currentBGMTitle: String = "Terrarium Idle"
 
     private var player: AVAudioPlayer?
     private var sfxPlayers: [String: AVAudioPlayer] = [:]
@@ -31,7 +32,7 @@ final class BackgroundAudioManager: ObservableObject {
     func startBGM(fileName: String, ext: String = "mp3", title: String = "Terrarium Idle") {
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .default, options: .mixWithOthers)
+            try session.setCategory(.playback, mode: .default, options: [])
             try session.setActive(true)
 
             guard let url = Bundle.main.url(forResource: fileName, withExtension: ext) else {
@@ -46,6 +47,7 @@ final class BackgroundAudioManager: ObservableObject {
             player?.play()
 
             isPlaying = true
+            currentBGMTitle = title
             updateNowPlaying(title: title)
 
         } catch {
@@ -130,12 +132,19 @@ final class BackgroundAudioManager: ObservableObject {
     private func updateNowPlaying(title: String) {
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: title,
+            MPMediaItemPropertyArtist: "Terrarium Idle",
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: player?.currentTime ?? 0,
         ]
 
         if let duration = player?.duration {
             info[MPMediaItemPropertyPlaybackDuration] = duration
+        }
+
+        // Add artwork if app icon is available
+        if let image = UIImage(named: "AppIcon") {
+            let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+            info[MPMediaItemPropertyArtwork] = artwork
         }
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
