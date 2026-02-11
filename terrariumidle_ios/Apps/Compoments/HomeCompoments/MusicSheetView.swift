@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MusicSheetView: View {
     @ObservedObject private var audioManager = BackgroundAudioManager.shared
+    @ObservedObject private var fireStore = FireStoreService.shared
     @Environment(\.dismiss) private var dismiss
 
     private let musics = ItemDataManager.shared.getAllMusics()
@@ -19,6 +20,10 @@ struct MusicSheetView: View {
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12),
     ]
+
+    private var unlockedIds: Set<String> {
+        MusicUnlockHelper.getUnlockedMusicIds(from: fireStore.gradenModel)
+    }
 
     var body: some View {
         NavigationView {
@@ -36,11 +41,14 @@ struct MusicSheetView: View {
 
                             LazyVGrid(columns: columns, spacing: 12) {
                                 ForEach(musics) { item in
+                                    let isLocked = !unlockedIds.contains(item.id)
                                     SoundCardView(
                                         item: item,
                                         isSelected: audioManager.currentBGMId == item.id,
                                         isPlaying: audioManager.currentBGMId == item.id && audioManager.isPlaying,
+                                        isLocked: isLocked,
                                         onTap: {
+                                            guard !isLocked else { return }
                                             audioManager.switchBGM(
                                                 id: item.id,
                                                 fileName: item.id,
@@ -57,11 +65,14 @@ struct MusicSheetView: View {
 
                             LazyVGrid(columns: columns, spacing: 12) {
                                 ForEach(sfxItems) { item in
+                                    let isLocked = !unlockedIds.contains(item.id)
                                     SoundCardView(
                                         item: item,
                                         isSelected: audioManager.activeSFXIds.contains(item.id),
                                         isPlaying: audioManager.activeSFXIds.contains(item.id),
+                                        isLocked: isLocked,
                                         onTap: {
+                                            guard !isLocked else { return }
                                             audioManager.toggleSFX(
                                                 id: item.id,
                                                 fileName: item.id
@@ -120,6 +131,7 @@ private struct SoundCardView: View {
     let item: ItemData
     let isSelected: Bool
     let isPlaying: Bool
+    let isLocked: Bool
     let onTap: () -> Void
 
     var body: some View {
@@ -142,7 +154,7 @@ private struct SoundCardView: View {
                     Spacer()
 
                     // Playing indicator
-                    if isPlaying {
+                    if isPlaying && !isLocked {
                         Image(systemName: "waveform")
                             .font(.system(size: 14))
                             .foregroundColor(.white)
@@ -158,19 +170,32 @@ private struct SoundCardView: View {
                         .padding(.horizontal, 4)
                         .padding(.bottom, 8)
                 }
+
+                // Lock overlay
+                if isLocked {
+                    ZStack {
+                        Color.black.opacity(0.6)
+
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
             }
             .frame(minHeight: 110)
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
                     .stroke(
-                        isSelected ? Color.white : Color.clear,
+                        isSelected && !isLocked ? Color.white : Color.clear,
                         lineWidth: 3
                     )
             )
-            .shadow(color: isSelected ? Color.blue.opacity(0.4) : .clear, radius: 6)
+            .shadow(color: isSelected && !isLocked ? Color.blue.opacity(0.4) : .clear, radius: 6)
+            .opacity(isLocked ? 0.6 : 1.0)
         }
         .buttonStyle(.plain)
+        .disabled(isLocked)
     }
 }
 
