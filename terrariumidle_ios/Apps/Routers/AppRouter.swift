@@ -14,6 +14,7 @@ enum AppRoute: Hashable {
     case splashView
     case homeView
     case storeView
+    case accountView
 }
 
 @MainActor
@@ -64,6 +65,8 @@ struct AppRouterView: View {
                         HomeView()
                     case .storeView:
                         StoreView()
+                    case .accountView:
+                        AccountView()
                     }
                 }
         }

@@ -20,8 +20,8 @@ struct GardenModel {
     var plants: [Plant]
 
     struct Item {
-        let fertilizer: Int
-        let shovel: Int
+        var fertilizer: Int
+        var shovel: Int
     }
 
     struct Cart {
@@ -61,8 +61,8 @@ struct GardenModel {
 
     struct Plant {
         let harvestTime: Int64
-        let idPlant: String
-        let idPot: String
+        var idPlant: String
+        var idPot: String
         let isHanging: Bool
         var plantLevel: Int // Made mutable for leveling
         var platLevelExp: Int // Made mutable for EXP progression

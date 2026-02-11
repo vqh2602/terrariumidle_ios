@@ -27,6 +27,12 @@ struct PlantItemView: View {
     @State private var floatingTexts: [(id: UUID, text: String, offset: CGFloat)] = []
     @State var fireStoreService: FireStoreService = .shared
 
+    // Confirmation alerts
+    @State private var showFertilizeAlert = false
+    @State private var showRemoveAlert = false
+    
+    @State private var animationPressed = false
+
     var body: some View {
         // Kiểm tra xem có phải sticker không
         let isSticker = (plantData?.idPlant.contains("sticker") == true &&
@@ -54,7 +60,7 @@ struct PlantItemView: View {
                     ZStack {
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(Color.gray.opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [8, 4]))
-                            .background(Color.gray.opacity(0.1))
+                            .background(Color.white.opacity(0.1))
                             .cornerRadius(12)
 
                         VStack(spacing: 8) {
@@ -141,20 +147,20 @@ struct PlantItemView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
-        .customContextMenu(menuItems: isSticker || isEditing ? [] : [
-            MenuItem(title: "Tưới cây", icon: "drop.fill") {
-                print("water at \(rowIndex),\(columnIndex)")
-            },
-            MenuItem(title: "Bón phân", icon: "leaf.fill") {
-                print("fertilize at \(rowIndex),\(columnIndex)")
-            },
-            MenuItem(title: "Thu hoạch", icon: "basket.fill") {
-                print("harvest at \(rowIndex),\(columnIndex)")
-            },
-            MenuItem(title: "Xóa", icon: "trash", role: .destructive) {
-                print("remove at \(rowIndex),\(columnIndex)")
-            },
-        ]).sheet(isPresented: $showSheet) {
+            .customContextMenu(menuItems: {
+                        if isEditing { return [] }
+                        var items: [MenuItem] = []
+                        if !isSticker {
+                            items.append(MenuItem(title: "Bón phân", icon: "leaf.fill") {
+                                showFertilizeAlert = true
+                            })
+                        }
+                        items.append(MenuItem(title: "Loại bỏ", icon: "trash", role: .destructive) {
+                            showRemoveAlert = true
+                        })
+                        return items
+                    }())
+        .sheet(isPresented: $showSheet) {
             SelectItemSheet(
                 isPresented: $showSheet,
                 cartPlants: cartPlants,
@@ -166,10 +172,20 @@ struct PlantItemView: View {
         }
 
         // MARK: - Tap to Collect (Non-Edit Mode Only)
-
+        .scaleEffect(animationPressed ? 0.94 : 1.0, anchor: .center)
+        .animation(.spring(response: 0.18, dampingFraction: 0.6), value: animationPressed)
         .onTapGesture {
+            // Trigger zoom effect
+            animationPressed = true
             if !isEditing && plantData != nil && !hasEmptyIds && !isSticker {
+            
                 handlePlantTap()
+               
+            }
+            AudioPlayer.shared.playTap()
+            // Reset zoom after short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                animationPressed = false
             }
         }
 
@@ -190,6 +206,7 @@ struct PlantItemView: View {
 
         // MARK: - Drag and Drop (Edit Mode Only - Conditionally Applied)
 
+        // bản chất là bọc thêm conten chính 1 lớp view nữa
         .modifier(DragDropModifier(
             isEditing: isEditing,
             plantData: plantData,
@@ -202,12 +219,12 @@ struct PlantItemView: View {
 
         // MARK: - Visual Feedback
 
-        .overlay(
-            // Blue overlay on source plant being dragged
-            draggedPlant?.sourceRow == rowIndex &&
-                draggedPlant?.sourceColumn == columnIndex ?
-                Color.blue.opacity(0.3).cornerRadius(12) : nil
-        )
+//        .overlay(
+//            // Blue overlay on source plant being dragged
+//            draggedPlant?.sourceRow == rowIndex &&
+//                draggedPlant?.sourceColumn == columnIndex ?
+//                Color.blue.opacity(0.3).cornerRadius(12) : nil
+//        )
         .overlay(
             // Green border on potential drop zones (when dragging)
             isEditing && draggedPlant != nil &&
@@ -216,6 +233,26 @@ struct PlantItemView: View {
                 .stroke(Color.green.opacity(0.6), lineWidth: 3)
                 : nil
         )
+
+        // MARK: - Confirmation Alerts
+
+        .alert("Bón phân", isPresented: $showFertilizeAlert) {
+            Button("Hủy", role: .cancel) {}
+            Button("Xác nhận") {
+                handleFertilize()
+            }
+        } message: {
+            Text("Sử dụng 10 phân bón để nâng cấp cây lên 1 level?")
+        }
+
+        .alert("Loại bỏ cây", isPresented: $showRemoveAlert) {
+            Button("Hủy", role: .cancel) {}
+            Button("Xác nhận", role: .destructive) {
+                handleRemovePlant()
+            }
+        } message: {
+            Text("Sử dụng 1 xẻng để loại bỏ cây này?").textStyle(.bodyMedium)
+        }
     }
 
     // MARK: - Tap Mechanics Helper Functions
@@ -228,7 +265,7 @@ struct PlantItemView: View {
         let level = plant.plantLevel
 
         // Get drop rate and oxygen amount based on level
-        let (dropChance, oxygenDrop) = getDropRate(level: level)
+        let (dropChance, oxygenDrop) = ShareFunc.getDropRate(level: level)
 
         // Random check
         if Double.random(in: 0 ... 1) <= dropChance {
@@ -247,7 +284,7 @@ struct PlantItemView: View {
 
             // Check plant level up (max level 3)
             if level < 3 {
-                let maxExp = calculatePlantMaxExp(level: level)
+                let maxExp = ShareFunc.calculatePlantMaxExp(level: level)
                 if updatedPlant.platLevelExp >= maxExp {
                     updatedPlant.plantLevel += 1
                     updatedPlant.platLevelExp -= maxExp
@@ -262,8 +299,9 @@ struct PlantItemView: View {
             updatedUser.userLevelEXP += 100
 
             // Check user level up
-            let userMaxExp = calculateUserMaxExp(level: updatedUser.userLevel)
+            let userMaxExp = ShareFunc.calculateUserMaxExp(level: updatedUser.userLevel)
             if updatedUser.userLevelEXP >= userMaxExp {
+                AudioPlayer.shared.playSFX(fileName: "level_up")
                 updatedUser.userLevel += 1
                 updatedUser.userLevelEXP -= userMaxExp
                 showFloatingText("⭐ Level \(updatedUser.userLevel)!")
@@ -284,28 +322,6 @@ struct PlantItemView: View {
         }
     }
 
-    /// Get drop rate and oxygen amount based on plant level
-    private func getDropRate(level: Int) -> (chance: Double, oxygen: Int) {
-        switch level {
-        case 1: return (0.60, 5) // 60% chance, 5 oxygen
-        case 2: return (0.70, 10) // 70% chance, 10 oxygen
-        case 3: return (0.95, 20) // 95% chance, 20 oxygen
-        default: return (0.0, 0)
-        }
-    }
-
-    /// Calculate max EXP needed for plant level up
-    /// Formula: (3000 * level) * 0.95
-    private func calculatePlantMaxExp(level: Int) -> Int {
-        return Int(Double(3000 * level) * 0.95)
-    }
-
-    /// Calculate max EXP needed for user level up
-    /// Formula: (1000 * level) * 0.75
-    private func calculateUserMaxExp(level: Int) -> Int {
-        return Int(Double(1000 * level) * 0.75)
-    }
-
     /// Show floating text animation
     private func showFloatingText(_ text: String) {
         let id = UUID()
@@ -319,6 +335,87 @@ struct PlantItemView: View {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             floatingTexts.removeAll { $0.id == id }
+        }
+    }
+
+    // MARK: - Plant Action Functions
+
+    /// Fertilize plant - costs 10 fertilizer, increases plant level by 1 (no limit)
+    private func handleFertilize() {
+        guard var gardenModel = fireStoreService.gradenModel else { return }
+
+        // Check if user has enough fertilizer
+        if gardenModel.item.fertilizer < 10 {
+            showFloatingText("❌ Không đủ phân bón!")
+            return
+        }
+
+        // Find the plant
+        var updatedPlants = gardenModel.plants
+        guard let plantIndex = updatedPlants.firstIndex(where: {
+            $0.position == "\(rowIndex),\(columnIndex)"
+        }) else { return }
+
+        var updatedPlant = updatedPlants[plantIndex]
+
+        // Increase plant level by 1 (no cap when using fertilizer)
+        updatedPlant.plantLevel += 1
+        updatedPlants[plantIndex] = updatedPlant
+
+        // Deduct 10 fertilizer
+        var updatedItem = gardenModel.item
+        updatedItem.fertilizer -= 10
+
+        // Update model
+        gardenModel.plants = updatedPlants
+        gardenModel.item = updatedItem
+
+        // Show success message
+        showFloatingText("🌟 Level \(updatedPlant.plantLevel)!")
+
+        // Save to Firestore
+        Task {
+            _ = await fireStoreService.updateDataUser(gardenModel: gardenModel)
+        }
+    }
+
+    /// Remove plant - costs 1 shovel, removes the plant
+    private func handleRemovePlant() {
+        guard var gardenModel = fireStoreService.gradenModel else { return }
+
+        // Check if user has enough shovels
+        if gardenModel.item.shovel < 1 {
+            showFloatingText("❌ Không đủ xẻng!")
+            return
+        }
+
+        // Remove the plant by setting its IDs to empty
+        var updatedPlants = gardenModel.plants
+        guard let plantIndex = updatedPlants.firstIndex(where: {
+            $0.position == "\(rowIndex),\(columnIndex)"
+        }) else { return }
+
+        var updatedPlant = updatedPlants[plantIndex]
+        updatedPlant.idPlant = ""
+        updatedPlant.idPot = ""
+        updatedPlant.plantLevel = 1
+        updatedPlant.platLevelExp = 0
+        updatedPlants[plantIndex] = updatedPlant
+
+        // Deduct 1 shovel
+        var updatedItem = gardenModel.item
+        updatedItem.shovel -= 1
+
+        // Update model
+        gardenModel.plants = updatedPlants
+        gardenModel.item = updatedItem
+
+        // Show success message
+        showFloatingText("✅ Đã loại bỏ cây!")
+
+        // Save to Firestore
+        Task {
+            _ = await fireStoreService.updateDataUser(gardenModel: gardenModel)
         }
     }
 }

@@ -103,7 +103,7 @@ struct PlantRiveView: View {
                     
                 }.task {
                     print("ℹ️ Plant View did appear - ID: \(plantId), Level: \(plantLevel)")
-                    try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
+//                    try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
                     
                     // Chỉ set level cho plant, không set cho sticker/decoration
                     if plantId.lowercased().contains("plant") {

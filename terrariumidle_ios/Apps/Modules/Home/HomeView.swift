@@ -86,6 +86,19 @@ struct HomeView: View {
                             LazyVStack(spacing: 0) {
                                 let userFloors: Int = (fireStoreService.gradenModel?.user.userFloor) ?? 1
 
+                                // MARK: - Unlock Floor Button (Edit Mode Only)
+
+                                if isEdit && canUnlockFloor() {
+                                    UnlockFloorButton(
+                                        currentFloor: userFloors,
+                                        cost: calculateUnlockCost(),
+                                        maxFloors: maxUnlockableFloors(),
+                                        onUnlock: handleUnlockFloor
+                                    )
+                                    .rotationEffect(.degrees(180))
+                                    .padding(.vertical, 12)
+                                }
+
                                 // MARK: - Main Loop: Iterate through each floor/row
 
                                 ForEach(0 ... userFloors, id: \.self) { rowIndex in
@@ -187,6 +200,7 @@ struct HomeView: View {
                         .padding(.horizontal)
                 }
             }
+          
             .task {
                 guard let userId = authService.currentUser?.uid else {
                     print("HomeView: chưa có userid")
@@ -289,6 +303,65 @@ struct HomeView: View {
         // Clear drag state IMMEDIATELY to prevent ghost overlay
         draggedPlant = nil
 
+        Task {
+            _ = await fireStoreService.updateDataUser(gardenModel: gardenModel)
+        }
+    }
+
+    // MARK: - Floor Unlock Functions
+
+    /// Calculate maximum unlockable floors based on user level
+    /// Formula: userLevel / 5 (rounded down)
+    private func maxUnlockableFloors() -> Int {
+        let userLevel = fireStoreService.gradenModel?.user.userLevel ?? 1
+        return userLevel / 5
+    }
+
+    /// Calculate cost to unlock next floor
+    /// Formula: 2500 * current_floors + (userLevel / 100)
+    private func calculateUnlockCost() -> Int {
+        let userFloor = fireStoreService.gradenModel?.user.userFloor ?? 1
+        let userLevel = fireStoreService.gradenModel?.user.userLevel ?? 1
+        return 2500 * userFloor + (userLevel / 100)
+    }
+
+    /// Check if user can unlock another floor
+    private func canUnlockFloor() -> Bool {
+        guard let gardenModel = fireStoreService.gradenModel else { return false }
+        let userFloor = gardenModel.user.userFloor
+        let maxFloors = maxUnlockableFloors()
+        return userFloor < maxFloors
+    }
+
+    /// Handle floor unlock purchase
+    private func handleUnlockFloor() {
+        guard var gardenModel = fireStoreService.gradenModel else { return }
+
+        let cost = calculateUnlockCost()
+
+        // Check oxygen
+        guard gardenModel.money.oxygen >= cost else {
+            print("❌ Not enough oxygen. Need: \(cost), Have: \(gardenModel.money.oxygen)")
+            // TODO: Show error toast
+            return
+        }
+
+        // Check max floors
+        guard canUnlockFloor() else {
+            print("❌ Already at max floors")
+            // TODO: Show error toast
+            return
+        }
+
+        // Deduct oxygen
+        gardenModel.money.oxygen -= cost
+
+        // Unlock floor
+        gardenModel.user.userFloor += 1
+
+        print("✅ Floor unlocked! New floor: \(gardenModel.user.userFloor), Oxygen spent: \(cost)")
+
+        // Update Firestore
         Task {
             _ = await fireStoreService.updateDataUser(gardenModel: gardenModel)
         }

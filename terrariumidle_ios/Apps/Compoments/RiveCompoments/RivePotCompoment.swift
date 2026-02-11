@@ -90,7 +90,7 @@ struct PotRiveView: View {
 //                vm.play()
             }.task {
                 print("ℹ️ Pot View did appear - ID: \(potId)")
-                try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
+//                try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
 
                 // Play pot animation
                 vm.pause()
