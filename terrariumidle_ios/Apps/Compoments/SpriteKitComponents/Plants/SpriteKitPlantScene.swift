@@ -1,0 +1,255 @@
+//
+//  SpriteKitPlantScene.swift
+//  terrariumidle_ios
+//
+//  Created by AI on 18/11/26.
+//
+
+import SpriteKit
+import UIKit
+
+// MARK: - SpriteKit Scene cho Cây cảnh trong Terrarium
+public final class SpriteKitPlantScene: SKScene {
+    // MARK: - Properties
+
+    private var plantNode: SKSpriteNode?
+    private var plantId: String = "plant1"
+    private var plantLevel: Int = 1
+    private var isHanging: Bool = false
+
+    private var baseScale: CGFloat = 1.0
+
+    // MARK: - Initializer
+
+    public override init() {
+        super.init(size: .zero)
+        setupBasics()
+    }
+
+    public override init(size: CGSize) {
+        super.init(size: size)
+        setupBasics()
+    }
+
+    public required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        setupBasics()
+    }
+
+    private func setupBasics() {
+        backgroundColor = .clear
+        scaleMode = .resizeFill
+    }
+
+    // MARK: - Configuration
+
+    public func configure(plantId: String, level: Int = 1, isHanging: Bool = false) {
+        self.plantId = plantId
+        self.plantLevel = level
+        self.isHanging = isHanging
+
+        if size.width > 0 && size.height > 0 {
+            buildPlant()
+        }
+    }
+
+    public override func didMove(to view: SKView) {
+        super.didMove(to: view)
+        view.allowsTransparency = true
+        if plantNode == nil && size.width > 0 && size.height > 0 {
+            buildPlant()
+        }
+    }
+
+    public override func didChangeSize(_ oldSize: CGSize) {
+        super.didChangeSize(oldSize)
+        if size.width > 0 && size.height > 0 {
+            buildPlant()
+        }
+    }
+
+    // MARK: - Build Plant Node
+
+    private func buildPlant() {
+        guard size.width > 0, size.height > 0 else { return }
+        removeAllChildren()
+
+        // 1. Tạo hoặc tải texture cây
+        let texture = loadPlantTexture()
+        let node = SKSpriteNode(texture: texture)
+
+        // Tính tỉ lệ tăng trưởng theo cấp độ (Level 1: mầm non, Level 2: đang lớn, Level 3+: trưởng thành)
+        let levelRatio: CGFloat
+        switch plantLevel {
+        case 1: levelRatio = 0.72
+        case 2: levelRatio = 0.86
+        default: levelRatio = 1.0
+        }
+
+        let fitWidthRatio = (size.width * 0.88) / texture.size().width
+        let fitHeightRatio = (size.height * 0.88) / texture.size().height
+        self.baseScale = min(fitWidthRatio, fitHeightRatio) * levelRatio
+
+        node.setScale(baseScale)
+
+        if isHanging {
+            // Cây treo: neo từ đỉnh chúc xuống
+            node.anchorPoint = CGPoint(x: 0.5, y: 1.0)
+            node.position = CGPoint(x: size.width / 2, y: size.height)
+        } else {
+            // Cây bình thường: neo từ gốc chậu mọc lên
+            node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
+            node.position = CGPoint(x: size.width / 2, y: 0)
+        }
+
+        addChild(node)
+        self.plantNode = node
+
+        // 2. Kích hoạt hiệu ứng đung đưa tự nhiên trong gió (Gentle idle sway)
+        startIdleSway(node: node)
+    }
+
+    // MARK: - Animation: Đung đưa theo gió
+
+    private func startIdleSway(node: SKNode) {
+        node.removeAction(forKey: "idleSway")
+
+        let swayAngle: CGFloat = isHanging ? 0.045 : 0.035
+        let swayDuration: Double = Double.random(in: 2.2...3.2)
+
+        let swayLeft = SKAction.rotate(toAngle: -swayAngle, duration: swayDuration)
+        swayLeft.timingMode = .easeInEaseOut
+
+        let swayRight = SKAction.rotate(toAngle: swayAngle, duration: swayDuration)
+        swayRight.timingMode = .easeInEaseOut
+
+        let sequence = SKAction.sequence([swayLeft, swayRight])
+        node.run(SKAction.repeatForever(sequence), withKey: "idleSway")
+    }
+
+    // MARK: - Animation: Phản hồi khi người dùng chạm vào cây (Tap Bounce)
+
+    public func playTapAnimation() {
+        guard let node = plantNode else { return }
+
+        // Hiệu ứng nảy Squash & Stretch
+        let squash = SKAction.scaleX(to: baseScale * 1.15, y: baseScale * 0.86, duration: 0.12)
+        squash.timingMode = .easeIn
+        let stretch = SKAction.scaleX(to: baseScale * 0.92, y: baseScale * 1.14, duration: 0.16)
+        stretch.timingMode = .easeOut
+        let settle = SKAction.scale(to: baseScale, duration: 0.18)
+        settle.timingMode = .easeInEaseOut
+
+        let bounceSequence = SKAction.sequence([squash, stretch, settle])
+        node.run(bounceSequence)
+
+        // Bắn ra 2-3 bong bóng oxy phát sáng bay lên
+        spawnOxygenBubbles()
+    }
+
+    private func spawnOxygenBubbles() {
+        guard let node = plantNode else { return }
+        let startPos = CGPoint(x: node.position.x, y: size.height * 0.6)
+
+        for _ in 0..<3 {
+            let bubble = SKShapeNode(circleOfRadius: CGFloat.random(in: 4...7))
+            bubble.fillColor = UIColor(red: 0.40, green: 0.90, blue: 0.65, alpha: 0.85)
+            bubble.strokeColor = UIColor.white.withAlphaComponent(0.6)
+            bubble.lineWidth = 1.0
+            bubble.position = CGPoint(
+                x: startPos.x + CGFloat.random(in: -25...25),
+                y: startPos.y + CGFloat.random(in: -10...10)
+            )
+            bubble.zPosition = 100
+            addChild(bubble)
+
+            let floatUp = SKAction.moveBy(
+                x: CGFloat.random(in: -20...20),
+                y: CGFloat.random(in: 45...80),
+                duration: Double.random(in: 0.7...1.2)
+            )
+            floatUp.timingMode = .easeOut
+            let fadeOut = SKAction.fadeOut(withDuration: 0.8)
+            let scaleUp = SKAction.scale(by: 1.3, duration: 0.8)
+            let group = SKAction.group([floatUp, fadeOut, scaleUp])
+
+            bubble.run(SKAction.sequence([group, SKAction.removeFromParent()]))
+        }
+    }
+
+    // MARK: - Texture Loader & Procedural Fallback
+
+    private func loadPlantTexture() -> SKTexture {
+        // 1. Thử tải ảnh thật từ Assets nếu có
+        let candidates = [plantId, "i_\(plantId)", "plant_\(plantId)"]
+        for name in candidates {
+            if let image = UIImage(named: name) {
+                return SKTexture(image: image)
+            }
+        }
+
+        // 2. Tự vẽ cây vector sinh học nếu chưa có ảnh
+        return Self.generateProceduralPlantTexture(plantId: plantId, isHanging: isHanging)
+    }
+
+    public static func generateProceduralPlantTexture(plantId: String, isHanging: Bool) -> SKTexture {
+        let size = CGSize(width: 140, height: 160)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { ctx in
+            let context = ctx.cgContext
+            let midX: CGFloat = 70
+
+            if isHanging {
+                // Cây rủ xuống (Hanging Ivy / Dây leo)
+                let stemPath = UIBezierPath()
+                stemPath.move(to: CGPoint(x: midX, y: 10))
+                stemPath.addCurve(to: CGPoint(x: midX - 25, y: 140), controlPoint1: CGPoint(x: midX - 35, y: 60), controlPoint2: CGPoint(x: midX - 10, y: 100))
+                stemPath.move(to: CGPoint(x: midX, y: 10))
+                stemPath.addCurve(to: CGPoint(x: midX + 28, y: 130), controlPoint1: CGPoint(x: midX + 35, y: 55), controlPoint2: CGPoint(x: midX + 10, y: 95))
+
+                UIColor(red: 0.28, green: 0.60, blue: 0.32, alpha: 0.9).setStroke()
+                stemPath.lineWidth = 2.5
+                stemPath.stroke()
+
+                // Các lá mọc dọc dây leo
+                let leafColor = UIColor(red: 0.38, green: 0.78, blue: 0.40, alpha: 0.95)
+                leafColor.setFill()
+                for y in stride(from: 30, to: 130, by: 22) {
+                    let leafRect1 = CGRect(x: midX - 40, y: CGFloat(y), width: 18, height: 12)
+                    context.fillEllipse(in: leafRect1)
+                    let leafRect2 = CGRect(x: midX + 24, y: CGFloat(y + 8), width: 18, height: 12)
+                    context.fillEllipse(in: leafRect2)
+                }
+            } else {
+                // Thân cây chính
+                let stem = UIBezierPath()
+                stem.move(to: CGPoint(x: midX, y: 155))
+                stem.addCurve(to: CGPoint(x: midX, y: 40), controlPoint1: CGPoint(x: midX - 8, y: 110), controlPoint2: CGPoint(x: midX + 6, y: 70))
+                UIColor(red: 0.32, green: 0.58, blue: 0.28, alpha: 0.95).setStroke()
+                stem.lineWidth = 3.5
+                stem.stroke()
+
+                // Tán lá xum xuê mềm mại
+                let foliageColors = [
+                    UIColor(red: 0.28, green: 0.72, blue: 0.42, alpha: 0.92),
+                    UIColor(red: 0.42, green: 0.82, blue: 0.48, alpha: 0.92),
+                    UIColor(red: 0.22, green: 0.62, blue: 0.35, alpha: 0.92)
+                ]
+
+                let leafClusters: [(CGRect, Int)] = [
+                    (CGRect(x: midX - 35, y: 65, width: 34, height: 24), 0),
+                    (CGRect(x: midX + 5, y: 55, width: 36, height: 24), 1),
+                    (CGRect(x: midX - 30, y: 35, width: 32, height: 22), 2),
+                    (CGRect(x: midX + 2, y: 25, width: 35, height: 22), 0),
+                    (CGRect(x: midX - 18, y: 10, width: 36, height: 28), 1)
+                ]
+
+                for (rect, colorIdx) in leafClusters {
+                    foliageColors[colorIdx].setFill()
+                    context.fillEllipse(in: rect)
+                }
+            }
+        }
+        return SKTexture(image: image)
+    }
+}
