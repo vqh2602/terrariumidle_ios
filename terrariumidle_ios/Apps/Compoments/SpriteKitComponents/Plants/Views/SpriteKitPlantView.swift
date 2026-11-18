@@ -8,6 +8,9 @@
 import SpriteKit
 import SwiftUI
 
+/// Typealias ngắn gọn để tái sử dụng thuận tiện ở các nơi
+public typealias PlantView = SpriteKitPlantView
+
 /// SwiftUI Component hiển thị cây bằng SpriteKit
 /// - Đung đưa nhẹ tự nhiên trong gió
 /// - Tự động mở rộng theo cấp độ cây (`plantLevel`)

@@ -13,6 +13,7 @@ public final class SpriteKitPotScene: SKScene {
     // MARK: - Properties
 
     private var potNode: SKSpriteNode?
+    private var pot1Node: Pot1Node?
     private var shadowNode: SKShapeNode?
     private var potId: String = "pot1"
     private var isHanging: Bool = false
@@ -38,6 +39,7 @@ public final class SpriteKitPotScene: SKScene {
     private func setupBasics() {
         backgroundColor = .clear
         scaleMode = .resizeFill
+        anchorPoint = CGPoint(x: 0.5, y: 0.0) // Luôn neo gốc toạ độ tại đáy giữa (Bottom-Center)
     }
 
     // MARK: - Configuration
@@ -71,6 +73,19 @@ public final class SpriteKitPotScene: SKScene {
     private func buildPot() {
         guard size.width > 0, size.height > 0 else { return }
         removeAllChildren()
+        potNode = nil
+        pot1Node = nil
+        shadowNode = nil
+        anchorPoint = CGPoint(x: 0.5, y: 0.0) // Luôn neo gốc tọa độ tại đáy giữa
+
+        // ĐẶC BIỆT: Chậu hồng chấm đỏ (pot1) có node chuyên biệt và hiệu ứng đá lấp lánh riêng
+        if potId.lowercased() == "pot1" {
+            let p1 = Pot1Node(containerSize: size, isHanging: isHanging)
+            p1.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p1)
+            self.pot1Node = p1
+            return
+        }
 
         // 1. Bóng đổ dưới đáy chậu (nếu không treo)
         if !isHanging {
@@ -79,7 +94,7 @@ public final class SpriteKitPotScene: SKScene {
             let shadow = SKShapeNode(ellipseOf: CGSize(width: shadowWidth, height: shadowHeight))
             shadow.fillColor = UIColor.black.withAlphaComponent(0.18)
             shadow.strokeColor = .clear
-            shadow.position = CGPoint(x: size.width / 2, y: size.height * 0.08)
+            shadow.position = CGPoint(x: 0, y: size.height * 0.06)
             shadow.zPosition = 1
             addChild(shadow)
             self.shadowNode = shadow
@@ -96,10 +111,10 @@ public final class SpriteKitPotScene: SKScene {
 
         if isHanging {
             node.anchorPoint = CGPoint(x: 0.5, y: 1.0)
-            node.position = CGPoint(x: size.width / 2, y: size.height)
+            node.position = CGPoint(x: 0, y: size.height)
         } else {
             node.anchorPoint = CGPoint(x: 0.5, y: 0.08)
-            node.position = CGPoint(x: size.width / 2, y: 0)
+            node.position = CGPoint(x: 0, y: 0)
         }
         node.zPosition = 10
 
@@ -110,6 +125,10 @@ public final class SpriteKitPotScene: SKScene {
     // MARK: - Animation: Phản hồi khi chạm vào chậu
 
     public func playTapAnimation() {
+        if let p1 = pot1Node {
+            p1.playTapAnimation()
+            return
+        }
         guard let node = potNode else { return }
 
         let compress = SKAction.scaleX(to: baseScale * 1.08, y: baseScale * 0.88, duration: 0.10)
@@ -132,7 +151,15 @@ public final class SpriteKitPotScene: SKScene {
     // MARK: - Texture Loader & Procedural Fallback
 
     private func loadPotTexture() -> SKTexture {
-        let candidates = [potId, "i_\(potId)", "pot_\(potId)"]
+        let candidates = [
+            "\(potId)-Asset-1@4.167x",
+            potId,
+            "\(potId)-Asset-1",
+            "\(potId)_Asset-1@4.167x",
+            "\(potId)_Asset-1",
+            "i_\(potId)",
+            "pot_\(potId)"
+        ]
         for name in candidates {
             if let image = UIImage(named: name) {
                 return SKTexture(image: image)

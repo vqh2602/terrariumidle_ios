@@ -166,32 +166,75 @@ public final class SpriteKitPlantScene: SKScene {
     }
 
     private func spawnOxygenBubbles() {
-        guard let node = plantNode else { return }
-        let startPos = CGPoint(x: node.position.x, y: size.height * 0.6)
+        guard let _ = plantNode else { return }
 
-        for _ in 0..<3 {
-            let bubble = SKShapeNode(circleOfRadius: CGFloat.random(in: 4...7))
-            bubble.fillColor = UIColor(red: 0.40, green: 0.90, blue: 0.65, alpha: 0.85)
-            bubble.strokeColor = UIColor.white.withAlphaComponent(0.6)
+        let bubbleCount: Int
+        switch plantLevel {
+        case 1, 100:
+            bubbleCount = Int.random(in: 1...2)
+        case 2, 200:
+            bubbleCount = Int.random(in: 3...4)
+        default:
+            bubbleCount = Int.random(in: 7...10)
+        }
+
+        for i in 0..<bubbleCount {
+            let radius: CGFloat
+            let spawnX: CGFloat
+            let spawnY: CGFloat
+            let floatDistance: CGFloat
+
+            switch plantLevel {
+            case 1, 100:
+                radius = CGFloat.random(in: 1.8...3.0)
+                spawnX = CGFloat.random(in: -size.width * 0.08...size.width * 0.08)
+                spawnY = CGFloat.random(in: size.height * 0.03...size.height * 0.12)
+                floatDistance = CGFloat.random(in: 18...35)
+            case 2, 200:
+                radius = CGFloat.random(in: 2.2...3.8)
+                spawnX = CGFloat.random(in: -size.width * 0.10...size.width * 0.10)
+                spawnY = CGFloat.random(in: size.height * 0.05...size.height * 0.20)
+                floatDistance = CGFloat.random(in: 25...45)
+            default:
+                radius = CGFloat.random(in: 3.5...7.5)
+                spawnX = CGFloat.random(in: -size.width * 0.46...size.width * 0.46)
+                spawnY = CGFloat.random(in: size.height * 0.18...size.height * 0.88)
+                floatDistance = CGFloat.random(in: 60...115)
+            }
+
+            let bubble = SKShapeNode(circleOfRadius: radius)
+            bubble.fillColor = UIColor(red: 0.35, green: 0.92, blue: 0.65, alpha: 0.85)
+            bubble.strokeColor = UIColor.white.withAlphaComponent(0.7)
             bubble.lineWidth = 1.0
-            bubble.position = CGPoint(
-                x: startPos.x + CGFloat.random(in: -25...25),
-                y: startPos.y + CGFloat.random(in: -10...10)
-            )
+
+            let highlight = SKShapeNode(circleOfRadius: radius * 0.3)
+            highlight.fillColor = UIColor.white.withAlphaComponent(0.8)
+            highlight.strokeColor = .clear
+            highlight.position = CGPoint(x: -radius * 0.3, y: radius * 0.3)
+            bubble.addChild(highlight)
+
+            bubble.position = CGPoint(x: spawnX, y: spawnY)
             bubble.zPosition = 100
+            bubble.alpha = 0.0
             addChild(bubble)
 
-            let floatUp = SKAction.moveBy(
-                x: CGFloat.random(in: -20...20),
-                y: CGFloat.random(in: 45...80),
-                duration: Double.random(in: 0.7...1.2)
-            )
-            floatUp.timingMode = .easeOut
-            let fadeOut = SKAction.fadeOut(withDuration: 0.8)
-            let scaleUp = SKAction.scale(by: 1.3, duration: 0.8)
-            let group = SKAction.group([floatUp, fadeOut, scaleUp])
+            let floatDuration = Double.random(in: 0.8...1.5)
+            let driftX = CGFloat.random(in: -20...20)
 
-            bubble.run(SKAction.sequence([group, SKAction.removeFromParent()]))
+            let delay = SKAction.wait(forDuration: Double(i) * 0.04)
+            let fadeIn = SKAction.fadeAlpha(to: 0.9, duration: 0.12)
+            let floatUp = SKAction.moveBy(x: driftX, y: floatDistance, duration: floatDuration)
+            floatUp.timingMode = .easeOut
+            let fadeOut = SKAction.fadeOut(withDuration: floatDuration * 0.6)
+            let scaleUp = SKAction.scale(by: 1.30, duration: floatDuration)
+
+            let motionGroup = SKAction.group([
+                floatUp,
+                SKAction.sequence([SKAction.wait(forDuration: floatDuration * 0.4), fadeOut]),
+                scaleUp
+            ])
+
+            bubble.run(SKAction.sequence([delay, fadeIn, motionGroup, SKAction.removeFromParent()]))
         }
     }
 

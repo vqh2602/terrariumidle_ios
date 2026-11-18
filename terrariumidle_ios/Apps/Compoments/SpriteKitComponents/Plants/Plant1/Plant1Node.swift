@@ -109,6 +109,10 @@ public final class Plant1Node: SKNode {
     private var seedNode: SKSpriteNode?
     /// Sprite hiển thị cây con (State 200)
     private var sproutNode: SKSpriteNode?
+    /// Vị trí toạ độ ban đầu của hạt giống (chống trôi khi tap liên tục)
+    private var initialSeedPosition: CGPoint = .zero
+    /// Vị trí toạ độ ban đầu của cây con (chống trôi khi tap liên tục)
+    private var initialSproutPosition: CGPoint = .zero
     /// Tỉ lệ scale cơ sở để áp dụng squash & stretch khi tương tác
     private var baseScale: CGFloat = 1.0
 
@@ -180,133 +184,135 @@ public final class Plant1Node: SKNode {
     // MARK: - State 100: Gieo hạt (Seed Stage)
 
     private func buildSeedState() {
-        let baseCanvasWidth: CGFloat = 428.0
-        let baseCanvasHeight: CGFloat = 862.0
+        plantRootNode.setScale(1.0)
+        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.70 : 0)
+        self.baseScale = 1.0
 
-        let fitW = (containerSize.width * 0.92) / baseCanvasWidth
-        let fitH = (containerSize.height * 0.92) / baseCanvasHeight
-        let scale = min(fitW, fitH)
-        self.baseScale = scale
-
-        plantRootNode.setScale(scale)
-        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.75 : 0)
-
-        // 1. Ưu tiên lấy node từ file trực quan Plant1Scene.sks nếu đã thiết kế trong Xcode
-        if let scene = loadSceneTemplate(),
-           let templateSeedGroup = scene.childNode(withName: "seedNode"),
-           let templateSprite = (templateSeedGroup.childNode(withName: "seedSprite") as? SKSpriteNode) ?? (templateSeedGroup.children.first as? SKSpriteNode) {
-            templateSprite.removeFromParent()
-            templateSprite.isHidden = false
-            plantRootNode.addChild(templateSprite)
-            self.seedNode = templateSprite
-
-            // Hiệu ứng nhịp thở hạt mầm (Gentle breathing pulse)
-            let pulseUp = SKAction.scale(to: 1.05, duration: 1.4)
-            pulseUp.timingMode = .easeInEaseOut
-            let pulseDown = SKAction.scale(to: 0.95, duration: 1.4)
-            pulseDown.timingMode = .easeInEaseOut
-            templateSprite.run(SKAction.repeatForever(SKAction.sequence([pulseUp, pulseDown])), withKey: "seedBreath")
-            startSeedGlowEffect(on: templateSprite)
-            return
-        }
-
-        // 2. Fallback tạo qua code nếu chưa có trong .sks
+        // Tải texture hạt giống (Asset-100)
         guard let seedTexture = loadTexture(assetId: 100) else { return }
 
+        // Kích thước hạt giống tí hon nằm gọn trong lòng đất (~18% chiều rộng container)
+        let targetW = containerSize.width * 0.18
+        let aspect: CGFloat = 257.0 / 259.0
+        let targetH = targetW * aspect
+
         let node = SKSpriteNode(texture: seedTexture)
-        node.size = CGSize(width: 130, height: 130)
-        node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        node.position = CGPoint(x: 0, y: 30)
+        node.size = CGSize(width: targetW, height: targetH)
+        node.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+        node.position = CGPoint(x: 0, y: 0)
         node.zPosition = 10
 
         plantRootNode.addChild(node)
         self.seedNode = node
+        self.initialSeedPosition = node.position
 
-        let pulseUp = SKAction.scale(to: 1.05, duration: 1.4)
-        pulseUp.timingMode = .easeInEaseOut
-        let pulseDown = SKAction.scale(to: 0.95, duration: 1.4)
-        pulseDown.timingMode = .easeInEaseOut
-        node.run(SKAction.repeatForever(SKAction.sequence([pulseUp, pulseDown])), withKey: "seedBreath")
+        // 1. Hiệu ứng thở hạt mầm sinh động (Gentle organic breathing pulse)
+        let breatheIn = SKAction.scaleX(to: 1.10, y: 0.90, duration: 1.0)
+        breatheIn.timingMode = .easeInEaseOut
+        let breatheOut = SKAction.scaleX(to: 0.92, y: 1.08, duration: 1.0)
+        breatheOut.timingMode = .easeInEaseOut
+        let breatheSeq = SKAction.sequence([breatheIn, breatheOut])
+        node.run(SKAction.repeatForever(breatheSeq), withKey: "seedBreath")
 
-        startSeedGlowEffect(on: node)
+        // 2. Hiệu ứng hạt cựa quậy nhẹ nhàng trong đất (Gentle seed wiggle)
+        let tiltL = SKAction.rotate(toAngle: -0.08, duration: 1.2)
+        tiltL.timingMode = .easeInEaseOut
+        let tiltR = SKAction.rotate(toAngle: 0.08, duration: 1.2)
+        tiltR.timingMode = .easeInEaseOut
+        node.run(SKAction.repeatForever(SKAction.sequence([tiltL, tiltR])), withKey: "seedWiggle")
+
+        // 3. Vòng hào quang sinh khí mầm xanh phát sáng phía sau hạt
+        startSeedGlowEffect(on: node, radius: targetW * 0.55)
     }
 
-    private func startSeedGlowEffect(on node: SKNode) {
-        let glowNode = SKShapeNode(circleOfRadius: 28)
-        glowNode.fillColor = UIColor(red: 0.45, green: 0.88, blue: 0.55, alpha: 0.22)
+    private func startSeedGlowEffect(on node: SKNode, radius: CGFloat = 14) {
+        let glowNode = SKShapeNode(circleOfRadius: radius)
+        glowNode.fillColor = UIColor(red: 0.35, green: 0.92, blue: 0.60, alpha: 0.28)
         glowNode.strokeColor = .clear
-        glowNode.position = CGPoint(x: 0, y: 15)
+        glowNode.position = CGPoint(x: 0, y: radius * 0.6)
         glowNode.zPosition = -1
+        glowNode.name = "seedGlowNode"
         node.addChild(glowNode)
 
-        let glowUp = SKAction.fadeAlpha(to: 0.45, duration: 1.6)
+        let glowUp = SKAction.group([
+            SKAction.fadeAlpha(to: 0.55, duration: 1.4),
+            SKAction.scale(to: 1.25, duration: 1.4)
+        ])
         glowUp.timingMode = .easeInEaseOut
-        let glowDown = SKAction.fadeAlpha(to: 0.10, duration: 1.6)
+
+        let glowDown = SKAction.group([
+            SKAction.fadeAlpha(to: 0.18, duration: 1.4),
+            SKAction.scale(to: 0.88, duration: 1.4)
+        ])
         glowDown.timingMode = .easeInEaseOut
-        glowNode.run(SKAction.repeatForever(SKAction.sequence([glowUp, glowDown])))
+
+        glowNode.run(SKAction.repeatForever(SKAction.sequence([glowUp, glowDown])), withKey: "seedGlowPulse")
     }
 
     // MARK: - State 200: Cây con (Sprout Stage)
 
     private func buildSproutState() {
-        let baseCanvasWidth: CGFloat = 428.0
-        let baseCanvasHeight: CGFloat = 862.0
+        plantRootNode.setScale(1.0)
+        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.70 : 0)
+        self.baseScale = 1.0
 
-        let fitW = (containerSize.width * 0.92) / baseCanvasWidth
-        let fitH = (containerSize.height * 0.92) / baseCanvasHeight
-        let scale = min(fitW, fitH)
-        self.baseScale = scale
-
-        plantRootNode.setScale(scale)
-        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.75 : 0)
-
-        // 1. Ưu tiên lấy node từ file trực quan Plant1Scene.sks nếu đã thiết kế trong Xcode
-        if let scene = loadSceneTemplate(),
-           let templateSproutGroup = scene.childNode(withName: "sproutNode"),
-           let templateSprite = (templateSproutGroup.childNode(withName: "sproutSprite") as? SKSpriteNode) ?? (templateSproutGroup.children.first as? SKSpriteNode) {
-            templateSprite.removeFromParent()
-            templateSprite.isHidden = false
-            plantRootNode.addChild(templateSprite)
-            self.sproutNode = templateSprite
-
-            // Hiệu ứng mầm non đung đưa đón nắng (Gentle swaying)
-            let swayLeft = SKAction.rotate(toAngle: -0.05, duration: 2.2)
-            swayLeft.timingMode = .easeInEaseOut
-            let swayRight = SKAction.rotate(toAngle: 0.05, duration: 2.2)
-            swayRight.timingMode = .easeInEaseOut
-            templateSprite.run(SKAction.repeatForever(SKAction.sequence([swayLeft, swayRight])), withKey: "sproutSway")
-
-            let bobUp = SKAction.scaleY(to: 1.03, duration: 1.8)
-            bobUp.timingMode = .easeInEaseOut
-            let bobDown = SKAction.scaleY(to: 0.98, duration: 1.8)
-            bobDown.timingMode = .easeInEaseOut
-            templateSprite.run(SKAction.repeatForever(SKAction.sequence([bobUp, bobDown])), withKey: "sproutBob")
-            return
-        }
-
-        // 2. Fallback tạo qua code nếu chưa có trong .sks
         guard let sproutTexture = loadTexture(assetId: 200) else { return }
 
+        // Kích thước mầm cây con nhỏ xinh mới nhú (~22% chiều cao container)
+        let targetH = containerSize.height * 0.22
+        let aspect: CGFloat = 235.0 / 253.0
+        let targetW = min(targetH * aspect, containerSize.width * 0.28)
+
         let node = SKSpriteNode(texture: sproutTexture)
-        node.size = CGSize(width: 160, height: 172)
-        node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        node.position = CGPoint(x: 0, y: 20)
+        node.size = CGSize(width: targetW, height: targetH)
+        node.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+        node.position = CGPoint(x: 0, y: 0)
         node.zPosition = 10
 
         plantRootNode.addChild(node)
         self.sproutNode = node
+        self.initialSproutPosition = node.position
 
-        let swayLeft = SKAction.rotate(toAngle: -0.05, duration: 2.2)
+        // 1. Hiệu ứng mầm non đung đưa đón nắng rõ rệt (Lively wind swaying)
+        let swayLeft = SKAction.rotate(toAngle: -0.15, duration: 1.6)
         swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(toAngle: 0.05, duration: 2.2)
+        let swayRight = SKAction.rotate(toAngle: 0.15, duration: 1.6)
         swayRight.timingMode = .easeInEaseOut
         node.run(SKAction.repeatForever(SKAction.sequence([swayLeft, swayRight])), withKey: "sproutSway")
 
-        let bobUp = SKAction.scaleY(to: 1.03, duration: 1.8)
+        // 2. Hiệu ứng thân mầm vươn nhún nhảy (Vertical spring bobbing)
+        let bobUp = SKAction.scaleY(to: 1.08, duration: 1.3)
         bobUp.timingMode = .easeInEaseOut
-        let bobDown = SKAction.scaleY(to: 0.98, duration: 1.8)
+        let bobDown = SKAction.scaleY(to: 0.92, duration: 1.3)
         bobDown.timingMode = .easeInEaseOut
         node.run(SKAction.repeatForever(SKAction.sequence([bobUp, bobDown])), withKey: "sproutBob")
+
+        // 3. Hào quang mầm non sinh trưởng
+        startSproutGlowEffect(on: node, radius: targetW * 0.50)
+    }
+
+    private func startSproutGlowEffect(on node: SKNode, radius: CGFloat = 16) {
+        let glowNode = SKShapeNode(circleOfRadius: radius)
+        glowNode.fillColor = UIColor(red: 0.40, green: 0.92, blue: 0.65, alpha: 0.22)
+        glowNode.strokeColor = .clear
+        glowNode.position = CGPoint(x: 0, y: radius * 0.8)
+        glowNode.zPosition = -1
+        glowNode.name = "sproutGlowNode"
+        node.addChild(glowNode)
+
+        let glowUp = SKAction.group([
+            SKAction.fadeAlpha(to: 0.48, duration: 1.6),
+            SKAction.scale(to: 1.20, duration: 1.6)
+        ])
+        glowUp.timingMode = .easeInEaseOut
+
+        let glowDown = SKAction.group([
+            SKAction.fadeAlpha(to: 0.12, duration: 1.6),
+            SKAction.scale(to: 0.90, duration: 1.6)
+        ])
+        glowDown.timingMode = .easeInEaseOut
+
+        glowNode.run(SKAction.repeatForever(SKAction.sequence([glowUp, glowDown])), withKey: "sproutGlowPulse")
     }
 
     // MARK: - State Level 3+: Cây trưởng thành (Kiến trúc lai .sks + Swift Animation)
@@ -425,7 +431,101 @@ public final class Plant1Node: SKNode {
     // MARK: - Phản hồi tương tác người dùng (Tap Bounce)
 
     public func playTapAnimation() {
-        // 1. Nảy đàn hồi tổng thể
+        switch growthState {
+        case .seed:
+            playSeedTapAnimation()
+        case .sprout:
+            playSproutTapAnimation()
+        case .mature:
+            playMatureTapAnimation()
+        }
+
+        // Nhả bong bóng oxy tương ứng theo giai đoạn
+        spawnOxygenBubbles()
+    }
+
+    /// Hiệu ứng khi tap vào hạt giống: Nảy tưng lên phấn khích + bừng sáng hào quang
+    private func playSeedTapAnimation() {
+        guard let node = seedNode else { return }
+        node.removeAction(forKey: "seedTapHop")
+
+        // Đưa ngay về toạ độ gốc để triệt tiêu việc cộng dồn toạ độ Y khi người dùng click dồn dập
+        node.position = initialSeedPosition
+
+        // 1. Nhún nén rồi nảy vọt lên trên không (dùng moveTo thay vì moveBy để không bao giờ bị lệch vị trí)
+        let squash = SKAction.scaleX(to: 1.28, y: 0.72, duration: 0.08)
+        squash.timingMode = .easeIn
+
+        let jumpUp = SKAction.group([
+            SKAction.moveTo(y: initialSeedPosition.y + 10, duration: 0.12),
+            SKAction.scaleX(to: 0.85, y: 1.20, duration: 0.12)
+        ])
+        jumpUp.timingMode = .easeOut
+
+        let fallDown = SKAction.group([
+            SKAction.moveTo(y: initialSeedPosition.y, duration: 0.12),
+            SKAction.scaleX(to: 1.12, y: 0.90, duration: 0.12)
+        ])
+        fallDown.timingMode = .easeIn
+
+        let settle = SKAction.scale(to: 1.0, duration: 0.10)
+        settle.timingMode = .easeInEaseOut
+
+        node.run(SKAction.sequence([squash, jumpUp, fallDown, settle]), withKey: "seedTapHop")
+
+        // 2. Hào quang bừng sáng
+        if let glow = node.childNode(withName: "seedGlowNode") {
+            let flash = SKAction.sequence([
+                SKAction.fadeAlpha(to: 0.85, duration: 0.08),
+                SKAction.fadeAlpha(to: 0.28, duration: 0.25)
+            ])
+            glow.run(flash)
+        }
+    }
+
+    /// Hiệu ứng khi tap vào cây con: Nảy đàn hồi lò xo + 2 lá mầm rung rinh
+    private func playSproutTapAnimation() {
+        guard let node = sproutNode else { return }
+        node.removeAction(forKey: "sproutTapBounce")
+
+        // Reset vị trí & góc xoay cơ sở để tránh trôi lệch khi tap liên tục
+        node.position = initialSproutPosition
+        node.zRotation = 0
+
+        // 1. Nén nhún đàn hồi lò xo
+        let squash = SKAction.scaleX(to: 1.26, y: 0.74, duration: 0.08)
+        squash.timingMode = .easeIn
+        let stretch = SKAction.scaleX(to: 0.84, y: 1.22, duration: 0.12)
+        stretch.timingMode = .easeOut
+        let bounceBack = SKAction.scaleX(to: 1.08, y: 0.94, duration: 0.10)
+        let settle = SKAction.scale(to: 1.0, duration: 0.12)
+        settle.timingMode = .easeInEaseOut
+
+        // 2. Rung lắc 2 lá mầm (dùng toAngle góc tuyệt đối để không trôi góc quay)
+        let shakeL = SKAction.rotate(toAngle: -0.15, duration: 0.07)
+        let shakeR = SKAction.rotate(toAngle: 0.15, duration: 0.08)
+        let shakeBack = SKAction.rotate(toAngle: 0, duration: 0.07)
+        let shakeSeq = SKAction.sequence([shakeL, shakeR, shakeBack])
+
+        let combined = SKAction.group([
+            SKAction.sequence([squash, stretch, bounceBack, settle]),
+            shakeSeq
+        ])
+
+        node.run(combined, withKey: "sproutTapBounce")
+
+        // 3. Hào quang sinh trưởng bừng sáng
+        if let glow = node.childNode(withName: "sproutGlowNode") {
+            let flash = SKAction.sequence([
+                SKAction.fadeAlpha(to: 0.75, duration: 0.08),
+                SKAction.fadeAlpha(to: 0.22, duration: 0.25)
+            ])
+            glow.run(flash)
+        }
+    }
+
+    /// Hiệu ứng khi tap vào cây trưởng thành: Toàn cây nhún nảy + 18 lá xao động
+    private func playMatureTapAnimation() {
         let squash = SKAction.scaleX(to: baseScale * 1.15, y: baseScale * 0.85, duration: 0.12)
         squash.timingMode = .easeIn
         let stretch = SKAction.scaleX(to: baseScale * 0.92, y: baseScale * 1.14, duration: 0.16)
@@ -435,43 +535,96 @@ public final class Plant1Node: SKNode {
 
         plantRootNode.run(SKAction.sequence([squash, stretch, settle]))
 
-        // 2. Xao động các lá
         for leaf in leafNodes {
-            let jiggle = SKAction.rotate(byAngle: CGFloat.random(in: -0.06...0.06), duration: 0.08)
+            let jiggle = SKAction.rotate(byAngle: CGFloat.random(in: -0.07...0.07), duration: 0.08)
             let returnJiggle = jiggle.reversed()
             leaf.run(SKAction.sequence([jiggle, returnJiggle]))
         }
-
-        // 3. Nhả bong bóng oxy hoặc hoa sinh khí
-        spawnOxygenBubbles()
     }
 
     private func spawnOxygenBubbles() {
-        let spawnY = containerSize.height * 0.55
-        for _ in 0..<3 {
-            let radius = CGFloat.random(in: 4...7)
+        // Số lượng bọt khí tăng dần theo giai đoạn sinh trưởng:
+        // - Hạt giống (Lv.1): 1 - 2 bọt nhỏ thoát ra từ gốc hạt
+        // - Cây con (Lv.2): 3 - 4 bọt vừa thoát ra từ 2 mầm lá non
+        // - Cây trưởng thành (Lv.3+): 7 - 10 bọt dồi dào phủ khắp toàn bộ tán cây
+        let bubbleCount: Int
+        switch growthState {
+        case .seed:
+            bubbleCount = Int.random(in: 1...2)
+        case .sprout:
+            bubbleCount = Int.random(in: 3...4)
+        case .mature:
+            bubbleCount = Int.random(in: 7...10)
+        }
+
+        for i in 0..<bubbleCount {
+            let radius: CGFloat
+            let spawnX: CGFloat
+            let spawnY: CGFloat
+            let floatDistance: CGFloat
+
+            switch growthState {
+            case .seed:
+                radius = CGFloat.random(in: 1.8...3.0)
+                spawnX = CGFloat.random(in: -containerSize.width * 0.08...containerSize.width * 0.08)
+                spawnY = CGFloat.random(in: containerSize.height * 0.03...containerSize.height * 0.12)
+                floatDistance = CGFloat.random(in: 18...35)
+            case .sprout:
+                radius = CGFloat.random(in: 2.2...3.8)
+                spawnX = CGFloat.random(in: -containerSize.width * 0.10...containerSize.width * 0.10)
+                spawnY = CGFloat.random(in: containerSize.height * 0.05...containerSize.height * 0.20)
+                floatDistance = CGFloat.random(in: 25...45)
+            case .mature:
+                radius = CGFloat.random(in: 3.5...7.5)
+                floatDistance = CGFloat.random(in: 60...115)
+                // Nếu đã có các node lá, chọn ngẫu nhiên các phiến lá trên cây để bọt khí thoát ra từ khắp nơi
+                if !leafNodes.isEmpty && Bool.random() {
+                    let randomLeaf = leafNodes.randomElement()!
+                    let leafPos = randomLeaf.position
+                    spawnX = leafPos.x + CGFloat.random(in: -18...18)
+                    spawnY = max(containerSize.height * 0.18, min(containerSize.height * 0.92, leafPos.y + CGFloat.random(in: -10...20)))
+                } else {
+                    // Trải đều toàn bộ tán cây từ mép trái sang mép phải (-46%...46%) và từ gốc lên ngọn (18%...90%)
+                    spawnX = CGFloat.random(in: -containerSize.width * 0.46...containerSize.width * 0.46)
+                    spawnY = CGFloat.random(in: containerSize.height * 0.18...containerSize.height * 0.90)
+                }
+            }
+
             let bubble = SKShapeNode(circleOfRadius: radius)
-            bubble.fillColor = UIColor(red: 0.40, green: 0.92, blue: 0.65, alpha: 0.85)
-            bubble.strokeColor = UIColor.white.withAlphaComponent(0.6)
+            bubble.fillColor = UIColor(red: 0.35, green: 0.92, blue: 0.65, alpha: 0.85)
+            bubble.strokeColor = UIColor.white.withAlphaComponent(0.7)
             bubble.lineWidth = 1.0
-            bubble.position = CGPoint(
-                x: CGFloat.random(in: -containerSize.width * 0.25...containerSize.width * 0.25),
-                y: spawnY + CGFloat.random(in: -10...15)
-            )
+
+            // Điểm sáng phản chiếu bên trong bọt khí
+            let highlight = SKShapeNode(circleOfRadius: radius * 0.3)
+            highlight.fillColor = UIColor.white.withAlphaComponent(0.8)
+            highlight.strokeColor = .clear
+            highlight.position = CGPoint(x: -radius * 0.3, y: radius * 0.3)
+            bubble.addChild(highlight)
+
+            bubble.position = CGPoint(x: spawnX, y: spawnY)
             bubble.zPosition = 100
+            bubble.alpha = 0.0
             addChild(bubble)
 
-            let floatUp = SKAction.moveBy(
-                x: CGFloat.random(in: -20...20),
-                y: CGFloat.random(in: 40...75),
-                duration: Double.random(in: 0.8...1.2)
-            )
-            floatUp.timingMode = .easeOut
-            let fadeOut = SKAction.fadeOut(withDuration: 0.8)
-            let scaleUp = SKAction.scale(by: 1.25, duration: 0.8)
-            let group = SKAction.group([floatUp, fadeOut, scaleUp])
+            // Hiệu ứng bay lên tự nhiên, tản đều và biến mất
+            let floatDuration = Double.random(in: 0.8...1.5)
+            let driftX = CGFloat.random(in: -20...20)
 
-            bubble.run(SKAction.sequence([group, SKAction.removeFromParent()]))
+            let delay = SKAction.wait(forDuration: Double(i) * 0.04)
+            let fadeIn = SKAction.fadeAlpha(to: 0.9, duration: 0.12)
+            let floatUp = SKAction.moveBy(x: driftX, y: floatDistance, duration: floatDuration)
+            floatUp.timingMode = .easeOut
+            let fadeOut = SKAction.fadeOut(withDuration: floatDuration * 0.6)
+            let scaleUp = SKAction.scale(by: 1.30, duration: floatDuration)
+
+            let motionGroup = SKAction.group([
+                floatUp,
+                SKAction.sequence([SKAction.wait(forDuration: floatDuration * 0.4), fadeOut]),
+                scaleUp
+            ])
+
+            bubble.run(SKAction.sequence([delay, fadeIn, motionGroup, SKAction.removeFromParent()]))
         }
     }
 

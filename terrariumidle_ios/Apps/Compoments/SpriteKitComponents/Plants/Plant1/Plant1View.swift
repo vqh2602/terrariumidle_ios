@@ -5,10 +5,10 @@
 //  Created by AI on 18/11/26.
 //
 
-import SpriteKit
 import SwiftUI
 
 /// SwiftUI Component chuyên biệt cho Cây Cỏ Loe (Plant1)
+/// - Tái sử dụng SpriteKitPlantView (PlantView) để tránh lặp lại code SpriteView và quản lý Scene lifecycle
 /// - Quản lý 3 trạng thái theo level logic (Level 1, 2, 3):
 ///   1. Level 1: Gieo hạt (dùng asset `Asset-100`)
 ///   2. Level 2: Cây con (dùng asset `Asset-200`)
@@ -19,8 +19,6 @@ public struct Plant1View: View {
     public var height: CGFloat
     public var isHanging: Bool = false
     public var onTap: (() -> Void)? = nil
-
-    @State private var scene: SpriteKitPlantScene
 
     public init(
         growthState: Plant1GrowthState = .mature(level: 3),
@@ -34,9 +32,6 @@ public struct Plant1View: View {
         self.height = height
         self.isHanging = isHanging
         self.onTap = onTap
-
-        let initialScene = Self.makeScene(width: width, height: height, level: growthState.rawLevel, isHanging: isHanging)
-        _scene = State(initialValue: initialScene)
     }
 
     public init(
@@ -50,23 +45,15 @@ public struct Plant1View: View {
     }
 
     public var body: some View {
-        SpriteView(scene: scene, options: [.allowsTransparency])
-            .frame(width: width, height: height)
-            .background(Color.clear)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                scene.playTapAnimation()
-                onTap?()
-            }
-            .onChange(of: growthState) { newState in
-                scene.configure(plantId: "plant1", level: newState.rawLevel, isHanging: isHanging)
-            }
-    }
-
-    private static func makeScene(width: CGFloat, height: CGFloat, level: Int, isHanging: Bool) -> SpriteKitPlantScene {
-        let newScene = SpriteKitPlantScene(size: CGSize(width: width, height: height))
-        newScene.configure(plantId: "plant1", level: level, isHanging: isHanging)
-        return newScene
+        PlantView(
+            plantId: "plant1",
+            plantLevel: growthState.rawLevel,
+            isHanging: isHanging,
+            width: width,
+            height: height,
+            onTap: onTap
+        )
+        .id(growthState.rawLevel)
     }
 }
 
@@ -83,6 +70,7 @@ private struct Plant1InteractiveDemoView: View {
                 .background(Color.black.opacity(0.04))
                 .cornerRadius(12)
                 .shadow(radius: 4)
+                .id(selectedLevel)
 
             Text("Trạng thái: \(Plant1GrowthState(level: selectedLevel).title)")
                 .font(.subheadline)
