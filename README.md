@@ -185,39 +185,45 @@ terrariumidle_ios/
 
 ---
 
-## 🎨 Hệ thống đồ họa SpriteKit
+## 🎨 Hệ thống đồ họa SpriteKit & Mô hình Kiến trúc Lai
 
-SpriteKit được sử dụng để tối ưu hiệu năng 60 FPS mượt mà, độc lập hoàn toàn khỏi runtime bên ngoài và hỗ trợ chỉnh sửa trực quan thông qua các tệp **`.sks`**:
+Terrarium Idle áp dụng mô hình kiến trúc lai (**Hybrid Visual Architecture**): Kết hợp giữa **Visual Scene Editor (`*.sks`)** và **Swift Code (`*.swift`)**:
+
+- **Kéo thả trực quan bằng chuột trong Xcode (`*.sks`)**: Thiết kế và căn chỉnh vị trí cây, lá, cuống, cành, mây, mặt trời, kích thước, góc xoay và thứ tự layer (`zPosition`).
+- **Code Swift 100% cho Logic & Hoạt ảnh (`*.swift`)**: Đảm nhiệm mưa rơi, gió thổi, hiệu ứng lá uốn lượn mềm mại, cây lớn lên theo level, phản hồi vật lý khi chạm (`tap squash & stretch`), nhả bọt khí oxy `+O2`.
+- **Tự động đồng bộ tọa độ**: Khi bạn kéo thả đổi vị trí hoặc xoay các bộ phận trong Xcode `.sks`, code Swift **tự động sử dụng vị trí mới đó**, không phải sửa lại tọa độ bằng tay trong code.
+- **Xem trước độc lập (Isolated Preview)**: Xem trước giao diện tĩnh và toàn bộ chuyển động ngay trên **SwiftUI Canvas Preview** (ví dụ: `Plant1View.swift`) mà không cần chạy lại toàn bộ ứng dụng mỗi lần.
 
 ```mermaid
 flowchart LR
-    JSON[effects_data.json / landscapes_data.json] --> Manager[ItemDataManager]
-    Manager --> Views["SwiftUI Views (OverlayEffectView / SpriteKitBackgroundView)"]
-
-    Views --> ModeCheck{"Ưu tiên nạp .sks?"}
-    ModeCheck -- "Có file .sks" --> SKS["Nạp Visual Emitter / Scene (.sks)"]
-    ModeCheck -- "Chưa có .sks" --> Procedural["Tự vẽ Procedural Vector (Fallback an toàn)"]
-
-    SKS --> MetalRenderer[Metal Accelerated GPU Output]
-    Procedural --> MetalRenderer
+    SKS["Xcode Scene Editor (*.sks)\n- Kéo thả vị trí cây, lá, mây, trời\n- Chỉnh kích thước, layer zPosition\n- Trực quan 100% bằng chuột"] --> Engine["SpriteKit Runtime"]
+    Swift["Swift Code (*.swift)\n- Nạp node từ *.sks\n- Gán animation uốn lượn, gió, mưa\n- Tương tác chạm tap, nảy bọt khí"] --> Engine
+    Engine --> MetalRenderer["Metal GPU Output 60 FPS\n(Tự nhận toạ độ mới khi sửa .sks)"]
 ```
 
 ### Các module chính:
 
-1. **Effects (Lớp phủ chuyển động)**:
+1. **Plants (Cây trồng đa trạng thái)**:
+   - **File trực quan (`Plant1Scene.sks`)**: Chứa 3 nhóm node: `seedNode` (Hạt), `sproutNode` (Cây con), `matureNode` (18 lá cây trưởng thành `leaf_2`...`leaf_19`).
+   - **Tự động uốn lượn**: Code Swift nạp 18 chiếc lá từ `.sks`, giữ nguyên vị trí được kéo thả và tự động gắn hiệu ứng uốn cong `startLeafBendingAnimation`.
+   - **Quy ước Asset**:
+     - `Asset-1` (`plant1_Asset-1`): Ảnh đại diện / đối chiếu tĩnh, không đưa vào scene diễn hoạt.
+     - `Asset-2` -> `Asset-99`: Các thành phần hoạt ảnh động (lá cây, cành, hoa).
+     - `Asset-100`: Gieo hạt (Level 1).
+     - `Asset-200`: Cây con (Level 2).
+
+2. **Effects (Lớp phủ chuyển động)**:
    - **Lá rơi & Cánh hoa**: Đung đưa trong gió (`swaying`), đổi góc nghiêng (`tilt`) và lật không gian 3D (`tumbling flip`).
    - **Đom đóm**: Chuyển động lượn lờ hữu cơ (`wandering`), hào quang phát sáng và thở nhịp (`pulsing alpha & scale`).
    - Cho phép truyền từ **1 đến 6 ảnh PNG tùy ý** hoặc tự sinh texture vector.
    - Luôn đặt `.allowsHitTesting(false)` để chạm xuyên qua đến các nút bấm và cây bên dưới.
 
-2. **Backgrounds (Bầu trời động)**:
+3. **Backgrounds (Bầu trời động)**:
    - Tự động vẽ dải màu chuyển (`Gradient`) từ mảng mã màu Hex trong JSON.
    - Thêm các đối tượng động: Mặt trời, hoàng hôn, mây trôi tự nhiên theo gió, mặt trăng khuyết/tròn, bầu trời đầy sao lấp lánh, vệt sao băng, hạt mưa rơi tí tách.
 
-3. **Plants & Pots (Cây & Chậu tương tác)**:
-   - Cây đung đưa nhẹ (`idleSway`), tự động scale kích thước theo `plantLevel`.
-   - Phản hồi vật lý khi chạm (`squash & stretch bounce`), nhả bọt khí oxy `+O2`.
-   - Chậu đổ bóng mềm, nảy lò xo khi nhấn (`spring compression`).
+4. **Pots (Chậu tương tác)**:
+   - Chậu đổ bóng mềm, nảy lò xo khi nhấn (`spring compression`). Phản hồi đồng bộ cùng cây khi người chơi tap vào màn hình.
 
 ---
 

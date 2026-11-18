@@ -167,34 +167,67 @@ public final class Plant1Node: SKNode {
         }
     }
 
+    // MARK: - SKS Scene Loader (Hybrid Visual Architecture)
+
+    /// Tải scene mẫu thiết kế trực quan từ Xcode (.sks)
+    private func loadSceneTemplate() -> SKScene? {
+        if let scene = SKScene(fileNamed: "Plant1Scene") {
+            return scene
+        }
+        return nil
+    }
+
     // MARK: - State 100: Gieo hạt (Seed Stage)
 
     private func buildSeedState() {
+        let baseCanvasWidth: CGFloat = 428.0
+        let baseCanvasHeight: CGFloat = 862.0
+
+        let fitW = (containerSize.width * 0.92) / baseCanvasWidth
+        let fitH = (containerSize.height * 0.92) / baseCanvasHeight
+        let scale = min(fitW, fitH)
+        self.baseScale = scale
+
+        plantRootNode.setScale(scale)
+        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.75 : 0)
+
+        // 1. Ưu tiên lấy node từ file trực quan Plant1Scene.sks nếu đã thiết kế trong Xcode
+        if let scene = loadSceneTemplate(),
+           let templateSeedGroup = scene.childNode(withName: "seedNode"),
+           let templateSprite = (templateSeedGroup.childNode(withName: "seedSprite") as? SKSpriteNode) ?? (templateSeedGroup.children.first as? SKSpriteNode) {
+            templateSprite.removeFromParent()
+            templateSprite.isHidden = false
+            plantRootNode.addChild(templateSprite)
+            self.seedNode = templateSprite
+
+            // Hiệu ứng nhịp thở hạt mầm (Gentle breathing pulse)
+            let pulseUp = SKAction.scale(to: 1.05, duration: 1.4)
+            pulseUp.timingMode = .easeInEaseOut
+            let pulseDown = SKAction.scale(to: 0.95, duration: 1.4)
+            pulseDown.timingMode = .easeInEaseOut
+            templateSprite.run(SKAction.repeatForever(SKAction.sequence([pulseUp, pulseDown])), withKey: "seedBreath")
+            startSeedGlowEffect(on: templateSprite)
+            return
+        }
+
+        // 2. Fallback tạo qua code nếu chưa có trong .sks
         guard let seedTexture = loadTexture(assetId: 100) else { return }
 
         let node = SKSpriteNode(texture: seedTexture)
-        let fitW = (containerSize.width * 0.50) / seedTexture.size().width
-        let fitH = (containerSize.height * 0.40) / seedTexture.size().height
-        let scale = min(fitW, fitH)
-        self.baseScale = scale
-        node.setScale(scale)
-
+        node.size = CGSize(width: 130, height: 130)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        node.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.75 : 0)
+        node.position = CGPoint(x: 0, y: 30)
         node.zPosition = 10
 
         plantRootNode.addChild(node)
         self.seedNode = node
 
-        // Hiệu ứng nhịp thở hạt mầm (Gentle breathing pulse)
-        let pulseUp = SKAction.scale(to: scale * 1.05, duration: 1.4)
+        let pulseUp = SKAction.scale(to: 1.05, duration: 1.4)
         pulseUp.timingMode = .easeInEaseOut
-        let pulseDown = SKAction.scale(to: scale * 0.95, duration: 1.4)
+        let pulseDown = SKAction.scale(to: 0.95, duration: 1.4)
         pulseDown.timingMode = .easeInEaseOut
-        let breatheSequence = SKAction.sequence([pulseUp, pulseDown])
-        node.run(SKAction.repeatForever(breatheSequence), withKey: "seedBreath")
+        node.run(SKAction.repeatForever(SKAction.sequence([pulseUp, pulseDown])), withKey: "seedBreath")
 
-        // Hiệu ứng phát sáng / hào quang sinh khí nhẹ
         startSeedGlowEffect(on: node)
     }
 
@@ -216,39 +249,67 @@ public final class Plant1Node: SKNode {
     // MARK: - State 200: Cây con (Sprout Stage)
 
     private func buildSproutState() {
+        let baseCanvasWidth: CGFloat = 428.0
+        let baseCanvasHeight: CGFloat = 862.0
+
+        let fitW = (containerSize.width * 0.92) / baseCanvasWidth
+        let fitH = (containerSize.height * 0.92) / baseCanvasHeight
+        let scale = min(fitW, fitH)
+        self.baseScale = scale
+
+        plantRootNode.setScale(scale)
+        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.75 : 0)
+
+        // 1. Ưu tiên lấy node từ file trực quan Plant1Scene.sks nếu đã thiết kế trong Xcode
+        if let scene = loadSceneTemplate(),
+           let templateSproutGroup = scene.childNode(withName: "sproutNode"),
+           let templateSprite = (templateSproutGroup.childNode(withName: "sproutSprite") as? SKSpriteNode) ?? (templateSproutGroup.children.first as? SKSpriteNode) {
+            templateSprite.removeFromParent()
+            templateSprite.isHidden = false
+            plantRootNode.addChild(templateSprite)
+            self.sproutNode = templateSprite
+
+            // Hiệu ứng mầm non đung đưa đón nắng (Gentle swaying)
+            let swayLeft = SKAction.rotate(toAngle: -0.05, duration: 2.2)
+            swayLeft.timingMode = .easeInEaseOut
+            let swayRight = SKAction.rotate(toAngle: 0.05, duration: 2.2)
+            swayRight.timingMode = .easeInEaseOut
+            templateSprite.run(SKAction.repeatForever(SKAction.sequence([swayLeft, swayRight])), withKey: "sproutSway")
+
+            let bobUp = SKAction.scaleY(to: 1.03, duration: 1.8)
+            bobUp.timingMode = .easeInEaseOut
+            let bobDown = SKAction.scaleY(to: 0.98, duration: 1.8)
+            bobDown.timingMode = .easeInEaseOut
+            templateSprite.run(SKAction.repeatForever(SKAction.sequence([bobUp, bobDown])), withKey: "sproutBob")
+            return
+        }
+
+        // 2. Fallback tạo qua code nếu chưa có trong .sks
         guard let sproutTexture = loadTexture(assetId: 200) else { return }
 
         let node = SKSpriteNode(texture: sproutTexture)
-        let fitW = (containerSize.width * 0.75) / sproutTexture.size().width
-        let fitH = (containerSize.height * 0.65) / sproutTexture.size().height
-        let scale = min(fitW, fitH)
-        self.baseScale = scale
-        node.setScale(scale)
-
+        node.size = CGSize(width: 160, height: 172)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        node.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.75 : 0)
+        node.position = CGPoint(x: 0, y: 20)
         node.zPosition = 10
 
         plantRootNode.addChild(node)
         self.sproutNode = node
 
-        // Hiệu ứng mầm non đung đưa đón nắng (Gentle swaying)
         let swayLeft = SKAction.rotate(toAngle: -0.05, duration: 2.2)
         swayLeft.timingMode = .easeInEaseOut
         let swayRight = SKAction.rotate(toAngle: 0.05, duration: 2.2)
         swayRight.timingMode = .easeInEaseOut
-        let swaySeq = SKAction.sequence([swayLeft, swayRight])
-        node.run(SKAction.repeatForever(swaySeq), withKey: "sproutSway")
+        node.run(SKAction.repeatForever(SKAction.sequence([swayLeft, swayRight])), withKey: "sproutSway")
 
-        // Hiệu ứng nhún nhảy nhẹ (Gentle vertical bob)
-        let bobUp = SKAction.scaleY(to: scale * 1.03, duration: 1.8)
+        let bobUp = SKAction.scaleY(to: 1.03, duration: 1.8)
         bobUp.timingMode = .easeInEaseOut
-        let bobDown = SKAction.scaleY(to: scale * 0.98, duration: 1.8)
+        let bobDown = SKAction.scaleY(to: 0.98, duration: 1.8)
         bobDown.timingMode = .easeInEaseOut
         node.run(SKAction.repeatForever(SKAction.sequence([bobUp, bobDown])), withKey: "sproutBob")
     }
 
-    // MARK: - State Level 3+: Cây trưởng thành (18 Lá Assets 2...19 uốn cong mềm mại, Asset-1 là ảnh nền đối chiếu)
+    // MARK: - State Level 3+: Cây trưởng thành (Kiến trúc lai .sks + Swift Animation)
 
     private func buildMatureState(level: Int) {
         // Tỉ lệ phát triển theo level: Level 3 = 88%, Level 10+ = 100%
@@ -265,18 +326,51 @@ public final class Plant1Node: SKNode {
         plantRootNode.setScale(scale)
         plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height : 0)
 
-        // Lưu ý theo quy ước: Asset-1 là ảnh đại diện / đối chiếu toạ độ, KHÔNG add vào scene hoạt ảnh.
-        // Cây trưởng thành được dựng hoàn toàn từ 18 bộ phận hoạt ảnh động (Assets 2 -> 19).
+        // 1. ƯU TIÊN KIẾN TRÚC LAI: Đọc trực tiếp các lá từ file trực quan Plant1Scene.sks
+        // Khi người thiết kế kéo thả chuột đổi vị trí trong Xcode, code tự động lấy vị trí mới đó!
+        if let scene = loadSceneTemplate(),
+           let matureGroup = scene.childNode(withName: "matureNode"),
+           !matureGroup.children.isEmpty {
 
-        // Lắp ráp và cấu tạo 18 chiếc lá hoạt ảnh động (Assets 2 -> 19)
+            var extractedLeaves: [SKSpriteNode] = []
+            for child in matureGroup.children {
+                if let sprite = child as? SKSpriteNode {
+                    extractedLeaves.append(sprite)
+                }
+            }
+
+            if !extractedLeaves.isEmpty {
+                for leaf in extractedLeaves {
+                    leaf.removeFromParent()
+                    leaf.isHidden = false
+                    plantRootNode.addChild(leaf)
+                    leafNodes.append(leaf)
+
+                    // Tìm metadata bổ trợ góc uốn/thời gian nếu có, hoặc suy ra từ vị trí trực quan
+                    let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+                    let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
+
+                    let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
+                    let bendAngle = meta?.bendAngle ?? 0.046
+                    let duration = meta?.duration ?? 2.8
+
+                    startLeafBendingAnimation(leaf: leaf, isLeft: isLeft, bendAngle: bendAngle, duration: duration)
+                }
+
+                addTrunkSwayAnimation()
+                return
+            }
+        }
+
+        // 2. FALLBACK CODE PROCEDURAL: Nếu file .sks chưa có lá thì sinh qua metadata chuẩn
         for data in Self.leavesMetadata {
             guard let leafTexture = loadTexture(assetId: data.assetId) else { continue }
 
             let leaf = SKSpriteNode(texture: leafTexture)
+            leaf.name = "leaf_\(data.assetId)"
             leaf.size = CGSize(width: data.width, height: data.height)
             leaf.anchorPoint = CGPoint(x: data.anchorX, y: data.anchorY)
 
-            // Chuyển đổi tọa độ pixel trên canvas 428 x 862 sang SpriteKit (gốc tại đáy giữa 0,0)
             let skX = data.imgX + data.anchorX * data.width
             let skY = baseCanvasHeight - data.imgY - (1.0 - data.anchorY) * data.height
 
@@ -286,11 +380,13 @@ public final class Plant1Node: SKNode {
             plantRootNode.addChild(leaf)
             leafNodes.append(leaf)
 
-            // Gán hiệu ứng uốn cong mềm mại theo gió cho từng lá
-            startLeafBendingAnimation(leaf: leaf, data: data)
+            startLeafBendingAnimation(leaf: leaf, isLeft: data.isLeft, bendAngle: data.bendAngle, duration: data.duration)
         }
 
-        // 3. Đung đưa nhẹ toàn cây (Trunk sway)
+        addTrunkSwayAnimation()
+    }
+
+    private func addTrunkSwayAnimation() {
         let trunkSwayLeft = SKAction.rotate(toAngle: -0.016, duration: 3.6)
         trunkSwayLeft.timingMode = .easeInEaseOut
         let trunkSwayRight = SKAction.rotate(toAngle: 0.016, duration: 3.6)
@@ -300,34 +396,28 @@ public final class Plant1Node: SKNode {
 
     // MARK: - Animation: Uốn cong lá mềm mại theo gió (Organic Leaf Bend)
 
-    private func startLeafBendingAnimation(leaf: SKSpriteNode, data: LeafData) {
+    private func startLeafBendingAnimation(leaf: SKSpriteNode, isLeft: Bool, bendAngle: CGFloat, duration: TimeInterval) {
         leaf.removeAction(forKey: "leafBend")
 
-        // Góc xoay uốn lượn tùy theo phía lá trái/phải
-        let angleDelta = data.isLeft ? -data.bendAngle : data.bendAngle
-        let duration = data.duration
+        let angleDelta = isLeft ? -bendAngle : bendAngle
 
-        // 1. Chuyển động xoay quanh cuống lá
         let bendForward = SKAction.rotate(byAngle: angleDelta, duration: duration * 0.5)
         bendForward.timingMode = .easeInEaseOut
 
         let bendBackward = SKAction.rotate(byAngle: -angleDelta, duration: duration * 0.5)
         bendBackward.timingMode = .easeInEaseOut
 
-        // 2. Biến dạng nén dãn nhẹ mô phỏng đường cong phiến lá 3D trong gió
         let flexIn = SKAction.scaleX(to: 0.97, y: 1.02, duration: duration * 0.5)
         flexIn.timingMode = .easeInEaseOut
 
         let flexOut = SKAction.scaleX(to: 1.02, y: 0.98, duration: duration * 0.5)
         flexOut.timingMode = .easeInEaseOut
 
-        // Kết hợp xoay và uốn cong
         let forwardGroup = SKAction.group([bendForward, flexIn])
         let backwardGroup = SKAction.group([bendBackward, flexOut])
 
         let bendSequence = SKAction.sequence([forwardGroup, backwardGroup])
 
-        // Random phase offset để các lá không chuyển động đồng loạt
         let initialWait = SKAction.wait(forDuration: Double.random(in: 0.0...1.6))
         leaf.run(SKAction.sequence([initialWait, SKAction.repeatForever(bendSequence)]), withKey: "leafBend")
     }
@@ -389,9 +479,11 @@ public final class Plant1Node: SKNode {
 
     private func loadTexture(assetId: Int) -> SKTexture? {
         let names = [
+            "plant1_Asset-\(assetId)@4.167x",
+            "plant1_Asset-\(assetId)",
             "Asset-\(assetId)@4.167x",
             "Asset-\(assetId)",
-            "plant1_Asset-\(assetId)",
+            "plant1/plant1_Asset-\(assetId)@4.167x",
             "plant1/Asset-\(assetId)"
         ]
 
@@ -402,7 +494,8 @@ public final class Plant1Node: SKNode {
         }
 
         // Fallback: Tìm trực tiếp trong bundle hoặc file system
-        if let bundleUrl = Bundle.main.url(forResource: "Asset-\(assetId)@4.167x", withExtension: "png") ??
+        if let bundleUrl = Bundle.main.url(forResource: "plant1_Asset-\(assetId)@4.167x", withExtension: "png") ??
+                           Bundle.main.url(forResource: "Asset-\(assetId)@4.167x", withExtension: "png") ??
                            Bundle.main.url(forResource: "Asset-\(assetId)", withExtension: "png") {
             if let data = try? Data(contentsOf: bundleUrl), let image = UIImage(data: data) {
                 return SKTexture(image: image)
