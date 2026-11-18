@@ -356,14 +356,8 @@ struct SelectItemSheet: View {
             plants: newPlants
         )
 
-        // Update Firestore
-        Task {
-            _ = await fireStore.updateDataUser(gardenModel: updatedModel)
-
-            // Close sheet
-            await MainActor.run {
-                isPresented = false
-            }
-        }
+        // Update Firestore asynchronously
+        fireStore.saveGarden(gardenModel: updatedModel, debounce: false)
+        isPresented = false
     }
 }

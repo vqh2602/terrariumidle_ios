@@ -33,23 +33,29 @@ struct PlantItemView: View {
     @State private var showFertilizeAlert = false
     @State private var showRemoveAlert = false
     
-    @State private var animationPressed = false
+    private var isSticker: Bool {
+        plantData?.idPlant.contains("sticker") == true && plantData?.idPlant == plantData?.idPot
+    }
+
+    private var isHanging: Bool {
+        plantData?.isHanging ?? false
+    }
+
+    private var hasEmptyIds: Bool {
+        !isSticker && (
+            plantData?.idPlant.isEmpty == true ||
+            plantData?.idPot.isEmpty == true ||
+            plantData?.idPlant == nil ||
+            plantData?.idPot == nil
+        )
+    }
+
+    private func handleDetailTap() {
+        guard !isEditing && plantData != nil && !hasEmptyIds && !isSticker else { return }
+        handlePlantTap()
+    }
 
     var body: some View {
-        // Kiểm tra xem có phải sticker không
-        let isSticker = (plantData?.idPlant.contains("sticker") == true &&
-            plantData?.idPlant == plantData?.idPot)
-
-        // Kiểm tra xem cây có treo không (isHanging = 1)
-        let isHanging = plantData?.isHanging ?? false
-
-        // Nếu KHÔNG phải sticker, check xem có plantId hoặc potId trống không
-        let hasEmptyIds = !isSticker && (
-            plantData?.idPlant.isEmpty == true ||
-                plantData?.idPot.isEmpty == true ||
-                plantData?.idPlant == nil ||
-                plantData?.idPot == nil
-        )
 
         Group {
             // MARK: - Layout Logic
@@ -133,9 +139,7 @@ struct PlantItemView: View {
                         width: itemWidth * 1.0,
                         height: itemWidth + itemWidth * 0.2,
                         onTap: {
-                            if !isEditing && plantData != nil && !hasEmptyIds && !isSticker {
-                                handlePlantTap()
-                            }
+                            handleDetailTap()
                         }
                     )
                     .frame(maxWidth: .infinity)
@@ -148,9 +152,7 @@ struct PlantItemView: View {
                         width: itemWidth,
                         height: itemWidth + itemWidth * 0.5,
                         onTap: {
-                            if !isEditing && plantData != nil && !hasEmptyIds && !isSticker {
-                                handlePlantTap()
-                            }
+                            handleDetailTap()
                         }
                     )
                 }
@@ -167,9 +169,7 @@ struct PlantItemView: View {
                         width: itemWidth,
                         height: itemWidth + itemWidth * 0.35,
                         onTap: {
-                            if !isEditing && plantData != nil && !hasEmptyIds && !isSticker {
-                                handlePlantTap()
-                            }
+                            handleDetailTap()
                         }
                     )
                     .zIndex(1)
@@ -181,9 +181,7 @@ struct PlantItemView: View {
                         width: itemWidth,
                         height: itemWidth * 0.6,
                         onTap: {
-                            if !isEditing && plantData != nil && !hasEmptyIds && !isSticker {
-                                handlePlantTap()
-                            }
+                            handleDetailTap()
                         }
                     )
                     .zIndex(2)
@@ -214,23 +212,6 @@ struct PlantItemView: View {
                 rowIndex: rowIndex,
                 columnIndex: columnIndex
             )
-        }
-
-        // MARK: - Tap to Collect (Non-Edit Mode Only)
-        .scaleEffect(animationPressed ? 0.94 : 1.0, anchor: .center)
-        .animation(.spring(response: 0.18, dampingFraction: 0.6), value: animationPressed)
-        .onTapGesture {
-            // Trigger zoom effect
-            animationPressed = true
-            if !isEditing && plantData != nil && !hasEmptyIds && !isSticker {
-                let plantSound = ItemDataManager.shared.getPlant(byId: plantData?.idPlant ?? "")?.clickSound ?? "tap"
-                AudioPlayer.shared.playClickSound(named: plantSound)
-                handlePlantTap()
-            }
-            // Reset zoom after short delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                animationPressed = false
-            }
         }
 
         // MARK: - Floating Text Overlay
@@ -359,10 +340,8 @@ struct PlantItemView: View {
             // Show oxygen collected
             showFloatingText("+\(oxygenDrop) 💨")
 
-            // Save to Firestore
-            Task {
-                _ = await fireStoreService.updateDataUser(gardenModel: gardenModel)
-            }
+            // Save to Firestore asynchronously with debouncing (gom các lần tap lại thành 1 lần ghi Firestore ở background)
+            fireStoreService.saveGarden(gardenModel: gardenModel, debounce: true)
         }
     }
 
@@ -417,10 +396,8 @@ struct PlantItemView: View {
         // Show success message
         showFloatingText("🌟 Level \(updatedPlant.plantLevel)!")
 
-        // Save to Firestore
-        Task {
-            _ = await fireStoreService.updateDataUser(gardenModel: gardenModel)
-        }
+        // Save to Firestore asynchronously
+        fireStoreService.saveGarden(gardenModel: gardenModel, debounce: false)
     }
 
     /// Remove plant - costs 1 shovel, removes the plant
@@ -457,10 +434,8 @@ struct PlantItemView: View {
         // Show success message
         showFloatingText("✅ Đã loại bỏ cây!")
 
-        // Save to Firestore
-        Task {
-            _ = await fireStoreService.updateDataUser(gardenModel: gardenModel)
-        }
+        // Save to Firestore asynchronously
+        fireStoreService.saveGarden(gardenModel: gardenModel, debounce: false)
     }
 }
 

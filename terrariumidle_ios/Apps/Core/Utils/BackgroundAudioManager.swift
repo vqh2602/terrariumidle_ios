@@ -26,21 +26,39 @@ final class BackgroundAudioManager: ObservableObject {
 
     private init() {
         setupRemoteCommands()
+        ensureAudioSession()
+    }
+
+    private static var isSessionConfigured = false
+
+    /// Cấu hình AudioSession bất đồng bộ trên background thread hoàn toàn,
+    /// tuyệt đối không gọi setActive trên Main Thread để tránh cảnh báo UI unresponsiveness
+    private func ensureAudioSession() {
+        guard !Self.isSessionConfigured else { return }
+        Self.isSessionConfigured = true
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                try session.setActive(true)
+            } catch {
+                print("⚠️ Lỗi thiết lập AVAudioSession:", error)
+            }
+        }
     }
 
     // MARK: - BGM
 
     func startBGM(fileName: String, ext: String = "mp3", title: String = "Terrarium Idle") {
+        ensureAudioSession()
+
+        guard let url = Bundle.main.url(forResource: fileName, withExtension: ext) else {
+            print("❌ Missing BGM: \(fileName).\(ext)")
+            return
+        }
+
         do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .default, options: [])
-            try session.setActive(true)
-
-            guard let url = Bundle.main.url(forResource: fileName, withExtension: ext) else {
-                print("❌ Missing BGM: \(fileName).\(ext)")
-                return
-            }
-
             player = try AVAudioPlayer(contentsOf: url)
             player?.numberOfLoops = -1
             player?.volume = bgmVolume

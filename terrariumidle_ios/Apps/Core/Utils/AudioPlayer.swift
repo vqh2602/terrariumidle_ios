@@ -19,12 +19,13 @@ final class AudioPlayer {
         preloadCommonSounds()
     }
 
-    /// Cấu hình AudioSession bất đồng bộ trên background thread để tránh chặn UI main thread khi tap liên tục
+    /// Cấu hình AudioSession bất đồng bộ trên background thread hoàn toàn,
+    /// tránh chặn UI main thread và loại bỏ cảnh báo UI unresponsiveness
     private func configureAudioSessionAsync() {
-        Task.detached(priority: .userInitiated) {
+        DispatchQueue.global(qos: .userInitiated).async {
             do {
                 let session = AVAudioSession.sharedInstance()
-                try session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+                try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
                 try session.setActive(true)
             } catch {
                 print("⚠️ Lỗi thiết lập AVAudioSession:", error)

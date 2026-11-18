@@ -18,51 +18,64 @@ class FireStoreService: ObservableObject {
     
     @Published var gradenModel: GardenModel?
 
+    // MARK: - Debounce & Background Persistence Properties
+    private var debounceTask: Task<Void, Never>?
+    private var pendingGardenModel: GardenModel?
+
     // MARK: - Dependencies
 
     private let auth: AuthService = AuthService.shared
     private let db = Firestore.firestore()
-    
-    
 
     // MARK: - Init
 
-//    init(auth: AuthService) {
-//        self.auth = auth
-//        currentUser = auth.currentUser
-////        super.init()
-//        print("user hiện tại: \(currentUser?.email ?? "n/a")")
-//    }
     /// Private init để ngăn tạo instance mới từ bên ngoài (enforcing Singleton)
-    private init() {}
+    private init() {
+        // Lắng nghe khi app chuẩn bị vào background hoặc ngưng hoạt động để lưu ngay lập tức các thay đổi đang chờ
+        #if canImport(UIKit)
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.willResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.flushPendingUpdates()
+        }
+        #endif
+    }
     
     var currentGradenModel: GardenModel? {
       return gradenModel
     }
     
-    func realtimeChangeDataGraden(userId: String?){
+    func realtimeChangeDataGraden(userId: String?) {
         guard let userId else { return }
         db.collection("users").document(userId)
-          .addSnapshotListener { documentSnapshot, error in
-            guard let document = documentSnapshot else {
-              print("Error fetching document: \(error?.localizedDescription ?? "unknown error")")
-              return
-            }
-            guard let data = document.data() else {
-              print("Document data was empty.")
-              return
-            }
-            self.dataGraden = data
-            do {
-                let model = try GardenModel(dict: data)
-                DispatchQueue.main.async {
-                    self.gradenModel = model
-                    print("User realtime:", model.user.userName, "Plants:", model.user.userFloor)
+            .addSnapshotListener { [weak self] documentSnapshot, error in
+                guard let self = self else { return }
+                guard let document = documentSnapshot else {
+                    print("Error fetching document: \(error?.localizedDescription ?? "unknown error")")
+                    return
                 }
-            } catch {
-                print("Failed to parse GardenModel: \(error)")
+                // Nếu snapshot này sinh ra do local write của chính thiết bị (hasPendingWrites),
+                // hoặc đang có thay đổi local đang chờ debounce, bỏ qua để tránh re-render giật lag
+                if document.metadata.hasPendingWrites || self.pendingGardenModel != nil {
+                    return
+                }
+                guard let data = document.data() else {
+                    print("Document data was empty.")
+                    return
+                }
+                self.dataGraden = data
+                do {
+                    let model = try GardenModel(dict: data)
+                    DispatchQueue.main.async {
+                        self.gradenModel = model
+                        print("User realtime:", model.user.userName, "Plants:", model.user.userFloor)
+                    }
+                } catch {
+                    print("Failed to parse GardenModel: \(error)")
+                }
             }
-          }
     }
     /// lấy dữ liệu khu vườn theo id user
     /// pb03Q3R93naRsjiAuyTGz0BPHI92 -> app flutter
@@ -75,9 +88,12 @@ class FireStoreService: ObservableObject {
             let dict = snapshot.data() ?? [:]
             dataGraden = dict
             // Parse GardenModel from the dictionary if possible
-            gradenModel = try GardenModel(dict: dict)
-            print("User:", gradenModel?.user.userName as Any, "Plants:", gradenModel?.user.userFloor as Any)
-            return gradenModel
+            let model = try GardenModel(dict: dict)
+            await MainActor.run {
+                self.gradenModel = model
+            }
+            print("User:", model.user.userName, "Plants:", model.user.userFloor)
+            return model
         } catch {
             print("Error loading garden: \(error)")
             return nil
@@ -144,44 +160,96 @@ class FireStoreService: ObservableObject {
 
     // MARK: - Update User Data
 
-    /// Update dữ liệu user lên Firestore
-    /// - Parameters:
-    ///   - gardenModel: GardenModel cần update
-    /// - Returns: GardenModel đã update hoặc nil nếu lỗi
+    /// Cập nhật dữ liệu khu vườn:
+    /// - Cập nhật ngay lập tức `gradenModel` trên MainActor để UI hiển thị mượt mà 60/120 FPS không độ trễ.
+    /// - `debounce == true`: Dành cho thao tác lặp lại nhiều lần liên tục (như tap nhặt oxy).
+    ///   Tự động gom toàn bộ các lần tap trong khoảng 1.2s thành 1 lần ghi Firestore duy nhất chạy ngầm ở background.
+    /// - `debounce == false`: Ghi ngay lập tức lên Firestore ở background thread (không block Main UI).
+    @MainActor
+    func saveGarden(gardenModel: GardenModel, debounce: Bool = false) {
+        // Cập nhật ngay local model để UI phản hồi ngay lập tức
+        self.gradenModel = gardenModel
+        self.pendingGardenModel = gardenModel
+
+        if debounce {
+            debounceTask?.cancel()
+            debounceTask = Task { [weak self] in
+                do {
+                    try await Task.sleep(nanoseconds: 1_200_000_000) // 1.2 giây sau lần tương tác cuối cùng
+                    guard !Task.isCancelled else { return }
+                    guard let self = self, let latestModel = self.pendingGardenModel else { return }
+                    self.pendingGardenModel = nil
+                    Task.detached(priority: .background) {
+                        await self.performFirestoreUpdate(gardenModel: latestModel)
+                    }
+                } catch {
+                    // Task bị huỷ khi người dùng tiếp tục tap - hoạt động bình thường
+                }
+            }
+        } else {
+            debounceTask?.cancel()
+            debounceTask = nil
+            pendingGardenModel = nil
+            let modelToSave = gardenModel
+            Task.detached(priority: .background) { [weak self] in
+                await self?.performFirestoreUpdate(gardenModel: modelToSave)
+            }
+        }
+    }
+
+    /// Lưu ngay lập tức các thay đổi đang chờ debounce (khi app chuẩn bị vào background hoặc thoát)
+    func flushPendingUpdates() {
+        debounceTask?.cancel()
+        debounceTask = nil
+        guard let model = pendingGardenModel else { return }
+        pendingGardenModel = nil
+        Task.detached(priority: .background) { [weak self] in
+            await self?.performFirestoreUpdate(gardenModel: model)
+        }
+    }
+
+    /// Ghi dữ liệu lên Firestore ở background thread hoàn toàn bất đồng bộ, không block UI
+    @discardableResult
+    func performFirestoreUpdate(gardenModel: GardenModel) async -> GardenModel? {
+        let userId = gardenModel.user.userID
+        guard !userId.isEmpty else {
+            print("❌ Lỗi: UserID rỗng")
+            return nil
+        }
+
+        // Chuyển đổi model sang Dictionary trên background thread để tránh chiếm dụng Main Thread
+        let updateData = await Task.detached(priority: .utility) {
+            return gardenModel.toDictionary()
+        }.value
+
+        do {
+            let docRef = db.collection("users").document(userId)
+            // Ghi trực tiếp bằng setData merge: true bất đồng bộ, không cần getDocument() trước
+            try await docRef.setData(updateData, merge: true)
+            print("✅ Update Firestore thành công cho user: \(gardenModel.user.userName)")
+            return gardenModel
+        } catch {
+            print("❌ Lỗi khi update Firestore: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// Update dữ liệu user lên Firestore (hỗ trợ async gọi từ các ViewModel / caller cũ)
+    @discardableResult
     func updateDataUser(gardenModel: GardenModel?) async -> GardenModel? {
         guard let gardenModel = gardenModel else {
             print("❌ Lỗi: Không tìm thấy thông tin tài khoản")
             return nil
         }
 
-        let userId = gardenModel.user.userID
-
-        do {
-            // Check xem document có tồn tại không
-            let docRef = db.collection("users").document(userId)
-            let snapshot = try await docRef.getDocument()
-
-            guard snapshot.exists else {
-                print("❌ Lỗi: Document không tồn tại cho userID: \(userId)")
-                return nil
-            }
-
-            // Convert GardenModel sang Dictionary để update
-            let updateData = gardenModel.toDictionary()
-
-            // Update document
-            try await docRef.updateData(updateData)
-            print("✅ Update thành công cho user: \(gardenModel.user.userName)")
-
-            // Update published property
-            gradenModel = gardenModel
-            _ = await getDataById(userId: gardenModel.user.userID)
-
-            return gardenModel
-        } catch {
-            print("❌ Lỗi khi update user: \(error.localizedDescription)")
-            return nil
+        await MainActor.run {
+            self.debounceTask?.cancel()
+            self.debounceTask = nil
+            self.pendingGardenModel = nil
+            self.gradenModel = gardenModel
         }
+
+        return await performFirestoreUpdate(gardenModel: gardenModel)
     }
 }
 

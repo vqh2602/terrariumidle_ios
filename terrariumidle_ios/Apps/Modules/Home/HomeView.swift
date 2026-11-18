@@ -149,8 +149,14 @@ struct HomeView: View {
                                                 let isEmpty = plantData == nil ||
                                                     (plantData?.idPlant.isEmpty == true && plantData?.idPot.isEmpty == true)
 
-                                                // Disable TouchScaleMenu in edit mode to allow drag gesture
-                                                if isEdit {
+                                                if isEmpty && !isEdit {
+                                                    // Empty slot in non-edit mode: Spacer to maintain layout, no interaction
+                                                    Color.clear
+                                                        .frame(width: itemWidth, height: 150)
+                                                        .allowsHitTesting(false)
+                                                        .id("\(rowIndex)-\(columnIndex)")
+                                                } else {
+                                                    // Plant slot: Tương tác tap trực tiếp trên cây và chậu, không bọc TouchScaleMenu khung ngoài
                                                     PlantItemView(
                                                         itemWidth: itemWidth,
                                                         plantData: plantData,
@@ -164,29 +170,6 @@ struct HomeView: View {
                                                         onDrop: handleDrop
                                                     )
                                                     .id("\(rowIndex)-\(columnIndex)")
-                                                } else if isEmpty {
-                                                    // Empty slot in non-edit mode: Spacer to maintain layout, no interaction
-                                                    Color.clear
-                                                        .frame(width: itemWidth, height: 150)
-                                                        .allowsHitTesting(false)
-                                                        .id("\(rowIndex)-\(columnIndex)")
-                                                } else {
-                                                    // Non-empty slot: Normal interaction
-                                                    TouchScaleMenu {
-                                                        PlantItemView(
-                                                            itemWidth: itemWidth,
-                                                            plantData: plantData,
-                                                            rowIndex: rowIndex,
-                                                            columnIndex: columnIndex,
-                                                            cartPlants: fireStoreService.gradenModel?.cart.cartPlants ?? [],
-                                                            cartPots: fireStoreService.gradenModel?.cart.cartPots ?? [],
-                                                            cartStickers: fireStoreService.gradenModel?.cart.cartStickers ?? [],
-                                                            isEditing: $isEdit,
-                                                            draggedPlant: $draggedPlant,
-                                                            onDrop: handleDrop
-                                                        )
-                                                        .id("\(rowIndex)-\(columnIndex)")
-                                                    }
                                                 }
                                             }
                                         }
@@ -332,9 +315,8 @@ struct HomeView: View {
         // Clear drag state IMMEDIATELY to prevent ghost overlay
         draggedPlant = nil
 
-        Task {
-            _ = await fireStoreService.updateDataUser(gardenModel: gardenModel)
-        }
+        // Save asynchronously
+        fireStoreService.saveGarden(gardenModel: gardenModel, debounce: false)
     }
 
     // MARK: - Floor Unlock Functions
@@ -390,10 +372,8 @@ struct HomeView: View {
 
         print("✅ Floor unlocked! New floor: \(gardenModel.user.userFloor), Oxygen spent: \(cost)")
 
-        // Update Firestore
-        Task {
-            _ = await fireStoreService.updateDataUser(gardenModel: gardenModel)
-        }
+        // Update Firestore asynchronously
+        fireStoreService.saveGarden(gardenModel: gardenModel, debounce: false)
     }
 }
 
