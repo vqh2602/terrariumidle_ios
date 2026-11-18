@@ -22,8 +22,13 @@ struct StoreItemCard: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
             } placeholder: {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.2))
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.gray.opacity(0.12))
+                    Image(systemName: item.type == "plant" ? "leaf" : (item.type == "pot" ? "shippingbox" : "photo"))
+                        .font(.system(size: 18))
+                        .foregroundColor(.gray.opacity(0.6))
+                }
             }
             .frame(width: 60, height: 60)
             .cornerRadius(8)

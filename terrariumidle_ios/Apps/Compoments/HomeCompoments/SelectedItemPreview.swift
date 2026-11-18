@@ -20,8 +20,13 @@ struct SelectedItemPreview: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
             } placeholder: {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.2))
+                ZStack {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.gray.opacity(0.12))
+                    Image(systemName: item.type == "plant" ? "leaf" : (item.type == "pot" ? "shippingbox" : "photo"))
+                        .font(.system(size: 14))
+                        .foregroundColor(.gray.opacity(0.6))
+                }
             }
             .frame(width: 40, height: 40)
             .cornerRadius(6)

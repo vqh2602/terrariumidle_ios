@@ -36,6 +36,7 @@ final class ImageCache {
 }
 
 struct CachedAsyncImage<Content: View, Placeholder: View>: View {
+    let rawNameOrUrl: String?
     let url: URL?
     @ViewBuilder let content: (Image) -> Content
     @ViewBuilder let placeholder: () -> Placeholder
@@ -48,8 +49,23 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
         self.url = url
+        let raw = url?.absoluteString
+        self.rawNameOrUrl = raw
         self.content = content
         self.placeholder = placeholder
+        _uiImage = State(initialValue: Self.resolveLocalImage(from: raw))
+    }
+
+    init(
+        named nameOrUrl: String?,
+        @ViewBuilder content: @escaping (Image) -> Content,
+        @ViewBuilder placeholder: @escaping () -> Placeholder
+    ) {
+        self.rawNameOrUrl = nameOrUrl
+        self.url = nameOrUrl.flatMap { URL(string: $0) }
+        self.content = content
+        self.placeholder = placeholder
+        _uiImage = State(initialValue: Self.resolveLocalImage(from: nameOrUrl))
     }
 
     var body: some View {
@@ -63,9 +79,73 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         }
     }
 
-    private func load() {
-        guard let url else { return }
+    /// Tìm nạp ảnh từ Asset Catalog cục bộ (Zero Network)
+    public static func resolveLocalImage(from rawString: String?) -> UIImage? {
+        guard let raw = rawString?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else {
+            return nil
+        }
 
+        // Bỏ qua nếu là URL mạng
+        if raw.lowercased().hasPrefix("http://") || raw.lowercased().hasPrefix("https://") {
+            return nil
+        }
+
+        // 1. Tìm trực tiếp theo tên
+        if let img = UIImage(named: raw) { return img }
+
+        // 2. Thử thêm hậu tố @4.167x
+        if let img = UIImage(named: "\(raw)@4.167x") { return img }
+
+        // 3. Đổi dấu gạch dưới thành gạch ngang hoặc ngược lại (pot1_Asset-1 <-> pot1-Asset-1)
+        let dash = raw.replacingOccurrences(of: "_", with: "-")
+        if let img = UIImage(named: dash) { return img }
+        if let img = UIImage(named: "\(dash)@4.167x") { return img }
+
+        let underscore = raw.replacingOccurrences(of: "-", with: "_")
+        if let img = UIImage(named: underscore) { return img }
+        if let img = UIImage(named: "\(underscore)@4.167x") { return img }
+
+        // 4. Nếu là chuỗi dạng "plantX_Asset-1" hoặc "potX_Asset-1" -> tìm theo base ID
+        if raw.contains("Asset-1") {
+            let baseId = raw.replacingOccurrences(of: "_Asset-1", with: "")
+                            .replacingOccurrences(of: "-Asset-1", with: "")
+            if let img = UIImage(named: baseId) { return img }
+            if let img = UIImage(named: "\(baseId)@4.167x") { return img }
+        }
+
+        // 5. Nếu là chuỗi base ID (như "pot1" hoặc "plant1") -> tìm các biến thể Asset-1
+        let variants = [
+            "\(raw)_Asset-1",
+            "\(raw)-Asset-1",
+            "\(raw)_Asset-1@4.167x",
+            "\(raw)-Asset-1@4.167x"
+        ]
+        for v in variants {
+            if let img = UIImage(named: v) { return img }
+        }
+
+        return nil
+    }
+
+    private func load() {
+        if uiImage != nil { return }
+
+        let rawString = rawNameOrUrl ?? url?.absoluteString
+
+        // 1. Kiểm tra lại local asset
+        if let local = Self.resolveLocalImage(from: rawString) {
+            self.uiImage = local
+            return
+        }
+
+        // 2. Tuyệt đối không dùng mạng nếu không phải URL http/https hợp lệ
+        guard let url = url ?? (rawString.flatMap { URL(string: $0) }),
+              let scheme = url.scheme?.lowercased(),
+              scheme == "http" || scheme == "https" else {
+            return
+        }
+
+        // 3. Fallback cho URL mạng cũ (nếu còn)
         if let cached = ImageCache.shared.image(for: url as NSURL) {
             uiImage = cached
             return
@@ -73,13 +153,11 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
 
         Task {
             do {
-                // Use URLSession with caching enabled
                 var request = URLRequest(url: url)
                 request.cachePolicy = .returnCacheDataElseLoad
 
                 let (data, response) = try await URLSession.shared.data(for: request)
 
-                // Cache the response
                 if let httpResponse = response as? HTTPURLResponse,
                    httpResponse.statusCode == 200
                 {

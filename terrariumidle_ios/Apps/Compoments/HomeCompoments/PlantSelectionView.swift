@@ -119,8 +119,18 @@ struct PlantItemRow: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                 } placeholder: {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.2))
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.gray.opacity(0.12))
+                        VStack(spacing: 2) {
+                            Image(systemName: "leaf.arrow.triangle.circlepath")
+                                .font(.system(size: 16))
+                                .foregroundColor(Color.green.opacity(0.80))
+                            Text("<update>")
+                                .font(.system(size: 8, weight: .semibold))
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
                 .frame(width: 60, height: 60)
                 .cornerRadius(8)
