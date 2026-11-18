@@ -48,6 +48,8 @@ public struct SpriteKitPotView: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 scene.playTapAnimation()
+                let soundName = ItemDataManager.shared.getPot(byId: potId)?.clickSound ?? "tap"
+                AudioPlayer.shared.playClickSound(named: soundName)
                 onTap?()
             }
             .onChange(of: potId) { newId in

@@ -159,6 +159,11 @@ public final class Plant1Node: SKNode {
         seedNode = nil
         sproutNode = nil
 
+        self.isPaused = false
+        self.speed = 1.0
+        plantRootNode.isPaused = false
+        plantRootNode.speed = 1.0
+
         guard containerSize.width > 0, containerSize.height > 0 else { return }
 
         switch growthState {
@@ -185,7 +190,7 @@ public final class Plant1Node: SKNode {
 
     private func buildSeedState() {
         plantRootNode.setScale(1.0)
-        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.70 : 0)
+        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.70 : 8)
         self.baseScale = 1.0
 
         // Tải texture hạt giống (Asset-100)
@@ -201,6 +206,8 @@ public final class Plant1Node: SKNode {
         node.anchorPoint = CGPoint(x: 0.5, y: 0.0)
         node.position = CGPoint(x: 0, y: 0)
         node.zPosition = 10
+        node.isPaused = false
+        node.speed = 1.0
 
         plantRootNode.addChild(node)
         self.seedNode = node
@@ -253,7 +260,7 @@ public final class Plant1Node: SKNode {
 
     private func buildSproutState() {
         plantRootNode.setScale(1.0)
-        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.70 : 0)
+        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.70 : 8)
         self.baseScale = 1.0
 
         guard let sproutTexture = loadTexture(assetId: 200) else { return }
@@ -268,6 +275,9 @@ public final class Plant1Node: SKNode {
         node.anchorPoint = CGPoint(x: 0.5, y: 0.0)
         node.position = CGPoint(x: 0, y: 0)
         node.zPosition = 10
+        node.isPaused = false
+        node.speed = 1.0
+        node.speed = 1.0
 
         plantRootNode.addChild(node)
         self.sproutNode = node
@@ -324,8 +334,8 @@ public final class Plant1Node: SKNode {
         let baseCanvasWidth: CGFloat = 428.0
         let baseCanvasHeight: CGFloat = 862.0
 
-        let fitW = (containerSize.width * 0.92) / baseCanvasWidth
-        let fitH = (containerSize.height * 0.92) / baseCanvasHeight
+        let fitW = containerSize.width / baseCanvasWidth
+        let fitH = containerSize.height / baseCanvasHeight
         let scale = min(fitW, fitH) * growthRatio
         self.baseScale = scale
 
@@ -333,23 +343,22 @@ public final class Plant1Node: SKNode {
         plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height : 0)
 
         // 1. ƯU TIÊN KIẾN TRÚC LAI: Đọc trực tiếp các lá từ file trực quan Plant1Scene.sks
-        // Khi người thiết kế kéo thả chuột đổi vị trí trong Xcode, code tự động lấy vị trí mới đó!
+        // Giữ đúng 100% khung và toạ độ thiết kế trong Xcode (bao gồm cả phần cắt cuống cắm vào chậu)
         if let scene = loadSceneTemplate(),
            let matureGroup = scene.childNode(withName: "matureNode"),
            !matureGroup.children.isEmpty {
 
-            var extractedLeaves: [SKSpriteNode] = []
-            for child in matureGroup.children {
-                if let sprite = child as? SKSpriteNode {
-                    extractedLeaves.append(sprite)
-                }
-            }
+            matureGroup.removeFromParent()
+            matureGroup.isHidden = false
+            matureGroup.isPaused = false
+            matureGroup.speed = 1.0
+            plantRootNode.addChild(matureGroup)
 
-            if !extractedLeaves.isEmpty {
-                for leaf in extractedLeaves {
-                    leaf.removeFromParent()
+            for child in matureGroup.children {
+                if let leaf = child as? SKSpriteNode {
                     leaf.isHidden = false
-                    plantRootNode.addChild(leaf)
+                    leaf.isPaused = false
+                    leaf.speed = 1.0
                     leafNodes.append(leaf)
 
                     // Tìm metadata bổ trợ góc uốn/thời gian nếu có, hoặc suy ra từ vị trí trực quan
@@ -357,15 +366,15 @@ public final class Plant1Node: SKNode {
                     let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
 
                     let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
-                    let bendAngle = meta?.bendAngle ?? 0.046
+                    let bendAngle = max(meta?.bendAngle ?? 0.046, 0.075)
                     let duration = meta?.duration ?? 2.8
 
                     startLeafBendingAnimation(leaf: leaf, isLeft: isLeft, bendAngle: bendAngle, duration: duration)
                 }
-
-                addTrunkSwayAnimation()
-                return
             }
+
+            addTrunkSwayAnimation()
+            return
         }
 
         // 2. FALLBACK CODE PROCEDURAL: Nếu file .sks chưa có lá thì sinh qua metadata chuẩn
@@ -378,24 +387,31 @@ public final class Plant1Node: SKNode {
             leaf.anchorPoint = CGPoint(x: data.anchorX, y: data.anchorY)
 
             let skX = data.imgX + data.anchorX * data.width
-            let skY = baseCanvasHeight - data.imgY - (1.0 - data.anchorY) * data.height
+            let skY = baseCanvasHeight - data.imgY - (1.0 - data.anchorY) * data.height - 180.0
 
             leaf.position = CGPoint(x: skX - (baseCanvasWidth / 2.0), y: skY)
             leaf.zPosition = data.zPos
+            leaf.isPaused = false
+            leaf.speed = 1.0
 
             plantRootNode.addChild(leaf)
             leafNodes.append(leaf)
 
-            startLeafBendingAnimation(leaf: leaf, isLeft: data.isLeft, bendAngle: data.bendAngle, duration: data.duration)
+            let bendAngle = max(data.bendAngle, 0.075)
+            startLeafBendingAnimation(leaf: leaf, isLeft: data.isLeft, bendAngle: bendAngle, duration: data.duration)
         }
 
         addTrunkSwayAnimation()
     }
 
     private func addTrunkSwayAnimation() {
-        let trunkSwayLeft = SKAction.rotate(toAngle: -0.016, duration: 3.6)
+        plantRootNode.removeAction(forKey: "trunkSway")
+        plantRootNode.isPaused = false
+        plantRootNode.speed = 1.0
+
+        let trunkSwayLeft = SKAction.rotate(toAngle: -0.038, duration: 2.8)
         trunkSwayLeft.timingMode = .easeInEaseOut
-        let trunkSwayRight = SKAction.rotate(toAngle: 0.016, duration: 3.6)
+        let trunkSwayRight = SKAction.rotate(toAngle: 0.038, duration: 2.8)
         trunkSwayRight.timingMode = .easeInEaseOut
         plantRootNode.run(SKAction.repeatForever(SKAction.sequence([trunkSwayLeft, trunkSwayRight])), withKey: "trunkSway")
     }
@@ -404,6 +420,8 @@ public final class Plant1Node: SKNode {
 
     private func startLeafBendingAnimation(leaf: SKSpriteNode, isLeft: Bool, bendAngle: CGFloat, duration: TimeInterval) {
         leaf.removeAction(forKey: "leafBend")
+        leaf.isPaused = false
+        leaf.speed = 1.0
 
         let angleDelta = isLeft ? -bendAngle : bendAngle
 
@@ -424,7 +442,8 @@ public final class Plant1Node: SKNode {
 
         let bendSequence = SKAction.sequence([forwardGroup, backwardGroup])
 
-        let initialWait = SKAction.wait(forDuration: Double.random(in: 0.0...1.6))
+        // Bắt đầu ngay với độ trễ tối thiểu để người dùng thấy hoạt ảnh ngay lập tức
+        let initialWait = SKAction.wait(forDuration: Double.random(in: 0.0...0.25))
         leaf.run(SKAction.sequence([initialWait, SKAction.repeatForever(bendSequence)]), withKey: "leafBend")
     }
 

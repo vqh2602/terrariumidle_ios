@@ -6,12 +6,62 @@ final class AudioPlayer {
 
     private var bgmPlayer: AVAudioPlayer?
     private var sfxPlayers: [AVAudioPlayer] = []   // để chồng nhiều effect
-    private var tapPlayer: AVAudioPlayer?
+
+    /// Pool player âm thanh ngắn (tối đa 4 player cho mỗi âm thanh để tap nhanh không bị trễ hay ngắt quãng)
+    private var soundPool: [String: [AVAudioPlayer]] = [:]
+    private let maxPlayersPerSound = 4
 
     var isBgmEnabled = true
     var isSfxEnabled = true
 
-    private init() {}
+    private init() {
+        configureAudioSessionAsync()
+        preloadCommonSounds()
+    }
+
+    /// Cấu hình AudioSession bất đồng bộ trên background thread để tránh chặn UI main thread khi tap liên tục
+    private func configureAudioSessionAsync() {
+        Task.detached(priority: .userInitiated) {
+            do {
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+                try session.setActive(true)
+            } catch {
+                print("⚠️ Lỗi thiết lập AVAudioSession:", error)
+            }
+        }
+    }
+
+    private func preloadCommonSounds() {
+        _ = getOrCreatePlayer(fileName: "tap", ext: "mp3")
+    }
+
+    /// Lấy player rảnh từ pool hoặc tạo mới nếu cần
+    private func getOrCreatePlayer(fileName: String, ext: String) -> AVAudioPlayer? {
+        let key = "\(fileName).\(ext)"
+        if var list = soundPool[key] {
+            if let idle = list.first(where: { !$0.isPlaying }) {
+                return idle
+            }
+            if list.count < maxPlayersPerSound,
+               let url = Bundle.main.url(forResource: fileName, withExtension: ext),
+               let newPlayer = try? AVAudioPlayer(contentsOf: url) {
+                newPlayer.prepareToPlay()
+                list.append(newPlayer)
+                soundPool[key] = list
+                return newPlayer
+            }
+            return list.first
+        }
+
+        guard let url = Bundle.main.url(forResource: fileName, withExtension: ext),
+              let player = try? AVAudioPlayer(contentsOf: url) else {
+            return nil
+        }
+        player.prepareToPlay()
+        soundPool[key] = [player]
+        return player
+    }
 
     // MARK: - Background Music
 
@@ -40,23 +90,33 @@ final class AudioPlayer {
         bgmPlayer = nil
     }
 
-    // MARK: - Tap Sound (1 cái ngắn, không cần chồng)
+    // MARK: - Tap Sound (Sử dụng Pool tái sử dụng, không block Main Thread khi tap liên tục)
 
     func playTap(fileName: String = "tap", ext: String = "mp3", volume: Float = 1.0) {
         guard isSfxEnabled else { return }
 
-        guard let url = Bundle.main.url(forResource: fileName, withExtension: ext) else {
+        guard let player = getOrCreatePlayer(fileName: fileName, ext: ext) else {
             print("❌ Không tìm thấy TAP: \(fileName).\(ext)")
             return
         }
 
-        do {
-            tapPlayer = try AVAudioPlayer(contentsOf: url)
-            tapPlayer?.volume = volume
-            tapPlayer?.prepareToPlay()
-            tapPlayer?.play()
-        } catch {
-            print("❌ Lỗi play TAP:", error)
+        player.volume = volume
+        player.currentTime = 0
+        player.play()
+    }
+
+    /// Phát âm thanh click từ cấu hình JSON (nếu không truyền hoặc không tìm thấy, mặc định là "tap")
+    func playClickSound(named soundName: String?, volume: Float = 1.0) {
+        guard isSfxEnabled else { return }
+        let cleanName = (soundName ?? "").trimmingCharacters(in: .whitespaces)
+        let targetName = cleanName.isEmpty ? "tap" : cleanName
+        let baseName = (targetName as NSString).deletingPathExtension
+        let fileExt = (targetName as NSString).pathExtension.isEmpty ? "mp3" : (targetName as NSString).pathExtension
+
+        if Bundle.main.url(forResource: baseName, withExtension: fileExt) != nil {
+            playTap(fileName: baseName, ext: fileExt, volume: volume)
+        } else {
+            playTap(fileName: "tap", ext: "mp3", volume: volume)
         }
     }
 
@@ -90,7 +150,8 @@ final class AudioPlayer {
     func stopAllSFX() {
         sfxPlayers.forEach { $0.stop() }
         sfxPlayers.removeAll()
-        tapPlayer?.stop()
-        tapPlayer = nil
+        for list in soundPool.values {
+            list.forEach { $0.stop() }
+        }
     }
 }

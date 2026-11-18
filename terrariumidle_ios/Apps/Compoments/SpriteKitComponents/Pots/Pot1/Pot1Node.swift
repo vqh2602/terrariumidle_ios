@@ -66,6 +66,11 @@ public final class Pot1Node: SKNode {
         potNode = nil
         shadowNode = nil
 
+        self.isPaused = false
+        self.speed = 1.0
+        potRootNode.isPaused = false
+        potRootNode.speed = 1.0
+
         guard containerSize.width > 0, containerSize.height > 0 else { return }
 
         // Tỉ lệ ảnh gốc: 276 x 195 (aspect ~ 0.7065)
@@ -93,6 +98,8 @@ public final class Pot1Node: SKNode {
            templatePot.texture != nil {
             templatePot.removeFromParent()
             templatePot.isHidden = false
+            templatePot.isPaused = false
+            templatePot.speed = 1.0
             potRootNode.addChild(templatePot)
             self.potNode = templatePot
             self.initialPotPosition = templatePot.position
@@ -108,6 +115,8 @@ public final class Pot1Node: SKNode {
         node.name = "potNode"
         node.size = CGSize(width: targetW, height: targetH)
         node.zPosition = 10
+        node.isPaused = false
+        node.speed = 1.0
 
         if isHanging {
             node.anchorPoint = CGPoint(x: 0.5, y: 1.0)

@@ -20,8 +20,7 @@ struct TouchScaleMenu<Content: View>: View {
                 // Trigger zoom effect
                 isPressed = true
 
-                // Play sound and call onTap
-                AudioPlayer.shared.playTap(fileName: "tap", ext: "mp3")
+                // Call onTap
                 onTap()
 
                 // Reset zoom after short delay

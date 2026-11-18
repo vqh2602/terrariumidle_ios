@@ -10,7 +10,8 @@
         "type": "plant",
         "effect": "Relax - m0",
         "itemTypeAttribute": "none",
-        "levelUnlock": 1
+        "levelUnlock": 1,
+        "sound": "tap"
     },
     {
         "id": "plant2",
@@ -23,7 +24,8 @@
         "type": "plant",
         "effect": "N.A",
         "itemTypeAttribute": "none",
-        "levelUnlock": 1
+        "levelUnlock": 1,
+        "sound": "tap"
     },
     {
         "id": "plant3",

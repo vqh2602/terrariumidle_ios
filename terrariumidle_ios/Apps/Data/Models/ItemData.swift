@@ -22,6 +22,20 @@ struct ItemData: Codable, Identifiable {
     let itemTypeAttribute: ItemTypeAttribute
     let levelUnlock: Int
 
+    // MARK: - Cấu hình âm thanh khi tap
+    let sound: String?
+    let tapSound: String?
+
+    var clickSound: String {
+        if let s = sound, !s.trimmingCharacters(in: .whitespaces).isEmpty {
+            return s.trimmingCharacters(in: .whitespaces)
+        }
+        if let ts = tapSound, !ts.trimmingCharacters(in: .whitespaces).isEmpty {
+            return ts.trimmingCharacters(in: .whitespaces)
+        }
+        return "tap"
+    }
+
     // MARK: - Cấu hình động SpriteKit từ file JSON (loại bỏ switch-case thủ công)
     let kind: String?            // "fallingLeaves", "fireflies", "weather", etc.
     let sksFile: String?         // Tên file .sks ("Fireflies.sks", "Rain.sks", "PlantScene.sks", v.v.)

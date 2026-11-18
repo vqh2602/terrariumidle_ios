@@ -46,11 +46,12 @@ public final class SpriteKitPlantScene: SKScene {
     // MARK: - Configuration
 
     public func configure(plantId: String, level: Int = 1, isHanging: Bool = false) {
+        let changed = self.plantId != plantId || self.plantLevel != level || self.isHanging != isHanging
         self.plantId = plantId
         self.plantLevel = level
         self.isHanging = isHanging
 
-        if size.width > 0 && size.height > 0 {
+        if (changed || (plantNode == nil && plant1Node == nil)) && size.width > 0 && size.height > 0 {
             buildPlant()
         }
     }
@@ -58,15 +59,19 @@ public final class SpriteKitPlantScene: SKScene {
     public override func didMove(to view: SKView) {
         super.didMove(to: view)
         view.allowsTransparency = true
-        if plantNode == nil && size.width > 0 && size.height > 0 {
+        view.isPaused = false
+        self.isPaused = false
+        if plantNode == nil && plant1Node == nil && size.width > 0 && size.height > 0 {
             buildPlant()
         }
     }
 
     public override func didChangeSize(_ oldSize: CGSize) {
         super.didChangeSize(oldSize)
-        if size.width > 0 && size.height > 0 {
-            buildPlant()
+        if (plantNode == nil && plant1Node == nil) || abs(oldSize.width - size.width) > 2 || abs(oldSize.height - size.height) > 2 {
+            if size.width > 0 && size.height > 0 {
+                buildPlant()
+            }
         }
     }
 

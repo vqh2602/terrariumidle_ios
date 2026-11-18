@@ -158,7 +158,7 @@ struct PlantItemView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else {
                 // NORMAL PLANT LAYOUT
-                VStack(spacing: 0) {
+                VStack(spacing: -itemWidth * 0.14) {
                     // Hiển thị Plant với idPlant từ data (không dùng mockup, cây chưa có sẽ hiện <update app để hiển thị>)
                     SpriteKitPlantView(
                         plantId: plantData?.idPlant ?? "plant1",
@@ -172,6 +172,7 @@ struct PlantItemView: View {
                             }
                         }
                     )
+                    .zIndex(1)
 
                     // Hiển thị Pot với idPot từ data
                     SpriteKitPotView(
@@ -185,6 +186,7 @@ struct PlantItemView: View {
                             }
                         }
                     )
+                    .zIndex(2)
                 }
                 .id("\(plantData?.idPlant ?? "")-\(plantData?.plantLevel ?? 1)")
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -221,11 +223,10 @@ struct PlantItemView: View {
             // Trigger zoom effect
             animationPressed = true
             if !isEditing && plantData != nil && !hasEmptyIds && !isSticker {
-            
+                let plantSound = ItemDataManager.shared.getPlant(byId: plantData?.idPlant ?? "")?.clickSound ?? "tap"
+                AudioPlayer.shared.playClickSound(named: plantSound)
                 handlePlantTap()
-               
             }
-            AudioPlayer.shared.playTap()
             // Reset zoom after short delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 animationPressed = false

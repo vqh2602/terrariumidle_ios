@@ -45,10 +45,11 @@ public final class SpriteKitPotScene: SKScene {
     // MARK: - Configuration
 
     public func configure(potId: String, isHanging: Bool = false) {
+        let changed = self.potId != potId || self.isHanging != isHanging
         self.potId = potId
         self.isHanging = isHanging
 
-        if size.width > 0 && size.height > 0 {
+        if (changed || (potNode == nil && pot1Node == nil)) && size.width > 0 && size.height > 0 {
             buildPot()
         }
     }
@@ -56,15 +57,19 @@ public final class SpriteKitPotScene: SKScene {
     public override func didMove(to view: SKView) {
         super.didMove(to: view)
         view.allowsTransparency = true
-        if potNode == nil && size.width > 0 && size.height > 0 {
+        view.isPaused = false
+        self.isPaused = false
+        if potNode == nil && pot1Node == nil && size.width > 0 && size.height > 0 {
             buildPot()
         }
     }
 
     public override func didChangeSize(_ oldSize: CGSize) {
         super.didChangeSize(oldSize)
-        if size.width > 0 && size.height > 0 {
-            buildPot()
+        if (potNode == nil && pot1Node == nil) || abs(oldSize.width - size.width) > 2 || abs(oldSize.height - size.height) > 2 {
+            if size.width > 0 && size.height > 0 {
+                buildPot()
+            }
         }
     }
 
