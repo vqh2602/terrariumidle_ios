@@ -69,9 +69,10 @@ struct SettingsRow: View {
             }
             .padding(.vertical, 12)
             .padding(.horizontal, 16)
-            .background(Color.white)
+            .background(.regularMaterial)
         }
         .buttonStyle(PlainButtonStyle())
+//        .background(.regularMaterial)
     }
 }
 

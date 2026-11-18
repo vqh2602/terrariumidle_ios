@@ -57,7 +57,7 @@ struct AppRouterView: View {
             SplashView(router: router)
                 .navigationDestination(for: AppRoute.self) { route in
                     switch route {
-                    case let .loginView(id):
+                    case .loginView(_):
                         LoginView()
                     case .splashView:
                         EmptyView()

@@ -103,8 +103,8 @@ struct PotRiveView2: View {
     var width: Double
     var height: Double?
     var body: some View {
-        RiveUIView(rive: {
-            let worker = Worker()
+        AsyncRiveUIViewRepresentable {
+            let worker = try await Worker()
             let file = try await File(
                 source: .url(URL(string: "https://vqh2602.github.io/terrarium_data.github.io/rive/pots/pot5.riv")!),
                 worker: worker
@@ -114,8 +114,8 @@ struct PotRiveView2: View {
             let rive = try await Rive(file: file, dataBind: .auto, fit: .fitHeight(alignment: .center))
 
             return rive
-        }).view().onAppear()
-            .frame(width: width, height: height ?? 100)
+        }
+        .frame(width: width, height: height ?? 100)
     }
 }
 

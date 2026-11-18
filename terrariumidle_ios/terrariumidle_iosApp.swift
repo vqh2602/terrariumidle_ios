@@ -7,7 +7,7 @@
 
 import SwiftUI
 import FirebaseCore
-
+import FirebaseAuth
 
 class AppDelegate: NSObject, UIApplicationDelegate {
   func application(_ application: UIApplication,
@@ -15,6 +15,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     FirebaseApp.configure()
 
     return true
+  }
+
+  func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+    return Auth.auth().canHandle(url)
   }
 }
 
@@ -24,6 +28,9 @@ struct terrariumidle_iosApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onOpenURL { url in
+                    _ = Auth.auth().canHandle(url)
+                }
         }
     }
 }

@@ -113,20 +113,45 @@ final class LoginViewModel: ObservableObject {
     //        }
     //    }
 
-    // MARK: - Email/Password Login
+    // MARK: - Google Sign-In
+
+    /// Đăng nhập bằng Google
+    func loginWithGoogle() async -> User? {
+        hasError = false
+        errorMessage = nil
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let user = try await auth.signInWithGoogle()
+            currentUser = user
+            isAuthenticated = true
+            fetchUserToken()
+            fetchCurrentUser()
+            return user
+        } catch {
+            hasError = true
+            errorMessage = error.localizedDescription
+            isAuthenticated = false
+            return nil
+        }
+    }
+
+    // MARK: - Email/Password Login & Register
 
     /// Đăng nhập bằng email và password
-    func login(email: String, password: String) async {
+    func login(email: String, password: String) async -> User? {
         // Validate input
         guard !email.isEmpty, !password.isEmpty else {
-            errorMessage = "Vui lòng nhập email và password"
+            errorMessage = "Vui lòng nhập email và mật khẩu"
             hasError = true
-            return
+            return nil
         }
 
         hasError = false
         errorMessage = nil
         isLoading = true
+        defer { isLoading = false }
 
         do {
             let (token, user) = try await auth.login(username: email, password: password)
@@ -136,15 +161,51 @@ final class LoginViewModel: ObservableObject {
 
             currentUser = user
             isAuthenticated = true
-            isLoading = false
-
+            fetchUserToken()
+            fetchCurrentUser()
+            return user
         } catch {
             print("❌ Đăng nhập email thất bại: \(error.localizedDescription)")
 
             errorMessage = error.localizedDescription
             hasError = true
             isAuthenticated = false
-            isLoading = false
+            return nil
+        }
+    }
+
+    /// Đăng ký tài khoản mới bằng email và password
+    func register(email: String, password: String) async -> User? {
+        // Validate input
+        guard !email.isEmpty, !password.isEmpty else {
+            errorMessage = "Vui lòng nhập email và mật khẩu"
+            hasError = true
+            return nil
+        }
+
+        hasError = false
+        errorMessage = nil
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let (token, user) = try await auth.register(email: email, password: password)
+
+            print("✅ Đăng ký email thành công!")
+            print("   Token: \(token)")
+
+            currentUser = user
+            isAuthenticated = true
+            fetchUserToken()
+            fetchCurrentUser()
+            return user
+        } catch {
+            print("❌ Đăng ký email thất bại: \(error.localizedDescription)")
+
+            errorMessage = error.localizedDescription
+            hasError = true
+            isAuthenticated = false
+            return nil
         }
     }
 

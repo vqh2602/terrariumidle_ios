@@ -18,7 +18,15 @@ struct SplashView: View {
 
     var body: some View {
         Group {
-            Text("Splash")
+            GeometryReader { geometry in
+                VStack {
+                    Image("logo").resizable()
+                        .scaledToFit().frame(
+                            width: 200, // 30% chiều rộng màn hình
+                            height: 200 // 30% chiều rộng màn hình
+                        ).padding(20)
+                }.frame( width:geometry.size.width  , height: geometry.size.height , alignment: .center).background(AppColors.backgroundLogin)
+            }
         }
         .onAppear {
             Task {

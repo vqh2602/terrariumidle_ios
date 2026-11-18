@@ -54,11 +54,33 @@ struct HomeView: View {
 
     @State private var isEdit: Bool = false
     @State private var draggedPlant: DraggedPlantData? = nil
+    @State var backgroundRive: String = "sky_sun_day"
+    @State var overlayRive: String? = nil
 
     init() {
         print("play sound tap")
         //            AudioPlayer.shared.playBGM(fileName:"peacefulgarden" )
         BackgroundAudioManager.shared.switchBGM(id: "m0", fileName: "peacefulgarden", title: "Mặc định")
+    }
+
+    private func autoSelectOverlay() {
+        let unlockedIds = MusicUnlockHelper.getUnlockedMusicIds(from: fireStoreService.gradenModel)
+
+        // Auto-select background landscape (chỉ chọn file .riv có thật trong bundle)
+        let unlockedLandscapes = ItemDataManager.shared.getAllLandscapes().filter {
+            unlockedIds.contains($0.id) && Bundle.main.url(forResource: $0.image, withExtension: "riv") != nil
+        }
+        if !unlockedLandscapes.isEmpty {
+            backgroundRive = unlockedLandscapes.randomElement()?.image ?? "sky_sun_day"
+        }
+
+        // Auto-select overlay effect (chỉ chọn file .riv có thật trong bundle)
+        let unlockedOverlays = ItemDataManager.shared.getAllEffects().filter {
+            unlockedIds.contains($0.id) && Bundle.main.url(forResource: $0.image, withExtension: "riv") != nil
+        }
+        if !unlockedOverlays.isEmpty {
+            overlayRive = unlockedOverlays.randomElement()?.image
+        }
     }
 
     var body: some View {
@@ -67,13 +89,12 @@ struct HomeView: View {
 
             GeometryReader { geometry in
                 let itemWidth = (geometry.size.width - 32) / 3.0
+                let safeBackground = Bundle.main.url(forResource: backgroundRive, withExtension: "riv") != nil ? backgroundRive : "sky_sun_day"
                 ZStack {
                     RiveViewModel(
-                        fileName: "sky_sun_day", // Sử dụng plantId làm fileName (ví dụ: "plant24", "sticker1")
-                        //                    stateMachineName: isPlant ? "plant" : nil, // nil cho sticker/decoration
-                        fit: .cover,
-
-                    ).view().frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height) // Chiếm toàn bộ không gian
+                        fileName: safeBackground,
+                        fit: .cover
+                    ).view().id(safeBackground).frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height) // Chiếm toàn bộ không gian
 
                     HStack(spacing: 0) {
                         Image("r1").resizable()
@@ -177,20 +198,16 @@ struct HomeView: View {
                             ).scaleEffect(x: -1, y: 1) // 👈 lật ngang
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     //                    .background(AppColors.backgroundLogin)
+                    if let overlay = overlayRive, !overlay.isEmpty, Bundle.main.url(forResource: overlay, withExtension: "riv") != nil {
+                        RiveViewModel(
+                            fileName: overlay,
+                            fit: .cover
 
-                    //                RiveUIView(rive: {
-                    //                    let worker = Worker()
-                    //                    let file = try await File(source: .local("overlay1", Bundle.main), worker: worker)
-                    //                    return try await Rive(file: file)
-                    //                }).view()
-                    //                    .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height) // Chiếm toàn bộ không gian
-                    //                    .ignoresSafeArea(.all) // Full màn hình, bao gồm status bar
-                    //                    .allowsHitTesting(false) // Chỉ hiển thị, không cho phép thao tác
-                    //
-                    //                    Button("lôgut") {
-                    //                        loginViewModel.logout()
-                    //                        router.replaceRoot(.loginView(id: ""))
-                    //                    }
+                        ).view().id(overlay)
+                            .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height) // Chiếm toàn bộ không gian
+                            .ignoresSafeArea(.all) // Full màn hình, bao gồm status bar
+                            .allowsHitTesting(false) // Chỉ hiển thị, không cho phép thao tác
+                    }
 
                 }.frame(alignment: .leading)
             }.overlay(alignment: .top) {
@@ -208,18 +225,22 @@ struct HomeView: View {
                 }
                 _ = await fireStoreService.getDataById(userId: userId)
                 fireStoreService.realtimeChangeDataGraden(userId: userId)
+                
+                // Auto-select random overlay if user has unlocked any
+                autoSelectOverlay()
             }
+          
 
             .navigationBarHidden(true) // Ẩn thanh navigation
             .ignoresSafeArea(.all)
-            .onChange(of: isEdit) { newValue in
+            .onChange(of: isEdit) {oldValue, newValue in
                 // Clear drag state when disabling edit mode
                 if !newValue {
                     draggedPlant = nil
                 }
             }
 
-            SpeedDial(isEditing: $isEdit)
+            SpeedDial(isEditing: $isEdit, backgroundRive: $backgroundRive, overlayRive: $overlayRive)
         } // Full màn hình, bao gồm status bar
     }
 

@@ -175,7 +175,9 @@ struct SelectItemSheet: View {
                     }
                 }
             }
-            .onChange(of: selectedTab) { newTab in
+            .onChange(of: selectedTab) { oldTab, newTab in
+//                print("Old:", oldValue)
+//                print("New:", newValue)
                 // Clear incompatible selections when switching modes
                 if newTab == .decoration {
                     // Switching to decoration mode → clear plant/pot

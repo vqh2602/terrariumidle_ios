@@ -10,7 +10,10 @@
 			<key>CFBundleURLName</key>
 			<string></string>
 			<key>CFBundleURLSchemes</key>
-			<array/>
+			<array>
+				<string>com.googleusercontent.apps.38854833849-2mdbsq4v4emun7bncmnd87stn0f6edve</string>
+				<string>app-1-38854833849-ios-bb50f64e4b7706c2e44d68</string>
+			</array>
 		</dict>
 	</array>
 	<key>UIBackgroundModes</key>

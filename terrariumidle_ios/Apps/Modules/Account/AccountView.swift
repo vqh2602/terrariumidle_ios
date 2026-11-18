@@ -21,7 +21,7 @@ struct AccountView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, geometry.safeAreaInsets.top + 10)
                     .padding(.bottom, 16)
-                    .background(Color.white)
+                    .background(.background)
 
                 // MARK: - Content ScrollView
 
@@ -158,7 +158,7 @@ struct AccountView: View {
                     viewModel.toggleRoomScene()
                 }
             }
-            .background(Color.white)
+            .background(.regularMaterial)
             .cornerRadius(12)
             .padding(.horizontal, 16)
         }
@@ -231,7 +231,7 @@ struct AccountView: View {
                     trailingContent: .chevron
                 ) {
                     viewModel.requestDeleteAccount()
-                }
+                } .background(.regularMaterial)
 
                 Divider().padding(.leading, 16)
 
@@ -241,9 +241,9 @@ struct AccountView: View {
                     trailingContent: .chevron
                 ) {
                     viewModel.requestSignOut()
-                }
+                } .background(.regularMaterial)
             }
-            .background(Color.white)
+            .background(.regularMaterial)
             .cornerRadius(12)
             .padding(.horizontal, 16)
         }

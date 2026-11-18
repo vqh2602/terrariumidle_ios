@@ -87,6 +87,33 @@ class AuthService: NSObject {
     }
   }
 
+  /// Đăng ký tài khoản mới bằng email và password
+  /// - Parameters:
+  ///   - email: Email của user
+  ///   - password: Password của user
+  /// - Returns: Tuple chứa (Firebase token, Firebase User object)
+  func register(email: String, password: String) async throws -> (token: String, user: User?) {
+    do {
+      let authResult = try await Auth.auth().createUser(withEmail: email, password: password)
+      let token = try await authResult.user.getIDToken()
+      return (token: token, user: authResult.user)
+    } catch {
+      throw AuthError.firebaseAuthFailed(error.localizedDescription)
+    }
+  }
+
+  // MARK: - Google Sign-In
+
+  /// Đăng nhập bằng Google qua Firebase OAuthProvider
+  /// Tự động hiển thị web sheet bảo mật ASWebAuthenticationSession của iOS
+  @MainActor
+  func signInWithGoogle() async throws -> User {
+    let provider = OAuthProvider(providerID: "google.com")
+    provider.scopes = ["profile", "email"]
+    let authResult = try await Auth.auth().signIn(with: provider, uiDelegate: nil)
+    return authResult.user
+  }
+
   // MARK: - Logout
 
   /// Đăng xuất user hiện tại khỏi Firebase

@@ -205,7 +205,7 @@ private struct PlaybackBar: View {
     @ObservedObject var audioManager: BackgroundAudioManager
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             Divider()
                 .background(Color.white.opacity(0.2))
 
@@ -219,23 +219,57 @@ private struct PlaybackBar: View {
                         .foregroundColor(.blue)
                 }
 
-                // Volume slider
-                Image(systemName: "speaker.fill")
-                    .foregroundColor(.white.opacity(0.6))
-                    .font(.system(size: 14))
+                VStack(spacing: 8) {
+                    // BGM Volume slider
+                    HStack(spacing: 8) {
+                        Text("Âm nhạc")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white.opacity(0.7))
+                            .frame(width: 60, alignment: .leading)
 
-                Slider(
-                    value: Binding(
-                        get: { audioManager.bgmVolume },
-                        set: { audioManager.setBGMVolume($0) }
-                    ),
-                    in: 0 ... 1
-                )
-                .tint(.white)
+                        Image(systemName: "speaker.fill")
+                            .foregroundColor(.white.opacity(0.6))
+                            .font(.system(size: 12))
 
-                Image(systemName: "speaker.wave.3.fill")
-                    .foregroundColor(.white.opacity(0.6))
-                    .font(.system(size: 14))
+                        Slider(
+                            value: Binding(
+                                get: { audioManager.bgmVolume },
+                                set: { audioManager.setBGMVolume($0) }
+                            ),
+                            in: 0 ... 1
+                        )
+                        .tint(.blue)
+
+                        Image(systemName: "speaker.wave.3.fill")
+                            .foregroundColor(.white.opacity(0.6))
+                            .font(.system(size: 12))
+                    }
+
+                    // SFX Volume slider
+                    HStack(spacing: 8) {
+                        Text("Hiệu ứng")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white.opacity(0.7))
+                            .frame(width: 60, alignment: .leading)
+
+                        Image(systemName: "speaker.fill")
+                            .foregroundColor(.white.opacity(0.6))
+                            .font(.system(size: 12))
+
+                        Slider(
+                            value: Binding(
+                                get: { audioManager.sfxVolume },
+                                set: { audioManager.setSFXVolume($0) }
+                            ),
+                            in: 0 ... 1
+                        )
+                        .tint(.orange)
+
+                        Image(systemName: "speaker.wave.3.fill")
+                            .foregroundColor(.white.opacity(0.6))
+                            .font(.system(size: 12))
+                    }
+                }
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 12)

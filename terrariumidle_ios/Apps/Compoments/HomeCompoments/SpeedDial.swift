@@ -10,7 +10,10 @@ import SwiftUI
 struct SpeedDial: View {
     @State private var isOpen = false
     @State private var showMusicSheet = false
+    @State private var showEffectsSheet = false
     @Binding var isEditing: Bool
+    @Binding var backgroundRive: String
+    @Binding var overlayRive: String?
     @EnvironmentObject var router: AppRouter
 
     var body: some View {
@@ -24,32 +27,28 @@ struct SpeedDial: View {
 
             VStack(alignment: .trailing, spacing: 12) {
                 if isOpen {
-                    DialItem(title: "Tưới cây", systemImage: "drop.fill", color: Color.blue) {
-                        print("water")
-                        close()
-                    }
-                    DialItem(title: "Phong cảnh", systemImage: "leaf.fill", color: Color.yellow) {
-                        print("fertilize")
-                        close()
-                    }
-                    DialItem(title: "Hiệu ứng", systemImage: "scissors", color: Color.orange) {
-                        print("harvest")
+//                    DialItem(title: "Tưới cây", systemImage: "drop.fill", color: Color.blue) {
+//                        print("water")
+//                        close()
+//                    }
+                    DialItem(title: "Phong cảnh", systemImage: "sun.max", color: Color.brown) {
+                        showEffectsSheet = true
                         close()
                     }
                     DialItem(title: "Âm nhạc", systemImage: "music.note", color: Color.orange) {
                         showMusicSheet = true
                         close()
                     }
-                    DialItem(title: "Cửa hàng", systemImage: "scissors", color: Color.orange) {
+                    DialItem(title: "Cửa hàng", systemImage: "camera.macro", color: Color.green) {
                         print("harvest")
                         router.push(.storeView)
                         close()
                     }
-                    DialItem(title: "Sự kiện", systemImage: "scissors", color: Color.orange) {
+                    DialItem(title: "Sự kiện", systemImage: "carrot.fill", color: Color.purple) {
                         print("harvest")
                         close()
                     }
-                    DialItem(title: "Bố cục", systemImage: "scissors", color: Color.orange) {
+                    DialItem(title: "Bố cục", systemImage: "environments.fill", color: Color.blue) {
                         isEditing.toggle()
                         close()
                     }
@@ -73,6 +72,9 @@ struct SpeedDial: View {
             .sheet(isPresented: $showMusicSheet) {
                 MusicSheetView()
             }
+            .sheet(isPresented: $showEffectsSheet) {
+                EffectsSheetView(backgroundRive: $backgroundRive, overlayRive: $overlayRive)
+            }
         }
     }
 
@@ -91,14 +93,14 @@ private struct DialItem: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Text(title)
-                    .textStyle(.bodyMedium).foregroundColor(color)
+                    .textStyle(.bodyMedium).foregroundColor(color).fontWeight(.bold)
                 Image(systemName: systemImage)
                     .font(.system(size: 16, weight: .semibold)).foregroundColor(color)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.7)))
-            .shadow(radius: 3)
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.9)))
+            .shadow(radius: 1)
         }
         .buttonStyle(.plain)
         .transition(.move(edge: .trailing).combined(with: .opacity))

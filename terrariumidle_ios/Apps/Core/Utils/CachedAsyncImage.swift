@@ -5,15 +5,34 @@
 //  Created by vương quang huy on 10/2/26.
 //
 
-import SwiftUI
 import AppIntents
+import SwiftUI
 
 final class ImageCache {
     static let shared = ImageCache()
     private let cache = NSCache<NSURL, UIImage>()
 
-    func image(for url: NSURL) -> UIImage? { cache.object(forKey: url) }
-    func set(_ image: UIImage, for url: NSURL) { cache.setObject(image, forKey: url) }
+    init() {
+        // Configure memory cache limits
+        cache.countLimit = 100 // Max 100 images in memory
+        cache.totalCostLimit = 50 * 1024 * 1024 // 50MB memory limit
+
+        // Configure URLCache for disk caching
+        let memoryCapacity = 50 * 1024 * 1024 // 50MB
+        let diskCapacity = 200 * 1024 * 1024 // 200MB
+        let urlCache = URLCache(memoryCapacity: memoryCapacity, diskCapacity: diskCapacity)
+        URLCache.shared = urlCache
+    }
+
+    func image(for url: NSURL) -> UIImage? {
+        cache.object(forKey: url)
+    }
+
+    func set(_ image: UIImage, for url: NSURL) {
+        // Estimate cost based on image size
+        let cost = Int(image.size.width * image.size.height * 4) // 4 bytes per pixel (RGBA)
+        cache.setObject(image, forKey: url, cost: cost)
+    }
 }
 
 struct CachedAsyncImage<Content: View, Placeholder: View>: View {
@@ -54,13 +73,26 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
 
         Task {
             do {
-                let (data, _) = try await URLSession.shared.data(from: url)
+                // Use URLSession with caching enabled
+                var request = URLRequest(url: url)
+                request.cachePolicy = .returnCacheDataElseLoad
+
+                let (data, response) = try await URLSession.shared.data(for: request)
+
+                // Cache the response
+                if let httpResponse = response as? HTTPURLResponse,
+                   httpResponse.statusCode == 200
+                {
+                    let cachedResponse = CachedURLResponse(response: httpResponse, data: data)
+                    URLCache.shared.storeCachedResponse(cachedResponse, for: request)
+                }
+
                 if let image = UIImage(data: data) {
                     ImageCache.shared.set(image, for: url as NSURL)
                     await MainActor.run { uiImage = image }
                 }
             } catch {
-                print("❌ Load image error:", error)
+                print("❌ Load image error for \(url.absoluteString):", error)
             }
         }
     }

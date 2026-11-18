@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - App Colors
 struct AppColors {
     // Primary Colors (from logo - teal to emerald gradient)
-    static let primary = Color(hex: "10B981")         // Emerald Green
+    static let primary = Color(hex: "2d6824")         // Emerald Green
     static let primaryLight = Color(hex: "34D399")    // Light Emerald
     static let primaryDark = Color(hex: "059669")     // Dark Emerald
     

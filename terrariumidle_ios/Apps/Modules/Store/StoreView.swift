@@ -136,12 +136,12 @@ struct StoreView: View {
                 statBadge(
                     icon: "shovel",
                     iconColor: .yellow,
-                    value: "\(gardenModel.item.shovel)"
+                    value: "\(formatNumber(gardenModel.item.shovel))"
                 )
                 statBadge(
                     icon: "fertilizer",
                     iconColor: .yellow,
-                    value: "\(gardenModel.item.fertilizer)"
+                    value: "\(formatNumber(gardenModel.item.fertilizer))"
                 )
             }
         }
@@ -154,7 +154,7 @@ struct StoreView: View {
                 .frame(width: 20, height: 20)
                 .foregroundColor(iconColor)
             Text(value)
-                .font(.system(size: 14, weight: .semibold))
+                .textStyle(.caption1).fontWeight(.bold)
                 .foregroundColor(.primary)
         }
         .padding(.horizontal, 8)

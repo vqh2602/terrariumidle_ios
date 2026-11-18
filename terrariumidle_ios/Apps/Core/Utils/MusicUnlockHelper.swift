@@ -42,9 +42,10 @@ enum MusicUnlockHelper {
         return unlockedIds
     }
 
-    /// Extract music/SFX ID from effect string
+    /// Extract music/SFX/landscape/overlay ID from effect string
     /// Format: "Description - id" → returns "id"
     /// Example: "Tiếng bão - sfx7" → "sfx7"
+    ///          "Ban công mưa bão - landscape3" → "landscape3"
     private static func extractMusicId(from effect: String) -> String? {
         guard !effect.isEmpty, effect != "N.A" else { return nil }
 
@@ -54,8 +55,8 @@ enum MusicUnlockHelper {
 
         let id = components.last ?? ""
 
-        // Validate it's a music/SFX id (starts with 'm' or 'sfx')
-        if id.hasPrefix("m") || id.hasPrefix("sfx") {
+        // Validate it's a valid ID (music, SFX, landscape, or overlay)
+        if id.hasPrefix("m") || id.hasPrefix("sfx") || id.hasPrefix("landscape") || id.hasPrefix("overlay") {
             return id
         }
 

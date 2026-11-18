@@ -18,6 +18,7 @@ final class BackgroundAudioManager: ObservableObject {
     @Published var currentBGMId: String? = nil
     @Published var activeSFXIds: Set<String> = []
     @Published var bgmVolume: Float = 0.6
+    @Published var sfxVolume: Float = 0.6
     @Published var currentBGMTitle: String = "Terrarium Idle"
 
     private var player: AVAudioPlayer?
@@ -64,12 +65,20 @@ final class BackgroundAudioManager: ObservableObject {
 
     func pause() {
         player?.pause()
+        // Also pause all SFX
+        for (_, sfxPlayer) in sfxPlayers {
+            sfxPlayer.pause()
+        }
         isPlaying = false
         updatePlaybackState()
     }
 
     func resume() {
         player?.play()
+        // Also resume all SFX
+        for (_, sfxPlayer) in sfxPlayers {
+            sfxPlayer.play()
+        }
         isPlaying = true
         updatePlaybackState()
     }
@@ -87,8 +96,16 @@ final class BackgroundAudioManager: ObservableObject {
     }
 
     func setBGMVolume(_ vol: Float) {
-        bgmVolume = vol
-        player?.volume = vol
+        bgmVolume = max(0, min(1, vol))
+        player?.volume = bgmVolume
+    }
+
+    func setSFXVolume(_ vol: Float) {
+        sfxVolume = max(0, min(1, vol))
+        // Update volume for all active SFX players
+        for (_, sfxPlayer) in sfxPlayers {
+            sfxPlayer.volume = sfxVolume
+        }
     }
 
     // MARK: - SFX (layered ambient sounds, looping)
@@ -109,7 +126,7 @@ final class BackgroundAudioManager: ObservableObject {
             do {
                 let p = try AVAudioPlayer(contentsOf: url)
                 p.numberOfLoops = -1
-                p.volume = bgmVolume
+                p.volume = sfxVolume
                 p.prepareToPlay()
                 p.play()
                 sfxPlayers[id] = p

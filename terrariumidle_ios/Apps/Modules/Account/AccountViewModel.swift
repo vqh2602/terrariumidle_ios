@@ -21,15 +21,12 @@ final class AccountViewModel: ObservableObject {
 
     // MARK: - Dependencies
 
-    private let fireStore: FireStoreService
-    private let auth: AuthService
+    private let fireStore: FireStoreService = FireStoreService.shared
+    private let auth: AuthService = AuthService.shared
 
     // MARK: - Init
 
-    init(auth: AuthService = AuthService.shared, fireStore: FireStoreService = FireStoreService.shared) {
-        self.auth = auth
-        self.fireStore = fireStore
-
+    init() {
         // Load saved preferences
         loadPreferences()
     }
