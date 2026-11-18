@@ -110,10 +110,8 @@ struct PotRiveView2: View {
                 worker: worker
             )
 
-            // ✅ Let Rive pick default artboard + default state machine + auto-bind VM if available
-            let rive = try await Rive(file: file, dataBind: .auto, fit: .fitHeight(alignment: .center))
-
-            return rive
+            // ✅ Khởi tạo Rive view không dùng dataBind (tránh deprecation warning)
+            return try await Rive(file: file, fit: .fitHeight(alignment: .center))
         }
         .frame(width: width, height: height ?? 100)
     }

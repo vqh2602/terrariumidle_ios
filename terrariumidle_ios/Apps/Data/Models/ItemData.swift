@@ -21,6 +21,7 @@ struct ItemData: Codable, Identifiable {
     let effect: String
     let itemTypeAttribute: ItemTypeAttribute
     let levelUnlock: Int
+    let images: [String]? // Cấu hình danh sách 1 -> 6 ảnh cho overlay/effect
 }
 
 // MARK: - Item Type Attribute
@@ -103,6 +104,10 @@ class ItemDataManager {
 
     func getAllEffects() -> [ItemData] {
         return allEffects
+    }
+
+    func getEffect(byIdOrImage idOrImage: String) -> ItemData? {
+        return allEffects.first { $0.id == idOrImage || $0.image == idOrImage }
     }
 
     func getAllShopItems() -> [ItemData] {

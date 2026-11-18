@@ -2,8 +2,13 @@
     {
         "id": "overlay1",
         "name": "Lá rơi xanh ngọc",
-        "description": "",
+        "description": "Lớp phủ lá xanh ngọc rơi nhẹ nhàng",
         "image": "overlay1",
+        "images": [
+            "leaf_emerald_1",
+            "leaf_emerald_2",
+            "leaf_emerald_3"
+        ],
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
@@ -15,8 +20,13 @@
     {
         "id": "overlay2",
         "name": "Lá rơi mùa thu",
-        "description": "",
+        "description": "Lớp phủ lá thu rực rỡ đung đưa trong gió",
         "image": "overlay2",
+        "images": [
+            "leaf_autumn_1",
+            "leaf_autumn_2",
+            "leaf_autumn_3"
+        ],
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
@@ -28,8 +38,12 @@
     {
         "id": "overlay3",
         "name": "Cánh hoa oải hương",
-        "description": "",
+        "description": "Cánh hoa lavender tím bay lượn từ tốn",
         "image": "overlay3",
+        "images": [
+            "petal_lavender_1",
+            "petal_lavender_2"
+        ],
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
@@ -41,8 +55,9 @@
     {
         "id": "overlay4",
         "name": "Đom đóm",
-        "description": "",
+        "description": "Đom đóm phát sáng bay lượn trong đêm",
         "image": "overlay4",
+        "images": [],
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
@@ -54,13 +69,35 @@
     {
         "id": "overlay5",
         "name": "Hoa đào rơi",
-        "description": "",
+        "description": "Cánh hoa đào hồng phấn bồng bềnh",
         "image": "overlay5",
+        "images": [
+            "petal_sakura_1",
+            "petal_sakura_2"
+        ],
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
         "type": "overlay",
         "effect": "Hoa đào rơi",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 0
+    },
+    {
+        "id": "overlay6",
+        "name": "Lá phong hoàng kim",
+        "description": "Lá phong đỏ và ngân hạnh vàng óng",
+        "image": "overlay6",
+        "images": [
+            "leaf_maple_1",
+            "leaf_maple_2",
+            "leaf_maple_3"
+        ],
+        "priceStore": 0,
+        "priceOxygen": 0,
+        "currencyUnit": "",
+        "type": "overlay",
+        "effect": "Lá phong hoàng kim - overlay6",
         "itemTypeAttribute": "none",
         "levelUnlock": 0
     }

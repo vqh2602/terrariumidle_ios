@@ -74,9 +74,9 @@ struct HomeView: View {
             backgroundRive = unlockedLandscapes.randomElement()?.image ?? "sky_sun_day"
         }
 
-        // Auto-select overlay effect (chỉ chọn file .riv có thật trong bundle)
+        // Auto-select overlay effect (sử dụng custom SpriteKit cho tất cả các overlay)
         let unlockedOverlays = ItemDataManager.shared.getAllEffects().filter {
-            unlockedIds.contains($0.id) && Bundle.main.url(forResource: $0.image, withExtension: "riv") != nil
+            unlockedIds.contains($0.id)
         }
         if !unlockedOverlays.isEmpty {
             overlayRive = unlockedOverlays.randomElement()?.image
@@ -198,16 +198,10 @@ struct HomeView: View {
                             ).scaleEffect(x: -1, y: 1) // 👈 lật ngang
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     //                    .background(AppColors.backgroundLogin)
-                    if let overlay = overlayRive, !overlay.isEmpty, Bundle.main.url(forResource: overlay, withExtension: "riv") != nil {
-                        RiveViewModel(
-                            fileName: overlay,
-                            fit: .cover
-
-                        ).view().id(overlay)
-                            .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height) // Chiếm toàn bộ không gian
-                            .ignoresSafeArea(.all) // Full màn hình, bao gồm status bar
-                            .allowsHitTesting(false) // Chỉ hiển thị, không cho phép thao tác
-                    }
+                    OverlayEffectView(overlayId: overlayRive)
+                        .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
+                        .ignoresSafeArea(.all)
+                        .allowsHitTesting(false)
 
                 }.frame(alignment: .leading)
             }.overlay(alignment: .top) {

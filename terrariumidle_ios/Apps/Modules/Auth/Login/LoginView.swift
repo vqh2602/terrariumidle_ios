@@ -64,12 +64,9 @@ struct LoginView: View {
                     .background(AppColors.backgroundLogin)
                     .navigationBarHidden(true) // Ẩn thanh navigation và nút back
 
-                RiveViewModel(
-                    fileName: "overlay1",
-                    fit: .cover
-                ).view()
-                .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
-                .allowsHitTesting(false) // ⭐️ Cho phép click xuyên qua animation overlay
+                OverlayEffectView(overlayId: "overlay1")
+                    .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
+                    .allowsHitTesting(false) // ⭐️ Cho phép click xuyên qua animation overlay
             }
             .sheet(isPresented: $showEmailSheet) {
                 EmailAuthSheet(viewModel: loginViewModel) {
