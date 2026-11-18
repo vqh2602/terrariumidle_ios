@@ -13,13 +13,13 @@ import UIKit
 /// Định nghĩa 3 trạng thái sinh trưởng của Cây Cỏ Loe theo cấp độ game (Level 1 - 2 - 3):
 /// - Level 1: Gieo hạt (sử dụng asset `Asset-100`)
 /// - Level 2: Cây con (sử dụng asset `Asset-200`)
-/// - Level 3+: Cây trưởng thành (ghép hoàn toàn từ các hoạt ảnh lá `Asset-2`...`Asset-19`, `Asset-1` là ảnh đại diện tĩnh đối chiếu)
+/// - Level 3+: Cây trưởng thành (ghép hoàn toàn từ 9 phiến lá hoạt ảnh `Asset-2`...`Asset-10`, `Asset-1` là ảnh đại diện tĩnh đối chiếu)
 public enum Plant1GrowthState: Equatable {
     /// Level 1: Gieo hạt (load Asset-100)
     case seed
     /// Level 2: Cây con (load Asset-200)
     case sprout
-    /// Level 3+: Cây trưởng thành (load Assets 2...19 lá uốn cong)
+    /// Level 3+: Cây trưởng thành (load Assets 2...10 lá uốn cong)
     case mature(level: Int)
 
     public init(level: Int) {
@@ -54,7 +54,7 @@ public enum Plant1GrowthState: Equatable {
 
 public final class Plant1Node: SKNode {
 
-    // MARK: - Metadata cấu trúc 18 phiến lá trên thân cây (Canvas 428 x 862)
+    // MARK: - Metadata cấu trúc 9 phiến lá trên thân cây (Canvas 428 x 862)
 
     private struct LeafData {
         let assetId: Int
@@ -72,27 +72,15 @@ public final class Plant1Node: SKNode {
 
     /// Tọa độ pixel chính xác và điểm neo cuống lá tương ứng trên ảnh gốc Asset-1 (428 x 862)
     private static let leavesMetadata: [LeafData] = [
-        // MARK: Lớp lá bóng đổ phía sau (Back Shadow Leaves - Assets 2...10)
-        LeafData(assetId: 2,  imgX: 208, imgY: 370, width: 163, height: 333, anchorX: 0.05, anchorY: 0.05, isLeft: false, zPos: 11, bendAngle: 0.045, duration: 2.8),
-        LeafData(assetId: 3,  imgX: 0,   imgY: 212, width: 182, height: 487, anchorX: 0.95, anchorY: 0.05, isLeft: true,  zPos: 12, bendAngle: 0.050, duration: 3.2),
-        LeafData(assetId: 4,  imgX: 194, imgY: 208, width: 79,  height: 468, anchorX: 0.08, anchorY: 0.05, isLeft: false, zPos: 13, bendAngle: 0.040, duration: 2.6),
-        LeafData(assetId: 5,  imgX: 46,  imgY: 120, width: 180, height: 568, anchorX: 0.85, anchorY: 0.05, isLeft: true,  zPos: 14, bendAngle: 0.055, duration: 3.4),
-        LeafData(assetId: 6,  imgX: 108, imgY: 212, width: 170, height: 389, anchorX: 0.95, anchorY: 0.05, isLeft: true,  zPos: 15, bendAngle: 0.045, duration: 2.9),
-        LeafData(assetId: 7,  imgX: 206, imgY: 364, width: 163, height: 333, anchorX: 0.05, anchorY: 0.05, isLeft: false, zPos: 16, bendAngle: 0.045, duration: 2.7),
-        LeafData(assetId: 8,  imgX: 46,  imgY: 112, width: 175, height: 487, anchorX: 0.95, anchorY: 0.05, isLeft: true,  zPos: 17, bendAngle: 0.050, duration: 3.1),
-        LeafData(assetId: 9,  imgX: 192, imgY: 206, width: 79,  height: 468, anchorX: 0.08, anchorY: 0.05, isLeft: false, zPos: 18, bendAngle: 0.040, duration: 2.5),
-        LeafData(assetId: 10, imgX: 46,  imgY: 116, width: 160, height: 568, anchorX: 0.90, anchorY: 0.05, isLeft: true,  zPos: 19, bendAngle: 0.055, duration: 3.3),
-
-        // MARK: Lớp lá tiền cảnh đón sáng (Front Highlight Leaves - Assets 11...19)
-        LeafData(assetId: 11, imgX: 102, imgY: 194, width: 170, height: 389, anchorX: 0.95, anchorY: 0.05, isLeft: true,  zPos: 31, bendAngle: 0.048, duration: 2.7),
-        LeafData(assetId: 12, imgX: 78,  imgY: 146, width: 114, height: 514, anchorX: 0.92, anchorY: 0.05, isLeft: true,  zPos: 32, bendAngle: 0.052, duration: 3.0),
-        LeafData(assetId: 13, imgX: 154, imgY: 0,   width: 61,  height: 749, anchorX: 0.90, anchorY: 0.03, isLeft: true,  zPos: 33, bendAngle: 0.038, duration: 3.5),
-        LeafData(assetId: 14, imgX: 202, imgY: 142, width: 130, height: 545, anchorX: 0.08, anchorY: 0.05, isLeft: false, zPos: 34, bendAngle: 0.052, duration: 2.8),
-        LeafData(assetId: 15, imgX: 196, imgY: 352, width: 223, height: 358, anchorX: 0.05, anchorY: 0.05, isLeft: false, zPos: 35, bendAngle: 0.046, duration: 2.6),
-        LeafData(assetId: 16, imgX: 90,  imgY: 144, width: 99,  height: 514, anchorX: 0.92, anchorY: 0.05, isLeft: true,  zPos: 36, bendAngle: 0.050, duration: 3.1),
-        LeafData(assetId: 17, imgX: 174, imgY: 0,   width: 40,  height: 749, anchorX: 0.85, anchorY: 0.03, isLeft: true,  zPos: 37, bendAngle: 0.035, duration: 3.6),
-        LeafData(assetId: 18, imgX: 208, imgY: 132, width: 125, height: 545, anchorX: 0.05, anchorY: 0.05, isLeft: false, zPos: 38, bendAngle: 0.048, duration: 2.9),
-        LeafData(assetId: 19, imgX: 204, imgY: 340, width: 223, height: 358, anchorX: 0.05, anchorY: 0.05, isLeft: false, zPos: 39, bendAngle: 0.045, duration: 2.5)
+        LeafData(assetId: 2,  imgX: 208, imgY: 370, width: 163, height: 333, anchorX: 0.05, anchorY: 0.02, isLeft: false, zPos: 11, bendAngle: 0.055, duration: 2.8),
+        LeafData(assetId: 3,  imgX: 0,   imgY: 212, width: 182, height: 487, anchorX: 0.95, anchorY: 0.02, isLeft: true,  zPos: 12, bendAngle: 0.060, duration: 3.2),
+        LeafData(assetId: 4,  imgX: 195, imgY: 213, width: 79,  height: 468, anchorX: 0.08, anchorY: 0.02, isLeft: false, zPos: 13, bendAngle: 0.045, duration: 2.6),
+        LeafData(assetId: 5,  imgX: 45,  imgY: 117, width: 180, height: 568, anchorX: 0.85, anchorY: 0.02, isLeft: true,  zPos: 14, bendAngle: 0.065, duration: 3.4),
+        LeafData(assetId: 6,  imgX: 11,  imgY: 317, width: 170, height: 389, anchorX: 0.95, anchorY: 0.02, isLeft: true,  zPos: 15, bendAngle: 0.055, duration: 2.9),
+        LeafData(assetId: 7,  imgX: 70,  imgY: 194, width: 114, height: 514, anchorX: 0.92, anchorY: 0.02, isLeft: true,  zPos: 16, bendAngle: 0.058, duration: 3.0),
+        LeafData(assetId: 8,  imgX: 154, imgY: 3,   width: 61,  height: 749, anchorX: 0.90, anchorY: 0.01, isLeft: true,  zPos: 17, bendAngle: 0.040, duration: 3.6),
+        LeafData(assetId: 9,  imgX: 201, imgY: 145, width: 130, height: 545, anchorX: 0.08, anchorY: 0.02, isLeft: false, zPos: 18, bendAngle: 0.060, duration: 2.8),
+        LeafData(assetId: 10, imgX: 205, imgY: 341, width: 223, height: 358, anchorX: 0.05, anchorY: 0.02, isLeft: false, zPos: 19, bendAngle: 0.052, duration: 2.5),
     ]
 
     // MARK: - Properties
@@ -354,23 +342,28 @@ public final class Plant1Node: SKNode {
             matureGroup.speed = 1.0
             plantRootNode.addChild(matureGroup)
 
-            for child in matureGroup.children {
-                if let leaf = child as? SKSpriteNode {
-                    leaf.isHidden = false
-                    leaf.isPaused = false
-                    leaf.speed = 1.0
-                    leafNodes.append(leaf)
+            let sortedLeaves = matureGroup.children.compactMap { $0 as? SKSpriteNode }.sorted {
+                let id1 = Int($0.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+                let id2 = Int($1.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+                return id1 < id2
+            }
 
-                    // Tìm metadata bổ trợ góc uốn/thời gian nếu có, hoặc suy ra từ vị trí trực quan
-                    let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
-                    let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
+            for (idx, leaf) in sortedLeaves.enumerated() {
+                leaf.isHidden = false
+                leaf.isPaused = false
+                leaf.speed = 1.0
+                leafNodes.append(leaf)
 
-                    let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
-                    let bendAngle = max(meta?.bendAngle ?? 0.046, 0.075)
-                    let duration = meta?.duration ?? 2.8
+                // Tìm metadata bổ trợ góc uốn/thời gian nếu có, hoặc suy ra từ vị trí trực quan
+                let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+                let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
 
-                    startLeafBendingAnimation(leaf: leaf, isLeft: isLeft, bendAngle: bendAngle, duration: duration)
-                }
+                let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
+                let bendAngle = meta?.bendAngle ?? 0.055
+                let duration = meta?.duration ?? 2.8
+                let phaseDelay = Double(idx) * 0.12
+
+                startLeafBendingAnimation(leaf: leaf, isLeft: isLeft, bendAngle: bendAngle, duration: duration, phaseDelay: phaseDelay)
             }
 
             addTrunkSwayAnimation()
@@ -378,7 +371,7 @@ public final class Plant1Node: SKNode {
         }
 
         // 2. FALLBACK CODE PROCEDURAL: Nếu file .sks chưa có lá thì sinh qua metadata chuẩn
-        for data in Self.leavesMetadata {
+        for (idx, data) in Self.leavesMetadata.enumerated() {
             guard let leafTexture = loadTexture(assetId: data.assetId) else { continue }
 
             let leaf = SKSpriteNode(texture: leafTexture)
@@ -397,8 +390,8 @@ public final class Plant1Node: SKNode {
             plantRootNode.addChild(leaf)
             leafNodes.append(leaf)
 
-            let bendAngle = max(data.bendAngle, 0.075)
-            startLeafBendingAnimation(leaf: leaf, isLeft: data.isLeft, bendAngle: bendAngle, duration: data.duration)
+            let phaseDelay = Double(idx) * 0.12
+            startLeafBendingAnimation(leaf: leaf, isLeft: data.isLeft, bendAngle: data.bendAngle, duration: data.duration, phaseDelay: phaseDelay)
         }
 
         addTrunkSwayAnimation()
@@ -409,16 +402,16 @@ public final class Plant1Node: SKNode {
         plantRootNode.isPaused = false
         plantRootNode.speed = 1.0
 
-        let trunkSwayLeft = SKAction.rotate(toAngle: -0.038, duration: 2.8)
+        let trunkSwayLeft = SKAction.rotate(toAngle: -0.032, duration: 3.0)
         trunkSwayLeft.timingMode = .easeInEaseOut
-        let trunkSwayRight = SKAction.rotate(toAngle: 0.038, duration: 2.8)
+        let trunkSwayRight = SKAction.rotate(toAngle: 0.032, duration: 3.0)
         trunkSwayRight.timingMode = .easeInEaseOut
         plantRootNode.run(SKAction.repeatForever(SKAction.sequence([trunkSwayLeft, trunkSwayRight])), withKey: "trunkSway")
     }
 
     // MARK: - Animation: Uốn cong lá mềm mại theo gió (Organic Leaf Bend)
 
-    private func startLeafBendingAnimation(leaf: SKSpriteNode, isLeft: Bool, bendAngle: CGFloat, duration: TimeInterval) {
+    private func startLeafBendingAnimation(leaf: SKSpriteNode, isLeft: Bool, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: TimeInterval = 0.0) {
         leaf.removeAction(forKey: "leafBend")
         leaf.isPaused = false
         leaf.speed = 1.0
@@ -431,10 +424,10 @@ public final class Plant1Node: SKNode {
         let bendBackward = SKAction.rotate(byAngle: -angleDelta, duration: duration * 0.5)
         bendBackward.timingMode = .easeInEaseOut
 
-        let flexIn = SKAction.scaleX(to: 0.97, y: 1.02, duration: duration * 0.5)
+        let flexIn = SKAction.scaleX(to: 0.96, y: 1.03, duration: duration * 0.5)
         flexIn.timingMode = .easeInEaseOut
 
-        let flexOut = SKAction.scaleX(to: 1.02, y: 0.98, duration: duration * 0.5)
+        let flexOut = SKAction.scaleX(to: 1.03, y: 0.97, duration: duration * 0.5)
         flexOut.timingMode = .easeInEaseOut
 
         let forwardGroup = SKAction.group([bendForward, flexIn])
@@ -442,8 +435,8 @@ public final class Plant1Node: SKNode {
 
         let bendSequence = SKAction.sequence([forwardGroup, backwardGroup])
 
-        // Bắt đầu ngay với độ trễ tối thiểu để người dùng thấy hoạt ảnh ngay lập tức
-        let initialWait = SKAction.wait(forDuration: Double.random(in: 0.0...0.25))
+        // Tạo nhịp thở tự nhiên với phase delay so le giữa các lá
+        let initialWait = SKAction.wait(forDuration: phaseDelay)
         leaf.run(SKAction.sequence([initialWait, SKAction.repeatForever(bendSequence)]), withKey: "leafBend")
     }
 
@@ -543,21 +536,35 @@ public final class Plant1Node: SKNode {
         }
     }
 
-    /// Hiệu ứng khi tap vào cây trưởng thành: Toàn cây nhún nảy + 18 lá xao động
+    /// Hiệu ứng khi tap vào cây trưởng thành: Toàn cây nhún nảy đàn hồi + 9 lá gợn sóng phản hồi
     private func playMatureTapAnimation() {
-        let squash = SKAction.scaleX(to: baseScale * 1.15, y: baseScale * 0.85, duration: 0.12)
+        plantRootNode.removeAction(forKey: "matureTapBounce")
+
+        // 1. Squash & Stretch cả cây đàn hồi lò xo
+        let squash = SKAction.scaleX(to: baseScale * 1.15, y: baseScale * 0.86, duration: 0.08)
         squash.timingMode = .easeIn
-        let stretch = SKAction.scaleX(to: baseScale * 0.92, y: baseScale * 1.14, duration: 0.16)
+        let stretch = SKAction.scaleX(to: baseScale * 0.90, y: baseScale * 1.14, duration: 0.12)
         stretch.timingMode = .easeOut
-        let settle = SKAction.scale(to: baseScale, duration: 0.18)
+        let bounce = SKAction.scaleX(to: baseScale * 1.05, y: baseScale * 0.96, duration: 0.10)
+        let settle = SKAction.scale(to: baseScale, duration: 0.10)
         settle.timingMode = .easeInEaseOut
 
-        plantRootNode.run(SKAction.sequence([squash, stretch, settle]))
+        plantRootNode.run(SKAction.sequence([squash, stretch, bounce, settle]), withKey: "matureTapBounce")
 
-        for leaf in leafNodes {
-            let jiggle = SKAction.rotate(byAngle: CGFloat.random(in: -0.07...0.07), duration: 0.08)
-            let returnJiggle = jiggle.reversed()
-            leaf.run(SKAction.sequence([jiggle, returnJiggle]))
+        // 2. Gợn sóng xao động lan tỏa qua 9 phiến lá
+        for (idx, leaf) in leafNodes.enumerated() {
+            let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+            let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
+            let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
+            let impulseAngle: CGFloat = (isLeft ? -1.0 : 1.0) * CGFloat.random(in: 0.08...0.12)
+
+            let delay = SKAction.wait(forDuration: Double(idx) * 0.02)
+            let jiggleOut = SKAction.rotate(byAngle: impulseAngle, duration: 0.08)
+            jiggleOut.timingMode = .easeOut
+            let jiggleBack = SKAction.rotate(byAngle: -impulseAngle, duration: 0.12)
+            jiggleBack.timingMode = .easeInEaseOut
+
+            leaf.run(SKAction.sequence([delay, jiggleOut, jiggleBack]))
         }
     }
 
@@ -565,7 +572,7 @@ public final class Plant1Node: SKNode {
         // Số lượng bọt khí tăng dần theo giai đoạn sinh trưởng:
         // - Hạt giống (Lv.1): 1 - 2 bọt nhỏ thoát ra từ gốc hạt
         // - Cây con (Lv.2): 3 - 4 bọt vừa thoát ra từ 2 mầm lá non
-        // - Cây trưởng thành (Lv.3+): 7 - 10 bọt dồi dào phủ khắp toàn bộ tán cây
+        // - Cây trưởng thành (Lv.3+): 8 - 12 bọt dồi dào phủ khắp toàn bộ tán cây
         let bubbleCount: Int
         switch growthState {
         case .seed:
@@ -573,7 +580,7 @@ public final class Plant1Node: SKNode {
         case .sprout:
             bubbleCount = Int.random(in: 3...4)
         case .mature:
-            bubbleCount = Int.random(in: 7...10)
+            bubbleCount = Int.random(in: 8...12)
         }
 
         for i in 0..<bubbleCount {

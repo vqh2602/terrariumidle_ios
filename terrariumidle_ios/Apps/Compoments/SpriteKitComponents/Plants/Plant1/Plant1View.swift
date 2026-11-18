@@ -12,7 +12,7 @@ import SwiftUI
 /// - Quản lý 3 trạng thái theo level logic (Level 1, 2, 3):
 ///   1. Level 1: Gieo hạt (dùng asset `Asset-100`)
 ///   2. Level 2: Cây con (dùng asset `Asset-200`)
-///   3. Level 3+: Cây trưởng thành (ghép từ các lá hoạt ảnh động `Asset-2`...`Asset-19`, `Asset-1` là ảnh đại diện tĩnh không đưa vào scene)
+///   3. Level 3+: Cây trưởng thành (ghép từ 9 phiến lá hoạt ảnh động `Asset-2`...`Asset-10`, `Asset-1` là ảnh đại diện tĩnh không đưa vào scene)
 public struct Plant1View: View {
     public var growthState: Plant1GrowthState = .mature(level: 3)
     public var width: CGFloat
