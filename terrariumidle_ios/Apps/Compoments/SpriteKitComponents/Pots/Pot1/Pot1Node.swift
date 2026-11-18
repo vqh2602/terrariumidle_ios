@@ -183,10 +183,17 @@ public final class Pot1Node: SKNode {
     private func emitSingleSparkle(on pot: SKNode, potBounds: CGSize) {
         let star = createStarSparkleNode(radius: CGFloat.random(in: 3.5...5.5), color: UIColor(red: 1.0, green: 0.95, blue: 0.70, alpha: 0.95))
 
-        // Vị trí xuất hiện ngẫu nhiên dọc thân hoặc viền trên chậu
+        // Vị trí xuất hiện ngẫu nhiên dọc thân hoặc viền trên chậu (xử lý chính xác cả chậu đứng và chậu treo)
         let halfW = potBounds.width * 0.38
         let rx = CGFloat.random(in: -halfW...halfW)
-        let ry = CGFloat.random(in: potBounds.height * 0.25...potBounds.height * 0.80)
+        let ry: CGFloat
+        if isHanging {
+            // Chậu treo có anchorPoint (0.5, 1.0) nên toạ độ Y nằm ở nửa dưới âm
+            ry = -CGFloat.random(in: potBounds.height * 0.20...potBounds.height * 0.85)
+        } else {
+            // Chậu đứng có anchorPoint (0.5, 0.0) nên toạ độ Y nằm ở nửa trên dương
+            ry = CGFloat.random(in: potBounds.height * 0.25...potBounds.height * 0.80)
+        }
 
         star.position = CGPoint(x: rx, y: ry)
         star.zPosition = 25
@@ -233,7 +240,17 @@ public final class Pot1Node: SKNode {
 
         node.run(SKAction.sequence([compress, rebound, settle]), withKey: "potTapBounce")
 
-        // 2. Bóng co giãn theo nhịp nảy
+        // Với chậu treo: Thêm hiệu ứng chao nghiêng nhẹ khi chạm vào
+        if isHanging {
+            let swing = SKAction.sequence([
+                SKAction.rotate(toAngle: -0.06, duration: 0.08),
+                SKAction.rotate(toAngle: 0.06, duration: 0.10),
+                SKAction.rotate(toAngle: 0, duration: 0.10)
+            ])
+            node.run(swing)
+        }
+
+        // 2. Bóng co giãn theo nhịp nảy (chỉ chậu đứng có bóng)
         if let shadow = shadowNode {
             shadow.removeAction(forKey: "shadowBounce")
             let shrink = SKAction.scale(to: 0.85, duration: 0.09)
@@ -248,43 +265,45 @@ public final class Pot1Node: SKNode {
 
     /// Tung ra các hạt đá lấp lánh bay toả ra xung quanh chậu khi chạm vào
     private func spawnSparkleBurst() {
-        let burstCount = Int.random(in: 5...8)
-        let potW = potNode?.size.width ?? containerSize.width * 0.75
-        let potH = potNode?.size.height ?? containerSize.height * 0.60
+        guard let pot = potNode else { return }
+        let potFrame = pot.frame
+        let burstCount = Int.random(in: 7...10)
 
         for i in 0..<burstCount {
-            let radius = CGFloat.random(in: 3.5...6.0)
+            let radius = CGFloat.random(in: 4.0...6.5)
             let starColor = (i % 2 == 0)
                 ? UIColor(red: 1.0, green: 0.92, blue: 0.55, alpha: 0.95) // Vàng hoàng yến lấp lánh
-                : UIColor(red: 1.0, green: 0.65, blue: 0.75, alpha: 0.95) // Hồng phấn hòa quyện màu chậu
+                : UIColor(red: 1.0, green: 0.65, blue: 0.78, alpha: 0.95) // Hồng phấn lấp lánh
 
             let star = createStarSparkleNode(radius: radius, color: starColor)
 
-            let startX = CGFloat.random(in: -potW * 0.35...potW * 0.35)
-            let startY = CGFloat.random(in: potH * 0.30...potH * 0.75)
+            // Vị trí xuất phát từ lòng/thân chậu (dựa trên potFrame chuẩn xác dù là chậu đứng hay chậu treo)
+            let startX = CGFloat.random(in: (potFrame.minX + potFrame.width * 0.15)...(potFrame.maxX - potFrame.width * 0.15))
+            let startY = CGFloat.random(in: (potFrame.minY + potFrame.height * 0.18)...(potFrame.maxY - potFrame.height * 0.15))
             star.position = CGPoint(x: startX, y: startY)
             star.zPosition = 50
             star.alpha = 0.0
-            star.setScale(0.3)
+            star.setScale(0.25)
             potRootNode.addChild(star)
 
-            let flyAngle = CGFloat.random(in: 0.2...(.pi - 0.2))
-            let distance = CGFloat.random(in: 25...55)
-            let dx = cos(flyAngle) * distance * (Bool.random() ? 1.0 : -1.0)
+            // Góc bay toả đều 360 độ xung quanh chậu
+            let flyAngle = CGFloat.random(in: 0...(.pi * 2))
+            let distance = CGFloat.random(in: 25...60)
+            let dx = cos(flyAngle) * distance
             let dy = sin(flyAngle) * distance
 
-            let delay = SKAction.wait(forDuration: Double(i) * 0.03)
-            let fadeIn = SKAction.fadeAlpha(to: 0.95, duration: 0.10)
+            let delay = SKAction.wait(forDuration: Double(i) * 0.025)
+            let fadeIn = SKAction.fadeAlpha(to: 1.0, duration: 0.10)
             let floatOut = SKAction.moveBy(x: dx, y: dy, duration: 0.55)
             floatOut.timingMode = .easeOut
-            let rotate = SKAction.rotate(byAngle: CGFloat.random(in: -2.0...2.0), duration: 0.55)
+            let rotate = SKAction.rotate(byAngle: CGFloat.random(in: -3.0...3.0), duration: 0.55)
             let scalePulse = SKAction.sequence([
-                SKAction.scale(to: 1.25, duration: 0.18),
-                SKAction.scale(to: 0.2, duration: 0.37)
+                SKAction.scale(to: 1.35, duration: 0.18),
+                SKAction.scale(to: 0.25, duration: 0.37)
             ])
             let fadeOut = SKAction.sequence([
-                SKAction.wait(forDuration: 0.25),
-                SKAction.fadeOut(withDuration: 0.30)
+                SKAction.wait(forDuration: 0.22),
+                SKAction.fadeOut(withDuration: 0.33)
             ])
 
             let motionGroup = SKAction.group([floatOut, rotate, scalePulse, fadeOut])

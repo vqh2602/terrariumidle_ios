@@ -88,6 +88,17 @@ public final class SpriteKitPlantScene: SKScene {
             return
         }
 
+        // Không dùng mockup nữa: Những cây chưa có asset sẽ hiển thị thông báo update
+        if !PlantAvailability.isAvailable(plantId: plantId) {
+            let label = SKLabelNode(text: "<update app để hiển thị>")
+            label.fontSize = 10
+            label.fontColor = UIColor.secondaryLabel
+            label.position = CGPoint(x: 0, y: size.height * 0.45)
+            label.zPosition = 20
+            addChild(label)
+            return
+        }
+
         // 1. Tạo hoặc tải texture cây (cho các cây khác)
         let texture = loadPlantTexture()
         let node = SKSpriteNode(texture: texture)
