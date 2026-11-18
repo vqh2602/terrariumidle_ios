@@ -5,7 +5,9 @@
 //  Created by vương quang huy on 6/2/26.
 //
 
-@_spi(RiveExperimental) import RiveRuntime
+// [RIVE_DEPRECATED] Loại bỏ Rive 100%, chuyển hoàn toàn sang SpriteKit
+// @_spi(RiveExperimental) import RiveRuntime
+import SpriteKit
 import SwiftUI
 
 import UniformTypeIdentifiers
@@ -84,10 +86,19 @@ struct PlantItemView: View {
                 if isHanging {
                     // Sticker treo - hiển thị như pot treo
                     ZStack(alignment: .top) {
+                        /* [RIVE_DEPRECATED] Không dùng Rive nữa, thay bằng SpriteKitPotView
                         PotRiveView(
                             width: itemWidth * 1.0,
                             height: itemWidth + itemWidth * 0.2, // Chiều cao pot treo
                             potId: plantData?.idPot ?? "pot15"
+                        )
+                        .frame(maxWidth: .infinity)
+                        */
+                        SpriteKitPotView(
+                            potId: plantData?.idPot ?? "pot15",
+                            isHanging: true,
+                            width: itemWidth * 1.0,
+                            height: itemWidth + itemWidth * 0.2
                         )
                         .frame(maxWidth: .infinity)
                     }
@@ -95,10 +106,18 @@ struct PlantItemView: View {
                 } else {
                     // Sticker không treo - chiều cao 155
                     VStack(spacing: 0) {
+                        /* [RIVE_DEPRECATED] Không dùng Rive nữa, thay bằng SpriteKitPotView
                         PotRiveView(
                             width: itemWidth,
                             height: 155, // Fixed height cho sticker không treo
                             potId: plantData?.idPot ?? "pot1"
+                        )
+                        */
+                        SpriteKitPotView(
+                            potId: plantData?.idPot ?? "pot1",
+                            isHanging: false,
+                            width: itemWidth,
+                            height: 155
                         )
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -108,19 +127,37 @@ struct PlantItemView: View {
                 // Pot ở trên, Plant phủ xuống dưới
                 ZStack(alignment: .top) {
                     // Pot ở trên cùng (topCenter)
+                    /* [RIVE_DEPRECATED] Không dùng Rive nữa, thay bằng SpriteKitPotView
                     PotRiveView(
                         width: itemWidth * 1.0,
                         height: itemWidth + itemWidth * 0.2, // Fixed height cho pot treo
                         potId: plantData?.idPot ?? "pot15"
                     )
                     .frame(maxWidth: .infinity)
+                    */
+                    SpriteKitPotView(
+                        potId: plantData?.idPot ?? "pot15",
+                        isHanging: true,
+                        width: itemWidth * 1.0,
+                        height: itemWidth + itemWidth * 0.2
+                    )
+                    .frame(maxWidth: .infinity)
 
                     // Plant phủ xuống - full width
+                    /* [RIVE_DEPRECATED] Không dùng Rive nữa, thay bằng SpriteKitPlantView
                     PlantRiveView(
                         width: itemWidth, // full width
                         height: itemWidth + itemWidth * 0.5, // Chiều cao như normal plant
                         plantId: plantData?.idPlant ?? "plant12",
                         plantLevel: plantData?.plantLevel ?? 3
+                    )
+                    */
+                    SpriteKitPlantView(
+                        plantId: plantData?.idPlant ?? "plant12",
+                        plantLevel: plantData?.plantLevel ?? 3,
+                        isHanging: true,
+                        width: itemWidth,
+                        height: itemWidth + itemWidth * 0.5
                     )
                 }
                 .id("\(plantData?.idPlant ?? "")-\(plantData?.plantLevel ?? 1)")
@@ -129,18 +166,35 @@ struct PlantItemView: View {
                 // NORMAL PLANT LAYOUT
                 VStack(spacing: 0) {
                     // Hiển thị Plant với idPlant từ data
+                    /* [RIVE_DEPRECATED] Không dùng Rive nữa, thay bằng SpriteKitPlantView
                     PlantRiveView(
                         width: itemWidth,
                         height: itemWidth + itemWidth * 0.35,
                         plantId: plantData?.idPlant ?? "plant1",
                         plantLevel: plantData?.plantLevel ?? 1
                     )
+                    */
+                    SpriteKitPlantView(
+                        plantId: plantData?.idPlant ?? "plant1",
+                        plantLevel: plantData?.plantLevel ?? 1,
+                        isHanging: false,
+                        width: itemWidth,
+                        height: itemWidth + itemWidth * 0.35
+                    )
 
                     // Hiển thị Pot với idPot từ data
+                    /* [RIVE_DEPRECATED] Không dùng Rive nữa, thay bằng SpriteKitPotView
                     PotRiveView(
                         width: itemWidth,
                         height: itemWidth * 0.6,
                         potId: plantData?.idPot ?? "pot1"
+                    )
+                    */
+                    SpriteKitPotView(
+                        potId: plantData?.idPot ?? "pot1",
+                        isHanging: false,
+                        width: itemWidth,
+                        height: itemWidth * 0.6
                     )
                 }
                 .id("\(plantData?.idPlant ?? "")-\(plantData?.plantLevel ?? 1)")

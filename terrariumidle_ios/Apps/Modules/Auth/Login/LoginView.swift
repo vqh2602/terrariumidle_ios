@@ -5,7 +5,8 @@
 //  Created by vương quang huy on 29/1/26.
 //
 
-@_spi(RiveExperimental) import RiveRuntime
+// [RIVE_DEPRECATED] Loại bỏ Rive 100%, không sử dụng RiveRuntime
+// @_spi(RiveExperimental) import RiveRuntime
 import SwiftUI
 
 import Combine

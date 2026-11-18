@@ -5,7 +5,9 @@
 //  Created by vương quang huy on 29/1/26.
 //
 
-@_spi(RiveExperimental) import RiveRuntime
+// [RIVE_DEPRECATED] Loại bỏ Rive 100%, chuyển hoàn toàn sang SpriteKit
+// @_spi(RiveExperimental) import RiveRuntime
+import SpriteKit
 import SwiftUI
 
 import Combine
@@ -90,6 +92,8 @@ struct HomeView: View {
             GeometryReader { geometry in
                 let itemWidth = (geometry.size.width - 32) / 3.0
                 ZStack {
+                    // [RIVE_DEPRECATED] Đã chuyển 100% sang SpriteKit, không dùng RiveViewModel nữa
+                    /*
                     if Bundle.main.url(forResource: backgroundRive, withExtension: "riv") != nil {
                         RiveViewModel(
                             fileName: backgroundRive,
@@ -101,6 +105,10 @@ struct HomeView: View {
                         SpriteKitBackgroundView(backgroundId: backgroundRive)
                             .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
                     }
+                    */
+                    // 100% SpriteKit Background
+                    SpriteKitBackgroundView(backgroundId: backgroundRive)
+                        .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
 
                     HStack(spacing: 0) {
                         Image("r1").resizable()

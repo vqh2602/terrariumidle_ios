@@ -6,6 +6,10 @@
 //  Created by vương quang huy on 2/2/26.
 //
 
+// [RIVE_DEPRECATED] Toàn bộ Rive đã được loại bỏ 100% và thay thế bằng SpriteKitPotView.
+// Code Rive được giữ lại dưới dạng comment để tham khảo, không xóa.
+
+/*
 import Foundation
 
 @_spi(RiveExperimental) import RiveRuntime
@@ -120,3 +124,4 @@ struct PotRiveView2: View {
 #Preview {
     PotRiveView(width: 200)
 }
+*/

@@ -5,6 +5,10 @@
 //  Created by vương quang huy on 2/2/26.
 //
 
+// [RIVE_DEPRECATED] Toàn bộ Rive đã được loại bỏ 100% và thay thế bằng SpriteKitPlantView.
+// Code Rive được giữ lại dưới dạng comment để tham khảo, không xóa.
+
+/*
 import Foundation
 
 import Combine
@@ -130,3 +134,4 @@ struct PlantRiveView: View {
 #Preview {
     PlantRiveView(width: 100)
 }
+*/

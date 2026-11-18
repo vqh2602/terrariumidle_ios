@@ -22,10 +22,10 @@ Dự án game mô phỏng thư giãn **Terrarium Idle** trên nền tảng iOS, 
 - **Ngôn ngữ**: Swift 5.10 / Swift 6 Compatible
 - **Frameworks chính**:
   - `SwiftUI`: Giao diện người dùng Reactive, mượt mà.
-  - `SpriteKit`: Hệ thống hạt (Particles), lá rơi, đom đóm, cây đung đưa, chậu nảy, thời tiết động (60 FPS, Metal-accelerated).
-  - `RiveRuntime`: Render các tệp đồ họa vector tương tác (`.riv`).
+  - `SpriteKit`: Hệ sinh thái đồ họa chính (100% thay thế Rive), phụ trách toàn bộ hiệu ứng lá rơi, đom đóm, mưa, cảnh nền trời/núi/mặt trời, chuyển động đung đưa & bong bóng oxy của cây, đổ bóng & nảy đàn hồi của chậu cây (60 FPS, Metal-accelerated).
   - `Firebase (Auth, Firestore, Messaging)`: Quản lý người dùng, đồng bộ dữ liệu khu vườn thời gian thực.
   - `AVFoundation`: Âm thanh nền (BGM), tiếng thời tiết (SFX) và hiệu ứng tương tác.
+  - *(Lưu ý: Toàn bộ code Rive cũ đã được đóng comment lưu trữ lại trong thư mục `RiveCompoments` để làm tài liệu tham khảo, app không còn dùng Rive runtime nữa)*.
 
 ---
 
@@ -52,13 +52,21 @@ flowchart TD
     Home --> ItemManager
     Home --> Audio
 
-    subgraph GraphicsEngine["Tầng Đồ họa & Hiển thị (Rendering Engines)"]
+    subgraph GraphicsEngine["Tầng Đồ họa & Hiển thị (SpriteKit Engine 100%)"]
         SpriteKitSystem[SpriteKitComponents: Dynamic Scenes & .sks Emitters]
-        RiveSystem[RiveRuntime: Interactive Vector Art .riv]
+        subgraph SpriteKitModules["Mô-đun SpriteKit"]
+            SKEffects[Effects: Leaves, Fireflies, Petals, Wind Overlays]
+            SKBg[Backgrounds: Day/Night Skys, Sun, Stars, Rain]
+            SKPlants[Plants: Swaying, Oxygen Bubbles, Tap Bounce]
+            SKPots[Pots: Soft Shadows, Spring Bounce, Hanging]
+        end
+        SpriteKitSystem --> SKEffects
+        SpriteKitSystem --> SKBg
+        SpriteKitSystem --> SKPlants
+        SpriteKitSystem --> SKPots
     end
 
     Home --> SpriteKitSystem
-    Home --> RiveSystem
 ```
 
 ---

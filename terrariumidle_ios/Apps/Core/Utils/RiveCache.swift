@@ -5,6 +5,10 @@
 //  Created by vương quang huy on 2/2/26.
 //
 
+// [RIVE_DEPRECATED] Đã chuyển 100% sang SpriteKit, RiveCache không còn được sử dụng.
+// Giữ lại code dưới dạng comment để tham khảo, không xóa.
+
+/*
 import Foundation
 
 enum RiveCache {
@@ -58,3 +62,4 @@ enum RiveCache {
         return localURL
     }
 }
+*/
