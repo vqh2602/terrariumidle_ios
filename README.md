@@ -159,6 +159,7 @@ terrariumidle_ios/
 │   │   │   │   ├── Emitters/                # Rain.sks
 │   │   │   │   └── Views/                   # SpriteKitBackgroundView
 │   │   │   ├── Plants/
+│   │   │   │   ├── Plant1/                  # 🌿 Cây Cỏ Loe ghép 18 lá (Plant1Node, Plant1View, Plant1Scene.sks)
 │   │   │   │   ├── Scenes/                  # SpriteKitPlantScene, PlantScene.sks
 │   │   │   │   └── Views/                   # SpriteKitPlantView
 │   │   │   └── Pots/

@@ -13,6 +13,7 @@ public final class SpriteKitPlantScene: SKScene {
     // MARK: - Properties
 
     private var plantNode: SKSpriteNode?
+    private var plant1Node: Plant1Node?
     private var plantId: String = "plant1"
     private var plantLevel: Int = 1
     private var isHanging: Bool = false
@@ -39,6 +40,7 @@ public final class SpriteKitPlantScene: SKScene {
     private func setupBasics() {
         backgroundColor = .clear
         scaleMode = .resizeFill
+        anchorPoint = CGPoint(x: 0.5, y: 0.0)
     }
 
     // MARK: - Configuration
@@ -73,8 +75,20 @@ public final class SpriteKitPlantScene: SKScene {
     private func buildPlant() {
         guard size.width > 0, size.height > 0 else { return }
         removeAllChildren()
+        plantNode = nil
+        plant1Node = nil
+        anchorPoint = CGPoint(x: 0.5, y: 0.0) // Luôn neo gốc tọa độ tại đáy giữa
 
-        // 1. Tạo hoặc tải texture cây
+        // ĐẶC BIỆT: Cây Cỏ Loe (plant1) hỗ trợ 3 trạng thái và 18 lá uốn lượn riêng biệt
+        if plantId.lowercased() == "plant1" {
+            let p1 = Plant1Node(level: plantLevel, containerSize: size, isHanging: isHanging)
+            p1.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p1)
+            self.plant1Node = p1
+            return
+        }
+
+        // 1. Tạo hoặc tải texture cây (cho các cây khác)
         let texture = loadPlantTexture()
         let node = SKSpriteNode(texture: texture)
 
@@ -95,11 +109,11 @@ public final class SpriteKitPlantScene: SKScene {
         if isHanging {
             // Cây treo: neo từ đỉnh chúc xuống
             node.anchorPoint = CGPoint(x: 0.5, y: 1.0)
-            node.position = CGPoint(x: size.width / 2, y: size.height)
+            node.position = CGPoint(x: 0, y: size.height)
         } else {
             // Cây bình thường: neo từ gốc chậu mọc lên
             node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-            node.position = CGPoint(x: size.width / 2, y: 0)
+            node.position = CGPoint(x: 0, y: 0)
         }
 
         addChild(node)
@@ -130,6 +144,10 @@ public final class SpriteKitPlantScene: SKScene {
     // MARK: - Animation: Phản hồi khi người dùng chạm vào cây (Tap Bounce)
 
     public func playTapAnimation() {
+        if let p1 = plant1Node {
+            p1.playTapAnimation()
+            return
+        }
         guard let node = plantNode else { return }
 
         // Hiệu ứng nảy Squash & Stretch
