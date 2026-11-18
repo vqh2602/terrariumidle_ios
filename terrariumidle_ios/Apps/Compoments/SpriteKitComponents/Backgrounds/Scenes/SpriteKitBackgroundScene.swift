@@ -8,26 +8,11 @@
 import SpriteKit
 import UIKit
 
-// MARK: - Kiểu phong cảnh nền SpriteKit
-public enum BackgroundTheme: String, Sendable {
-    case day = "sky_sun_day"
-    case sunset = "sky_sun_set"
-    case rain = "sky_rain"
-    case moonNight = "sky_moon_night"
-    case moonStar = "sky_moon_star"
-    case landscape6 = "landscape6"
-    case landscape7 = "landscape7"
-
-    public static func from(id: String) -> BackgroundTheme {
-        return BackgroundTheme(rawValue: id) ?? .day
-    }
-}
-
 // MARK: - SpriteKit Scene cho Phong cảnh nền động
 public final class SpriteKitBackgroundScene: SKScene {
     // MARK: - Properties
 
-    private var currentTheme: BackgroundTheme = .day
+    private var currentThemeId: String = "sky_sun_day"
     private var isConfigured = false
 
     // MARK: - Initializer
@@ -55,7 +40,7 @@ public final class SpriteKitBackgroundScene: SKScene {
     // MARK: - Configuration
 
     public func configure(themeId: String) {
-        self.currentTheme = BackgroundTheme.from(id: themeId)
+        self.currentThemeId = themeId
         if size.width > 0 && size.height > 0 {
             rebuildScene()
         }
@@ -76,7 +61,7 @@ public final class SpriteKitBackgroundScene: SKScene {
         }
     }
 
-    // MARK: - Rebuild Scene based on Theme
+    // MARK: - Rebuild Scene động hoàn toàn từ cấu hình JSON (Không cần switch thủ công)
 
     private func rebuildScene() {
         guard size.width > 0, size.height > 0 else { return }
@@ -84,78 +69,74 @@ public final class SpriteKitBackgroundScene: SKScene {
         removeAllChildren()
         removeAllActions()
 
-        // 1. Lớp màu nền Gradient
-        buildGradientBackground()
+        let item = ItemDataManager.shared.getLandscape(byIdOrImage: currentThemeId)
 
-        // 2. Các thành phần động theo từng chủ đề
-        switch currentTheme {
-        case .day:
-            buildSunNode()
-            buildDriftingClouds(count: 5, color: UIColor.white.withAlphaComponent(0.85))
+        // 1. Lớp màu nền Gradient động từ mảng skyGradient trong JSON
+        buildGradientBackground(item: item)
 
-        case .sunset, .landscape6:
-            buildSunsetSunNode()
-            buildDriftingClouds(count: 6, color: UIColor(red: 1.0, green: 0.85, blue: 0.78, alpha: 0.75))
-
-        case .rain:
-            buildDriftingClouds(count: 7, color: UIColor(red: 0.45, green: 0.50, blue: 0.58, alpha: 0.85))
-            buildRainEmitter()
-
-        case .moonNight, .landscape7:
-            buildStarfield(count: 45)
-            buildMoonNode(isFull: false)
-            buildDriftingClouds(count: 3, color: UIColor.white.withAlphaComponent(0.20))
-
-        case .moonStar:
-            buildStarfield(count: 65)
-            buildMoonNode(isFull: true)
-            buildShootingStars()
+        // 2. Các thành phần động nạp trực tiếp từ mảng elements trong JSON
+        let activeElements = item?.elements ?? ["sun", "clouds"]
+        for element in activeElements {
+            switch element {
+            case "sun":
+                buildSunNode()
+            case "sun_sunset":
+                buildSunsetSunNode()
+            case "clouds":
+                buildDriftingClouds(count: 5, color: UIColor.white.withAlphaComponent(0.85))
+            case "clouds_sunset":
+                buildDriftingClouds(count: 6, color: UIColor(red: 1.0, green: 0.85, blue: 0.78, alpha: 0.75))
+            case "clouds_dark":
+                buildDriftingClouds(count: 7, color: UIColor(red: 0.45, green: 0.50, blue: 0.58, alpha: 0.85))
+            case "clouds_night":
+                buildDriftingClouds(count: 3, color: UIColor.white.withAlphaComponent(0.20))
+            case "rain":
+                buildRainEmitter(sksFile: item?.sksFile)
+            case "moon_crescent":
+                buildMoonNode(isFull: false)
+            case "moon_full":
+                buildMoonNode(isFull: true)
+            case "stars":
+                buildStarfield(count: 45)
+            case "stars_dense":
+                buildStarfield(count: 65)
+            case "shooting_stars":
+                buildShootingStars()
+            default:
+                break
+            }
         }
     }
 
-    // MARK: - 1. Gradient Background
+    // MARK: - 1. Gradient Background động từ JSON
 
-    private func buildGradientBackground() {
+    private func buildGradientBackground(item: ItemData?) {
         let renderer = UIGraphicsImageRenderer(size: size)
         let gradientImage = renderer.image { ctx in
             let context = ctx.cgContext
             let colorSpace = CGColorSpaceCreateDeviceRGB()
 
             let colors: [CGColor]
-            switch currentTheme {
-            case .day:
+            if let hexColors = item?.skyGradient, !hexColors.isEmpty {
+                colors = hexColors.map { UIColor(hexString: $0).cgColor }
+            } else {
+                // Fallback mặc định ban ngày nếu JSON chưa khai báo gradient
                 colors = [
                     UIColor(red: 0.42, green: 0.75, blue: 0.95, alpha: 1.0).cgColor,
                     UIColor(red: 0.78, green: 0.90, blue: 0.98, alpha: 1.0).cgColor,
                     UIColor(red: 0.92, green: 0.96, blue: 0.99, alpha: 1.0).cgColor
                 ]
-            case .sunset, .landscape6:
-                colors = [
-                    UIColor(red: 0.55, green: 0.28, blue: 0.55, alpha: 1.0).cgColor,
-                    UIColor(red: 0.92, green: 0.45, blue: 0.32, alpha: 1.0).cgColor,
-                    UIColor(red: 0.98, green: 0.78, blue: 0.45, alpha: 1.0).cgColor
-                ]
-            case .rain:
-                colors = [
-                    UIColor(red: 0.28, green: 0.34, blue: 0.42, alpha: 1.0).cgColor,
-                    UIColor(red: 0.45, green: 0.52, blue: 0.58, alpha: 1.0).cgColor,
-                    UIColor(red: 0.60, green: 0.65, blue: 0.70, alpha: 1.0).cgColor
-                ]
-            case .moonNight, .landscape7:
-                colors = [
-                    UIColor(red: 0.06, green: 0.08, blue: 0.16, alpha: 1.0).cgColor,
-                    UIColor(red: 0.12, green: 0.15, blue: 0.28, alpha: 1.0).cgColor,
-                    UIColor(red: 0.18, green: 0.22, blue: 0.38, alpha: 1.0).cgColor
-                ]
-            case .moonStar:
-                colors = [
-                    UIColor(red: 0.03, green: 0.04, blue: 0.10, alpha: 1.0).cgColor,
-                    UIColor(red: 0.08, green: 0.10, blue: 0.22, alpha: 1.0).cgColor,
-                    UIColor(red: 0.14, green: 0.18, blue: 0.32, alpha: 1.0).cgColor
-                ]
             }
 
-            let locations: [CGFloat] = [0.0, 0.55, 1.0]
+            let locations: [CGFloat]
+            if colors.count == 2 {
+                locations = [0.0, 1.0]
+            } else if colors.count == 3 {
+                locations = [0.0, 0.55, 1.0]
+            } else {
+                locations = (0..<colors.count).map { CGFloat($0) / CGFloat(max(1, colors.count - 1)) }
+            }
+
             if let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: locations) {
                 context.drawLinearGradient(
                     gradient,
@@ -308,7 +289,18 @@ public final class SpriteKitBackgroundScene: SKScene {
 
     // MARK: - 5. Rain Emitter
 
-    private func buildRainEmitter() {
+    private func buildRainEmitter(sksFile: String? = nil) {
+        // 1. Ưu tiên tải hiệu ứng hạt mưa từ file Rain.sks hoặc tên file trong JSON
+        let fileName = sksFile ?? "Rain.sks"
+        if let emitter = SKEmitterNode(fileNamed: fileName) ?? SKEmitterNode(fileNamed: "Rain") {
+            emitter.position = CGPoint(x: size.width / 2, y: size.height + 20)
+            emitter.particlePositionRange = CGVector(dx: size.width + 80, dy: 20)
+            emitter.zPosition = -20
+            addChild(emitter)
+            return
+        }
+
+        // 2. Fallback procedural nếu file .sks chưa được nạp
         let rainTexture = Self.createRainDropTexture()
 
         let spawnRain = SKAction.run { [weak self] in
@@ -420,5 +412,19 @@ public final class SpriteKitBackgroundScene: SKScene {
             dropPath.fill()
         }
         return SKTexture(image: image)
+    }
+}
+
+// MARK: - Extension chuyển đổi mã màu Hex từ JSON thành UIColor
+private extension UIColor {
+    convenience init(hexString: String) {
+        var hex = hexString.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        if hex.hasPrefix("#") { hex.removeFirst() }
+        var rgbValue: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&rgbValue)
+        let r = CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0
+        let g = CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0
+        let b = CGFloat(rgbValue & 0x0000FF) / 255.0
+        self.init(red: r, green: g, blue: b, alpha: 1.0)
     }
 }

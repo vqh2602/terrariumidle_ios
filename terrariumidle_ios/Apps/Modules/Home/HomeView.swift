@@ -66,9 +66,9 @@ struct HomeView: View {
     private func autoSelectOverlay() {
         let unlockedIds = MusicUnlockHelper.getUnlockedMusicIds(from: fireStoreService.gradenModel)
 
-        // Auto-select background landscape (chỉ chọn file .riv có thật trong bundle)
+        // Auto-select background landscape
         let unlockedLandscapes = ItemDataManager.shared.getAllLandscapes().filter {
-            unlockedIds.contains($0.id) && Bundle.main.url(forResource: $0.image, withExtension: "riv") != nil
+            unlockedIds.contains($0.id)
         }
         if !unlockedLandscapes.isEmpty {
             backgroundRive = unlockedLandscapes.randomElement()?.image ?? "sky_sun_day"
@@ -89,12 +89,18 @@ struct HomeView: View {
 
             GeometryReader { geometry in
                 let itemWidth = (geometry.size.width - 32) / 3.0
-                let safeBackground = Bundle.main.url(forResource: backgroundRive, withExtension: "riv") != nil ? backgroundRive : "sky_sun_day"
                 ZStack {
-                    RiveViewModel(
-                        fileName: safeBackground,
-                        fit: .cover
-                    ).view().id(safeBackground).frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height) // Chiếm toàn bộ không gian
+                    if Bundle.main.url(forResource: backgroundRive, withExtension: "riv") != nil {
+                        RiveViewModel(
+                            fileName: backgroundRive,
+                            fit: .cover
+                        ).view().id(backgroundRive)
+                            .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
+                    } else {
+                        // Tự động load background SpriteKit động từ JSON
+                        SpriteKitBackgroundView(backgroundId: backgroundRive)
+                            .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
+                    }
 
                     HStack(spacing: 0) {
                         Image("r1").resizable()

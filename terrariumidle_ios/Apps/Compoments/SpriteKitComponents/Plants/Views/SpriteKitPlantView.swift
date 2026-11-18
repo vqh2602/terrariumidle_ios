@@ -59,7 +59,14 @@ public struct SpriteKitPlantView: View {
                 Color.clear
                     .frame(width: width, height: height)
                     .onAppear {
-                        let newScene = SpriteKitPlantScene(size: CGSize(width: width, height: height))
+                        // Ưu tiên nạp từ PlantScene.sks nếu có
+                        let newScene: SpriteKitPlantScene
+                        if let sksScene = SpriteKitPlantScene(fileNamed: "PlantScene.sks") ?? SpriteKitPlantScene(fileNamed: "PlantScene") {
+                            sksScene.size = CGSize(width: width, height: height)
+                            newScene = sksScene
+                        } else {
+                            newScene = SpriteKitPlantScene(size: CGSize(width: width, height: height))
+                        }
                         newScene.configure(plantId: plantId, level: plantLevel, isHanging: isHanging)
                         self.scene = newScene
                     }

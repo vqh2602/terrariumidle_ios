@@ -27,6 +27,18 @@ public enum WindDirection: Sendable {
         case .variable: return 20
         }
     }
+
+    public static func fromString(_ str: String?) -> WindDirection {
+        switch str?.lowercased() {
+        case "none": return .none
+        case "gentleleft": return .gentleLeft
+        case "gentleright": return .gentleRight
+        case "breezeleft": return .breezeLeft
+        case "breezeright": return .breezeRight
+        case "variable": return .variable
+        default: return .gentleRight
+        }
+    }
 }
 
 // MARK: - Mật độ lá rơi
@@ -50,6 +62,14 @@ public enum LeafDensity: Sendable {
         case .high: return 26
         }
     }
+
+    public static func fromString(_ str: String?) -> LeafDensity {
+        switch str?.lowercased() {
+        case "low": return .low
+        case "high": return .high
+        default: return .medium
+        }
+    }
 }
 
 // MARK: - Tốc độ rơi
@@ -63,6 +83,14 @@ public enum LeafSpeed: Sendable {
         case .slow: return 6.5...9.5
         case .normal: return 4.5...7.0
         case .fast: return 2.8...4.5
+        }
+    }
+
+    public static func fromString(_ str: String?) -> LeafSpeed {
+        switch str?.lowercased() {
+        case "slow": return .slow
+        case "fast": return .fast
+        default: return .normal
         }
     }
 }

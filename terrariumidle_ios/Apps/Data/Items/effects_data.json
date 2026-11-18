@@ -4,6 +4,10 @@
         "name": "Lá rơi xanh ngọc",
         "description": "Lớp phủ lá xanh ngọc rơi nhẹ nhàng",
         "image": "overlay1",
+        "kind": "fallingLeaves",
+        "wind": "gentleRight",
+        "density": "medium",
+        "speed": "normal",
         "images": [
             "leaf_emerald_1",
             "leaf_emerald_2",
@@ -22,6 +26,10 @@
         "name": "Lá rơi mùa thu",
         "description": "Lớp phủ lá thu rực rỡ đung đưa trong gió",
         "image": "overlay2",
+        "kind": "fallingLeaves",
+        "wind": "breezeRight",
+        "density": "medium",
+        "speed": "normal",
         "images": [
             "leaf_autumn_1",
             "leaf_autumn_2",
@@ -40,6 +48,10 @@
         "name": "Cánh hoa oải hương",
         "description": "Cánh hoa lavender tím bay lượn từ tốn",
         "image": "overlay3",
+        "kind": "fallingLeaves",
+        "wind": "gentleLeft",
+        "density": "medium",
+        "speed": "slow",
         "images": [
             "petal_lavender_1",
             "petal_lavender_2"
@@ -57,6 +69,9 @@
         "name": "Đom đóm",
         "description": "Đom đóm phát sáng bay lượn trong đêm",
         "image": "overlay4",
+        "kind": "fireflies",
+        "sksFile": "Fireflies.sks",
+        "particleCount": 26,
         "images": [],
         "priceStore": 0,
         "priceOxygen": 0,
@@ -71,6 +86,10 @@
         "name": "Hoa đào rơi",
         "description": "Cánh hoa đào hồng phấn bồng bềnh",
         "image": "overlay5",
+        "kind": "fallingLeaves",
+        "wind": "variable",
+        "density": "medium",
+        "speed": "slow",
         "images": [
             "petal_sakura_1",
             "petal_sakura_2"
@@ -88,6 +107,10 @@
         "name": "Lá phong hoàng kim",
         "description": "Lá phong đỏ và ngân hạnh vàng óng",
         "image": "overlay6",
+        "kind": "fallingLeaves",
+        "wind": "breezeRight",
+        "density": "medium",
+        "speed": "normal",
         "images": [
             "leaf_maple_1",
             "leaf_maple_2",

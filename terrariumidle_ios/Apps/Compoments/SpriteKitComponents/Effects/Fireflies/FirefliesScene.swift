@@ -92,7 +92,16 @@ public final class FirefliesScene: SKScene {
 
         removeAllChildren()
 
-        // Khởi tạo các đom đóm rải đều màn hình
+        // 1. Ưu tiên nạp hiệu ứng hạt từ file Fireflies.sks
+        if let emitter = SKEmitterNode(fileNamed: "Fireflies.sks") ?? SKEmitterNode(fileNamed: "Fireflies") {
+            emitter.position = CGPoint(x: size.width / 2, y: size.height * 0.45)
+            emitter.particlePositionRange = CGVector(dx: size.width * 0.9, dy: size.height * 0.7)
+            emitter.zPosition = 10
+            addChild(emitter)
+            return
+        }
+
+        // 2. Fallback procedural đom đóm
         for _ in 0..<fireflyCount {
             spawnFirefly()
         }

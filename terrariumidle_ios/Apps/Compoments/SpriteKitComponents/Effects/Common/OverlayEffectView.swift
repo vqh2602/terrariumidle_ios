@@ -38,43 +38,33 @@ public struct OverlayEffectView: View {
     public var body: some View {
         if let id = overlayId, !id.isEmpty {
             let effectItem = ItemDataManager.shared.getEffect(byIdOrImage: id)
-            let configuredImages = effectItem?.images ?? []
+            let kind = effectItem?.kind ?? (id == "overlay4" ? "fireflies" : "fallingLeaves")
 
             Group {
-                if let config = OverlayEffectConfig.config(for: id) {
-                    switch config.kind {
-                    case .fireflies(let count):
-                        FirefliesView(
-                            count: count,
-                            customImages: customImages,
-                            isPaused: isPaused
-                        )
-                        .id("fireflies_\(id)")
-
-                    case .fallingLeaves(let density, let wind, let speed):
-                        let textures = configuredImages.isEmpty ? OverlayEffectConfig.generateTextures(for: id) : []
-                        FallingLeavesView(
-                            leafImages: configuredImages,
-                            customImages: customImages,
-                            customTextures: textures,
-                            density: density,
-                            wind: wind,
-                            speed: speed,
-                            isPaused: isPaused
-                        )
-                        .id("leaves_\(id)_\(configuredImages.joined(separator: "_"))")
-                    }
+                if kind == "fireflies" {
+                    FirefliesView(
+                        count: effectItem?.particleCount ?? 26,
+                        customImages: customImages,
+                        isPaused: isPaused
+                    )
+                    .id("fireflies_\(id)")
                 } else {
-                    // Fallback mặc định nếu có ID overlay mới chưa khai báo
+                    let wind = WindDirection.fromString(effectItem?.wind)
+                    let density = LeafDensity.fromString(effectItem?.density)
+                    let speed = LeafSpeed.fromString(effectItem?.speed)
+                    let configuredImages = effectItem?.images ?? []
+                    let textures = configuredImages.isEmpty ? OverlayEffectConfig.generateTextures(for: id) : []
+
                     FallingLeavesView(
                         leafImages: configuredImages,
                         customImages: customImages,
-                        density: .medium,
-                        wind: .gentleRight,
-                        speed: .normal,
+                        customTextures: textures,
+                        density: density,
+                        wind: wind,
+                        speed: speed,
                         isPaused: isPaused
                     )
-                    .id("fallback_\(id)_\(configuredImages.joined(separator: "_"))")
+                    .id("leaves_\(id)_\(configuredImages.joined(separator: "_"))")
                 }
             }
             .allowsHitTesting(false) // ⭐️ Luôn đảm bảo click xuyên qua

@@ -47,7 +47,14 @@ public struct SpriteKitBackgroundView: View {
             } else {
                 Color.clear
                     .onAppear {
-                        let newScene = SpriteKitBackgroundScene(size: geometry.size)
+                        // Ưu tiên nạp từ BackgroundScene.sks nếu có
+                        let newScene: SpriteKitBackgroundScene
+                        if let sksScene = SpriteKitBackgroundScene(fileNamed: "BackgroundScene.sks") ?? SpriteKitBackgroundScene(fileNamed: "BackgroundScene") {
+                            sksScene.size = geometry.size
+                            newScene = sksScene
+                        } else {
+                            newScene = SpriteKitBackgroundScene(size: geometry.size)
+                        }
                         newScene.configure(themeId: backgroundId)
                         self.scene = newScene
                     }

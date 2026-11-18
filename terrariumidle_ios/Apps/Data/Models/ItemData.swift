@@ -21,7 +21,17 @@ struct ItemData: Codable, Identifiable {
     let effect: String
     let itemTypeAttribute: ItemTypeAttribute
     let levelUnlock: Int
-    let images: [String]? // Cấu hình danh sách 1 -> 6 ảnh cho overlay/effect
+
+    // MARK: - Cấu hình động SpriteKit từ file JSON (loại bỏ switch-case thủ công)
+    let kind: String?            // "fallingLeaves", "fireflies", "weather", etc.
+    let sksFile: String?         // Tên file .sks ("Fireflies.sks", "Rain.sks", "PlantScene.sks", v.v.)
+    let images: [String]?        // Danh sách 1 -> 6 ảnh cho overlay/effect
+    let wind: String?            // "none", "gentleLeft", "gentleRight", "breezeLeft", "breezeRight", "variable"
+    let density: String?         // "low", "medium", "high"
+    let speed: String?           // "slow", "normal", "fast"
+    let particleCount: Int?      // Số lượng hạt (ví dụ: đom đóm = 26)
+    let skyGradient: [String]?   // Mảng mã màu hex bầu trời ["#6BAFCF", "#C7E6FA", "#EBF5FC"]
+    let elements: [String]?      // Thành phần bầu trời: ["sun", "clouds", "rain", "moon_crescent", "stars", "shooting_stars"]
 }
 
 // MARK: - Item Type Attribute
@@ -116,6 +126,10 @@ class ItemDataManager {
 
     func getAllLandscapes() -> [ItemData] {
         return allLandscapes
+    }
+
+    func getLandscape(byIdOrImage idOrImage: String) -> ItemData? {
+        return allLandscapes.first { $0.id == idOrImage || $0.image == idOrImage }
     }
 
     func getAllMusics() -> [ItemData] {

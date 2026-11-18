@@ -53,7 +53,14 @@ public struct SpriteKitPotView: View {
                 Color.clear
                     .frame(width: width, height: height)
                     .onAppear {
-                        let newScene = SpriteKitPotScene(size: CGSize(width: width, height: height))
+                        // Ưu tiên nạp từ PotScene.sks nếu có
+                        let newScene: SpriteKitPotScene
+                        if let sksScene = SpriteKitPotScene(fileNamed: "PotScene.sks") ?? SpriteKitPotScene(fileNamed: "PotScene") {
+                            sksScene.size = CGSize(width: width, height: height)
+                            newScene = sksScene
+                        } else {
+                            newScene = SpriteKitPotScene(size: CGSize(width: width, height: height))
+                        }
                         newScene.configure(potId: potId, isHanging: isHanging)
                         self.scene = newScene
                     }
