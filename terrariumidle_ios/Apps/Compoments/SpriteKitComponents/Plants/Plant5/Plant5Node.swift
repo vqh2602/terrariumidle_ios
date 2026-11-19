@@ -65,18 +65,18 @@ public final class Plant5Node: SKNode {
 
     /// Tọa độ pixel và điểm neo cuống lá Epipremnum Aureum (Canvas 724 x 495)
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId:  2, imgX: 468, imgY:   7, width: 255, height: 339, anchorX: 0.93, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: 0.040, duration: 2.8),
-        LeafData(assetId:  3, imgX: 272, imgY:  28, width: 200, height: 399, anchorX: 0.63, anchorY: 0.00, isLeft: false, zPos: 12, bendAngle: 0.045, duration: 3.0),
-        LeafData(assetId:  8, imgX: 158, imgY: 102, width:  98, height: 159, anchorX: 0.47, anchorY: 0.00, isLeft: true,  zPos: 13, bendAngle: 0.050, duration: 3.0),
-        LeafData(assetId:  9, imgX:  77, imgY:  95, width: 118, height: 219, anchorX: 0.55, anchorY: 0.00, isLeft: true,  zPos: 14, bendAngle: 0.035, duration: 3.2),
-        LeafData(assetId:  1, imgX: 509, imgY: 302, width: 154, height: 150, anchorX: 0.96, anchorY: 0.00, isLeft: false, zPos: 15, bendAngle: 0.035, duration: 2.6),
-        LeafData(assetId:  4, imgX: 497, imgY: 205, width: 170, height: 121, anchorX: 0.99, anchorY: 0.00, isLeft: false, zPos: 16, bendAngle: 0.050, duration: 3.2),
-        LeafData(assetId:  5, imgX: 330, imgY: 187, width: 133, height: 143, anchorX: 0.07, anchorY: 0.00, isLeft: true,  zPos: 17, bendAngle: 0.035, duration: 3.4),
-        LeafData(assetId: 10, imgX:   0, imgY:   0, width: 354, height: 282, anchorX: 0.20, anchorY: 0.00, isLeft: true,  zPos: 18, bendAngle: 0.040, duration: 3.4),
-        LeafData(assetId: 12, imgX: 415, imgY: 268, width: 225, height: 227, anchorX: 0.47, anchorY: 0.00, isLeft: false, zPos: 19, bendAngle: 0.050, duration: 2.8),
-        LeafData(assetId:  6, imgX: 436, imgY:  93, width: 169, height: 275, anchorX: 0.55, anchorY: 0.00, isLeft: false, zPos: 20, bendAngle: 0.040, duration: 2.6),
-        LeafData(assetId:  7, imgX: 461, imgY:  14, width: 176, height: 229, anchorX: 0.99, anchorY: 0.00, isLeft: false, zPos: 21, bendAngle: 0.045, duration: 2.8),
-        LeafData(assetId: 11, imgX: 294, imgY:  16, width: 173, height: 200, anchorX: 0.60, anchorY: 0.00, isLeft: false, zPos: 22, bendAngle: 0.045, duration: 2.6),
+        LeafData(assetId:  2, imgX: 468, imgY: 151, width: 255, height: 339, anchorX: 0.93, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: 0.040, duration: 2.8),
+        LeafData(assetId:  3, imgX: 272, imgY:  69, width: 200, height: 399, anchorX: 0.63, anchorY: 0.00, isLeft: false, zPos: 12, bendAngle: 0.045, duration: 3.0),
+        LeafData(assetId:  8, imgX: 155, imgY: 226, width:  98, height: 159, anchorX: 0.47, anchorY: 0.00, isLeft: true,  zPos: 13, bendAngle: 0.050, duration: 3.0),
+        LeafData(assetId:  9, imgX:  53, imgY: 176, width: 118, height: 219, anchorX: 0.55, anchorY: 0.00, isLeft: true,  zPos: 14, bendAngle: 0.035, duration: 3.2),
+        LeafData(assetId:  1, imgX: 494, imgY:  43, width: 154, height: 150, anchorX: 0.96, anchorY: 0.00, isLeft: false, zPos: 15, bendAngle: 0.035, duration: 2.6),
+        LeafData(assetId:  4, imgX: 489, imgY: 157, width: 170, height: 121, anchorX: 0.99, anchorY: 0.00, isLeft: false, zPos: 16, bendAngle: 0.050, duration: 3.2),
+        LeafData(assetId:  5, imgX: 334, imgY: 163, width: 133, height: 143, anchorX: 0.07, anchorY: 0.00, isLeft: true,  zPos: 17, bendAngle: 0.035, duration: 3.4),
+        LeafData(assetId: 10, imgX:   0, imgY: 208, width: 354, height: 282, anchorX: 0.20, anchorY: 0.00, isLeft: true,  zPos: 18, bendAngle: 0.040, duration: 3.4),
+        LeafData(assetId: 12, imgX: 407, imgY:   0, width: 225, height: 227, anchorX: 0.47, anchorY: 0.00, isLeft: false, zPos: 19, bendAngle: 0.050, duration: 2.8),
+        LeafData(assetId:  6, imgX: 432, imgY: 131, width: 169, height: 275, anchorX: 0.55, anchorY: 0.00, isLeft: false, zPos: 20, bendAngle: 0.040, duration: 2.6),
+        LeafData(assetId:  7, imgX: 459, imgY: 256, width: 176, height: 229, anchorX: 0.99, anchorY: 0.00, isLeft: false, zPos: 21, bendAngle: 0.045, duration: 2.8),
+        LeafData(assetId: 11, imgX: 299, imgY: 277, width: 173, height: 200, anchorX: 0.60, anchorY: 0.00, isLeft: false, zPos: 22, bendAngle: 0.045, duration: 2.6),
     ]
 
     // MARK: - Properties

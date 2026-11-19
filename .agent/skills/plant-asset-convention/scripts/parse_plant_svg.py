@@ -38,6 +38,22 @@ def get_asset_pixel_size(file_path):
     except Exception:
         return None
 
+def get_plant_assets(plant_num):
+    plant_asset_dir = os.path.join(ASSETS_PLANTS_DIR, f"plant{plant_num}")
+    assets = {}
+    if not os.path.exists(plant_asset_dir):
+        return assets
+    for root, dirs, files in os.walk(plant_asset_dir):
+        for f in files:
+            m = re.search(r'(?:plant\d+_Asset-|Plant\d+-|leaf_)(\d+)', f, re.IGNORECASE)
+            if m and f.endswith('.png') and not any(k in f.lower() for k in ['100', '200', 'avatar', 'thumb']):
+                aid = int(m.group(1))
+                p = os.path.join(root, f)
+                sz = get_asset_pixel_size(p)
+                if sz:
+                    assets[aid] = sz
+    return assets
+
 def find_reference_canvas_size(plant_num):
     # 1. Ưu tiên đọc baseCanvasWidth / baseCanvasHeight từ PlantXNode.swift
     swift_path = os.path.join(COMPONENTS_PLANTS_DIR, f"Plant{plant_num}/Plant{plant_num}Node.swift")
@@ -85,10 +101,15 @@ def extract_svg_elements(svg_path):
         svg_h = float(re.sub(r'[^\d.]', '', height_attr))
 
     container = None
-    for elem in root.iter():
-        elem_id = elem.attrib.get('id', '')
-        if any(k in elem_id.lower() for k in ['rex', 'plant', 'leaves', 'object', 'body']):
-            container = elem
+    # 1. Tìm container có nhiều phần tử con nhất (thường là thẻ <g> chứa các lá)
+    g_candidates = [e for e in root.iter() if clean_tag(e.tag) == 'g' and len(e) >= 4]
+    if g_candidates:
+        container = max(g_candidates, key=lambda e: len(e))
+    else:
+        for elem in root.iter():
+            elem_id = elem.attrib.get('id', '')
+            if any(k in elem_id.lower() for k in ['rex', 'plant', 'leaves', 'object', 'body']):
+                container = elem
 
     items = []
     for elem in root.iter():
@@ -101,7 +122,7 @@ def extract_svg_elements(svg_path):
             w = float(elem.attrib.get('width', 0))
             h = float(elem.attrib.get('height', 0))
             if w > 0 and h > 0:
-                items.append({'id': aid, 'x': x, 'y': y, 'w': w, 'h': h})
+                items.append({'id': aid, 'x': x, 'y': y, 'w': w, 'h': h, 'anchor_x': None})
 
     if not items and container is not None:
         for idx, child in enumerate(container):
@@ -119,8 +140,12 @@ def extract_svg_elements(svg_path):
                 min_y, max_y = min(all_y), max(all_y)
                 w = max_x - min_x
                 h = max_y - min_y
+                # Điểm neo cuống lá từ toạ độ đáy
+                bottom_pts = [(x, y) for x, y in zip(all_x, all_y) if y > max_y - 2.0]
+                avg_bx = sum(x for x, y in bottom_pts) / len(bottom_pts) if bottom_pts else (min_x + max_x) / 2
+                ax = (avg_bx - min_x) / (max_x - min_x) if max_x > min_x else 0.5
                 aid = idx + 1
-                items.append({'id': aid, 'x': min_x, 'y': min_y, 'w': w, 'h': h})
+                items.append({'id': aid, 'x': min_x, 'y': min_y, 'w': w, 'h': h, 'anchor_x': ax})
 
     return svg_w, svg_h, items
 
@@ -188,6 +213,19 @@ def process_plant(plant_num, svg_path=None, do_update=False, offset_y=10.0):
 
     print(f"📏 Canvas: {canvas_w:.1f} x {canvas_h:.1f} (Scale: {scale_x:.3f}x)")
 
+    assets = get_plant_assets(plant_num)
+    if assets and len(assets) == len(raw_items):
+        asset_ids = sorted(assets.keys())
+        item_ids = sorted([it['id'] for it in raw_items])
+        if asset_ids != item_ids:
+            remaining_assets = dict(assets)
+            for it in raw_items:
+                w_scaled = it['w'] * scale_x
+                h_scaled = it['h'] * scale_y
+                best_aid = min(remaining_assets.keys(), key=lambda a: abs(w_scaled - remaining_assets[a][0]) + abs(h_scaled - remaining_assets[a][1]))
+                it['id'] = best_aid
+                del remaining_assets[best_aid]
+
     swift_path = os.path.join(COMPONENTS_PLANTS_DIR, f"Plant{plant_num}/Plant{plant_num}Node.swift")
     existing_meta = {}
     if os.path.exists(swift_path):
@@ -205,7 +243,7 @@ def process_plant(plant_num, svg_path=None, do_update=False, offset_y=10.0):
                 }
 
     leaf_coords = {}
-    swift_lines = []
+    parsed_leaves = []
 
     for idx, it in enumerate(raw_items):
         aid = it['id']
@@ -214,31 +252,42 @@ def process_plant(plant_num, svg_path=None, do_update=False, offset_y=10.0):
         w = it['w'] * scale_x
         h = it['h'] * scale_y
 
+        center_x = ix + w / 2.0
+        calc_is_left = center_x < (canvas_w / 2.0)
+
         meta = existing_meta.get(aid)
-        if meta:
+        if it.get('anchor_x') is not None:
+            ax = it['anchor_x']
+        elif meta:
             ax = meta['anchorX']
-            ay = meta['anchorY']
-            is_left = meta['isLeft']
-            z_pos = meta['zPos']
-            bend = meta['bendAngle']
-            dur = meta['duration']
         else:
-            center_x = ix + w / 2.0
-            is_left = center_x < (canvas_w / 2.0)
-            ax = 0.85 if is_left else 0.15
-            ay = 0.00
-            z_pos = 11 + idx
-            bend = 0.040
-            dur = 3.0
+            ax = 0.85 if calc_is_left else 0.15
+
+        ay = meta['anchorY'] if meta else 0.00
+        is_left = meta['isLeft'] if meta else calc_is_left
+        z_pos = meta['zPos'] if meta else (11 + idx)
+        bend = meta['bendAngle'] if meta else 0.040
+        dur = meta['duration'] if meta else 3.0
 
         sk_x = (ix + ax * w) - (canvas_w / 2.0)
         sk_y = canvas_h - iy - (1.0 - ay) * h - offset_y
 
         leaf_coords[f"leaf_{aid}"] = (sk_x, sk_y, ax, ay)
+        parsed_leaves.append({
+            'aid': aid, 'ix': ix, 'iy': iy, 'w': w, 'h': h,
+            'ax': ax, 'ay': ay, 'is_left': is_left, 'z_pos': z_pos,
+            'bend': bend, 'dur': dur
+        })
+
+    # Sắp xếp danh sách Swift theo zPos tăng dần (từ lớp sau ra trước)
+    parsed_leaves.sort(key=lambda item: item['z_pos'])
+
+    swift_lines = []
+    for l in parsed_leaves:
         swift_lines.append(
-            f"        LeafData(assetId: {aid:2d}, imgX: {ix:4.0f}, imgY: {iy:4.0f}, width: {w:4.0f}, height: {h:4.0f}, "
-            f"anchorX: {ax:.2f}, anchorY: {ay:.2f}, isLeft: {str(is_left).lower():5s}, "
-            f"zPos: {z_pos:2d}, bendAngle: {bend:.3f}, duration: {dur:.1f}),"
+            f"        LeafData(assetId: {l['aid']:2d}, imgX: {l['ix']:4.0f}, imgY: {l['iy']:4.0f}, width: {l['w']:4.0f}, height: {l['h']:4.0f}, "
+            f"anchorX: {l['ax']:.2f}, anchorY: {l['ay']:.2f}, isLeft: {str(l['is_left']).lower():5s}, "
+            f"zPos: {l['z_pos']:2d}, bendAngle: {l['bend']:.3f}, duration: {l['dur']:.1f}),"
         )
 
     print("\n📝 Mảng Swift leavesMetadata đề xuất:")

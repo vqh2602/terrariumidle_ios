@@ -65,17 +65,17 @@ public final class Plant6Node: SKNode {
 
     /// Tọa độ pixel và điểm neo cuống lá Dieffenbachia Seguine (Canvas 642 x 771)
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId:  5, imgX:   4, imgY:  38, width: 308, height: 481, anchorX: 0.31, anchorY: 0.00, isLeft: true,  zPos: 11, bendAngle: 0.050, duration: 3.2),
-        LeafData(assetId:  6, imgX: 194, imgY: 266, width: 195, height: 505, anchorX: 0.23, anchorY: 0.00, isLeft: true,  zPos: 12, bendAngle: 0.035, duration: 3.4),
-        LeafData(assetId:  9, imgX: 340, imgY: 100, width: 166, height: 131, anchorX: 0.83, anchorY: 0.00, isLeft: false, zPos: 13, bendAngle: 0.050, duration: 3.0),
-        LeafData(assetId:  2, imgX:   0, imgY:  29, width: 296, height: 309, anchorX: 0.56, anchorY: 0.00, isLeft: true,  zPos: 14, bendAngle: 0.035, duration: 2.6),
-        LeafData(assetId:  7, imgX: 309, imgY: 269, width: 333, height: 384, anchorX: 0.85, anchorY: 0.00, isLeft: false, zPos: 15, bendAngle: 0.040, duration: 2.6),
-        LeafData(assetId:  8, imgX: 317, imgY:  50, width: 215, height: 433, anchorX: 0.64, anchorY: 0.00, isLeft: false, zPos: 16, bendAngle: 0.045, duration: 2.8),
-        LeafData(assetId:  3, imgX: 187, imgY:   0, width: 231, height:  53, anchorX: 0.45, anchorY: 0.00, isLeft: true,  zPos: 17, bendAngle: 0.040, duration: 2.8),
-        LeafData(assetId:  4, imgX:  31, imgY:  52, width: 290, height: 166, anchorX: 0.42, anchorY: 0.00, isLeft: true,  zPos: 18, bendAngle: 0.045, duration: 3.0),
-        LeafData(assetId: 10, imgX:   0, imgY: 270, width: 305, height: 408, anchorX: 0.32, anchorY: 0.00, isLeft: true,  zPos: 19, bendAngle: 0.035, duration: 3.2),
-        LeafData(assetId: 11, imgX: 196, imgY:  38, width: 204, height: 312, anchorX: 0.25, anchorY: 0.00, isLeft: true,  zPos: 20, bendAngle: 0.040, duration: 3.4),
-        LeafData(assetId: 12, imgX: 280, imgY:  24, width: 131, height: 102, anchorX: 0.68, anchorY: 0.00, isLeft: false, zPos: 21, bendAngle: 0.045, duration: 2.6),
+        LeafData(assetId:  5, imgX:    1, imgY:  249, width:  313, height:  486, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 11, bendAngle: 0.050, duration: 3.2),
+        LeafData(assetId:  6, imgX:  190, imgY:   -2, width:  199, height:  511, anchorX: 0.56, anchorY: 0.00, isLeft: true , zPos: 12, bendAngle: 0.035, duration: 3.4),
+        LeafData(assetId:  9, imgX:  334, imgY:  536, width:  175, height:  136, anchorX: 0.14, anchorY: 0.00, isLeft: false, zPos: 13, bendAngle: 0.050, duration: 3.0),
+        LeafData(assetId:  2, imgX:   -2, imgY:  430, width:  303, height:  316, anchorX: 0.93, anchorY: 0.00, isLeft: true , zPos: 14, bendAngle: 0.035, duration: 2.6),
+        LeafData(assetId:  7, imgX:  307, imgY:  114, width:  337, height:  391, anchorX: 0.04, anchorY: 0.00, isLeft: false, zPos: 15, bendAngle: 0.040, duration: 2.6),
+        LeafData(assetId:  8, imgX:  315, imgY:  280, width:  219, height:  443, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 16, bendAngle: 0.045, duration: 2.8),
+        LeafData(assetId:  3, imgX:  179, imgY:  718, width:  240, height:   57, anchorX: 0.61, anchorY: 0.00, isLeft: true , zPos: 17, bendAngle: 0.040, duration: 2.8),
+        LeafData(assetId:  4, imgX:   24, imgY:  551, width:  298, height:  173, anchorX: 0.97, anchorY: 0.00, isLeft: true , zPos: 18, bendAngle: 0.045, duration: 3.0),
+        LeafData(assetId: 10, imgX:   -0, imgY:   92, width:  306, height:  411, anchorX: 0.96, anchorY: 0.00, isLeft: true , zPos: 19, bendAngle: 0.035, duration: 3.2),
+        LeafData(assetId: 11, imgX:  194, imgY:  419, width:  205, height:  317, anchorX: 0.55, anchorY: 0.00, isLeft: true , zPos: 20, bendAngle: 0.040, duration: 3.4),
+        LeafData(assetId: 12, imgX:  276, imgY:  645, width:  136, height:  103, anchorX: 0.32, anchorY: 0.00, isLeft: false, zPos: 21, bendAngle: 0.045, duration: 2.6),
     ]
 
     // MARK: - Properties
