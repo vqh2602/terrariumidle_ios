@@ -396,15 +396,13 @@ public final class Plant1Node: SKNode {
     // MARK: - State Level 3+: Cây trưởng thành (Kiến trúc lai .sks + Swift Animation)
 
     private func buildMatureState(level: Int) {
-        // Tỉ lệ phát triển theo level: Level 3 = 88%, Level 10+ = 100%
-        let growthRatio: CGFloat = 0.88 + (CGFloat(max(3, min(10, level)) - 3) / 7.0) * 0.12
-
+        // Cây Level 3 là trưởng thành: Giới hạn độ lớn cố định chuẩn, bón phân chỉ tăng level chứ không tăng kích thước
         let baseCanvasWidth: CGFloat = 428.0
         let baseCanvasHeight: CGFloat = 862.0
 
         let fitW = containerSize.width / baseCanvasWidth
         let fitH = containerSize.height / baseCanvasHeight
-        let scale = min(fitW, fitH) * growthRatio
+        let scale = min(fitW, fitH)
         self.baseScale = scale
 
         plantRootNode.setScale(scale)

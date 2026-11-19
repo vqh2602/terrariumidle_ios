@@ -95,7 +95,7 @@ private struct Plant1InteractiveDemoView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.teal)
 
-                Button("Lv.10: Cực đại") {
+                Button("Lv.10: Bón phân") {
                     selectedLevel = 10
                 }
                 .buttonStyle(.borderedProminent)

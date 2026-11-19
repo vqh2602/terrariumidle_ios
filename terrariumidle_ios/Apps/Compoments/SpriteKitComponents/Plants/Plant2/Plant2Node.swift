@@ -374,14 +374,13 @@ public final class Plant2Node: SKNode {
     // MARK: - State Level 3+: Cây trưởng thành Aloe Vera
 
     private func buildMatureState(level: Int) {
-        let growthRatio: CGFloat = 0.88 + (CGFloat(max(3, min(10, level)) - 3) / 7.0) * 0.12
-
+        // Cây Level 3 là trưởng thành: Giới hạn độ lớn cố định chuẩn, bón phân chỉ tăng level chứ không tăng kích thước
         let baseCanvasWidth: CGFloat = 484.0
         let baseCanvasHeight: CGFloat = 641.0
 
         let fitW = containerSize.width / baseCanvasWidth
         let fitH = containerSize.height / baseCanvasHeight
-        let scale = min(fitW, fitH) * growthRatio
+        let scale = min(fitW, fitH)
         self.baseScale = scale
 
         plantRootNode.setScale(scale)

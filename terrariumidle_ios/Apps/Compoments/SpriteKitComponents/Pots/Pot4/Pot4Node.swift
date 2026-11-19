@@ -196,7 +196,7 @@ public final class Pot4Node: SKNode, PotInteractiveNode {
             heartY = potBounds.height * 0.48
         }
 
-        let heart = createHeartNode(size: CGSize(width: 14, height: 13), color: UIColor(red: 1.0, green: 0.35, blue: 0.50, alpha: 0.75))
+        let heart = HeartBurstEffect.createHeartNode(size: CGSize(width: 14, height: 13), color: UIColor(red: 1.0, green: 0.35, blue: 0.50, alpha: 0.75))
         heart.position = CGPoint(x: 0, y: heartY)
         heart.zPosition = 15
         heart.name = "heartEmblem"
