@@ -60,8 +60,22 @@ Khi xuất cây từ Figma / Adobe Illustrator dạng file `.svg` để lấy v�
   - Lá nghiêng sang trái (`isLeft: true`): cuống lá ở góc dưới bên phải (`anchorX: 0.80 -> 0.95`, `anchorY: 0.00 -> 0.05`).
   - Lá nghiêng sang phải (`isLeft: false`): cuống lá ở góc dưới bên trái (`anchorX: 0.05 -> 0.20`, `anchorY: 0.00 -> 0.05`).
   - Lá thẳng giữa: cuống lá ở chính giữa đáy (`anchorX: 0.50`, `anchorY: 0.00`).
-- **Tool tự động trích xuất**: Dùng script `.agent/skills/plant-asset-convention/scripts/parse_plant_svg.py` để bóc tách file `.svg` thành mảng Swift `leavesMetadata` tự động:
+- **Tool tự động trích xuất & cập nhật**: Dùng script `.agent/skills/plant-asset-convention/scripts/parse_plant_svg.py`:
   ```bash
-  python3 .agent/skills/plant-asset-convention/scripts/parse_plant_svg.py <file.svg>
+  python3 .agent/skills/plant-asset-convention/scripts/parse_plant_svg.py --plant <X>
   ```
+
+- **Thư mục lưu trữ SVG chuẩn**: Mọi file SVG trích xuất từ thiết kế được đặt tại `terrariumidle_ios/Resources/SVGPlants/plantX.svg`.
+
+- **Quy trình Zero-Prompt (Khi người dùng chỉ ra lệnh ngắn: "từ plantX, sắp xếp lại toạ độ scene", "sắp xếp lại toạ độ plant X từ file svg" hoặc tag @plantX.svg)**:
+  Agent **BẮT BUỘC** tự động thực thi ngay quy trình sau mà không cần người dùng hướng dẫn thêm prompt:
+  1. Tìm file SVG tại `terrariumidle_ios/Resources/SVGPlants/plantX.svg` (hoặc file được tag).
+  2. Bóc tách các thành phần cây (thẻ `<image>` hoặc vector `<g>/<path>`), trích xuất toạ độ pixel và kích thước `(x, y, w, h)`.
+  3. Ánh xạ với canvas `baseCanvasWidth x baseCanvasHeight` và các layer asset trong `Assets.xcassets/Plants/plantX/`.
+  4. Tính toán điểm neo cuống lá (`anchorPoint`) và toạ độ SpriteKit `(skX, skY)` theo đúng công thức chuẩn.
+  5. Tự động cập nhật đồng bộ vào **CẢ 2 FILE**:
+     - `terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Plants/PlantX/PlantXScene.sks`: cập nhật toạ độ `_position` và `_anchorPoint` cho từng `leaf_X`.
+     - `terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Plants/PlantX/PlantXNode.swift`: cập nhật mảng `leavesMetadata`.
+  6. Kiểm tra toàn vẹn bằng `plutil -lint` và `swiftc -parse`.
+
 

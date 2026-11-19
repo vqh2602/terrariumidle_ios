@@ -89,15 +89,35 @@ let skY = baseCanvasHeight - svgY - (1.0 - anchorY) * height - 10.0
 - **Lá hướng/nghiêng sang phải** (`isLeft: false`): Tâm cuống lá nằm ở góc dưới bên trái phiến lá $\rightarrow$ `anchorX ≈ 0.05 - 0.20`, `anchorY ≈ 0.00 - 0.05`.
 - **Lá mọc thẳng giữa**: Tâm cuống lá ở chính giữa đáy $\rightarrow$ `anchorX ≈ 0.50`, `anchorY ≈ 0.00`.
 
-### 4.4. Tool tự động bóc tách file SVG (`parse_plant_svg.py`)
+### 4.4. Tool tự động bóc tách và cập nhật Scene (`parse_plant_svg.py`)
 
-Dự án cung cấp sẵn script bóc tách tự động tại:
+Dự án cung cấp sẵn script bóc tách và cập nhật tự động tại:
 `scripts/parse_plant_svg.py`
 
-Cách chạy:
+Cách chạy tự động theo Plant ID:
 ```bash
-python3 .agent/skills/plant-asset-convention/scripts/parse_plant_svg.py <path/to/plant.svg> [--offset-y 10.0]
+python3 .agent/skills/plant-asset-convention/scripts/parse_plant_svg.py --plant <X>
 ```
 
-Script sẽ tự động đọc canvas `viewBox`, quét toàn bộ các layer/thẻ lá (`leaf_X`, `PlantX-X`), tính toán hướng lá (`isLeft`), điểm neo (`anchorX`), toạ độ `(skX, skY)` và in ra mảng mã nguồn Swift `leavesMetadata: [LeafData]` sẵn sàng để dán vào `PlantXNode.swift`.
+Hoặc chỉ định file SVG cụ thể:
+```bash
+python3 .agent/skills/plant-asset-convention/scripts/parse_plant_svg.py <path/to/plant.svg> --update [--offset-y 10.0]
+```
+
+Script sẽ tự động:
+1. Đọc kích thước canvas và scale tương ứng với `baseCanvasWidth x baseCanvasHeight` của `PlantXNode.swift`.
+2. Quét toàn bộ các phiến lá/bộ phận (cả thẻ `<image>` và vector `<g>/<path>`).
+3. Tự động tính toán điểm neo cuống lá (`anchorPoint`) và toạ độ SpriteKit `(skX, skY)`.
+4. Cập nhật trực tiếp vào file **`PlantXScene.sks`** và **`PlantXNode.swift`**.
+
+### 4.5. Cơ chế Zero-Prompt Workflow (Quy trình tự động không cần Prompt dài)
+
+- **Vị trí lưu trữ SVG**: File SVG xuất từ Figma / Illustrator luôn được đặt tại:
+  `terrariumidle_ios/Resources/SVGPlants/plantX.svg`
+- **Tác vụ khi người dùng chỉ ra lệnh ngắn** (ví dụ: *"từ plantX, sắp xếp lại toạ độ scene đi"*, *"sắp xếp lại toạ độ plant X từ file svg"*, hoặc tag `@plantX.svg`):
+  1. Tự động lấy file `terrariumidle_ios/Resources/SVGPlants/plantX.svg`.
+  2. Bóc tách toạ độ và quy đổi sang hệ toạ độ SpriteKit (`skX, skY`).
+  3. Đồng bộ cập nhật vào cả `PlantXScene.sks` (toạ độ và điểm neo visual) và `PlantXNode.swift` (`leavesMetadata`).
+  4. Chạy kiểm tra linting (`plutil -lint`) và Swift syntax (`swiftc -parse`).
+
 

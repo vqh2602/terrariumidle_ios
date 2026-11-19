@@ -63,23 +63,23 @@ public final class Plant3Node: SKNode {
         let duration: TimeInterval
     }
 
-    /// Tọa độ pixel và điểm neo cuống lá bản rộng Begonia Rex (Canvas 796 x 538)
+    /// Tọa độ pixel và điểm neo cuống lá bản rộng Begonia Rex trích xuất từ plant3.svg (Canvas 796 x 538)
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId: 1,  imgX: 340, imgY: 374, width: 83,  height: 164, anchorX: 0.10, anchorY: 0.00, isLeft: true,  zPos: 11, bendAngle: 0.030, duration: 3.2),
-        LeafData(assetId: 3,  imgX: 428, imgY: 337, width: 32,  height: 201, anchorX: 0.31, anchorY: 0.00, isLeft: false, zPos: 12, bendAngle: 0.030, duration: 3.5),
+        LeafData(assetId: 1,  imgX: 444, imgY: 356, width: 83,  height: 164, anchorX: 0.10, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: 0.030, duration: 3.2),
+        LeafData(assetId: 3,  imgX: 385, imgY: 328, width: 32,  height: 201, anchorX: 0.31, anchorY: 0.00, isLeft: false, zPos: 12, bendAngle: 0.030, duration: 3.5),
         LeafData(assetId: 5,  imgX: 30,  imgY: 79,  width: 256, height: 135, anchorX: 0.93, anchorY: 0.00, isLeft: true,  zPos: 13, bendAngle: 0.050, duration: 3.4),
-        LeafData(assetId: 6,  imgX: 0,   imgY: 184, width: 254, height: 120, anchorX: 0.43, anchorY: 0.00, isLeft: true,  zPos: 14, bendAngle: 0.055, duration: 3.1),
-        LeafData(assetId: 9,  imgX: 692, imgY: 240, width: 77,  height: 82,  anchorX: 0.60, anchorY: 0.00, isLeft: false, zPos: 15, bendAngle: 0.042, duration: 2.7),
-        LeafData(assetId: 2,  imgX: 428, imgY: 235, width: 58,  height: 221, anchorX: 0.29, anchorY: 0.00, isLeft: false, zPos: 16, bendAngle: 0.040, duration: 3.0),
-        LeafData(assetId: 4,  imgX: 441, imgY: 243, width: 104, height: 194, anchorX: 0.90, anchorY: 0.00, isLeft: false, zPos: 17, bendAngle: 0.045, duration: 2.9),
-        LeafData(assetId: 7,  imgX: 79,  imgY: 217, width: 141, height: 57,  anchorX: 0.73, anchorY: 0.00, isLeft: true,  zPos: 18, bendAngle: 0.040, duration: 2.8),
+        LeafData(assetId: 6,  imgX: 0,   imgY: 185, width: 254, height: 120, anchorX: 0.43, anchorY: 0.00, isLeft: true,  zPos: 14, bendAngle: 0.055, duration: 3.1),
+        LeafData(assetId: 9,  imgX: 346, imgY: 83,  width: 77,  height: 82,  anchorX: 0.60, anchorY: 0.00, isLeft: false, zPos: 15, bendAngle: 0.042, duration: 2.7),
+        LeafData(assetId: 2,  imgX: 422, imgY: 311, width: 58,  height: 221, anchorX: 0.29, anchorY: 0.00, isLeft: false, zPos: 16, bendAngle: 0.040, duration: 3.0),
+        LeafData(assetId: 4,  imgX: 281, imgY: 333, width: 104, height: 194, anchorX: 0.90, anchorY: 0.00, isLeft: false, zPos: 17, bendAngle: 0.045, duration: 2.9),
+        LeafData(assetId: 7,  imgX: 88,  imgY: 209, width: 141, height: 57,  anchorX: 0.73, anchorY: 0.00, isLeft: true,  zPos: 18, bendAngle: 0.040, duration: 2.8),
         LeafData(assetId: 10, imgX: 331, imgY: 0,   width: 184, height: 239, anchorX: 0.32, anchorY: 0.00, isLeft: true,  zPos: 19, bendAngle: 0.046, duration: 3.6),
-        LeafData(assetId: 11, imgX: 220, imgY: 247, width: 110, height: 171, anchorX: 0.05, anchorY: 0.00, isLeft: true,  zPos: 20, bendAngle: 0.048, duration: 3.2),
-        LeafData(assetId: 14, imgX: 553, imgY: 261, width: 243, height: 118, anchorX: 0.51, anchorY: 0.00, isLeft: false, zPos: 21, bendAngle: 0.060, duration: 3.5),
-        LeafData(assetId: 8,  imgX: 193, imgY: 140, width: 168, height: 192, anchorX: 0.01, anchorY: 0.00, isLeft: true,  zPos: 22, bendAngle: 0.048, duration: 3.3),
-        LeafData(assetId: 13, imgX: 434, imgY: 265, width: 144, height: 212, anchorX: 0.88, anchorY: 0.00, isLeft: false, zPos: 23, bendAngle: 0.055, duration: 3.0),
-        LeafData(assetId: 15, imgX: 451, imgY: 108, width: 320, height: 184, anchorX: 0.53, anchorY: 0.00, isLeft: false, zPos: 24, bendAngle: 0.058, duration: 3.3),
-        LeafData(assetId: 12, imgX: 291, imgY: 197, width: 172, height: 240, anchorX: 0.38, anchorY: 0.00, isLeft: true,  zPos: 25, bendAngle: 0.052, duration: 2.9),
+        LeafData(assetId: 11, imgX: 238, imgY: 230, width: 110, height: 171, anchorX: 0.05, anchorY: 0.00, isLeft: true,  zPos: 20, bendAngle: 0.048, duration: 3.2),
+        LeafData(assetId: 14, imgX: 553, imgY: 226, width: 243, height: 118, anchorX: 0.51, anchorY: 0.00, isLeft: false, zPos: 21, bendAngle: 0.060, duration: 3.5),
+        LeafData(assetId: 8,  imgX: 193, imgY: 139, width: 168, height: 192, anchorX: 0.01, anchorY: 0.00, isLeft: true,  zPos: 22, bendAngle: 0.048, duration: 3.3),
+        LeafData(assetId: 13, imgX: 434, imgY: 237, width: 144, height: 212, anchorX: 0.88, anchorY: 0.00, isLeft: false, zPos: 23, bendAngle: 0.055, duration: 3.0),
+        LeafData(assetId: 15, imgX: 445, imgY: 108, width: 320, height: 184, anchorX: 0.53, anchorY: 0.00, isLeft: false, zPos: 24, bendAngle: 0.058, duration: 3.3),
+        LeafData(assetId: 12, imgX: 285, imgY: 194, width: 172, height: 240, anchorX: 0.38, anchorY: 0.00, isLeft: true,  zPos: 25, bendAngle: 0.052, duration: 2.9),
     ]
 
     // MARK: - Properties
