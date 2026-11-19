@@ -65,14 +65,14 @@ public final class Plant4Node: SKNode {
 
     /// Tọa độ pixel và điểm neo cuống lá Alocasia Morocco (Canvas 723 x 737)
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId: 1, imgX: 507, imgY: 182, width:  83, height: 141, anchorX: 0.16, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: 0.035, duration: 2.6),
-        LeafData(assetId: 2, imgX: 377, imgY:  36, width: 346, height: 458, anchorX: 0.46, anchorY: 0.00, isLeft: false, zPos: 12, bendAngle: 0.040, duration: 2.8),
-        LeafData(assetId: 3, imgX: 294, imgY: 336, width: 179, height: 245, anchorX: 0.67, anchorY: 0.00, isLeft: false, zPos: 13, bendAngle: 0.045, duration: 3.0),
-        LeafData(assetId: 7, imgX:   0, imgY:   0, width: 347, height: 499, anchorX: 0.53, anchorY: 0.00, isLeft: true,  zPos: 14, bendAngle: 0.045, duration: 2.8),
-        LeafData(assetId: 4, imgX: 379, imgY: 422, width: 254, height: 315, anchorX: 0.54, anchorY: 0.00, isLeft: false, zPos: 15, bendAngle: 0.050, duration: 3.2),
-        LeafData(assetId: 5, imgX: 109, imgY:  25, width: 289, height: 685, anchorX: 0.59, anchorY: 0.00, isLeft: true,  zPos: 16, bendAngle: 0.035, duration: 3.4),
-        LeafData(assetId: 8, imgX: 171, imgY:  14, width: 201, height: 486, anchorX: 0.68, anchorY: 0.00, isLeft: true,  zPos: 17, bendAngle: 0.050, duration: 3.0),
-        LeafData(assetId: 6, imgX: 342, imgY: 108, width: 186, height: 319, anchorX: 0.12, anchorY: 0.00, isLeft: false, zPos: 18, bendAngle: 0.040, duration: 2.6),
+        LeafData(assetId: 1, imgX: 499, imgY: 422, width:  83, height: 141, anchorX: 0.16, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: 0.035, duration: 2.6),
+        LeafData(assetId: 2, imgX: 375, imgY: 243, width: 346, height: 458, anchorX: 0.46, anchorY: 0.00, isLeft: false, zPos: 12, bendAngle: 0.040, duration: 2.8),
+        LeafData(assetId: 3, imgX: 290, imgY: 156, width: 179, height: 245, anchorX: 0.67, anchorY: 0.00, isLeft: false, zPos: 13, bendAngle: 0.045, duration: 3.0),
+        LeafData(assetId: 7, imgX:   0, imgY:  19, width: 347, height: 499, anchorX: 0.53, anchorY: 0.00, isLeft: true,  zPos: 14, bendAngle: 0.045, duration: 2.8),
+        LeafData(assetId: 4, imgX: 370, imgY:   0, width: 254, height: 315, anchorX: 0.54, anchorY: 0.00, isLeft: false, zPos: 15, bendAngle: 0.050, duration: 3.2),
+        LeafData(assetId: 5, imgX: 109, imgY:  19, width: 289, height: 685, anchorX: 0.59, anchorY: 0.00, isLeft: true,  zPos: 16, bendAngle: 0.035, duration: 3.4),
+        LeafData(assetId: 8, imgX: 168, imgY: 237, width: 201, height: 486, anchorX: 0.68, anchorY: 0.00, isLeft: true,  zPos: 17, bendAngle: 0.050, duration: 3.0),
+        LeafData(assetId: 6, imgX: 337, imgY: 312, width: 186, height: 319, anchorX: 0.12, anchorY: 0.00, isLeft: false, zPos: 18, bendAngle: 0.040, duration: 2.6),
     ]
 
     // MARK: - Properties
