@@ -176,62 +176,19 @@ public final class Pot5Node: SKNode, PotInteractiveNode {
 
     public func playTapAnimation() {
         guard let node = potNode else { return }
-        node.removeAction(forKey: "potTapBounce")
-        node.position = initialPotPosition
 
-        // Đồ nung đất gạch caro: Nảy đanh chắc gọn gàng
-        let compress = SKAction.scaleX(to: 1.09, y: 0.91, duration: 0.08)
-        compress.timingMode = .easeIn
-        let rebound = SKAction.scaleX(to: 0.96, y: 1.05, duration: 0.12)
-        rebound.timingMode = .easeOut
-        let settle = SKAction.scale(to: 1.0, duration: 0.14)
-        settle.timingMode = .easeInEaseOut
-        node.run(SKAction.sequence([compress, rebound, settle]), withKey: "potTapBounce")
+        // 1. Squash & Stretch nén nảy đàn hồi + bóng đổ + đu đưa chậu treo
+        PotBounceAnimator.applyBounce(
+            to: node,
+            shadowNode: shadowNode,
+            initialPosition: initialPotPosition,
+            isHanging: isHanging,
+            config: .firm
+        )
 
-        if isHanging {
-            let swing = SKAction.sequence([
-                SKAction.rotate(toAngle: -0.05, duration: 0.08),
-                SKAction.rotate(toAngle: 0.05, duration: 0.10),
-                SKAction.rotate(toAngle: 0, duration: 0.10)
-            ])
-            node.run(swing)
-        }
-
-        if let shadow = shadowNode {
-            shadow.removeAction(forKey: "shadowBounce")
-            let shrink = SKAction.scale(to: 0.88, duration: 0.08)
-            let restore = SKAction.scale(to: 1.0, duration: 0.26)
-            restore.timingMode = .easeOut
-            shadow.run(SKAction.sequence([shrink, restore]), withKey: "shadowBounce")
-        }
-
-        spawnClayGlint()
-    }
-
-    private func spawnClayGlint() {
-        guard let pot = potNode else { return }
-        let potFrame = pot.frame
-        let count = Int.random(in: 4...6)
-
-        for i in 0..<count {
-            let spark = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.5...2.8))
-            spark.fillColor = UIColor(red: 0.95, green: 0.85, blue: 0.72, alpha: 0.85)
-            spark.strokeColor = .clear
-
-            let startX = CGFloat.random(in: (potFrame.minX + potFrame.width * 0.15)...(potFrame.maxX - potFrame.width * 0.15))
-            let startY = CGFloat.random(in: (potFrame.minY + potFrame.height * 0.2)...(potFrame.maxY - potFrame.height * 0.2))
-            spark.position = CGPoint(x: startX, y: startY)
-            spark.zPosition = 35
-            spark.alpha = 0.0
-            potRootNode.addChild(spark)
-
-            let delay = SKAction.wait(forDuration: Double(i) * 0.03)
-            let fadeIn = SKAction.fadeAlpha(to: 0.9, duration: 0.08)
-            let move = SKAction.moveBy(x: CGFloat.random(in: -15...15), y: CGFloat.random(in: 10...30), duration: 0.40)
-            move.timingMode = .easeOut
-            let fadeOut = SKAction.fadeOut(withDuration: 0.25)
-            let seq = SKAction.sequence([delay, fadeIn, SKAction.group([move, fadeOut]), SKAction.removeFromParent()])
-            spark.run(seq)
+        // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã khai báo
+        for effect in tapEffects {
+            effect.trigger(on: node, in: potRootNode, isHanging: isHanging)
         }
     }
 }

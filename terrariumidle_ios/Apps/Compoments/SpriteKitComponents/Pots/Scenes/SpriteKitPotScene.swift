@@ -29,6 +29,9 @@ public final class SpriteKitPotScene: SKScene {
     private var isHanging: Bool = false
     private var baseScale: CGFloat = 1.0
 
+    /// Danh sách hiệu ứng khi tap vào chậu (dùng cho chậu generic fallback)
+    public var tapEffects: [PotTapEffect] = []
+
     // MARK: - Initializer
 
     public override init() {
@@ -192,6 +195,13 @@ public final class SpriteKitPotScene: SKScene {
 
         addChild(node)
         self.potNode = node
+
+        // Tự động nạp hiệu ứng tap cho chậu generic dựa vào thuộc tính "effect" trong pots_data.json
+        self.tapEffects.removeAll()
+        if let effectName = ItemDataManager.shared.getPot(byId: potId)?.effect,
+           let effect = PotTapEffectFactory.create(named: effectName) {
+            self.tapEffects.append(effect)
+        }
     }
 
     // MARK: - Animation: Phản hồi khi chạm vào chậu
@@ -203,20 +213,18 @@ public final class SpriteKitPotScene: SKScene {
         }
         guard let node = potNode else { return }
 
-        let compress = SKAction.scaleX(to: baseScale * 1.08, y: baseScale * 0.88, duration: 0.10)
-        compress.timingMode = .easeIn
-        let rebound = SKAction.scaleX(to: baseScale * 0.94, y: baseScale * 1.06, duration: 0.14)
-        rebound.timingMode = .easeOut
-        let settle = SKAction.scale(to: baseScale, duration: 0.16)
-        settle.timingMode = .easeInEaseOut
+        // 1. Squash & Stretch đàn hồi + bóng đổ + chậu treo
+        PotBounceAnimator.applyBounce(
+            to: node,
+            shadowNode: shadowNode,
+            initialPosition: node.position,
+            isHanging: isHanging,
+            config: .standard
+        )
 
-        node.run(SKAction.sequence([compress, rebound, settle]))
-
-        // Hiệu ứng bóng co giãn nhẹ theo nhịp nảy
-        if let shadow = shadowNode {
-            let shrink = SKAction.scale(to: 0.88, duration: 0.10)
-            let restore = SKAction.scale(to: 1.0, duration: 0.30)
-            shadow.run(SKAction.sequence([shrink, restore]))
+        // 2. Kích hoạt hiệu ứng thị giác đã nạp
+        for effect in tapEffects {
+            effect.trigger(on: node, in: self, isHanging: isHanging)
         }
     }
 

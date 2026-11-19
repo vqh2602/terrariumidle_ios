@@ -34,6 +34,9 @@ public final class Pot6Node: SKNode, PotInteractiveNode {
     /// Tỉ lệ scale cơ sở
     private var baseScale: CGFloat = 1.0
 
+    /// Danh sách hiệu ứng khi tap vào chậu (có thể tùy biến, thay đổi hoặc gán thêm để tái sử dụng)
+    public var tapEffects: [PotTapEffect] = [QuartzBurstEffect()]
+
     // MARK: - Initializer
 
     public init(containerSize: CGSize = CGSize(width: 120, height: 85), isHanging: Bool = false) {
@@ -229,7 +232,7 @@ public final class Pot6Node: SKNode, PotInteractiveNode {
     }
 
     private func emitQuartzSparkle(on pot: SKNode, at basePos: CGPoint) {
-        let sparkle = createDiamondCrystalNode(radius: CGFloat.random(in: 3.5...5.5), color: UIColor(red: 1.0, green: 0.80, blue: 0.92, alpha: 0.95))
+        let sparkle = QuartzBurstEffect.createDiamondCrystalNode(radius: CGFloat.random(in: 3.5...5.5), color: UIColor(red: 1.0, green: 0.80, blue: 0.92, alpha: 0.95))
         sparkle.position = CGPoint(
             x: basePos.x + CGFloat.random(in: -8...8),
             y: basePos.y + CGFloat.random(in: -6...6)
@@ -258,103 +261,28 @@ public final class Pot6Node: SKNode, PotInteractiveNode {
 
     public func playTapAnimation() {
         guard let node = potNode else { return }
-        node.removeAction(forKey: "potTapBounce")
-        node.position = initialPotPosition
 
-        // Squash & stretch nén nảy đàn hồi
-        let compress = SKAction.scaleX(to: 1.11, y: 0.89, duration: 0.09)
-        compress.timingMode = .easeIn
-        let rebound = SKAction.scaleX(to: 0.95, y: 1.07, duration: 0.13)
-        rebound.timingMode = .easeOut
-        let settle = SKAction.scale(to: 1.0, duration: 0.15)
-        settle.timingMode = .easeInEaseOut
-        node.run(SKAction.sequence([compress, rebound, settle]), withKey: "potTapBounce")
+        // 1. Squash & Stretch nén nảy đàn hồi + bóng đổ + đu đưa chậu treo
+        PotBounceAnimator.applyBounce(
+            to: node,
+            shadowNode: shadowNode,
+            initialPosition: initialPotPosition,
+            isHanging: isHanging,
+            config: .init(
+                compressX: 1.11,
+                compressY: 0.89,
+                compressDuration: 0.09,
+                reboundX: 0.95,
+                reboundY: 1.07,
+                reboundDuration: 0.13,
+                settleDuration: 0.15,
+                shadowShrink: 0.86
+            )
+        )
 
-        if isHanging {
-            let swing = SKAction.sequence([
-                SKAction.rotate(toAngle: -0.06, duration: 0.08),
-                SKAction.rotate(toAngle: 0.06, duration: 0.10),
-                SKAction.rotate(toAngle: 0, duration: 0.10)
-            ])
-            node.run(swing)
+        // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã khai báo
+        for effect in tapEffects {
+            effect.trigger(on: node, in: potRootNode, isHanging: isHanging)
         }
-
-        if let shadow = shadowNode {
-            shadow.removeAction(forKey: "shadowBounce")
-            let shrink = SKAction.scale(to: 0.86, duration: 0.09)
-            let restore = SKAction.scale(to: 1.0, duration: 0.28)
-            restore.timingMode = .easeOut
-            shadow.run(SKAction.sequence([shrink, restore]), withKey: "shadowBounce")
-        }
-
-        spawnQuartzBurst()
-    }
-
-    private func spawnQuartzBurst() {
-        guard let pot = potNode else { return }
-        let potFrame = pot.frame
-        let burstCount = Int.random(in: 8...12)
-
-        for i in 0..<burstCount {
-            let radius = CGFloat.random(in: 3.5...6.5)
-            let color = (i % 2 == 0)
-                ? UIColor(red: 1.0, green: 0.72, blue: 0.88, alpha: 0.95) // Hồng thạch anh phấn
-                : UIColor(red: 0.95, green: 0.85, blue: 1.0, alpha: 0.95) // Ánh pha lê tím nhạt
-
-            let crystal = createDiamondCrystalNode(radius: radius, color: color)
-
-            let startX = CGFloat.random(in: (potFrame.minX + potFrame.width * 0.15)...(potFrame.maxX - potFrame.width * 0.15))
-            let startY = CGFloat.random(in: (potFrame.minY + potFrame.height * 0.25)...(potFrame.maxY - potFrame.height * 0.15))
-            crystal.position = CGPoint(x: startX, y: startY)
-            crystal.zPosition = 50
-            crystal.alpha = 0.0
-            crystal.setScale(0.2)
-            potRootNode.addChild(crystal)
-
-            let flyAngle = CGFloat.random(in: 0...(.pi * 2))
-            let distance = CGFloat.random(in: 25...65)
-            let dx = cos(flyAngle) * distance
-            let dy = sin(flyAngle) * distance
-
-            let delay = SKAction.wait(forDuration: Double(i) * 0.02)
-            let fadeIn = SKAction.fadeAlpha(to: 1.0, duration: 0.10)
-            let floatOut = SKAction.moveBy(x: dx, y: dy, duration: 0.55)
-            floatOut.timingMode = .easeOut
-            let rotate = SKAction.rotate(byAngle: CGFloat.random(in: -3.5...3.5), duration: 0.55)
-            let fadeOut = SKAction.sequence([
-                SKAction.wait(forDuration: 0.25),
-                SKAction.fadeOut(withDuration: 0.30)
-            ])
-
-            let motionGroup = SKAction.group([floatOut, rotate, fadeOut])
-            let fullSeq = SKAction.sequence([delay, fadeIn, motionGroup, SKAction.removeFromParent()])
-            crystal.run(fullSeq)
-        }
-    }
-
-    // MARK: - Helper tạo hình thoi thạch anh (Diamond Quartz Crystal)
-
-    private func createDiamondCrystalNode(radius: CGFloat, color: UIColor) -> SKShapeNode {
-        let path = CGMutablePath()
-        let rw = radius * 0.75
-        let rh = radius * 1.35
-
-        path.move(to: CGPoint(x: 0, y: rh))
-        path.addLine(to: CGPoint(x: rw, y: 0))
-        path.addLine(to: CGPoint(x: 0, y: -rh))
-        path.addLine(to: CGPoint(x: -rw, y: 0))
-        path.closeSubpath()
-
-        let crystalNode = SKShapeNode(path: path)
-        crystalNode.fillColor = color
-        crystalNode.strokeColor = UIColor.white.withAlphaComponent(0.85)
-        crystalNode.lineWidth = 0.6
-
-        let core = SKShapeNode(circleOfRadius: radius * 0.25)
-        core.fillColor = .white
-        core.strokeColor = .clear
-        crystalNode.addChild(core)
-
-        return crystalNode
     }
 }
