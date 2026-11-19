@@ -156,7 +156,7 @@ struct PlantItemView: View {
                         }
                     )
                 }
-                .id("\(plantData?.idPlant ?? "")-\(plantData?.plantLevel ?? 1)")
+                .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)")
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else {
                 // NORMAL PLANT LAYOUT
@@ -186,7 +186,7 @@ struct PlantItemView: View {
                     )
                     .zIndex(2)
                 }
-                .id("\(plantData?.idPlant ?? "")-\(plantData?.plantLevel ?? 1)")
+                .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)")
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
@@ -410,18 +410,9 @@ struct PlantItemView: View {
             return
         }
 
-        // Remove the plant by setting its IDs to empty
+        // Remove the plant by removing it from the array
         var updatedPlants = gardenModel.plants
-        guard let plantIndex = updatedPlants.firstIndex(where: {
-            $0.position == "\(rowIndex),\(columnIndex)"
-        }) else { return }
-
-        var updatedPlant = updatedPlants[plantIndex]
-        updatedPlant.idPlant = ""
-        updatedPlant.idPot = ""
-        updatedPlant.plantLevel = 1
-        updatedPlant.platLevelExp = 0
-        updatedPlants[plantIndex] = updatedPlant
+        updatedPlants.removeAll { $0.position == "\(rowIndex),\(columnIndex)" }
 
         // Deduct 1 shovel
         var updatedItem = gardenModel.item

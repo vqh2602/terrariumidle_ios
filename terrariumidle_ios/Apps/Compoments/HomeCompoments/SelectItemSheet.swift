@@ -325,22 +325,27 @@ struct SelectItemSheet: View {
                 platLevelExp: 0,
                 position: position
             )
+            // Xoá bản ghi cũ tại cùng vị trí nếu có để tránh trùng lặp
+            newPlants.removeAll { $0.position == position }
             newPlants.append(newPlant)
             print("✅ Created plant: \(plantId) with pot: \(potId) at position: \(position), hanging: \(isHanging)")
 
         } else if selectionMode == .decorationOnly,
                   let decorationId = selectedDecorationId
         {
+            let isHanging = ItemDataManager.shared.getItem(byId: decorationId)?.itemTypeAttribute == .hanging
             // Create decoration (both idPlant and idPot set to sticker id)
             let newDecoration = GardenModel.Plant(
                 harvestTime: currentTime,
                 idPlant: decorationId,
                 idPot: decorationId,
-                isHanging: false,
+                isHanging: isHanging,
                 plantLevel: 1,
                 platLevelExp: 0,
                 position: position
             )
+            // Xoá bản ghi cũ tại cùng vị trí nếu có để tránh trùng lặp
+            newPlants.removeAll { $0.position == position }
             newPlants.append(newDecoration)
             print("✅ Created decoration: \(decorationId) at position: \(position)")
         }

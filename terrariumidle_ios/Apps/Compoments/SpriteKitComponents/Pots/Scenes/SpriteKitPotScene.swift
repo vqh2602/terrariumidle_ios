@@ -156,18 +156,31 @@ public final class SpriteKitPotScene: SKScene {
     // MARK: - Texture Loader & Procedural Fallback
 
     private func loadPotTexture() -> SKTexture {
+        let potNumber = potId.filter(\.isNumber)
         let candidates = [
             "\(potId)-Asset-1@4.167x",
             potId,
             "\(potId)-Asset-1",
             "\(potId)_Asset-1@4.167x",
             "\(potId)_Asset-1",
+            "Pot\(potNumber)-1@4.167x",
+            "Pot\(potNumber)-1",
+            "\(potId.capitalized)-1@4.167x",
+            "\(potId.capitalized)-1",
             "i_\(potId)",
             "pot_\(potId)"
         ]
         for name in candidates {
             if let image = UIImage(named: name) {
                 return SKTexture(image: image)
+            }
+        }
+
+        if let imageField = ItemDataManager.shared.getPot(byId: potId)?.image {
+            for name in [imageField, "\(imageField)@4.167x"] {
+                if let image = UIImage(named: name) {
+                    return SKTexture(image: image)
+                }
             }
         }
 

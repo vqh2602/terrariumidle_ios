@@ -184,15 +184,16 @@ public final class Plant1Node: SKNode {
         // Tải texture hạt giống (Asset-100)
         guard let seedTexture = loadTexture(assetId: 100) else { return }
 
-        // Kích thước hạt giống tí hon nằm gọn trong lòng đất (~18% chiều rộng container)
-        let targetW = containerSize.width * 0.18
+        // Kích thước hạt giống nằm gọn trên miệng chậu (~28% chiều rộng container)
+        let targetW = containerSize.width * 0.28
         let aspect: CGFloat = 200.0 / 259.0
         let targetH = targetW * aspect
 
         let node = SKSpriteNode(texture: seedTexture)
         node.size = CGSize(width: targetW, height: targetH)
-        node.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        node.position = CGPoint(x: 0, y: 0)
+        node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
+        let seedY: CGFloat = isHanging ? containerSize.height * 0.70 : containerSize.height * 0.10
+        node.position = CGPoint(x: 0, y: seedY)
         node.zPosition = 10
         node.isPaused = false
         node.speed = 1.0
@@ -253,18 +254,18 @@ public final class Plant1Node: SKNode {
 
         guard let sproutTexture = loadTexture(assetId: 200) else { return }
 
-        // Kích thước mầm cây con nhỏ xinh mới nhú (~22% chiều cao container)
-        let targetH = containerSize.height * 0.22
+        // Kích thước mầm cây con nhỏ xinh mới nhú (~36% chiều cao container)
+        let targetH = containerSize.height * 0.36
         let aspect: CGFloat = 235.0 / 203.0
-        let targetW = min(targetH * aspect, containerSize.width * 0.28)
+        let targetW = min(targetH * aspect, containerSize.width * 0.40)
 
         let node = SKSpriteNode(texture: sproutTexture)
         node.size = CGSize(width: targetW, height: targetH)
-        node.anchorPoint = CGPoint(x: 0.5, y: 0.0)
-        node.position = CGPoint(x: 0, y: 0)
+        node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
+        let sproutY: CGFloat = isHanging ? containerSize.height * 0.70 : containerSize.height * 0.08
+        node.position = CGPoint(x: 0, y: sproutY)
         node.zPosition = 10
         node.isPaused = false
-        node.speed = 1.0
         node.speed = 1.0
 
         plantRootNode.addChild(node)

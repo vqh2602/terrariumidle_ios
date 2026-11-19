@@ -154,7 +154,7 @@ struct HomeView: View {
                                                     Color.clear
                                                         .frame(width: itemWidth, height: 150)
                                                         .allowsHitTesting(false)
-                                                        .id("\(rowIndex)-\(columnIndex)")
+                                                        .id("\(rowIndex)-\(columnIndex)-empty")
                                                 } else {
                                                     // Plant slot: Tương tác tap trực tiếp trên cây và chậu, không bọc TouchScaleMenu khung ngoài
                                                     PlantItemView(
@@ -169,7 +169,7 @@ struct HomeView: View {
                                                         draggedPlant: $draggedPlant,
                                                         onDrop: handleDrop
                                                     )
-                                                    .id("\(rowIndex)-\(columnIndex)")
+                                                    .id("\(rowIndex)-\(columnIndex)-\(plantData?.idPlant ?? "empty")-\(plantData?.idPot ?? "empty")-\(plantData?.plantLevel ?? 0)")
                                                 }
                                             }
                                         }
@@ -246,7 +246,15 @@ struct HomeView: View {
     private func getPlantData(at row: Int, column: Int, from gardenModel: GardenModel?) -> GardenModel.Plant? {
         guard let plants = gardenModel?.plants else { return nil }
 
-        // Tìm plant có position khớp với row,column
+        // Ưu tiên tìm plant tại vị trí (row, column) có dữ liệu hợp lệ (không rỗng)
+        if let validPlant = plants.reversed().first(where: { plant in
+            guard let position = PlantPosition(from: plant.position) else { return false }
+            return position.row == row && position.column == column && !plant.idPlant.isEmpty && !plant.idPot.isEmpty
+        }) {
+            return validPlant
+        }
+
+        // Fallback: Tìm bản ghi khớp toạ độ
         return plants.first { plant in
             // Parse position từ string "row,column"
             guard let position = PlantPosition(from: plant.position) else {
