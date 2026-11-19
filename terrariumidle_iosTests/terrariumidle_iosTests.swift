@@ -82,4 +82,24 @@ struct terrariumidle_iosTests {
         #expect(plants.count == 1)
         #expect(plants.first?.position == "1,3")
     }
+
+    @Test func testPots4To7Data() async throws {
+        let pot4 = ItemDataManager.shared.getPot(byId: "pot4")
+        #expect(pot4 != nil)
+        #expect(pot4?.image == "Pot4@4.167x")
+        #expect(pot4?.effect == "Trái tim nhịp đập")
+
+        let pot5 = ItemDataManager.shared.getPot(byId: "pot5")
+        #expect(pot5 != nil)
+        #expect(pot5?.image == "pot5@4.167x")
+
+        let pot6 = ItemDataManager.shared.getPot(byId: "pot6")
+        #expect(pot6 != nil)
+        #expect(pot6?.image == "Pot6@4.167x")
+        #expect(pot6?.effect == "Tam thạch anh hồng")
+
+        let pot7 = ItemDataManager.shared.getPot(byId: "pot7")
+        #expect(pot7 != nil)
+        #expect(pot7?.image == "Pot7@4.167x")
+    }
 }

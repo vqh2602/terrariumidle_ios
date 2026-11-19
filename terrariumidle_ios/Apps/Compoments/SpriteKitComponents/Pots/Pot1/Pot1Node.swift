@@ -15,7 +15,7 @@ import UIKit
 /// - Hiệu ứng đặc trưng: "Đá lấp lánh" (Sparkle / Glitter effect)
 ///   - Idle: Các hạt sao lấp lánh nhẹ nhàng điểm xuyết trên viền chậu
 ///   - Tap: Nhún nảy lò xo đàn hồi (chống trôi toạ độ) + bung tỏa chùm tia sáng lấp lánh
-public final class Pot1Node: SKNode {
+public final class Pot1Node: SKNode, PotInteractiveNode {
 
     // MARK: - Properties
 

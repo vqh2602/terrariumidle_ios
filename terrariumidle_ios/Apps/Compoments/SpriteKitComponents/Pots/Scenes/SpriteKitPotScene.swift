@@ -8,12 +8,22 @@
 import SpriteKit
 import UIKit
 
+// MARK: - Pot Interactive Node Protocol
+public protocol PotInteractiveNode: AnyObject {
+    var asNode: SKNode { get }
+    func playTapAnimation()
+}
+
+extension PotInteractiveNode where Self: SKNode {
+    public var asNode: SKNode { self }
+}
+
 // MARK: - SpriteKit Scene cho Chậu cây trong Terrarium
 public final class SpriteKitPotScene: SKScene {
     // MARK: - Properties
 
     private var potNode: SKSpriteNode?
-    private var pot1Node: Pot1Node?
+    private var customPotInteractive: PotInteractiveNode?
     private var shadowNode: SKNode?
     private var potId: String = "pot1"
     private var isHanging: Bool = false
@@ -49,7 +59,7 @@ public final class SpriteKitPotScene: SKScene {
         self.potId = potId
         self.isHanging = isHanging
 
-        if (changed || (potNode == nil && pot1Node == nil)) && size.width > 0 && size.height > 0 {
+        if (changed || (potNode == nil && customPotInteractive == nil)) && size.width > 0 && size.height > 0 {
             buildPot()
         }
     }
@@ -59,14 +69,14 @@ public final class SpriteKitPotScene: SKScene {
         view.allowsTransparency = true
         view.isPaused = false
         self.isPaused = false
-        if potNode == nil && pot1Node == nil && size.width > 0 && size.height > 0 {
+        if potNode == nil && customPotInteractive == nil && size.width > 0 && size.height > 0 {
             buildPot()
         }
     }
 
     public override func didChangeSize(_ oldSize: CGSize) {
         super.didChangeSize(oldSize)
-        if (potNode == nil && pot1Node == nil) || abs(oldSize.width - size.width) > 2 || abs(oldSize.height - size.height) > 2 {
+        if (potNode == nil && customPotInteractive == nil) || abs(oldSize.width - size.width) > 2 || abs(oldSize.height - size.height) > 2 {
             if size.width > 0 && size.height > 0 {
                 buildPot()
             }
@@ -79,20 +89,61 @@ public final class SpriteKitPotScene: SKScene {
         guard size.width > 0, size.height > 0 else { return }
         removeAllChildren()
         potNode = nil
-        pot1Node = nil
+        customPotInteractive = nil
         shadowNode = nil
         anchorPoint = CGPoint(x: 0.5, y: 0.0) // Luôn neo gốc tọa độ tại đáy giữa
 
-        // ĐẶC BIỆT: Chậu hồng chấm đỏ (pot1) có node chuyên biệt và hiệu ứng đá lấp lánh riêng
-        if potId.lowercased() == "pot1" {
+        let cleanId = potId.lowercased().trimmingCharacters(in: .whitespaces)
+
+        // TỰ ĐỘNG NẠP CÁC NODE CHẬU CHUYÊN BIỆT (Pot1 -> Pot7)
+        switch cleanId {
+        case "pot1":
             let p1 = Pot1Node(containerSize: size, isHanging: isHanging)
             p1.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p1)
-            self.pot1Node = p1
+            self.customPotInteractive = p1
             return
+        case "pot2":
+            let p2 = Pot2Node(containerSize: size, isHanging: isHanging)
+            p2.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p2)
+            self.customPotInteractive = p2
+            return
+        case "pot3":
+            let p3 = Pot3Node(containerSize: size, isHanging: isHanging)
+            p3.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p3)
+            self.customPotInteractive = p3
+            return
+        case "pot4":
+            let p4 = Pot4Node(containerSize: size, isHanging: isHanging)
+            p4.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p4)
+            self.customPotInteractive = p4
+            return
+        case "pot5":
+            let p5 = Pot5Node(containerSize: size, isHanging: isHanging)
+            p5.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p5)
+            self.customPotInteractive = p5
+            return
+        case "pot6":
+            let p6 = Pot6Node(containerSize: size, isHanging: isHanging)
+            p6.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p6)
+            self.customPotInteractive = p6
+            return
+        case "pot7":
+            let p7 = Pot7Node(containerSize: size, isHanging: isHanging)
+            p7.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p7)
+            self.customPotInteractive = p7
+            return
+        default:
+            break
         }
 
-        // 1. Chậu cây chính
+        // 1. Chậu cây chính (Generic fallback cho các chậu khác nếu có)
         let (texture, loadedImage) = loadPotTextureAndImage()
         let node = SKSpriteNode(texture: texture)
 
@@ -123,7 +174,7 @@ public final class SpriteKitPotScene: SKScene {
         node.zPosition = 10
 
         // 2. Bóng đổ dưới đáy chậu (nếu không treo)
-        // Đo chính xác bề rộng đáy chậu (kể cả chậu đáy hẹp như pot3) để bóng đổ tự nhiên, ôm sát đáy
+        // Đo chính xác bề rộng đáy chậu để bóng đổ tự nhiên, ôm sát đáy
         if !isHanging {
             let baseRatio = Self.detectBaseRatio(for: potId, image: loadedImage)
             let baseContactWidth = potRenderedWidth * baseRatio
@@ -146,8 +197,8 @@ public final class SpriteKitPotScene: SKScene {
     // MARK: - Animation: Phản hồi khi chạm vào chậu
 
     public func playTapAnimation() {
-        if let p1 = pot1Node {
-            p1.playTapAnimation()
+        if let custom = customPotInteractive {
+            custom.playTapAnimation()
             return
         }
         guard let node = potNode else { return }

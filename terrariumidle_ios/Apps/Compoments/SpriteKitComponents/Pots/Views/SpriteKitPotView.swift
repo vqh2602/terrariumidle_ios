@@ -71,26 +71,56 @@ public struct SpriteKitPotView: View {
 }
 
 // MARK: - Preview Chậu cây SpriteKit
-#Preview {
-    VStack(spacing: 30) {
-        Text("🪴 SpriteKit Pot View Demo")
-            .font(.headline)
+private struct SpriteKitPotInteractiveDemoView: View {
+    @State private var selectedPotId: String = "pot4"
+    @State private var isHanging: Bool = false
+    @State private var tapCount: Int = 0
 
-        HStack(spacing: 24) {
-            VStack {
-                Text("Chậu 1 (pot1)").font(.caption)
-                PotView(potId: "pot1", isHanging: false, width: 120, height: 85)
-                    .background(Color.black.opacity(0.04))
-                    .cornerRadius(8)
+    private let potIds = ["pot1", "pot2", "pot3", "pot4", "pot5", "pot6", "pot7"]
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("🪴 SpriteKit Pot View Demo")
+                .font(.headline)
+
+            Picker("Chọn chậu", selection: $selectedPotId) {
+                ForEach(potIds, id: \.self) { id in
+                    Text(id.uppercased()).tag(id)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+
+            ZStack(alignment: isHanging ? .top : .bottom) {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(UIColor.secondarySystemBackground))
+                    .frame(width: 220, height: 180)
+
+                PotView(
+                    potId: selectedPotId,
+                    isHanging: isHanging,
+                    width: isHanging ? 150 : 160,
+                    height: isHanging ? 150 : 110,
+                    onTap: {
+                        tapCount += 1
+                    }
+                )
+                .padding(.top, isHanging ? 16 : 0)
+                .padding(.bottom, isHanging ? 0 : 20)
+                .id("\(selectedPotId)-\(isHanging)")
             }
 
-            VStack {
-                Text("Chậu treo (pot1)").font(.caption)
-                PotView(potId: "pot1", isHanging: true, width: 120, height: 110)
-                    .background(Color.black.opacity(0.04))
-                    .cornerRadius(8)
-            }
+            Text("Số lần chạm: \(tapCount)")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            Toggle("Chậu treo (isHanging)", isOn: $isHanging)
+                .padding(.horizontal, 40)
         }
+        .padding()
     }
-    .padding()
+}
+
+#Preview {
+    SpriteKitPotInteractiveDemoView()
 }
