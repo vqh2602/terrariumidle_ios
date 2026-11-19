@@ -18,7 +18,11 @@ public enum PlantAvailability {
     public static let supportedPlantIds: Set<String> = [
         "plant1",
         "plant2",
-        "plant3"
+        "plant3",
+        "plant4",
+        "plant5",
+        "plant6",
+        "plant7"
     ]
 
     /// Kiểm tra xem loài cây này đã có trong phiên bản hiện tại chưa

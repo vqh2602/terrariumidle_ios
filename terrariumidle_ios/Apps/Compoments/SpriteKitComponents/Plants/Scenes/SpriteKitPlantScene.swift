@@ -16,6 +16,10 @@ public final class SpriteKitPlantScene: SKScene {
     private var plant1Node: Plant1Node?
     private var plant2Node: Plant2Node?
     private var plant3Node: Plant3Node?
+    private var plant4Node: Plant4Node?
+    private var plant5Node: Plant5Node?
+    private var plant6Node: Plant6Node?
+    private var plant7Node: Plant7Node?
     private var plantId: String = "plant1"
     private var plantLevel: Int = 1
     private var isHanging: Bool = false
@@ -23,7 +27,8 @@ public final class SpriteKitPlantScene: SKScene {
     private var baseScale: CGFloat = 1.0
 
     private var hasActivePlantNode: Bool {
-        plantNode != nil || plant1Node != nil || plant2Node != nil || plant3Node != nil
+        plantNode != nil || plant1Node != nil || plant2Node != nil || plant3Node != nil ||
+        plant4Node != nil || plant5Node != nil || plant6Node != nil || plant7Node != nil
     }
 
     // MARK: - Initializer
@@ -90,6 +95,10 @@ public final class SpriteKitPlantScene: SKScene {
         plant1Node = nil
         plant2Node = nil
         plant3Node = nil
+        plant4Node = nil
+        plant5Node = nil
+        plant6Node = nil
+        plant7Node = nil
         anchorPoint = CGPoint(x: 0.5, y: 0.0) // Luôn neo gốc tọa độ tại đáy giữa
 
         // ĐẶC BIỆT: Cây Cỏ Loe (plant1) hỗ trợ 3 trạng thái và 18 lá uốn lượn riêng biệt
@@ -116,6 +125,42 @@ public final class SpriteKitPlantScene: SKScene {
             p3.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p3)
             self.plant3Node = p3
+            return
+        }
+
+        // ĐẶC BIỆT: Cây Ráy Alocasia Morocco (plant4) với 8 phiến lá uốn lượn mềm mại
+        if plantId.lowercased() == "plant4" {
+            let p4 = Plant4Node(level: plantLevel, containerSize: size, isHanging: isHanging)
+            p4.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p4)
+            self.plant4Node = p4
+            return
+        }
+
+        // ĐẶC BIỆT: Cây Trầu Bà Vàng (plant5 - Epipremnum Aureum) với 12 phiến lá dạng dây leo
+        if plantId.lowercased() == "plant5" {
+            let p5 = Plant5Node(level: plantLevel, containerSize: size, isHanging: isHanging)
+            p5.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p5)
+            self.plant5Node = p5
+            return
+        }
+
+        // ĐẶC BIỆT: Cây Vạn Niên Thanh Đốm (plant6 - Dieffenbachia Seguine) với 11 phiến lá lớn bản rộng
+        if plantId.lowercased() == "plant6" {
+            let p6 = Plant6Node(level: plantLevel, containerSize: size, isHanging: isHanging)
+            p6.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p6)
+            self.plant6Node = p6
+            return
+        }
+
+        // ĐẶC BIỆT: Cây Thiết Mộc Lan (plant7 - Fragrant Dracaena) với 19 phiến lá vươn xòe
+        if plantId.lowercased() == "plant7" {
+            let p7 = Plant7Node(level: plantLevel, containerSize: size, isHanging: isHanging)
+            p7.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p7)
+            self.plant7Node = p7
             return
         }
 
@@ -196,6 +241,22 @@ public final class SpriteKitPlantScene: SKScene {
         }
         if let p3 = plant3Node {
             p3.playTapAnimation()
+            return
+        }
+        if let p4 = plant4Node {
+            p4.playTapAnimation()
+            return
+        }
+        if let p5 = plant5Node {
+            p5.playTapAnimation()
+            return
+        }
+        if let p6 = plant6Node {
+            p6.playTapAnimation()
+            return
+        }
+        if let p7 = plant7Node {
+            p7.playTapAnimation()
             return
         }
         guard let node = plantNode else { return }

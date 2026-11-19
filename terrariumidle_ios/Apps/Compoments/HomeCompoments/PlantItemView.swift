@@ -161,14 +161,14 @@ struct PlantItemView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else {
                 // NORMAL PLANT LAYOUT
-                VStack(spacing: -itemWidth * 0.14) {
+                VStack(spacing: -itemWidth * 0.02) {
                     // Hiển thị Plant với idPlant từ data (không dùng mockup, cây chưa có sẽ hiện <update app để hiển thị>)
                     SpriteKitPlantView(
                         plantId: plantData?.idPlant ?? "plant1",
                         plantLevel: plantData?.plantLevel ?? 1,
                         isHanging: false,
                         width: itemWidth,
-                        height: itemWidth + itemWidth * 0.35,
+                        height: itemWidth + itemWidth * 0.5,
                         onTap: {
                             handleDetailTap()
                         }
@@ -181,7 +181,7 @@ struct PlantItemView: View {
                         potId: plantData?.idPot ?? "pot1",
                         isHanging: false,
                         width: itemWidth,
-                        height: itemWidth * 0.6,
+                        height: itemWidth * 0.4,
                         onTap: {
                             handleDetailTap()
                         }
