@@ -36,18 +36,22 @@ flowchart LR
 
 ### Yêu cầu cấu trúc file `.sks`:
 - Kích thước scene đúng bằng kích thước ảnh tham chiếu (ví dụ: Plant1: 428x862, Plant2: 484x641, Plant3: 796x538), `anchorPoint = (0.5, 0.0)`.
+- **Tự fill Asset vào mọi Sprite**: Mọi `SKSpriteNode` (`seedSprite`, `sproutSprite`, `leaf_X`) trong `.sks` **BẮT BUỘC PHẢI CÓ TEXTURE THẬT** (`imageNamed: ...`) tương ứng trong `Assets.xcassets`. Tuyệt đối không để `_texture = nil / $null` hoặc `color: .clear` khiến Xcode Scene Editor hiển thị khung chữ nhật rỗng.
 - 3 nhóm node chuẩn:
-  - `seedNode` (pos: (0, 0)) -> child `seedSprite` (pos: (0, 30), anchor: (0.5, 0.05), zPos: 10, texture: `plant1_Asset-100@4.167x`)
-  - `sproutNode` (pos: (0, 0)) -> child `sproutSprite` (pos: (0, 20), anchor: (0.5, 0.05), zPos: 10, texture: `plant1_Asset-200@4.167x`)
+  - `seedNode` (pos: (0, 0)) -> child `seedSprite` (pos: (0, -18.5), anchor: (0.5, 0.05), zPos: 10, texture: `plant1_Asset-100@4.167x`)
+  - `sproutNode` (pos: (0, 0)) -> child `sproutSprite` (pos: (0, -18.5), anchor: (0.5, 0.05), zPos: 10, texture: `plant1_Asset-200@4.167x`)
   - `matureNode` (pos: (0, -10)) -> chứa các phiến lá con `leaf_1`, `leaf_2`,... sắp xếp đúng z-order (từ lớp sau ra trước), toạ độ cuống cắm vào chậu.
 
 ---
 
 ## 3. Quy tắc triển khai Code SpriteKit (`PlantXNode.swift`)
 
-1. **SKS Scene Loader**:
+1. **SKS Scene Loader cho CẢ 3 TRẠNG THÁI (Seed, Sprout, Mature)**:
    - Khai báo hàm `loadSceneTemplate() -> SKScene?` nạp `PlantXScene.sks`.
-   - Trong `buildMatureState`: Ưu tiên nạp node từ `PlantXScene.sks` để đảm bảo khi người dùng chỉnh vị trí trong Xcode Scene Editor, giao diện tự động cập nhật mà không phải sửa code.
+   - Cả 3 hàm `buildSeedState` (Level 1), `buildSproutState` (Level 2) và `buildMatureState` (Level 3+) **BẮT BUỘC** phải ưu tiên nạp trực tiếp node tương ứng (`seedNode`, `sproutNode`, `matureNode`) từ `PlantXScene.sks`.
+   - Tuyệt đối **KHÔNG ĐƯỢC** hardcode toạ độ Y của hạt giống/cây con bằng công thức như `containerSize.height * 0.08` làm trôi lệch vị trí và khiến cây con bay lơ lửng trên không trung.
+   - Luôn có kiểm tra fallback tự fill texture: `if sprite.texture == nil { sprite.texture = loadTexture(...) }`.
+   - Khi chỉnh vị trí trong Xcode Scene Editor (`.sks`), code Swift phải tự động sử dụng vị trí mới đó mà không cần sửa code.
 
 2. **Cơ chế Fallback Procedural**:
    - Luôn định nghĩa `leavesMetadata` chuẩn để nếu file `.sks` chưa tải được thì code vẫn render chính xác 100% hình thể cây.

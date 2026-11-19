@@ -156,32 +156,72 @@ public final class Plant3Node: SKNode {
         }
     }
 
-    // MARK: - State 100: Hạt giống (Ánh xạ tái sử dụng từ Plant1)
+    // MARK: - State 100: Hạt giống (Seed Stage)
 
     private func buildSeedState() {
-        plantRootNode.setScale(1.0)
-        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.70 : 0)
-        self.baseScale = 1.0
+        let baseCanvasWidth: CGFloat = 796.0
+        let baseCanvasHeight: CGFloat = 538.0
 
+        let fitW = containerSize.width / baseCanvasWidth
+        let fitH = containerSize.height / baseCanvasHeight
+        let scale = min(fitW, fitH)
+        self.baseScale = scale
+
+        plantRootNode.setScale(scale)
+        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height : 0)
+
+        // 1. ƯU TIÊN KIẾN TRÚC LAI: Nạp trực tiếp từ file Plant3Scene.sks
+        if let scene = loadSceneTemplate(),
+           let seedGroup = scene.childNode(withName: "seedNode") {
+            seedGroup.removeFromParent()
+            seedGroup.isHidden = false
+            seedGroup.isPaused = false
+            seedGroup.speed = 1.0
+            plantRootNode.addChild(seedGroup)
+
+            let sprite = (seedGroup.childNode(withName: "seedSprite") as? SKSpriteNode) ?? (seedGroup as? SKSpriteNode)
+            if let sprite = sprite {
+                if sprite.texture == nil {
+                    sprite.texture = loadTexture(assetId: 100)
+                }
+                sprite.isHidden = false
+                sprite.isPaused = false
+                sprite.speed = 1.0
+                self.seedNode = sprite
+                self.initialSeedPosition = sprite.position
+
+                attachSeedAnimations(to: sprite)
+                return
+            }
+        }
+
+        // 2. Fallback procedural: Sinh hạt giống tại toạ độ chuẩn phòng khi scene không tải được
         guard let seedTexture = loadTexture(assetId: 100) else { return }
-
-        // Kích thước hạt mầm gieo nhỏ gọn trên miệng chậu (~20% chiều rộng container)
-        let targetW = containerSize.width * 0.20
-        let aspect: CGFloat = 257.0 / 259.0
-        let targetH = targetW * aspect
-
         let node = SKSpriteNode(texture: seedTexture)
-        node.size = CGSize(width: targetW, height: targetH)
+        node.name = "seedSprite"
+        node.size = CGSize(width: 130, height: 100)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        let seedY: CGFloat = isHanging ? containerSize.height * 0.70 : containerSize.height * 0.08
-        node.position = CGPoint(x: 0, y: seedY)
+        node.position = CGPoint(x: 0, y: -18.5)
         node.zPosition = 10
         node.isPaused = false
         node.speed = 1.0
 
-        plantRootNode.addChild(node)
+        let fallbackGroup = SKNode()
+        fallbackGroup.name = "seedNode"
+        fallbackGroup.position = .zero
+        fallbackGroup.addChild(node)
+
+        plantRootNode.addChild(fallbackGroup)
         self.seedNode = node
         self.initialSeedPosition = node.position
+
+        attachSeedAnimations(to: node)
+    }
+
+    private func attachSeedAnimations(to node: SKSpriteNode) {
+        node.removeAction(forKey: "seedBreath")
+        node.removeAction(forKey: "seedWiggle")
+        node.childNode(withName: "seedGlowNode")?.removeFromParent()
 
         let breatheIn = SKAction.scaleX(to: 1.10, y: 0.90, duration: 1.0)
         breatheIn.timingMode = .easeInEaseOut
@@ -195,7 +235,7 @@ public final class Plant3Node: SKNode {
         tiltR.timingMode = .easeInEaseOut
         node.run(SKAction.repeatForever(SKAction.sequence([tiltL, tiltR])), withKey: "seedWiggle")
 
-        startSeedGlowEffect(on: node, radius: targetW * 0.45)
+        startSeedGlowEffect(on: node, radius: max(14, node.size.width * 0.45))
     }
 
     private func startSeedGlowEffect(on node: SKNode, radius: CGFloat = 14) {
@@ -222,32 +262,72 @@ public final class Plant3Node: SKNode {
         glowNode.run(SKAction.repeatForever(SKAction.sequence([glowUp, glowDown])), withKey: "seedGlowPulse")
     }
 
-    // MARK: - State 200: Cây con (Ánh xạ tái sử dụng từ Plant1)
+    // MARK: - State 200: Cây con (Sprout Stage)
 
     private func buildSproutState() {
-        plantRootNode.setScale(1.0)
-        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.70 : 0)
-        self.baseScale = 1.0
+        let baseCanvasWidth: CGFloat = 796.0
+        let baseCanvasHeight: CGFloat = 538.0
 
+        let fitW = containerSize.width / baseCanvasWidth
+        let fitH = containerSize.height / baseCanvasHeight
+        let scale = min(fitW, fitH)
+        self.baseScale = scale
+
+        plantRootNode.setScale(scale)
+        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height : 0)
+
+        // 1. ƯU TIÊN KIẾN TRÚC LAI: Nạp trực tiếp từ file Plant3Scene.sks
+        if let scene = loadSceneTemplate(),
+           let sproutGroup = scene.childNode(withName: "sproutNode") {
+            sproutGroup.removeFromParent()
+            sproutGroup.isHidden = false
+            sproutGroup.isPaused = false
+            sproutGroup.speed = 1.0
+            plantRootNode.addChild(sproutGroup)
+
+            let sprite = (sproutGroup.childNode(withName: "sproutSprite") as? SKSpriteNode) ?? (sproutGroup as? SKSpriteNode)
+            if let sprite = sprite {
+                if sprite.texture == nil {
+                    sprite.texture = loadTexture(assetId: 200)
+                }
+                sprite.isHidden = false
+                sprite.isPaused = false
+                sprite.speed = 1.0
+                self.sproutNode = sprite
+                self.initialSproutPosition = sprite.position
+
+                attachSproutAnimations(to: sprite)
+                return
+            }
+        }
+
+        // 2. Fallback procedural: Sinh mầm cây con tại toạ độ chuẩn phòng khi scene không tải được
         guard let sproutTexture = loadTexture(assetId: 200) else { return }
-
-        // Kích thước mầm cây con nhỏ xinh mới nhú (~38% chiều cao container)
-        let targetH = containerSize.height * 0.38
-        let aspect: CGFloat = 235.0 / 253.0
-        let targetW = min(targetH * aspect, containerSize.width * 0.42)
-
         let node = SKSpriteNode(texture: sproutTexture)
-        node.size = CGSize(width: targetW, height: targetH)
+        node.name = "sproutSprite"
+        node.size = CGSize(width: 130, height: 112)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        let sproutY: CGFloat = isHanging ? containerSize.height * 0.70 : containerSize.height * 0.08
-        node.position = CGPoint(x: 0, y: sproutY)
+        node.position = CGPoint(x: 0, y: -18.5)
         node.zPosition = 10
         node.isPaused = false
         node.speed = 1.0
 
-        plantRootNode.addChild(node)
+        let fallbackGroup = SKNode()
+        fallbackGroup.name = "sproutNode"
+        fallbackGroup.position = .zero
+        fallbackGroup.addChild(node)
+
+        plantRootNode.addChild(fallbackGroup)
         self.sproutNode = node
         self.initialSproutPosition = node.position
+
+        attachSproutAnimations(to: node)
+    }
+
+    private func attachSproutAnimations(to node: SKSpriteNode) {
+        node.removeAction(forKey: "sproutSway")
+        node.removeAction(forKey: "sproutBob")
+        node.childNode(withName: "sproutGlowNode")?.removeFromParent()
 
         let swayLeft = SKAction.rotate(toAngle: -0.06, duration: 1.8)
         swayLeft.timingMode = .easeInEaseOut
@@ -261,7 +341,7 @@ public final class Plant3Node: SKNode {
         bobDown.timingMode = .easeInEaseOut
         node.run(SKAction.repeatForever(SKAction.sequence([bobUp, bobDown])), withKey: "sproutBob")
 
-        startSproutGlowEffect(on: node, radius: targetW * 0.45, targetH: targetH)
+        startSproutGlowEffect(on: node, radius: max(16, node.size.width * 0.45), targetH: max(50, node.size.height))
     }
 
     private func startSproutGlowEffect(on node: SKNode, radius: CGFloat = 16, targetH: CGFloat = 50) {
