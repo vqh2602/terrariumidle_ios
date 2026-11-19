@@ -32,6 +32,9 @@ public final class Pot3Node: SKNode, PotInteractiveNode {
     /// Tỉ lệ scale cơ sở
     private var baseScale: CGFloat = 1.0
 
+    /// Danh sách hiệu ứng khi tap vào chậu (có thể tùy biến, thay đổi hoặc gán thêm để tái sử dụng)
+    public var tapEffects: [PotTapEffect] = [StoneDustEffect()]
+
     // MARK: - Initializer
 
     public init(containerSize: CGSize = CGSize(width: 120, height: 85), isHanging: Bool = false) {
@@ -174,61 +177,19 @@ public final class Pot3Node: SKNode, PotInteractiveNode {
 
     public func playTapAnimation() {
         guard let node = potNode else { return }
-        node.removeAction(forKey: "potTapBounce")
-        node.position = initialPotPosition
 
-        let compress = SKAction.scaleX(to: 1.08, y: 0.92, duration: 0.08)
-        compress.timingMode = .easeIn
-        let rebound = SKAction.scaleX(to: 0.96, y: 1.05, duration: 0.12)
-        rebound.timingMode = .easeOut
-        let settle = SKAction.scale(to: 1.0, duration: 0.14)
-        settle.timingMode = .easeInEaseOut
-        node.run(SKAction.sequence([compress, rebound, settle]), withKey: "potTapBounce")
+        // 1. Squash & Stretch nén nảy đàn hồi + bóng đổ + đu đưa chậu treo
+        PotBounceAnimator.applyBounce(
+            to: node,
+            shadowNode: shadowNode,
+            initialPosition: initialPotPosition,
+            isHanging: isHanging,
+            config: .firm
+        )
 
-        if isHanging {
-            let swing = SKAction.sequence([
-                SKAction.rotate(toAngle: -0.05, duration: 0.08),
-                SKAction.rotate(toAngle: 0.05, duration: 0.10),
-                SKAction.rotate(toAngle: 0, duration: 0.10)
-            ])
-            node.run(swing)
-        }
-
-        if let shadow = shadowNode {
-            shadow.removeAction(forKey: "shadowBounce")
-            let shrink = SKAction.scale(to: 0.88, duration: 0.08)
-            let restore = SKAction.scale(to: 1.0, duration: 0.26)
-            restore.timingMode = .easeOut
-            shadow.run(SKAction.sequence([shrink, restore]), withKey: "shadowBounce")
-        }
-
-        spawnStoneDust()
-    }
-
-    private func spawnStoneDust() {
-        guard let pot = potNode else { return }
-        let potFrame = pot.frame
-        let count = Int.random(in: 4...6)
-
-        for i in 0..<count {
-            let spark = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.5...2.6))
-            spark.fillColor = UIColor(white: 0.82, alpha: 0.85) // Bụi đá xám bạc
-            spark.strokeColor = .clear
-
-            let startX = CGFloat.random(in: (potFrame.minX + potFrame.width * 0.2)...(potFrame.maxX - potFrame.width * 0.2))
-            let startY = CGFloat.random(in: (potFrame.minY + potFrame.height * 0.25)...(potFrame.maxY - potFrame.height * 0.25))
-            spark.position = CGPoint(x: startX, y: startY)
-            spark.zPosition = 35
-            spark.alpha = 0.0
-            potRootNode.addChild(spark)
-
-            let delay = SKAction.wait(forDuration: Double(i) * 0.03)
-            let fadeIn = SKAction.fadeAlpha(to: 0.85, duration: 0.08)
-            let move = SKAction.moveBy(x: CGFloat.random(in: -14...14), y: CGFloat.random(in: 8...22), duration: 0.38)
-            move.timingMode = .easeOut
-            let fadeOut = SKAction.fadeOut(withDuration: 0.24)
-            let seq = SKAction.sequence([delay, fadeIn, SKAction.group([move, fadeOut]), SKAction.removeFromParent()])
-            spark.run(seq)
+        // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã khai báo
+        for effect in tapEffects {
+            effect.trigger(on: node, in: potRootNode, isHanging: isHanging)
         }
     }
 }

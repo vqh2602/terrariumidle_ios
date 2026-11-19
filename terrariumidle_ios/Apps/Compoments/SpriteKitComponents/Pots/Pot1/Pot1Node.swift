@@ -34,6 +34,9 @@ public final class Pot1Node: SKNode, PotInteractiveNode {
     /// Tỉ lệ scale cơ sở
     private var baseScale: CGFloat = 1.0
 
+    /// Danh sách hiệu ứng khi tap vào chậu (có thể tùy biến, thay đổi hoặc gán thêm để tái sử dụng)
+    public var tapEffects: [PotTapEffect] = [SparkleBurstEffect()]
+
     // MARK: - Initializer
 
     public init(containerSize: CGSize = CGSize(width: 120, height: 85), isHanging: Bool = false) {
@@ -192,7 +195,7 @@ public final class Pot1Node: SKNode, PotInteractiveNode {
     }
 
     private func emitSingleSparkle(on pot: SKNode, potBounds: CGSize) {
-        let star = createStarSparkleNode(radius: CGFloat.random(in: 3.5...5.5), color: UIColor(red: 1.0, green: 0.95, blue: 0.70, alpha: 0.95))
+        let star = SparkleBurstEffect.createStarSparkleNode(radius: CGFloat.random(in: 3.5...5.5), color: UIColor(red: 1.0, green: 0.95, blue: 0.70, alpha: 0.95))
 
         // Vị trí xuất hiện ngẫu nhiên dọc thân hoặc viền trên chậu (xử lý chính xác cả chậu đứng và chậu treo)
         let halfW = potBounds.width * 0.38
@@ -236,123 +239,28 @@ public final class Pot1Node: SKNode, PotInteractiveNode {
 
     public func playTapAnimation() {
         guard let node = potNode else { return }
-        node.removeAction(forKey: "potTapBounce")
 
-        // Reset vị trí toạ độ gốc để không bao giờ bị trôi toạ độ khi tap liên tục
-        node.position = initialPotPosition
+        // 1. Squash & Stretch nén nảy đàn hồi + bóng đổ + đu đưa chậu treo
+        PotBounceAnimator.applyBounce(
+            to: node,
+            shadowNode: shadowNode,
+            initialPosition: initialPotPosition,
+            isHanging: isHanging,
+            config: .init(
+                compressX: 1.12,
+                compressY: 0.88,
+                compressDuration: 0.09,
+                reboundX: 0.94,
+                reboundY: 1.08,
+                reboundDuration: 0.13,
+                settleDuration: 0.15,
+                shadowShrink: 0.85
+            )
+        )
 
-        // 1. Squash & Stretch nén nảy đàn hồi
-        let compress = SKAction.scaleX(to: 1.12, y: 0.88, duration: 0.09)
-        compress.timingMode = .easeIn
-        let rebound = SKAction.scaleX(to: 0.94, y: 1.08, duration: 0.13)
-        rebound.timingMode = .easeOut
-        let settle = SKAction.scale(to: 1.0, duration: 0.15)
-        settle.timingMode = .easeInEaseOut
-
-        node.run(SKAction.sequence([compress, rebound, settle]), withKey: "potTapBounce")
-
-        // Với chậu treo: Thêm hiệu ứng chao nghiêng nhẹ khi chạm vào
-        if isHanging {
-            let swing = SKAction.sequence([
-                SKAction.rotate(toAngle: -0.06, duration: 0.08),
-                SKAction.rotate(toAngle: 0.06, duration: 0.10),
-                SKAction.rotate(toAngle: 0, duration: 0.10)
-            ])
-            node.run(swing)
+        // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã khai báo
+        for effect in tapEffects {
+            effect.trigger(on: node, in: potRootNode, isHanging: isHanging)
         }
-
-        // 2. Bóng co giãn theo nhịp nảy (chỉ chậu đứng có bóng)
-        if let shadow = shadowNode {
-            shadow.removeAction(forKey: "shadowBounce")
-            let shrink = SKAction.scale(to: 0.85, duration: 0.09)
-            let restore = SKAction.scale(to: 1.0, duration: 0.28)
-            restore.timingMode = .easeOut
-            shadow.run(SKAction.sequence([shrink, restore]), withKey: "shadowBounce")
-        }
-
-        // 3. Bung toả chùm hạt sáng lấp lánh (Sparkle Glitter Burst)
-        spawnSparkleBurst()
-    }
-
-    /// Tung ra các hạt đá lấp lánh bay toả ra xung quanh chậu khi chạm vào
-    private func spawnSparkleBurst() {
-        guard let pot = potNode else { return }
-        let potFrame = pot.frame
-        let burstCount = Int.random(in: 7...10)
-
-        for i in 0..<burstCount {
-            let radius = CGFloat.random(in: 4.0...6.5)
-            let starColor = (i % 2 == 0)
-                ? UIColor(red: 1.0, green: 0.92, blue: 0.55, alpha: 0.95) // Vàng hoàng yến lấp lánh
-                : UIColor(red: 1.0, green: 0.65, blue: 0.78, alpha: 0.95) // Hồng phấn lấp lánh
-
-            let star = createStarSparkleNode(radius: radius, color: starColor)
-
-            // Vị trí xuất phát từ lòng/thân chậu (dựa trên potFrame chuẩn xác dù là chậu đứng hay chậu treo)
-            let startX = CGFloat.random(in: (potFrame.minX + potFrame.width * 0.15)...(potFrame.maxX - potFrame.width * 0.15))
-            let startY = CGFloat.random(in: (potFrame.minY + potFrame.height * 0.18)...(potFrame.maxY - potFrame.height * 0.15))
-            star.position = CGPoint(x: startX, y: startY)
-            star.zPosition = 50
-            star.alpha = 0.0
-            star.setScale(0.25)
-            potRootNode.addChild(star)
-
-            // Góc bay toả đều 360 độ xung quanh chậu
-            let flyAngle = CGFloat.random(in: 0...(.pi * 2))
-            let distance = CGFloat.random(in: 25...60)
-            let dx = cos(flyAngle) * distance
-            let dy = sin(flyAngle) * distance
-
-            let delay = SKAction.wait(forDuration: Double(i) * 0.025)
-            let fadeIn = SKAction.fadeAlpha(to: 1.0, duration: 0.10)
-            let floatOut = SKAction.moveBy(x: dx, y: dy, duration: 0.55)
-            floatOut.timingMode = .easeOut
-            let rotate = SKAction.rotate(byAngle: CGFloat.random(in: -3.0...3.0), duration: 0.55)
-            let scalePulse = SKAction.sequence([
-                SKAction.scale(to: 1.35, duration: 0.18),
-                SKAction.scale(to: 0.25, duration: 0.37)
-            ])
-            let fadeOut = SKAction.sequence([
-                SKAction.wait(forDuration: 0.22),
-                SKAction.fadeOut(withDuration: 0.33)
-            ])
-
-            let motionGroup = SKAction.group([floatOut, rotate, scalePulse, fadeOut])
-            let fullSeq = SKAction.sequence([delay, fadeIn, motionGroup, SKAction.removeFromParent()])
-
-            star.run(fullSeq)
-        }
-    }
-
-    // MARK: - Helper tạo hình ngôi sao 4 cánh lấp lánh (4-Point Diamond Star)
-
-    private func createStarSparkleNode(radius: CGFloat, color: UIColor) -> SKShapeNode {
-        let path = CGMutablePath()
-        let r = radius
-        let innerR = radius * 0.25
-
-        // Ngôi sao 4 cánh nhọn tỏa sáng
-        path.move(to: CGPoint(x: 0, y: r))
-        path.addLine(to: CGPoint(x: innerR, y: innerR))
-        path.addLine(to: CGPoint(x: r, y: 0))
-        path.addLine(to: CGPoint(x: innerR, y: -innerR))
-        path.addLine(to: CGPoint(x: 0, y: -r))
-        path.addLine(to: CGPoint(x: -innerR, y: -innerR))
-        path.addLine(to: CGPoint(x: -r, y: 0))
-        path.addLine(to: CGPoint(x: -innerR, y: innerR))
-        path.closeSubpath()
-
-        let starNode = SKShapeNode(path: path)
-        starNode.fillColor = color
-        starNode.strokeColor = UIColor.white.withAlphaComponent(0.8)
-        starNode.lineWidth = 0.5
-
-        // Điểm sáng trắng trung tâm
-        let centerPoint = SKShapeNode(circleOfRadius: innerR * 0.8)
-        centerPoint.fillColor = .white
-        centerPoint.strokeColor = .clear
-        starNode.addChild(centerPoint)
-
-        return starNode
     }
 }

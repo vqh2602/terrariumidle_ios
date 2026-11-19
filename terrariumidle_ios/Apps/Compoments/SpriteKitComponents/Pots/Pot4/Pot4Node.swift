@@ -36,6 +36,9 @@ public final class Pot4Node: SKNode, PotInteractiveNode {
     /// Tỉ lệ scale cơ sở
     private var baseScale: CGFloat = 1.0
 
+    /// Danh sách hiệu ứng khi tap vào chậu (có thể tùy biến, thay đổi hoặc gán thêm để tái sử dụng)
+    public var tapEffects: [PotTapEffect] = [HeartBurstEffect()]
+
     // MARK: - Initializer
 
     public init(containerSize: CGSize = CGSize(width: 120, height: 85), isHanging: Bool = false) {
@@ -227,7 +230,7 @@ public final class Pot4Node: SKNode, PotInteractiveNode {
 
     private func emitFloatingMiniHeart(on pot: SKNode, originY: CGFloat) {
         let size = CGFloat.random(in: 7.0...10.0)
-        let heart = createHeartNode(size: CGSize(width: size, height: size * 0.92), color: UIColor(red: 1.0, green: 0.45, blue: 0.65, alpha: 0.85))
+        let heart = HeartBurstEffect.createHeartNode(size: CGSize(width: size, height: size * 0.92), color: UIColor(red: 1.0, green: 0.45, blue: 0.65, alpha: 0.85))
 
         let rx = CGFloat.random(in: -10...10)
         heart.position = CGPoint(x: rx, y: originY)
@@ -256,124 +259,19 @@ public final class Pot4Node: SKNode, PotInteractiveNode {
 
     public func playTapAnimation() {
         guard let node = potNode else { return }
-        node.removeAction(forKey: "potTapBounce")
-        node.position = initialPotPosition
 
-        // 1. Squash & Stretch nén nảy đàn hồi
-        let compress = SKAction.scaleX(to: 1.10, y: 0.90, duration: 0.09)
-        compress.timingMode = .easeIn
-        let rebound = SKAction.scaleX(to: 0.95, y: 1.07, duration: 0.13)
-        rebound.timingMode = .easeOut
-        let settle = SKAction.scale(to: 1.0, duration: 0.15)
-        settle.timingMode = .easeInEaseOut
-        node.run(SKAction.sequence([compress, rebound, settle]), withKey: "potTapBounce")
+        // 1. Squash & Stretch nén nảy đàn hồi + bóng đổ + đu đưa chậu treo
+        PotBounceAnimator.applyBounce(
+            to: node,
+            shadowNode: shadowNode,
+            initialPosition: initialPotPosition,
+            isHanging: isHanging,
+            config: .standard
+        )
 
-        if isHanging {
-            let swing = SKAction.sequence([
-                SKAction.rotate(toAngle: -0.05, duration: 0.08),
-                SKAction.rotate(toAngle: 0.05, duration: 0.10),
-                SKAction.rotate(toAngle: 0, duration: 0.10)
-            ])
-            node.run(swing)
+        // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã khai báo
+        for effect in tapEffects {
+            effect.trigger(on: node, in: potRootNode, isHanging: isHanging)
         }
-
-        // 2. Bóng co giãn theo nhịp nảy
-        if let shadow = shadowNode {
-            shadow.removeAction(forKey: "shadowBounce")
-            let shrink = SKAction.scale(to: 0.86, duration: 0.09)
-            let restore = SKAction.scale(to: 1.0, duration: 0.28)
-            restore.timingMode = .easeOut
-            shadow.run(SKAction.sequence([shrink, restore]), withKey: "shadowBounce")
-        }
-
-        // 3. Bung toả chùm trái tim lấp lánh (Heart Burst)
-        spawnHeartBurst()
-    }
-
-    private func spawnHeartBurst() {
-        guard let pot = potNode else { return }
-        let potFrame = pot.frame
-        let burstCount = Int.random(in: 7...10)
-
-        for i in 0..<burstCount {
-            let size = CGFloat.random(in: 8.0...14.0)
-            let heartColor = (i % 2 == 0)
-                ? UIColor(red: 1.0, green: 0.35, blue: 0.55, alpha: 0.95)
-                : UIColor(red: 1.0, green: 0.70, blue: 0.82, alpha: 0.95)
-
-            let heart = createHeartNode(size: CGSize(width: size, height: size * 0.92), color: heartColor)
-
-            let startX = CGFloat.random(in: (potFrame.minX + potFrame.width * 0.2)...(potFrame.maxX - potFrame.width * 0.2))
-            let startY = CGFloat.random(in: (potFrame.minY + potFrame.height * 0.3)...(potFrame.maxY - potFrame.height * 0.2))
-            heart.position = CGPoint(x: startX, y: startY)
-            heart.zPosition = 50
-            heart.alpha = 0.0
-            heart.setScale(0.3)
-            potRootNode.addChild(heart)
-
-            let flyAngle = CGFloat.random(in: .pi * 0.2...(.pi * 0.8)) // Bay vút lên trên
-            let distance = CGFloat.random(in: 30...65)
-            let dx = cos(flyAngle) * distance
-            let dy = sin(flyAngle) * distance
-
-            let delay = SKAction.wait(forDuration: Double(i) * 0.02)
-            let fadeIn = SKAction.fadeAlpha(to: 1.0, duration: 0.10)
-            let floatOut = SKAction.moveBy(x: dx, y: dy, duration: 0.60)
-            floatOut.timingMode = .easeOut
-            let wobble = SKAction.sequence([
-                SKAction.rotate(byAngle: 0.25, duration: 0.15),
-                SKAction.rotate(byAngle: -0.50, duration: 0.30),
-                SKAction.rotate(byAngle: 0.25, duration: 0.15)
-            ])
-            let fadeOut = SKAction.sequence([
-                SKAction.wait(forDuration: 0.28),
-                SKAction.fadeOut(withDuration: 0.32)
-            ])
-
-            let motionGroup = SKAction.group([floatOut, wobble, fadeOut])
-            let fullSeq = SKAction.sequence([delay, fadeIn, motionGroup, SKAction.removeFromParent()])
-            heart.run(fullSeq)
-        }
-    }
-
-    // MARK: - Helper vẽ hình trái tim Bezier (Heart Shape)
-
-    private func createHeartNode(size: CGSize, color: UIColor) -> SKShapeNode {
-        let path = UIBezierPath()
-        let w = size.width
-        let h = size.height
-
-        path.move(to: CGPoint(x: 0, y: -h * 0.45))
-        path.addCurve(
-            to: CGPoint(x: -w * 0.5, y: h * 0.1),
-            controlPoint1: CGPoint(x: -w * 0.3, y: -h * 0.2),
-            controlPoint2: CGPoint(x: -w * 0.5, y: -h * 0.05)
-        )
-        path.addArc(
-            withCenter: CGPoint(x: -w * 0.25, y: h * 0.2),
-            radius: w * 0.25,
-            startAngle: .pi,
-            endAngle: 0,
-            clockwise: true
-        )
-        path.addArc(
-            withCenter: CGPoint(x: w * 0.25, y: h * 0.2),
-            radius: w * 0.25,
-            startAngle: .pi,
-            endAngle: 0,
-            clockwise: true
-        )
-        path.addCurve(
-            to: CGPoint(x: 0, y: -h * 0.45),
-            controlPoint1: CGPoint(x: w * 0.5, y: -h * 0.05),
-            controlPoint2: CGPoint(x: w * 0.3, y: -h * 0.2)
-        )
-        path.close()
-
-        let heartNode = SKShapeNode(path: path.cgPath)
-        heartNode.fillColor = color
-        heartNode.strokeColor = UIColor.white.withAlphaComponent(0.7)
-        heartNode.lineWidth = 0.6
-        return heartNode
     }
 }

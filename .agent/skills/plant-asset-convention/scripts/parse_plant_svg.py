@@ -209,9 +209,18 @@ def process_plant(plant_num, svg_path=None, do_update=False, offset_y=10.0):
         canvas_w, canvas_h = svg_w, svg_h
 
     scale_x = canvas_w / svg_w if svg_w > 0 else 1.0
-    scale_y = canvas_h / svg_h if svg_h > 0 else 1.0
-
-    print(f"📏 Canvas: {canvas_w:.1f} x {canvas_h:.1f} (Scale: {scale_x:.3f}x)")
+    # Nếu canvas_h lớn hơn nhiều so với svg_h * scale_x (do avatar có khoảng trống đệm ở đáy),
+    # sử dụng uniform scale và tính offset_y_extra để cắm gốc cây vào miệng chậu
+    max_svg_y = max(it['y'] + it['h'] for it in raw_items) if raw_items else svg_h
+    content_h = max_svg_y * scale_x
+    if canvas_h > content_h + 20.0:
+        scale_y = scale_x
+        offset_y_extra = canvas_h - content_h
+        print(f"📏 Canvas: {canvas_w:.1f} x {canvas_h:.1f} (Uniform Scale: {scale_x:.3f}x, Offset Y Extra: {offset_y_extra:.1f})")
+    else:
+        scale_y = canvas_h / svg_h if svg_h > 0 else 1.0
+        offset_y_extra = 0.0
+        print(f"📏 Canvas: {canvas_w:.1f} x {canvas_h:.1f} (Scale: {scale_x:.3f}x)")
 
     assets = get_plant_assets(plant_num)
     if assets and len(assets) == len(raw_items):
@@ -248,7 +257,7 @@ def process_plant(plant_num, svg_path=None, do_update=False, offset_y=10.0):
     for idx, it in enumerate(raw_items):
         aid = it['id']
         ix = it['x'] * scale_x
-        iy = it['y'] * scale_y
+        iy = it['y'] * scale_y + offset_y_extra
         w = it['w'] * scale_x
         h = it['h'] * scale_y
 
@@ -264,7 +273,7 @@ def process_plant(plant_num, svg_path=None, do_update=False, offset_y=10.0):
             ax = 0.85 if calc_is_left else 0.15
 
         ay = meta['anchorY'] if meta else 0.00
-        is_left = meta['isLeft'] if meta else calc_is_left
+        is_left = calc_is_left
         z_pos = meta['zPos'] if meta else (11 + idx)
         bend = meta['bendAngle'] if meta else 0.040
         dur = meta['duration'] if meta else 3.0

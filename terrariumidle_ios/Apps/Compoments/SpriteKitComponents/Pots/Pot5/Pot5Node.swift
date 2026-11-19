@@ -32,6 +32,9 @@ public final class Pot5Node: SKNode, PotInteractiveNode {
     /// Tỉ lệ scale cơ sở
     private var baseScale: CGFloat = 1.0
 
+    /// Danh sách hiệu ứng khi tap vào chậu (có thể tùy biến, thay đổi hoặc gán thêm để tái sử dụng)
+    public var tapEffects: [PotTapEffect] = [ClayGlintEffect()]
+
     // MARK: - Initializer
 
     public init(containerSize: CGSize = CGSize(width: 120, height: 85), isHanging: Bool = false) {
