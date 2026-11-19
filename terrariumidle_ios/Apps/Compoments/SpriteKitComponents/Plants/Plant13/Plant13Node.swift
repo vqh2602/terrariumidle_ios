@@ -1,0 +1,639 @@
+//
+//  Plant13Node.swift
+//  terrariumidle_ios
+//
+//  Created by AI on 19/11/26.
+//
+
+import SpriteKit
+import UIKit
+
+// MARK: - Trạng thái sinh trưởng Cây Trầu Bà Dây Leo (Plant13 - Philodendron hederaceum)
+
+public enum Plant13GrowthState: Equatable {
+    case seed
+    case sprout
+    case mature(level: Int)
+
+    public init(level: Int) {
+        switch level {
+        case 1, 100:
+            self = .seed
+        case 2, 200:
+            self = .sprout
+        default:
+            self = .mature(level: max(3, level))
+        }
+    }
+
+    public var rawLevel: Int {
+        switch self {
+        case .seed: return 1
+        case .sprout: return 2
+        case .mature(let lvl): return lvl
+        }
+    }
+
+    public var title: String {
+        switch self {
+        case .seed: return "Gieo hạt (Lv.1)"
+        case .sprout: return "Cây con (Lv.2)"
+        case .mature(let lvl): return "Trưởng thành (Lv.\(lvl))"
+        }
+    }
+}
+
+// MARK: - Node SpriteKit điều khiển toàn bộ cấu trúc & animation Plant13
+
+public final class Plant13Node: SKNode {
+
+    // MARK: - Metadata cấu trúc 8 bộ phận dây leo Philodendron (Canvas 458 x 657)
+
+    private struct LeafData {
+        let assetId: Int
+        let imgX: CGFloat
+        let imgY: CGFloat
+        let width: CGFloat
+        let height: CGFloat
+        let anchorX: CGFloat
+        let anchorY: CGFloat
+        let isLeft: Bool
+        let zPos: CGFloat
+        let bendAngle: CGFloat
+        let duration: TimeInterval
+    }
+
+    /// Tọa độ pixel và điểm neo cuống dây leo Philodendron hederaceum (Canvas 458 x 657)
+    private static let leavesMetadata: [LeafData] = [
+        LeafData(assetId: 5, imgX: 250, imgY:   0, width: 181, height: 644, anchorX: 0.45, anchorY: 0.01, isLeft: false, zPos: 11, bendAngle: 0.025, duration: 4.5),
+        LeafData(assetId: 2, imgX: 258, imgY:   0, width: 173, height: 474, anchorX: 0.45, anchorY: 0.01, isLeft: false, zPos: 12, bendAngle: 0.040, duration: 3.8),
+        LeafData(assetId: 6, imgX: 259, imgY:  21, width: 199, height: 465, anchorX: 0.35, anchorY: 0.01, isLeft: false, zPos: 13, bendAngle: 0.055, duration: 3.5),
+        LeafData(assetId: 4, imgX: 137, imgY: 276, width: 147, height: 372, anchorX: 0.65, anchorY: 0.01, isLeft: true , zPos: 14, bendAngle: 0.060, duration: 3.2),
+        LeafData(assetId: 1, imgX: 133, imgY: 276, width: 132, height: 302, anchorX: 0.65, anchorY: 0.01, isLeft: true , zPos: 15, bendAngle: 0.065, duration: 3.0),
+        LeafData(assetId: 3, imgX: 142, imgY: 276, width: 201, height: 256, anchorX: 0.50, anchorY: 0.01, isLeft: true , zPos: 16, bendAngle: 0.065, duration: 2.8),
+        LeafData(assetId: 7, imgX: 258, imgY:   0, width: 151, height: 237, anchorX: 0.25, anchorY: 0.01, isLeft: false, zPos: 17, bendAngle: 0.070, duration: 2.7),
+        LeafData(assetId: 8, imgX: 323, imgY:   0, width: 116, height: 179, anchorX: 0.25, anchorY: 0.01, isLeft: false, zPos: 18, bendAngle: 0.075, duration: 2.5),
+    ]
+
+    // MARK: - Properties
+
+    public private(set) var growthState: Plant13GrowthState = .mature(level: 1)
+    private var containerSize: CGSize = .zero
+    private var isHanging: Bool = false
+
+    private let plantRootNode = SKNode()
+    private var leafNodes: [SKSpriteNode] = []
+    private var seedNode: SKSpriteNode?
+    private var sproutNode: SKSpriteNode?
+    private var initialSeedPosition: CGPoint = .zero
+    private var initialSproutPosition: CGPoint = .zero
+    private var baseScale: CGFloat = 1.0
+
+    // MARK: - Initializer
+
+    public init(growthState: Plant13GrowthState = .mature(level: 1), containerSize: CGSize = CGSize(width: 140, height: 180), isHanging: Bool = false) {
+        self.growthState = growthState
+        self.containerSize = containerSize
+        self.isHanging = isHanging
+        super.init()
+
+        addChild(plantRootNode)
+        build()
+    }
+
+    public convenience init(level: Int, containerSize: CGSize = CGSize(width: 140, height: 180), isHanging: Bool = false) {
+        self.init(growthState: Plant13GrowthState(level: level), containerSize: containerSize, isHanging: isHanging)
+    }
+
+    public required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        addChild(plantRootNode)
+    }
+
+    // MARK: - Configuration
+
+    public func configure(growthState: Plant13GrowthState, containerSize: CGSize, isHanging: Bool = false) {
+        self.growthState = growthState
+        self.containerSize = containerSize
+        self.isHanging = isHanging
+        build()
+    }
+
+    public func configure(level: Int, containerSize: CGSize, isHanging: Bool = false) {
+        configure(growthState: Plant13GrowthState(level: level), containerSize: containerSize, isHanging: isHanging)
+    }
+
+    // MARK: - Build Scene theo trạng thái
+
+    public func build() {
+        plantRootNode.removeAllChildren()
+        plantRootNode.removeAllActions()
+        leafNodes.removeAll()
+        seedNode = nil
+        sproutNode = nil
+
+        self.isPaused = false
+        self.speed = 1.0
+        plantRootNode.isPaused = false
+        plantRootNode.speed = 1.0
+
+        guard containerSize.width > 0, containerSize.height > 0 else { return }
+
+        switch growthState {
+        case .seed:
+            buildSeedState()
+        case .sprout:
+            buildSproutState()
+        case .mature(let level):
+            buildMatureState(level: level)
+        }
+    }
+
+    // MARK: - Level 1: Hạt giống (Seed)
+
+    private func buildSeedState() {
+        let baseCanvasWidth: CGFloat = 458.0
+        let baseCanvasHeight: CGFloat = 657.0
+
+        let fitW = containerSize.width / baseCanvasWidth
+        let fitH = containerSize.height / baseCanvasHeight
+        baseScale = min(fitW, fitH) * 1.05
+        plantRootNode.setScale(baseScale)
+
+        // 1. ƯU TIÊN KIẾN TRÚC LAI: Nạp seedNode từ Plant13Scene.sks
+        if let scene = loadSceneTemplate(),
+           let templateSeedNode = scene.childNode(withName: "seedNode") {
+            let seedSprite = templateSeedNode.childNode(withName: "seedSprite") as? SKSpriteNode
+
+            templateSeedNode.removeFromParent()
+            templateSeedNode.isHidden = false
+            templateSeedNode.isPaused = false
+            templateSeedNode.speed = 1.0
+
+            if let sprite = seedSprite {
+                if sprite.texture == nil {
+                    sprite.texture = loadTexture(assetId: 100)
+                }
+                sprite.isHidden = false
+                sprite.isPaused = false
+                sprite.speed = 1.0
+                self.initialSeedPosition = sprite.position
+                self.seedNode = sprite
+            }
+
+            plantRootNode.addChild(templateSeedNode)
+            startSeedAnimation()
+            return
+        }
+
+        // 2. Fallback procedural
+        guard let seedTexture = loadTexture(assetId: 100) else { return }
+        let seed = SKSpriteNode(texture: seedTexture)
+        seed.name = "seedSprite"
+        seed.size = CGSize(width: 80, height: 60)
+        seed.anchorPoint = CGPoint(x: 0.5, y: 0.05)
+        seed.position = CGPoint(x: 0, y: -18.5)
+        seed.zPosition = 10
+        seed.isPaused = false
+        seed.speed = 1.0
+
+        plantRootNode.addChild(seed)
+        self.seedNode = seed
+        self.initialSeedPosition = seed.position
+        startSeedAnimation()
+    }
+
+    // MARK: - Level 2: Cây con (Sprout)
+
+    private func buildSproutState() {
+        let baseCanvasWidth: CGFloat = 458.0
+        let baseCanvasHeight: CGFloat = 657.0
+
+        let fitW = containerSize.width / baseCanvasWidth
+        let fitH = containerSize.height / baseCanvasHeight
+        baseScale = min(fitW, fitH) * 1.05
+        plantRootNode.setScale(baseScale)
+
+        // 1. ƯU TIÊN KIẾN TRÚC LAI: Nạp sproutNode từ Plant13Scene.sks
+        if let scene = loadSceneTemplate(),
+           let templateSproutNode = scene.childNode(withName: "sproutNode") {
+            let sproutSprite = templateSproutNode.childNode(withName: "sproutSprite") as? SKSpriteNode
+
+            templateSproutNode.removeFromParent()
+            templateSproutNode.isHidden = false
+            templateSproutNode.isPaused = false
+            templateSproutNode.speed = 1.0
+
+            if let sprite = sproutSprite {
+                if sprite.texture == nil {
+                    sprite.texture = loadTexture(assetId: 200)
+                }
+                sprite.isHidden = false
+                sprite.isPaused = false
+                sprite.speed = 1.0
+                self.initialSproutPosition = sprite.position
+                self.sproutNode = sprite
+            }
+
+            plantRootNode.addChild(templateSproutNode)
+            startSproutAnimation()
+            return
+        }
+
+        // 2. Fallback procedural
+        guard let sproutTexture = loadTexture(assetId: 200) else { return }
+        let sprout = SKSpriteNode(texture: sproutTexture)
+        sprout.name = "sproutSprite"
+        sprout.size = CGSize(width: 140, height: 160)
+        sprout.anchorPoint = CGPoint(x: 0.5, y: 0.05)
+        sprout.position = CGPoint(x: 0, y: -18.5)
+        sprout.zPosition = 10
+        sprout.isPaused = false
+        sprout.speed = 1.0
+
+        plantRootNode.addChild(sprout)
+        self.sproutNode = sprout
+        self.initialSproutPosition = sprout.position
+        startSproutAnimation()
+    }
+
+    // MARK: - Level 3+: Cây trưởng thành (Mature - 8 bộ phận Trầu Bà Dây Leo)
+
+    private func buildMatureState(level: Int) {
+        let baseCanvasWidth: CGFloat = 458.0
+        let baseCanvasHeight: CGFloat = 657.0
+
+        let fitW = containerSize.width / baseCanvasWidth
+        let fitH = containerSize.height / baseCanvasHeight
+        baseScale = min(fitW, fitH)
+
+        let levelBonus = CGFloat(min(level, 10) - 3) * 0.015
+        plantRootNode.setScale(baseScale * (1.0 + levelBonus))
+
+        // 1. ƯU TIÊN KIẾN TRÚC LAI: Nạp matureNode từ Plant13Scene.sks
+        if let scene = loadSceneTemplate(),
+           let matureGroup = scene.childNode(withName: "matureNode") {
+            matureGroup.removeFromParent()
+            matureGroup.isHidden = false
+            matureGroup.isPaused = false
+            matureGroup.speed = 1.0
+            plantRootNode.addChild(matureGroup)
+
+            let sortedLeaves = matureGroup.children.compactMap { $0 as? SKSpriteNode }.sorted {
+                let id1 = Int($0.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+                let id2 = Int($1.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+                return id1 < id2
+            }
+
+            for (idx, leaf) in sortedLeaves.enumerated() {
+                let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+                if leaf.texture == nil {
+                    leaf.texture = loadTexture(assetId: assetNum)
+                }
+                if let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum }) {
+                    leaf.size = CGSize(width: meta.width, height: meta.height)
+                    leaf.anchorPoint = CGPoint(x: meta.anchorX, y: meta.anchorY)
+                }
+                leaf.isHidden = false
+                leaf.isPaused = false
+                leaf.speed = 1.0
+                leafNodes.append(leaf)
+
+                let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
+                let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
+                let bendAngle = meta?.bendAngle ?? 0.060
+                let duration = meta?.duration ?? 3.2
+                let phaseDelay = Double(idx) * 0.14
+
+                startVineAnimation(leaf: leaf, isLeft: isLeft, bendAngle: bendAngle, duration: duration, phaseDelay: phaseDelay)
+            }
+
+            addTrunkSwayAnimation()
+            return
+        }
+
+        // 2. Fallback procedural
+        let fallbackGroup = SKNode()
+        fallbackGroup.name = "matureNode"
+        fallbackGroup.position = CGPoint(x: 0, y: -10)
+        plantRootNode.addChild(fallbackGroup)
+
+        for (idx, data) in Self.leavesMetadata.enumerated() {
+            guard let leafTexture = loadTexture(assetId: data.assetId) else { continue }
+
+            let leaf = SKSpriteNode(texture: leafTexture)
+            leaf.name = "leaf_\(data.assetId)"
+            leaf.size = CGSize(width: data.width, height: data.height)
+            leaf.anchorPoint = CGPoint(x: data.anchorX, y: data.anchorY)
+
+            let skX = (data.imgX + data.anchorX * data.width) - (baseCanvasWidth / 2.0)
+            let skY = baseCanvasHeight - data.imgY - (1.0 - data.anchorY) * data.height
+
+            leaf.position = CGPoint(x: skX, y: skY)
+            leaf.zPosition = data.zPos
+            leaf.isPaused = false
+            leaf.speed = 1.0
+
+            fallbackGroup.addChild(leaf)
+            leafNodes.append(leaf)
+
+            let phaseDelay = Double(idx) * 0.14
+            startVineAnimation(leaf: leaf, isLeft: data.isLeft, bendAngle: data.bendAngle, duration: data.duration, phaseDelay: phaseDelay)
+        }
+
+        addTrunkSwayAnimation()
+    }
+
+    private func addTrunkSwayAnimation() {
+        plantRootNode.removeAction(forKey: "trunkSway")
+        plantRootNode.isPaused = false
+        plantRootNode.speed = 1.0
+
+        let swayLeft = SKAction.rotate(byAngle: 0.005, duration: 5.2)
+        swayLeft.timingMode = .easeInEaseOut
+        let swayRight = SKAction.rotate(byAngle: -0.005, duration: 5.2)
+        swayRight.timingMode = .easeInEaseOut
+        let trunkSeq = SKAction.sequence([swayLeft, swayRight])
+        plantRootNode.run(SKAction.repeatForever(trunkSeq), withKey: "trunkSway")
+    }
+
+    // MARK: - Scene Template Loader
+
+    private func loadSceneTemplate() -> SKScene? {
+        return SKScene(fileNamed: "Plant13Scene")
+    }
+
+    // MARK: - Animation: Gieo hạt (Level 1)
+
+    private func startSeedAnimation() {
+        guard let seed = seedNode else { return }
+        seed.removeAction(forKey: "seedBreathing")
+        seed.isPaused = false
+        seed.speed = 1.0
+
+        let scaleUp = SKAction.scale(to: 1.04, duration: 1.8)
+        scaleUp.timingMode = .easeInEaseOut
+        let scaleDown = SKAction.scale(to: 0.96, duration: 1.8)
+        scaleDown.timingMode = .easeInEaseOut
+        let breathe = SKAction.sequence([scaleUp, scaleDown])
+        seed.run(SKAction.repeatForever(breathe), withKey: "seedBreathing")
+    }
+
+    // MARK: - Animation: Cây con (Level 2)
+
+    private func startSproutAnimation() {
+        guard let sprout = sproutNode else { return }
+        sprout.removeAction(forKey: "sproutSway")
+        sprout.isPaused = false
+        sprout.speed = 1.0
+
+        let swayLeft = SKAction.rotate(byAngle: 0.045, duration: 2.2)
+        swayLeft.timingMode = .easeInEaseOut
+        let swayRight = SKAction.rotate(byAngle: -0.045, duration: 2.2)
+        swayRight.timingMode = .easeInEaseOut
+        let sway = SKAction.sequence([swayLeft, swayRight])
+        sprout.run(SKAction.repeatForever(sway), withKey: "sproutSway")
+    }
+
+    // MARK: - Animation: Dây leo rủ mềm mại (Level 3+)
+
+    private func startVineAnimation(leaf: SKSpriteNode, isLeft: Bool, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: Double) {
+        leaf.removeAction(forKey: "vineWind")
+        leaf.isPaused = false
+        leaf.speed = 1.0
+
+        let angleDelta = isLeft ? -bendAngle : bendAngle
+
+        let bendForward = SKAction.rotate(byAngle: angleDelta, duration: duration * 0.5)
+        bendForward.timingMode = .easeInEaseOut
+        let bendBack = SKAction.rotate(byAngle: -angleDelta, duration: duration * 0.5)
+        bendBack.timingMode = .easeInEaseOut
+
+        let flexOut = SKAction.scaleX(to: 1.04, y: 0.97, duration: duration * 0.5)
+        flexOut.timingMode = .easeInEaseOut
+        let flexIn = SKAction.scaleX(to: 0.97, y: 1.03, duration: duration * 0.5)
+        flexIn.timingMode = .easeInEaseOut
+
+        let forwardGroup = SKAction.group([bendForward, flexOut])
+        let backwardGroup = SKAction.group([bendBack, flexIn])
+        let cycle = SKAction.sequence([forwardGroup, backwardGroup])
+
+        if phaseDelay > 0 {
+            leaf.run(SKAction.sequence([
+                SKAction.wait(forDuration: phaseDelay),
+                SKAction.repeatForever(cycle)
+            ]), withKey: "vineWind")
+        } else {
+            leaf.run(SKAction.repeatForever(cycle), withKey: "vineWind")
+        }
+    }
+
+    // MARK: - Phản hồi tương tác Tap (Bounce & Bọt oxy)
+
+    public func playTapAnimation() {
+        switch growthState {
+        case .seed:
+            guard let seed = seedNode else { return }
+            seed.removeAction(forKey: "seedTap")
+            seed.position = initialSeedPosition
+
+            let squash = SKAction.scaleX(to: 1.28, y: 0.75, duration: 0.08)
+            squash.timingMode = .easeIn
+            let stretch = SKAction.scaleX(to: 0.82, y: 1.25, duration: 0.12)
+            stretch.timingMode = .easeOut
+            let bounceBack = SKAction.scaleX(to: 1.08, y: 0.95, duration: 0.10)
+            let settle = SKAction.scale(to: 1.0, duration: 0.12)
+            settle.timingMode = .easeInEaseOut
+            seed.run(SKAction.sequence([squash, stretch, bounceBack, settle]), withKey: "seedTap")
+
+        case .sprout:
+            guard let sprout = sproutNode else { return }
+            sprout.removeAction(forKey: "sproutTap")
+            sprout.position = initialSproutPosition
+
+            let squash = SKAction.scaleX(to: 1.25, y: 0.78, duration: 0.08)
+            squash.timingMode = .easeIn
+            let stretch = SKAction.scaleX(to: 0.85, y: 1.20, duration: 0.12)
+            stretch.timingMode = .easeOut
+            let bounceBack = SKAction.scaleX(to: 1.06, y: 0.96, duration: 0.10)
+            let settle = SKAction.scale(to: 1.0, duration: 0.12)
+            settle.timingMode = .easeInEaseOut
+
+            let shakeL = SKAction.rotate(toAngle: -0.12, duration: 0.07)
+            let shakeR = SKAction.rotate(toAngle: 0.12, duration: 0.08)
+            let shakeBack = SKAction.rotate(toAngle: 0, duration: 0.07)
+            let shakeSeq = SKAction.sequence([shakeL, shakeR, shakeBack])
+
+            let combined = SKAction.group([
+                SKAction.sequence([squash, stretch, bounceBack, settle]),
+                shakeSeq
+            ])
+            sprout.run(combined, withKey: "sproutTap")
+
+        case .mature:
+            guard !leafNodes.isEmpty else { return }
+            plantRootNode.removeAction(forKey: "matureTapBounce")
+
+            let squash = SKAction.scaleX(to: baseScale * 1.10, y: baseScale * 0.90, duration: 0.08)
+            squash.timingMode = .easeIn
+            let stretch = SKAction.scaleX(to: baseScale * 0.93, y: baseScale * 1.10, duration: 0.12)
+            stretch.timingMode = .easeOut
+            let bounce = SKAction.scaleX(to: baseScale * 1.03, y: baseScale * 0.98, duration: 0.10)
+            let settle = SKAction.scale(to: baseScale, duration: 0.10)
+            settle.timingMode = .easeInEaseOut
+
+            plantRootNode.run(SKAction.sequence([squash, stretch, bounce, settle]), withKey: "matureTapBounce")
+
+            for (idx, leaf) in leafNodes.enumerated() {
+                let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+                let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
+                let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
+                let impulseAngle: CGFloat = (isLeft ? -1.0 : 1.0) * CGFloat.random(in: 0.10...0.16)
+
+                let delay = SKAction.wait(forDuration: Double(idx) * 0.025)
+                let jiggleOut = SKAction.rotate(byAngle: impulseAngle, duration: 0.08)
+                jiggleOut.timingMode = .easeOut
+                let jiggleBack = SKAction.rotate(byAngle: -impulseAngle, duration: 0.13)
+                jiggleBack.timingMode = .easeInEaseOut
+
+                let flutterScaleOut = SKAction.scaleY(to: 1.07, duration: 0.08)
+                let flutterScaleIn = SKAction.scaleY(to: 1.0, duration: 0.13)
+
+                let swingGroup1 = SKAction.group([jiggleOut, flutterScaleOut])
+                let swingGroup2 = SKAction.group([jiggleBack, flutterScaleIn])
+
+                leaf.run(SKAction.sequence([delay, swingGroup1, swingGroup2]))
+            }
+        }
+
+        spawnOxygenBubbles()
+    }
+
+    // MARK: - Hiệu ứng bọt khí Oxy bay lên chuẩn Terrarium (trên chính Plant13Node)
+
+    private func spawnOxygenBubbles() {
+        let bubbleCount: Int
+        switch growthState {
+        case .seed:
+            bubbleCount = Int.random(in: 1...2)
+        case .sprout:
+            bubbleCount = Int.random(in: 3...4)
+        case .mature:
+            bubbleCount = Int.random(in: 8...12)
+        }
+
+        for i in 0..<bubbleCount {
+            let radius: CGFloat
+            let spawnX: CGFloat
+            let spawnY: CGFloat
+            let floatDistance: CGFloat
+
+            switch growthState {
+            case .seed:
+                radius = CGFloat.random(in: 1.8...3.0)
+                spawnX = CGFloat.random(in: -containerSize.width * 0.08...containerSize.width * 0.08)
+                spawnY = CGFloat.random(in: containerSize.height * 0.03...containerSize.height * 0.12)
+                floatDistance = CGFloat.random(in: 18...35)
+            case .sprout:
+                radius = CGFloat.random(in: 2.2...3.8)
+                spawnX = CGFloat.random(in: -containerSize.width * 0.10...containerSize.width * 0.10)
+                spawnY = CGFloat.random(in: containerSize.height * 0.05...containerSize.height * 0.20)
+                floatDistance = CGFloat.random(in: 25...45)
+            case .mature:
+                radius = CGFloat.random(in: 3.5...7.5)
+                floatDistance = CGFloat.random(in: 60...115)
+                if !leafNodes.isEmpty && Bool.random() {
+                    let randomLeaf = leafNodes.randomElement()!
+                    let leafWorldPos = randomLeaf.parent?.convert(randomLeaf.position, to: self) ?? randomLeaf.position
+                    spawnX = leafWorldPos.x + CGFloat.random(in: -16...16)
+                    spawnY = max(containerSize.height * 0.18, min(containerSize.height * 0.90, leafWorldPos.y + CGFloat.random(in: -10...20)))
+                } else {
+                    spawnX = CGFloat.random(in: -containerSize.width * 0.44...containerSize.width * 0.44)
+                    spawnY = CGFloat.random(in: containerSize.height * 0.18...containerSize.height * 0.88)
+                }
+            }
+
+            let bubble = SKShapeNode(circleOfRadius: radius)
+            bubble.fillColor = UIColor(red: 0.35, green: 0.92, blue: 0.65, alpha: 0.85)
+            bubble.strokeColor = UIColor.white.withAlphaComponent(0.7)
+            bubble.lineWidth = 1.0
+
+            let highlight = SKShapeNode(circleOfRadius: radius * 0.3)
+            highlight.fillColor = UIColor.white.withAlphaComponent(0.8)
+            highlight.strokeColor = .clear
+            highlight.position = CGPoint(x: -radius * 0.3, y: radius * 0.3)
+            bubble.addChild(highlight)
+
+            bubble.position = CGPoint(x: spawnX, y: spawnY)
+            bubble.zPosition = 100
+            bubble.alpha = 0.0
+            addChild(bubble)
+
+            let floatDuration = Double.random(in: 0.8...1.5)
+            let driftX = CGFloat.random(in: -18...18)
+            let delay = SKAction.wait(forDuration: Double(i) * 0.04)
+            let fadeIn = SKAction.fadeAlpha(to: 0.9, duration: 0.12)
+            let floatUp = SKAction.moveBy(x: driftX, y: floatDistance, duration: floatDuration)
+            floatUp.timingMode = .easeOut
+            let fadeOut = SKAction.fadeOut(withDuration: floatDuration * 0.6)
+            let scaleUp = SKAction.scale(by: 1.30, duration: floatDuration)
+
+            let motionGroup = SKAction.group([
+                floatUp,
+                SKAction.sequence([SKAction.wait(forDuration: floatDuration * 0.4), fadeOut]),
+                scaleUp
+            ])
+
+            bubble.run(SKAction.sequence([delay, fadeIn, motionGroup, SKAction.removeFromParent()]))
+        }
+    }
+
+    // MARK: - Texture Loader Helper
+
+    private func loadTexture(assetId: Int) -> SKTexture? {
+        let nameVariants: [String]
+        switch assetId {
+        case 100:
+            nameVariants = ["plant1_Asset-100@4.167x", "plant1_Asset-100", "seed"]
+        case 200:
+            nameVariants = ["plant1_Asset-200@4.167x", "plant1_Asset-200", "sprout"]
+        default:
+            nameVariants = [
+                "Plant13-\(assetId)@4.167x",
+                "Plant13-\(assetId)",
+                "Asset-\(assetId)@4.167x",
+                "Asset-\(assetId)",
+                "plant13_Asset-\(assetId)@4.167x",
+                "plant13_\(assetId)"
+            ]
+        }
+
+        for name in nameVariants {
+            if let img = UIImage(named: name) {
+                return SKTexture(image: img)
+            }
+        }
+
+        if assetId == 100 || assetId == 200 {
+            return generateProceduralPlaceholder(assetId: assetId)
+        }
+
+        return nil
+    }
+
+    private func generateProceduralPlaceholder(assetId: Int) -> SKTexture {
+        let size = (assetId == 100) ? CGSize(width: 40, height: 40) : CGSize(width: 80, height: 100)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let img = renderer.image { ctx in
+            let rect = CGRect(origin: .zero, size: size)
+            if assetId == 100 {
+                UIColor(red: 0.55, green: 0.40, blue: 0.25, alpha: 1.0).setFill()
+                ctx.cgContext.fillEllipse(in: rect.insetBy(dx: 4, dy: 4))
+            } else {
+                UIColor(red: 0.45, green: 0.75, blue: 0.35, alpha: 1.0).setFill()
+                ctx.cgContext.fillEllipse(in: rect.insetBy(dx: 6, dy: 6))
+            }
+        }
+        return SKTexture(image: img)
+    }
+}
