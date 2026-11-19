@@ -14,11 +14,17 @@ public final class SpriteKitPlantScene: SKScene {
 
     private var plantNode: SKSpriteNode?
     private var plant1Node: Plant1Node?
+    private var plant2Node: Plant2Node?
+    private var plant3Node: Plant3Node?
     private var plantId: String = "plant1"
     private var plantLevel: Int = 1
     private var isHanging: Bool = false
 
     private var baseScale: CGFloat = 1.0
+
+    private var hasActivePlantNode: Bool {
+        plantNode != nil || plant1Node != nil || plant2Node != nil || plant3Node != nil
+    }
 
     // MARK: - Initializer
 
@@ -51,7 +57,7 @@ public final class SpriteKitPlantScene: SKScene {
         self.plantLevel = level
         self.isHanging = isHanging
 
-        if (changed || (plantNode == nil && plant1Node == nil)) && size.width > 0 && size.height > 0 {
+        if (changed || !hasActivePlantNode) && size.width > 0 && size.height > 0 {
             buildPlant()
         }
     }
@@ -61,14 +67,14 @@ public final class SpriteKitPlantScene: SKScene {
         view.allowsTransparency = true
         view.isPaused = false
         self.isPaused = false
-        if plantNode == nil && plant1Node == nil && size.width > 0 && size.height > 0 {
+        if !hasActivePlantNode && size.width > 0 && size.height > 0 {
             buildPlant()
         }
     }
 
     public override func didChangeSize(_ oldSize: CGSize) {
         super.didChangeSize(oldSize)
-        if (plantNode == nil && plant1Node == nil) || abs(oldSize.width - size.width) > 2 || abs(oldSize.height - size.height) > 2 {
+        if !hasActivePlantNode || abs(oldSize.width - size.width) > 2 || abs(oldSize.height - size.height) > 2 {
             if size.width > 0 && size.height > 0 {
                 buildPlant()
             }
@@ -82,6 +88,8 @@ public final class SpriteKitPlantScene: SKScene {
         removeAllChildren()
         plantNode = nil
         plant1Node = nil
+        plant2Node = nil
+        plant3Node = nil
         anchorPoint = CGPoint(x: 0.5, y: 0.0) // Luôn neo gốc tọa độ tại đáy giữa
 
         // ĐẶC BIỆT: Cây Cỏ Loe (plant1) hỗ trợ 3 trạng thái và 18 lá uốn lượn riêng biệt
@@ -90,6 +98,24 @@ public final class SpriteKitPlantScene: SKScene {
             p1.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p1)
             self.plant1Node = p1
+            return
+        }
+
+        // ĐẶC BIỆT: Cây Nha Đam (plant2 - Aloe Vera) với 8 bẹ mọng nước uốn lượn
+        if plantId.lowercased() == "plant2" {
+            let p2 = Plant2Node(level: plantLevel, containerSize: size, isHanging: isHanging)
+            p2.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p2)
+            self.plant2Node = p2
+            return
+        }
+
+        // ĐẶC BIỆT: Cây Begonia Rex (plant3 - Thu hải đường lá rộng) với 15 phiến lá bản rộng
+        if plantId.lowercased() == "plant3" {
+            let p3 = Plant3Node(level: plantLevel, containerSize: size, isHanging: isHanging)
+            p3.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p3)
+            self.plant3Node = p3
             return
         }
 
@@ -162,6 +188,14 @@ public final class SpriteKitPlantScene: SKScene {
     public func playTapAnimation() {
         if let p1 = plant1Node {
             p1.playTapAnimation()
+            return
+        }
+        if let p2 = plant2Node {
+            p2.playTapAnimation()
+            return
+        }
+        if let p3 = plant3Node {
+            p3.playTapAnimation()
             return
         }
         guard let node = plantNode else { return }

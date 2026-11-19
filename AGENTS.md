@@ -1,22 +1,39 @@
 # Workspace Guidelines
 
-## Mô hình Kiến trúc Lai SpriteKit (Visual `.sks` + Swift Code)
+## Mô hình Kiến trúc Lai SpriteKit (Visual `.sks` + Swift Code) - LẤY PLANT1 LÀM CHUẨN
 
-1. **Thiết kế trực quan (`*.sks` - Xcode Scene Editor)**:
-   - Dùng kéo thả bằng chuột trong Xcode để chỉnh vị trí cây, lá, cành, mây, mặt trời, kích thước, góc xoay, thứ tự layer (`zPosition`), điểm neo (`anchorPoint`).
-   - Chia nhóm node rõ ràng: `seedNode` (Hạt giống), `sproutNode` (Cây con), `matureNode` (Cây trưởng thành).
+Mọi loài cây mới (`Plant2`, `Plant3`, `Plant4`, ...) **BẮT BUỘC** phải có đầy đủ bộ 3 file cấu trúc tương tự `Plant1`:
+1. **`PlantXScene.sks` (Thiết kế trực quan trong Xcode Scene Editor)**:
+   - Bắt buộc phải có file `.sks` cho mỗi loài cây!
+   - Kích thước canvas bằng đúng kích thước ảnh đại diện tham chiếu (ví dụ: Plant1: 428x862, Plant2: 484x641, Plant3: 796x538), `anchorPoint = (0.5, 0.0)`.
+   - Cấu trúc cây phân cấp bắt buộc:
+     - `seedNode` (SKNode, pos: (0, 0)) -> child `seedSprite` (SKSpriteNode, pos: (0, 30), anchor: (0.5, 0.05), zPos: 10, texture: `plant1_Asset-100@4.167x`).
+     - `sproutNode` (SKNode, pos: (0, 0)) -> child `sproutSprite` (SKSpriteNode, pos: (0, 20), anchor: (0.5, 0.05), zPos: 10, texture: `plant1_Asset-200@4.167x`).
+     - `matureNode` (SKNode, pos: (0, -10)) -> chứa đầy đủ các phiến lá `leaf_X` (SKSpriteNode), mỗi lá có toạ độ `position`, `anchorPoint` tại cuống, `size`, `zPosition` (lớp sau ra trước), và `texture`.
+   - Dùng kéo thả bằng chuột trong Xcode Scene Editor để tinh chỉnh vị trí, góc xoay.
+
+2. **`PlantXNode.swift` (Lập trình Logic & Animation)**:
+   - Phải có hàm `loadSceneTemplate() -> SKScene?` nạp từ `PlantXScene.sks`:
+     ```swift
+     private func loadSceneTemplate() -> SKScene? {
+         return SKScene(fileNamed: "PlantXScene")
+     }
+     ```
+   - Trong `buildMatureState`: Ưu tiên nạp trực tiếp `matureGroup` từ `PlantXScene.sks` và duyệt qua các `leaf_X` để gắn `SKAction` hoạt ảnh động.
    - Khi chỉnh vị trí trong Xcode `.sks`, code Swift phải tự động sử dụng vị trí mới đó, không bắt buộc sửa tọa độ bằng tay trong code.
+   - Luôn có cơ chế Fallback Procedural chứa toạ độ chuẩn phòng trường hợp scene chưa tải được.
 
-2. **Lập trình Logic & Hoạt ảnh (`*.swift`)**:
-   - Code Swift 100% cho logic và animation: mưa rơi, gió thổi, cây uốn lượn, lớn lên theo level, phản hồi tương tác tap (squash & stretch, sinh bọt khí oxy).
-   - Tải các node từ `.sks` và gắn các `SKAction` hoạt ảnh động.
+3. **`PlantXView.swift` (Xem trước độc lập)**:
+   - Bọc `PlantView(plantId: "plantX", ...)` kèm SwiftUI `#Preview` với các nút chuyển trạng thái (Lv.1 Hạt giống, Lv.2 Cây con, Lv.3 Trưởng thành, Lv.10 Cực đại).
 
-3. **Xem trước (Preview)**:
-   - Preview được giao diện và animation trực tiếp trên SwiftUI Canvas Preview (ví dụ: `Plant1View.swift`) mà không phải chạy toàn bộ game mỗi lần.
+4. **Đăng ký vào hệ thống Scene chung**:
+   - Thêm ID vào `PlantAvailability.supportedPlantIds` trong [SpriteKitPlantView.swift](file:///Users/vuongquanghuy/code/prj_ios/terrariumidle_ios/terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Plants/Views/SpriteKitPlantView.swift).
+   - Đăng ký khởi tạo node và gán tap animation trong [SpriteKitPlantScene.swift](file:///Users/vuongquanghuy/code/prj_ios/terrariumidle_ios/terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Plants/Scenes/SpriteKitPlantScene.swift).
 
 ## Quy ước Asset Cây (Plant Asset Convention)
 
-- **`Asset-1`** (hoặc `plantX_Asset-1`): Ảnh nền/ảnh đại diện của cây (ảnh tĩnh dùng làm thumbnail và đối chiếu toạ độ). **Tuyệt đối KHÔNG đưa vào scene làm hiệu ứng hay layer chuyển động**.
+- **`Asset-1`** (hoặc ảnh đại diện `aloe-vera@4.167x`, `begonia-rex@4.167x`): Ảnh nền/ảnh đại diện của cây (ảnh tĩnh dùng làm thumbnail và đối chiếu toạ độ). **Tuyệt đối KHÔNG đưa vào scene làm hiệu ứng hay layer chuyển động**.
 - **`Asset-2` -> `Asset-99`**: Các thành phần hoạt ảnh động (lá cây, cành, hoa uốn lượn). Toàn bộ cây trưởng thành được ghép và diễn hoạt từ các thành phần này.
 - **`Asset-100`**: Trạng thái gieo hạt giống (Level 1).
 - **`Asset-200`**: Trạng thái cây con (Level 2).
+- **Toạ độ ghép lá**: Phải đối chiếu pixel chính xác với ảnh avatar để đảm bảo khi ghép lại, cây hoàn toàn khớp với ảnh gốc, không bị lệch tán hay khoảng trắng.

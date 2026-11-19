@@ -16,7 +16,9 @@ public typealias PlantView = SpriteKitPlantView
 public enum PlantAvailability {
     /// Danh sách ID các cây đã được phát triển hoàn thiện tài nguyên và hoạt ảnh
     public static let supportedPlantIds: Set<String> = [
-        "plant1"
+        "plant1",
+        "plant2",
+        "plant3"
     ]
 
     /// Kiểm tra xem loài cây này đã có trong phiên bản hiện tại chưa

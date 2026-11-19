@@ -178,7 +178,7 @@ public final class Plant1Node: SKNode {
 
     private func buildSeedState() {
         plantRootNode.setScale(1.0)
-        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.70 : 8)
+        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.70 : 0)
         self.baseScale = 1.0
 
         // Tải texture hạt giống (Asset-100)
@@ -186,7 +186,7 @@ public final class Plant1Node: SKNode {
 
         // Kích thước hạt giống tí hon nằm gọn trong lòng đất (~18% chiều rộng container)
         let targetW = containerSize.width * 0.18
-        let aspect: CGFloat = 257.0 / 259.0
+        let aspect: CGFloat = 200.0 / 259.0
         let targetH = targetW * aspect
 
         let node = SKSpriteNode(texture: seedTexture)
@@ -248,14 +248,14 @@ public final class Plant1Node: SKNode {
 
     private func buildSproutState() {
         plantRootNode.setScale(1.0)
-        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.70 : 8)
+        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height * 0.70 : 0)
         self.baseScale = 1.0
 
         guard let sproutTexture = loadTexture(assetId: 200) else { return }
 
         // Kích thước mầm cây con nhỏ xinh mới nhú (~22% chiều cao container)
         let targetH = containerSize.height * 0.22
-        let aspect: CGFloat = 235.0 / 253.0
+        let aspect: CGFloat = 235.0 / 203.0
         let targetW = min(targetH * aspect, containerSize.width * 0.28)
 
         let node = SKSpriteNode(texture: sproutTexture)
