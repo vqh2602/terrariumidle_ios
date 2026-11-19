@@ -65,13 +65,13 @@ public final class Plant14Node: SKNode {
 
     /// Tọa độ pixel và điểm neo cuống dây lá tim Heartleaf philodendron (Canvas 510 x 648)
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId: 1, imgX: 256, imgY:   0, width: 254, height: 627, anchorX: 0.45, anchorY: 0.01, isLeft: false, zPos: 11, bendAngle: 0.025, duration: 4.6),
-        LeafData(assetId: 7, imgX: 322, imgY:   2, width: 159, height: 570, anchorX: 0.35, anchorY: 0.01, isLeft: false, zPos: 12, bendAngle: 0.035, duration: 4.0),
-        LeafData(assetId: 6, imgX:   0, imgY: 214, width: 212, height: 434, anchorX: 0.75, anchorY: 0.01, isLeft: true , zPos: 13, bendAngle: 0.055, duration: 3.4),
-        LeafData(assetId: 3, imgX: 229, imgY: 203, width: 113, height: 404, anchorX: 0.45, anchorY: 0.01, isLeft: false, zPos: 14, bendAngle: 0.055, duration: 3.2),
-        LeafData(assetId: 4, imgX: 209, imgY: 295, width: 218, height: 334, anchorX: 0.45, anchorY: 0.01, isLeft: false, zPos: 15, bendAngle: 0.065, duration: 2.9),
-        LeafData(assetId: 5, imgX: 334, imgY: 293, width: 172, height: 253, anchorX: 0.35, anchorY: 0.01, isLeft: false, zPos: 16, bendAngle: 0.070, duration: 2.7),
-        LeafData(assetId: 2, imgX: 316, imgY: 294, width: 124, height: 184, anchorX: 0.40, anchorY: 0.01, isLeft: false, zPos: 17, bendAngle: 0.075, duration: 2.5),
+        LeafData(assetId: 1, imgX: 258.4, imgY:   0.0, width: 254, height: 627, anchorX: 0.05, anchorY: 0.01, isLeft: false, zPos: 11, bendAngle: 0.025, duration: 4.6),
+        LeafData(assetId: 2, imgX: 236.5, imgY: 433.9, width: 124, height: 184, anchorX: 0.05, anchorY: 0.01, isLeft: false, zPos: 12, bendAngle: 0.075, duration: 2.5),
+        LeafData(assetId: 3, imgX: 232.7, imgY: 202.3, width: 113, height: 404, anchorX: 0.05, anchorY: 0.01, isLeft: false, zPos: 13, bendAngle: 0.055, duration: 3.2),
+        LeafData(assetId: 4, imgX: 213.8, imgY: 292.6, width: 218, height: 334, anchorX: 0.05, anchorY: 0.01, isLeft: false, zPos: 14, bendAngle: 0.065, duration: 2.9),
+        LeafData(assetId: 5, imgX:  37.1, imgY: 378.5, width: 172, height: 253, anchorX: 0.90, anchorY: 0.01, isLeft: true , zPos: 15, bendAngle: 0.070, duration: 2.7),
+        LeafData(assetId: 6, imgX:   0.0, imgY: 213.0, width: 212, height: 434, anchorX: 0.98, anchorY: 0.01, isLeft: true , zPos: 16, bendAngle: 0.055, duration: 3.4),
+        LeafData(assetId: 7, imgX:  67.2, imgY:  57.5, width: 159, height: 570, anchorX: 0.97, anchorY: 0.01, isLeft: true , zPos: 17, bendAngle: 0.035, duration: 4.0),
     ]
 
     // MARK: - Properties
