@@ -94,9 +94,9 @@
     },
     {
         "id": "plant8",
-        "name": "Xương rồng đá cuội",
+        "name": "Schefflera",
         "description": "Loài cây có sức sống mãnh liệt, nhánh lớn",
-        "image": "plant8_Asset-1",
+        "image": "Schefflera@4.167x",
         "priceStore": 50,
         "priceOxygen": 11500,
         "currencyUnit": "ticket",
