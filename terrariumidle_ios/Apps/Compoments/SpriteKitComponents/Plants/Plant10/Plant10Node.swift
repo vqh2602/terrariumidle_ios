@@ -459,7 +459,6 @@ public final class Plant10Node: SKNode {
             let settle = SKAction.scale(to: 1.0, duration: 0.12)
             settle.timingMode = .easeInEaseOut
             seed.run(SKAction.sequence([squash, stretch, bounceBack, settle]), withKey: "seedTap")
-            spawnOxygenBubbles(count: 3, from: seed.position)
 
         case .sprout:
             guard let sprout = sproutNode else { return }
@@ -484,7 +483,6 @@ public final class Plant10Node: SKNode {
                 shakeSeq
             ])
             sprout.run(combined, withKey: "sproutTap")
-            spawnOxygenBubbles(count: 4, from: CGPoint(x: sprout.position.x, y: sprout.position.y + 40))
 
         case .mature:
             guard !leafNodes.isEmpty else { return }
@@ -522,34 +520,88 @@ public final class Plant10Node: SKNode {
 
                 leaf.run(SKAction.sequence([delay, swingGroup1, swingGroup2]))
             }
-
-            spawnOxygenBubbles(count: 8, from: CGPoint(x: 0, y: 160))
         }
+
+        spawnOxygenBubbles()
     }
 
-    // MARK: - Hiệu ứng bọt khí Oxy bay lên
+    // MARK: - Hiệu ứng bọt khí Oxy bay lên chuẩn Terrarium (toàn màn hình, dồi dào như các cây khác)
 
-    private func spawnOxygenBubbles(count: Int, from startPos: CGPoint) {
-        for i in 0..<count {
-            let bubble = SKShapeNode(circleOfRadius: CGFloat.random(in: 4...9))
-            bubble.fillColor = UIColor(red: 0.40, green: 0.85, blue: 0.50, alpha: 0.70)
-            bubble.strokeColor = UIColor.white.withAlphaComponent(0.90)
+    private func spawnOxygenBubbles() {
+        let bubbleCount: Int
+        switch growthState {
+        case .seed:
+            bubbleCount = Int.random(in: 1...2)
+        case .sprout:
+            bubbleCount = Int.random(in: 3...4)
+        case .mature:
+            bubbleCount = Int.random(in: 8...12)
+        }
+
+        for i in 0..<bubbleCount {
+            let radius: CGFloat
+            let spawnX: CGFloat
+            let spawnY: CGFloat
+            let floatDistance: CGFloat
+
+            switch growthState {
+            case .seed:
+                radius = CGFloat.random(in: 1.8...3.0)
+                spawnX = CGFloat.random(in: -containerSize.width * 0.08...containerSize.width * 0.08)
+                spawnY = CGFloat.random(in: containerSize.height * 0.03...containerSize.height * 0.12)
+                floatDistance = CGFloat.random(in: 18...35)
+            case .sprout:
+                radius = CGFloat.random(in: 2.2...3.8)
+                spawnX = CGFloat.random(in: -containerSize.width * 0.10...containerSize.width * 0.10)
+                spawnY = CGFloat.random(in: containerSize.height * 0.05...containerSize.height * 0.20)
+                floatDistance = CGFloat.random(in: 25...45)
+            case .mature:
+                radius = CGFloat.random(in: 3.5...7.5)
+                floatDistance = CGFloat.random(in: 60...115)
+                if !leafNodes.isEmpty && Bool.random() {
+                    let randomLeaf = leafNodes.randomElement()!
+                    // Chuyển đổi vị trí lá sang toạ độ của Plant10Node (không bị co cụm)
+                    let leafWorldPos = randomLeaf.parent?.convert(randomLeaf.position, to: self) ?? randomLeaf.position
+                    spawnX = leafWorldPos.x + CGFloat.random(in: -16...16)
+                    spawnY = max(containerSize.height * 0.18, min(containerSize.height * 0.90, leafWorldPos.y + CGFloat.random(in: -10...20)))
+                } else {
+                    spawnX = CGFloat.random(in: -containerSize.width * 0.44...containerSize.width * 0.44)
+                    spawnY = CGFloat.random(in: containerSize.height * 0.18...containerSize.height * 0.88)
+                }
+            }
+
+            let bubble = SKShapeNode(circleOfRadius: radius)
+            bubble.fillColor = UIColor(red: 0.35, green: 0.92, blue: 0.65, alpha: 0.85)
+            bubble.strokeColor = UIColor.white.withAlphaComponent(0.7)
             bubble.lineWidth = 1.0
-            bubble.position = CGPoint(
-                x: startPos.x + CGFloat.random(in: -30...30),
-                y: startPos.y + CGFloat(i * 10)
-            )
-            bubble.zPosition = 35
-            plantRootNode.addChild(bubble)
 
-            let riseDistance = CGFloat.random(in: 70...140)
-            let driftX = CGFloat.random(in: -25...25)
-            let riseAction = SKAction.moveBy(x: driftX, y: riseDistance, duration: Double.random(in: 0.7...1.2))
-            riseAction.timingMode = .easeOut
-            let fadeAction = SKAction.fadeOut(withDuration: 0.5)
-            let removeAction = SKAction.removeFromParent()
+            let highlight = SKShapeNode(circleOfRadius: radius * 0.3)
+            highlight.fillColor = UIColor.white.withAlphaComponent(0.8)
+            highlight.strokeColor = .clear
+            highlight.position = CGPoint(x: -radius * 0.3, y: radius * 0.3)
+            bubble.addChild(highlight)
 
-            bubble.run(SKAction.sequence([riseAction, fadeAction, removeAction]))
+            bubble.position = CGPoint(x: spawnX, y: spawnY)
+            bubble.zPosition = 100
+            bubble.alpha = 0.0
+            addChild(bubble)
+
+            let floatDuration = Double.random(in: 0.8...1.5)
+            let driftX = CGFloat.random(in: -18...18)
+            let delay = SKAction.wait(forDuration: Double(i) * 0.04)
+            let fadeIn = SKAction.fadeAlpha(to: 0.9, duration: 0.12)
+            let floatUp = SKAction.moveBy(x: driftX, y: floatDistance, duration: floatDuration)
+            floatUp.timingMode = .easeOut
+            let fadeOut = SKAction.fadeOut(withDuration: floatDuration * 0.6)
+            let scaleUp = SKAction.scale(by: 1.30, duration: floatDuration)
+
+            let motionGroup = SKAction.group([
+                floatUp,
+                SKAction.sequence([SKAction.wait(forDuration: floatDuration * 0.4), fadeOut]),
+                scaleUp
+            ])
+
+            bubble.run(SKAction.sequence([delay, fadeIn, motionGroup, SKAction.removeFromParent()]))
         }
     }
 

@@ -56,6 +56,16 @@ flowchart LR
 2. **Cơ chế Fallback Procedural**:
    - Luôn định nghĩa `leavesMetadata` chuẩn để nếu file `.sks` chưa tải được thì code vẫn render chính xác 100% hình thể cây.
 
+3. **Quy chuẩn Hiệu ứng Bọt khí Oxy (Oxygen Bubbles Convention - Lấy Plant 1 làm chuẩn)**:
+   - **Thêm trực tiếp vào Node cây**: Bọt khí phải được add trực tiếp vào chính Node cây (`addChild(bubble)`), **TUYỆT ĐỐI KHÔNG** add vào `plantRootNode` vì `plantRootNode` bị `setScale(baseScale)` (thường thu nhỏ 0.2 ~ 0.25) khiến bọt khí bị teo nhỏ và không bay được ra khắp khung hình.
+   - **Điểm sáng phản chiếu (Specular Highlight)**: Thêm node con `highlight` màu trắng (radius bằng 30% bọt, alpha 0.8) tạo hiệu ứng bọt khí 3D căng bóng.
+   - **Kích thước và số lượng**:
+     - Hạt giống (Lv.1): 1 - 2 bọt nhỏ (radius 1.8 - 3.0 pt).
+     - Cây con (Lv.2): 3 - 4 bọt vừa (radius 2.2 - 3.8 pt).
+     - Trưởng thành (Lv.3+): 8 - 12 bọt dồi dào (radius 3.5 - 7.5 pt).
+   - **Vị trí sinh bọt**: Phân bổ từ các vị trí phiến lá ngẫu nhiên (`randomLeaf.parent?.convert(randomLeaf.position, to: self)`) hoặc trải đều tự nhiên khắp khung cây ($-44\% \dots +44\%$ chiều rộng, $18\% \dots 90\%$ chiều cao) với quãng đường bay $60 \dots 115\text{pt}$ và độ giãn nở `scaleUp: 1.30`.
+   - **Thân cọc/trụ leo**: Nếu cây có cọc gỗ hoặc thân chính riêng (`assetId: 2`), không được lắc độc lập làm rời cuống lá khỏi cành; thân chính chỉ đung đưa rất nhẹ ($0.003 \dots 0.008\text{rad}$).
+
 ---
 
 ## 4. Bóc tách Toạ độ từ SVG & Công thức chuyển đổi SpriteKit (SVG Extraction & Coordinate Conversion)

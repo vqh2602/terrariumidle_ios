@@ -436,40 +436,51 @@ public final class Plant8Node: SKNode {
             seed.removeAction(forKey: "seedTap")
             seed.position = initialSeedPosition
 
-            let squash = SKAction.scaleX(to: 1.18, y: 0.82, duration: 0.10)
-            squash.timingMode = .easeOut
-            let stretch = SKAction.scaleX(to: 0.88, y: 1.15, duration: 0.14)
-            stretch.timingMode = .easeInEaseOut
-            let settle = SKAction.scale(to: 1.0, duration: 0.16)
-            settle.timingMode = .easeOut
-            seed.run(SKAction.sequence([squash, stretch, settle]), withKey: "seedTap")
-            spawnOxygenBubbles(count: 2, from: seed.position)
+            let squash = SKAction.scaleX(to: 1.28, y: 0.75, duration: 0.08)
+            squash.timingMode = .easeIn
+            let stretch = SKAction.scaleX(to: 0.82, y: 1.25, duration: 0.12)
+            stretch.timingMode = .easeOut
+            let bounceBack = SKAction.scaleX(to: 1.08, y: 0.95, duration: 0.10)
+            let settle = SKAction.scale(to: 1.0, duration: 0.12)
+            settle.timingMode = .easeInEaseOut
+            seed.run(SKAction.sequence([squash, stretch, bounceBack, settle]), withKey: "seedTap")
 
         case .sprout:
             guard let sprout = sproutNode else { return }
             sprout.removeAction(forKey: "sproutTap")
             sprout.position = initialSproutPosition
 
-            let squash = SKAction.scaleX(to: 1.15, y: 0.85, duration: 0.11)
-            squash.timingMode = .easeOut
-            let stretch = SKAction.scaleX(to: 0.90, y: 1.12, duration: 0.15)
-            stretch.timingMode = .easeInEaseOut
-            let settle = SKAction.scale(to: 1.0, duration: 0.16)
-            settle.timingMode = .easeOut
-            sprout.run(SKAction.sequence([squash, stretch, settle]), withKey: "sproutTap")
-            spawnOxygenBubbles(count: 3, from: CGPoint(x: sprout.position.x, y: sprout.position.y + 40))
+            let squash = SKAction.scaleX(to: 1.25, y: 0.78, duration: 0.08)
+            squash.timingMode = .easeIn
+            let stretch = SKAction.scaleX(to: 0.85, y: 1.20, duration: 0.12)
+            stretch.timingMode = .easeOut
+            let bounceBack = SKAction.scaleX(to: 1.06, y: 0.96, duration: 0.10)
+            let settle = SKAction.scale(to: 1.0, duration: 0.12)
+            settle.timingMode = .easeInEaseOut
+
+            let shakeL = SKAction.rotate(toAngle: -0.12, duration: 0.07)
+            let shakeR = SKAction.rotate(toAngle: 0.12, duration: 0.08)
+            let shakeBack = SKAction.rotate(toAngle: 0, duration: 0.07)
+            let shakeSeq = SKAction.sequence([shakeL, shakeR, shakeBack])
+
+            let combined = SKAction.group([
+                SKAction.sequence([squash, stretch, bounceBack, settle]),
+                shakeSeq
+            ])
+            sprout.run(combined, withKey: "sproutTap")
 
         case .mature:
             guard !leafNodes.isEmpty else { return }
             plantRootNode.removeAction(forKey: "matureTapBounce")
 
-            let squash = SKAction.scaleX(to: baseScale * 1.06, y: baseScale * 0.94, duration: 0.10)
-            squash.timingMode = .easeOut
-            let stretch = SKAction.scaleX(to: baseScale * 0.96, y: baseScale * 1.05, duration: 0.14)
-            stretch.timingMode = .easeInEaseOut
-            let settle = SKAction.scale(to: baseScale, duration: 0.18)
-            settle.timingMode = .easeOut
-            plantRootNode.run(SKAction.sequence([squash, stretch, settle]), withKey: "matureTapBounce")
+            let squash = SKAction.scaleX(to: baseScale * 1.12, y: baseScale * 0.88, duration: 0.08)
+            squash.timingMode = .easeIn
+            let stretch = SKAction.scaleX(to: baseScale * 0.92, y: baseScale * 1.12, duration: 0.12)
+            stretch.timingMode = .easeOut
+            let bounce = SKAction.scaleX(to: baseScale * 1.04, y: baseScale * 0.97, duration: 0.10)
+            let settle = SKAction.scale(to: baseScale, duration: 0.10)
+            settle.timingMode = .easeInEaseOut
+            plantRootNode.run(SKAction.sequence([squash, stretch, bounce, settle]), withKey: "matureTapBounce")
 
             for (idx, leaf) in leafNodes.enumerated() {
                 let flutterAngle: CGFloat = (idx % 2 == 0) ? 0.060 : -0.060
@@ -478,34 +489,87 @@ public final class Plant8Node: SKNode {
                 let flutter = SKAction.sequence([flutterOut, flutterIn])
                 leaf.run(flutter)
             }
-
-            spawnOxygenBubbles(count: 5, from: CGPoint(x: 0, y: 160))
         }
+
+        spawnOxygenBubbles()
     }
 
-    // MARK: - Hiệu ứng bọt khí Oxy bay lên
+    // MARK: - Hiệu ứng bọt khí Oxy bay lên chuẩn Terrarium (toàn màn hình, dồi dào như các cây khác)
 
-    private func spawnOxygenBubbles(count: Int, from startPos: CGPoint) {
-        for i in 0..<count {
-            let bubble = SKShapeNode(circleOfRadius: CGFloat.random(in: 4...9))
-            bubble.fillColor = UIColor(red: 0.40, green: 0.85, blue: 0.50, alpha: 0.70)
-            bubble.strokeColor = UIColor.white.withAlphaComponent(0.90)
+    private func spawnOxygenBubbles() {
+        let bubbleCount: Int
+        switch growthState {
+        case .seed:
+            bubbleCount = Int.random(in: 1...2)
+        case .sprout:
+            bubbleCount = Int.random(in: 3...4)
+        case .mature:
+            bubbleCount = Int.random(in: 8...12)
+        }
+
+        for i in 0..<bubbleCount {
+            let radius: CGFloat
+            let spawnX: CGFloat
+            let spawnY: CGFloat
+            let floatDistance: CGFloat
+
+            switch growthState {
+            case .seed:
+                radius = CGFloat.random(in: 1.8...3.0)
+                spawnX = CGFloat.random(in: -containerSize.width * 0.08...containerSize.width * 0.08)
+                spawnY = CGFloat.random(in: containerSize.height * 0.03...containerSize.height * 0.12)
+                floatDistance = CGFloat.random(in: 18...35)
+            case .sprout:
+                radius = CGFloat.random(in: 2.2...3.8)
+                spawnX = CGFloat.random(in: -containerSize.width * 0.10...containerSize.width * 0.10)
+                spawnY = CGFloat.random(in: containerSize.height * 0.05...containerSize.height * 0.20)
+                floatDistance = CGFloat.random(in: 25...45)
+            case .mature:
+                radius = CGFloat.random(in: 3.5...7.5)
+                floatDistance = CGFloat.random(in: 60...115)
+                if !leafNodes.isEmpty && Bool.random() {
+                    let randomLeaf = leafNodes.randomElement()!
+                    let leafWorldPos = randomLeaf.parent?.convert(randomLeaf.position, to: self) ?? randomLeaf.position
+                    spawnX = leafWorldPos.x + CGFloat.random(in: -16...16)
+                    spawnY = max(containerSize.height * 0.18, min(containerSize.height * 0.90, leafWorldPos.y + CGFloat.random(in: -10...20)))
+                } else {
+                    spawnX = CGFloat.random(in: -containerSize.width * 0.44...containerSize.width * 0.44)
+                    spawnY = CGFloat.random(in: containerSize.height * 0.18...containerSize.height * 0.88)
+                }
+            }
+
+            let bubble = SKShapeNode(circleOfRadius: radius)
+            bubble.fillColor = UIColor(red: 0.35, green: 0.92, blue: 0.65, alpha: 0.85)
+            bubble.strokeColor = UIColor.white.withAlphaComponent(0.7)
             bubble.lineWidth = 1.0
-            bubble.position = CGPoint(
-                x: startPos.x + CGFloat.random(in: -30...30),
-                y: startPos.y + CGFloat(i * 10)
-            )
-            bubble.zPosition = 35
-            plantRootNode.addChild(bubble)
 
-            let riseDistance = CGFloat.random(in: 70...140)
-            let driftX = CGFloat.random(in: -25...25)
-            let riseAction = SKAction.moveBy(x: driftX, y: riseDistance, duration: Double.random(in: 0.7...1.2))
-            riseAction.timingMode = .easeOut
-            let fadeAction = SKAction.fadeOut(withDuration: 0.5)
-            let removeAction = SKAction.removeFromParent()
+            let highlight = SKShapeNode(circleOfRadius: radius * 0.3)
+            highlight.fillColor = UIColor.white.withAlphaComponent(0.8)
+            highlight.strokeColor = .clear
+            highlight.position = CGPoint(x: -radius * 0.3, y: radius * 0.3)
+            bubble.addChild(highlight)
 
-            bubble.run(SKAction.sequence([riseAction, fadeAction, removeAction]))
+            bubble.position = CGPoint(x: spawnX, y: spawnY)
+            bubble.zPosition = 100
+            bubble.alpha = 0.0
+            addChild(bubble)
+
+            let floatDuration = Double.random(in: 0.8...1.5)
+            let driftX = CGFloat.random(in: -18...18)
+            let delay = SKAction.wait(forDuration: Double(i) * 0.04)
+            let fadeIn = SKAction.fadeAlpha(to: 0.9, duration: 0.12)
+            let floatUp = SKAction.moveBy(x: driftX, y: floatDistance, duration: floatDuration)
+            floatUp.timingMode = .easeOut
+            let fadeOut = SKAction.fadeOut(withDuration: floatDuration * 0.6)
+            let scaleUp = SKAction.scale(by: 1.30, duration: floatDuration)
+
+            let motionGroup = SKAction.group([
+                floatUp,
+                SKAction.sequence([SKAction.wait(forDuration: floatDuration * 0.4), fadeOut]),
+                scaleUp
+            ])
+
+            bubble.run(SKAction.sequence([delay, fadeIn, motionGroup, SKAction.removeFromParent()]))
         }
     }
 

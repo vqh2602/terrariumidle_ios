@@ -26,6 +26,12 @@ Mọi loài cây mới (`Plant2`, `Plant3`, `Plant4`, ...) **BẮT BUỘC** ph�
      - Luôn có kiểm tra fallback tự fill texture: `if sprite.texture == nil { sprite.texture = loadTexture(...) }`.
      - Khi chỉnh vị trí trong Xcode `.sks`, code Swift phải tự động sử dụng vị trí mới đó mà không cần sửa code.
    - Luôn có cơ chế Fallback Procedural chứa toạ độ chuẩn phòng trường hợp scene chưa tải được.
+   - **QUY CHUẨN HIỆU ỨNG BỌT KHÍ OXY (Oxygen Bubbles Convention - LẤY PLANT1 LÀM CHUẨN)**:
+     - Bọt khí **BẮT BUỘC** phải add trực tiếp vào chính Node cây (`addChild(bubble)`), **TUYỆT ĐỐI KHÔNG** add vào `plantRootNode` vì `plantRootNode` bị `setScale(baseScale)` (thường thu nhỏ chỉ còn 0.2 ~ 0.25) khiến bọt khí bị teo nhỏ như hạt bụi và giới hạn không gian bay.
+     - Bọt khí phải có node con `highlight` (điểm sáng phản chiếu trắng $30\%$ radius, alpha 0.8) tạo hiệu ứng 3D căng bóng.
+     - Kích thước bọt chuẩn theo `containerSize`: Hạt (radius $1.8 \dots 3.0$), Cây con ($2.2 \dots 3.8$), Trưởng thành ($3.5 \dots 7.5$, $8 \dots 12$ bọt).
+     - Phân bổ vị trí sinh bọt: Chuyển đổi vị trí lá sang toạ độ cây (`randomLeaf.parent?.convert(randomLeaf.position, to: self)`) hoặc trải đều tự nhiên khắp khung cây ($-44\% \dots +44\%$ chiều rộng, $18\% \dots 90\%$ chiều cao) với quãng đường bay $60 \dots 115\text{pt}$ và độ giãn nở `scaleUp: 1.30`.
+     - Thân cọc/trụ leo (`assetId: 2` ở cây leo hoặc cây có thân riêng) không lắc độc lập làm rời cuống lá khỏi cành, thân chính chỉ đung đưa rất nhẹ ($0.003 \dots 0.008\text{rad}$).
 
 3. **`PlantXView.swift` (Xem trước độc lập)**:
    - Bọc `PlantView(plantId: "plantX", ...)` kèm SwiftUI `#Preview` với các nút chuyển trạng thái (Lv.1 Hạt giống, Lv.2 Cây con, Lv.3 Trưởng thành, Lv.10 Cực đại).
