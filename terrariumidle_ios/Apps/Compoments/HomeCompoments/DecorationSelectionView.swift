@@ -76,7 +76,7 @@ struct DecorationItemRow: View {
         Button(action: onSelect) {
             HStack(spacing: 12) {
                 // Decoration Image
-                CachedAsyncImage(url: URL(string: decoration.image)) { image in
+                CachedAsyncImage(named: decoration.image) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)

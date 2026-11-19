@@ -105,6 +105,19 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         if let img = UIImage(named: underscore) { return img }
         if let img = UIImage(named: "\(underscore)@4.167x") { return img }
 
+        // Đổi khoảng trắng thành gạch ngang hoặc ngược lại (Dracaena trifasciata <-> Dracaena-trifasciata)
+        let spaceToDash = raw.replacingOccurrences(of: " ", with: "-")
+        if let img = UIImage(named: spaceToDash) { return img }
+        if let img = UIImage(named: "\(spaceToDash)@4.167x") { return img }
+
+        let dashToSpace = raw.replacingOccurrences(of: "-", with: " ")
+        if let img = UIImage(named: dashToSpace) { return img }
+        if let img = UIImage(named: "\(dashToSpace)@4.167x") { return img }
+
+        if let unencoded = raw.removingPercentEncoding, unencoded != raw {
+            if let img = resolveLocalImage(from: unencoded) { return img }
+        }
+
         // 4. Nếu là chuỗi dạng "plantX_Asset-1" hoặc "potX_Asset-1" -> tìm theo base ID
         if raw.contains("Asset-1") {
             let baseId = raw.replacingOccurrences(of: "_Asset-1", with: "")

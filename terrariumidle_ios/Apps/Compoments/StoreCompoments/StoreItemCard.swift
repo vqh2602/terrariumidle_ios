@@ -17,7 +17,7 @@ struct StoreItemCard: View {
     var body: some View {
         HStack(spacing: 12) {
             // Item Image
-            CachedAsyncImage(url: URL(string: item.image)) { image in
+            CachedAsyncImage(named: item.image) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fit)

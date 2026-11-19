@@ -76,7 +76,7 @@ struct PotItemRow: View {
         Button(action: onSelect) {
             HStack(spacing: 12) {
                 // Pot Image
-                CachedAsyncImage(url: URL(string: pot.image)) { image in
+                CachedAsyncImage(named: pot.image) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
