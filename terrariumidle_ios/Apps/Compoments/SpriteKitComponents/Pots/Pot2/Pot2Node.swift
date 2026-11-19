@@ -19,6 +19,7 @@ public final class Pot2Node: SKNode, PotInteractiveNode {
 
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
+    private var widthFill: CGFloat = 0.0
 
     /// Gốc rễ chậu và hiệu ứng
     private let potRootNode = SKNode()
@@ -37,9 +38,10 @@ public final class Pot2Node: SKNode, PotInteractiveNode {
 
     // MARK: - Initializer
 
-    public init(containerSize: CGSize = CGSize(width: 120, height: 85), isHanging: Bool = false) {
+    public init(containerSize: CGSize = CGSize(width: 120, height: 85), isHanging: Bool = false, widthFill: CGFloat = 0.0) {
         self.containerSize = containerSize
         self.isHanging = isHanging
+        self.widthFill = min(max(widthFill, 0.0), 1.0)
         super.init()
 
         addChild(potRootNode)
@@ -53,9 +55,10 @@ public final class Pot2Node: SKNode, PotInteractiveNode {
 
     // MARK: - Configuration
 
-    public func configure(containerSize: CGSize, isHanging: Bool = false) {
+    public func configure(containerSize: CGSize, isHanging: Bool = false, widthFill: CGFloat = 0.0) {
         self.containerSize = containerSize
         self.isHanging = isHanging
+        self.widthFill = min(max(widthFill, 0.0), 1.0)
         build()
     }
 
@@ -77,7 +80,9 @@ public final class Pot2Node: SKNode, PotInteractiveNode {
         // Tỉ lệ ảnh gốc: 294 x 255 (aspect ~ 0.8673)
         let aspect: CGFloat = 255.0 / 294.0
         let targetH = containerSize.height * 0.98
-        let targetW = min(targetH / aspect, containerSize.width * 0.96)
+        let baseW = min(targetH / aspect, containerSize.width * 0.96)
+        let maxW = containerSize.width * 0.96
+        let targetW = baseW + (maxW - baseW) * widthFill
 
         // 1. Bóng đổ dưới đáy chậu (nếu không phải chậu treo)
         // pot2 có đáy chiếm ~78% bề rộng, đế vững
@@ -102,6 +107,12 @@ public final class Pot2Node: SKNode, PotInteractiveNode {
             templatePot.isHidden = false
             templatePot.isPaused = false
             templatePot.speed = 1.0
+            if widthFill > 0 {
+                let extraW = (containerSize.width * 0.96 - templatePot.size.width) * widthFill
+                if extraW > 0 {
+                    templatePot.size.width += extraW
+                }
+            }
             potRootNode.addChild(templatePot)
             self.potNode = templatePot
             self.initialPotPosition = templatePot.position

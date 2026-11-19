@@ -84,4 +84,27 @@ Khi xuất cây từ Figma / Adobe Illustrator dạng file `.svg` để lấy v�
      - `terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Plants/PlantX/PlantXNode.swift`: cập nhật mảng `leavesMetadata`.
   6. Kiểm tra toàn vẹn bằng `plutil -lint` và `swiftc -parse`.
 
+## Quy chuẩn Chậu cây SpriteKit (Pot Views & widthFill Convention)
+
+Mọi Chậu cây (`SpriteKitPotView`, `PotView`, và các View chuyên biệt `Pot1View` -> `Pot14View`) cùng các Node SpriteKit (`Pot1Node` -> `Pot14Node`):
+1. **Tham số `widthFill: CGFloat`**:
+   - Khoảng giá trị: `0.0 ... 1.0` (mặc định `0.0`, tối đa `1.0`, kiểu phần trăm `%`).
+   - Có bí danh `public var fillWidth: CGFloat` tương thích 2 chiều.
+   - **Ý nghĩa & mục đích**: Dùng để xử lý các chậu có tỉ lệ nguyên bản dạng dọc/hẹp (ví dụ `pot8`, `pot10`, `pot11`, `pot12`, `pot13` với tỉ lệ $H/W \ge 1.0$) khiến chậu bị teo hẹp khi đặt dưới cây có tán rộng trên kệ.
+2. **Công thức tính toán độ rộng chuẩn (`targetW`)**:
+   ```swift
+   let targetH = containerSize.height * 0.98
+   let baseW = min(containerSize.width * 0.96, targetH / aspect)
+   let maxW = containerSize.width * 0.96
+   let targetW = baseW + (maxW - baseW) * min(max(widthFill, 0.0), 1.0)
+   ```
+   - Khi `widthFill == 0`: chậu giữ nguyên tỉ lệ nguyên bản tự nhiên (`baseW`).
+   - Khi `widthFill == 1.0`: chậu phủ tối đa chiều rộng cho phép (`maxW = containerSize.width * 0.96`).
+   - Khi `0 < widthFill < 1`: mở rộng mượt mà theo tỉ lệ phần trăm giữa `baseW` và `maxW`.
+3. **Bóng đổ tự động co giãn (`shadowNode`)**:
+   - Luôn tính bề rộng bóng đổ dựa theo `targetW` đã qua co giãn (`baseContactW = targetW * ratio`), đảm bảo bóng đổ luôn ôm sát đáy chậu khi kéo rộng.
+4. **Cấu hình mặc định trong `pots_data.json`**:
+   - `ItemData` hỗ trợ thuộc tính `widthFill: Double?`.
+   - Các chậu có tỉ lệ hẹp tự nhiên có thể khai báo trước `"widthFill": 0.40 ~ 0.45` trong `pots_data.json` để tự động hiển thị cân đối trong `PlantItemView` ngay cả khi View gọi không truyền tham số riêng.
+
 

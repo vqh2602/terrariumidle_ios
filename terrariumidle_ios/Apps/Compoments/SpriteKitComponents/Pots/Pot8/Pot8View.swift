@@ -14,17 +14,26 @@ public struct Pot8View: View {
     public var isHanging: Bool = false
     public var width: CGFloat
     public var height: CGFloat
+    public var widthFill: CGFloat = 0.0
     public var onTap: (() -> Void)? = nil
+
+    /// Bí danh (alias) tương thích cho thuộc tính widthFill
+    public var fillWidth: CGFloat {
+        get { widthFill }
+        set { widthFill = newValue }
+    }
 
     public init(
         isHanging: Bool = false,
         width: CGFloat = 120,
         height: CGFloat = 95,
+        widthFill: CGFloat = 0.0,
         onTap: (() -> Void)? = nil
     ) {
         self.isHanging = isHanging
         self.width = width
         self.height = height
+        self.widthFill = min(max(widthFill, 0.0), 1.0)
         self.onTap = onTap
     }
 
@@ -34,6 +43,7 @@ public struct Pot8View: View {
             isHanging: isHanging,
             width: width,
             height: height,
+            widthFill: widthFill,
             onTap: onTap
         )
     }

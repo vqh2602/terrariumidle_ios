@@ -46,6 +46,9 @@ struct ItemData: Codable, Identifiable {
     let particleCount: Int?      // Số lượng hạt (ví dụ: đom đóm = 26)
     let skyGradient: [String]?   // Mảng mã màu hex bầu trời ["#6BAFCF", "#C7E6FA", "#EBF5FC"]
     let elements: [String]?      // Thành phần bầu trời: ["sun", "clouds", "rain", "moon_crescent", "stars", "shooting_stars"]
+
+    // MARK: - Cấu hình độ rộng chậu cây (0.0 -> 1.0)
+    let widthFill: Double?
 }
 
 // MARK: - Item Type Attribute

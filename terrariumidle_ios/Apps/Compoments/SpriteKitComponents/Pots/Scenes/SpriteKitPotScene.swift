@@ -27,6 +27,7 @@ public final class SpriteKitPotScene: SKScene {
     private var shadowNode: SKNode?
     private var potId: String = "pot1"
     private var isHanging: Bool = false
+    private var widthFill: CGFloat = 0.0
     private var baseScale: CGFloat = 1.0
 
     /// Danh sách hiệu ứng khi tap vào chậu (dùng cho chậu generic fallback)
@@ -57,10 +58,12 @@ public final class SpriteKitPotScene: SKScene {
 
     // MARK: - Configuration
 
-    public func configure(potId: String, isHanging: Bool = false) {
-        let changed = self.potId != potId || self.isHanging != isHanging
+    public func configure(potId: String, isHanging: Bool = false, widthFill: CGFloat = 0.0) {
+        let cleanFill = min(max(widthFill, 0.0), 1.0)
+        let changed = self.potId != potId || self.isHanging != isHanging || abs(self.widthFill - cleanFill) > 0.001
         self.potId = potId
         self.isHanging = isHanging
+        self.widthFill = cleanFill
 
         if (changed || (potNode == nil && customPotInteractive == nil)) && size.width > 0 && size.height > 0 {
             buildPot()
@@ -98,88 +101,92 @@ public final class SpriteKitPotScene: SKScene {
 
         let cleanId = potId.lowercased().trimmingCharacters(in: .whitespaces)
 
-        // TỰ ĐỘNG NẠP CÁC NODE CHẬU CHUYÊN BIỆT (Pot1 -> Pot7)
+        // Lấy widthFill hiệu lực: ưu tiên tham số truyền vào, nếu = 0 thì lấy từ pots_data.json nếu có
+        let configuredFill = ItemDataManager.shared.getPot(byId: cleanId)?.widthFill ?? 0.0
+        let effectiveFill = widthFill > 0 ? widthFill : CGFloat(configuredFill)
+
+        // TỰ ĐỘNG NẠP CÁC NODE CHẬU CHUYÊN BIỆT (Pot1 -> Pot14)
         switch cleanId {
         case "pot1":
-            let p1 = Pot1Node(containerSize: size, isHanging: isHanging)
+            let p1 = Pot1Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p1.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p1)
             self.customPotInteractive = p1
             return
         case "pot2":
-            let p2 = Pot2Node(containerSize: size, isHanging: isHanging)
+            let p2 = Pot2Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p2.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p2)
             self.customPotInteractive = p2
             return
         case "pot3":
-            let p3 = Pot3Node(containerSize: size, isHanging: isHanging)
+            let p3 = Pot3Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p3.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p3)
             self.customPotInteractive = p3
             return
         case "pot4":
-            let p4 = Pot4Node(containerSize: size, isHanging: isHanging)
+            let p4 = Pot4Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p4.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p4)
             self.customPotInteractive = p4
             return
         case "pot5":
-            let p5 = Pot5Node(containerSize: size, isHanging: isHanging)
+            let p5 = Pot5Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p5.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p5)
             self.customPotInteractive = p5
             return
         case "pot6":
-            let p6 = Pot6Node(containerSize: size, isHanging: isHanging)
+            let p6 = Pot6Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p6.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p6)
             self.customPotInteractive = p6
             return
         case "pot7":
-            let p7 = Pot7Node(containerSize: size, isHanging: isHanging)
+            let p7 = Pot7Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p7.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p7)
             self.customPotInteractive = p7
             return
         case "pot8":
-            let p8 = Pot8Node(containerSize: size, isHanging: isHanging)
+            let p8 = Pot8Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p8.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p8)
             self.customPotInteractive = p8
             return
         case "pot9":
-            let p9 = Pot9Node(containerSize: size, isHanging: isHanging)
+            let p9 = Pot9Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p9.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p9)
             self.customPotInteractive = p9
             return
         case "pot10":
-            let p10 = Pot10Node(containerSize: size, isHanging: isHanging)
+            let p10 = Pot10Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p10.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p10)
             self.customPotInteractive = p10
             return
         case "pot11":
-            let p11 = Pot11Node(containerSize: size, isHanging: isHanging)
+            let p11 = Pot11Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p11.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p11)
             self.customPotInteractive = p11
             return
         case "pot12":
-            let p12 = Pot12Node(containerSize: size, isHanging: isHanging)
+            let p12 = Pot12Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p12.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p12)
             self.customPotInteractive = p12
             return
         case "pot13":
-            let p13 = Pot13Node(containerSize: size, isHanging: isHanging)
+            let p13 = Pot13Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p13.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p13)
             self.customPotInteractive = p13
             return
         case "pot14":
-            let p14 = Pot14Node(containerSize: size, isHanging: isHanging)
+            let p14 = Pot14Node(containerSize: size, isHanging: isHanging, widthFill: effectiveFill)
             p14.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p14)
             self.customPotInteractive = p14
@@ -195,7 +202,7 @@ public final class SpriteKitPotScene: SKScene {
         let texW = texture.size().width
         let texH = texture.size().height
 
-        // Fit hình chậu theo chiều cao container: Chậu luôn cao chạm mép trên để không bao giờ có khoảng trắng hở
+        // Fit hình chậu theo chiều cao container
         let targetHeight = size.height * (isHanging ? 0.98 : 0.98)
         var scale = targetHeight / texH
 
@@ -203,10 +210,13 @@ public final class SpriteKitPotScene: SKScene {
         if texW * scale > size.width * 0.96 {
             scale = (size.width * 0.96) / texW
         }
-        self.baseScale = scale
-        node.setScale(baseScale)
 
-        let potRenderedWidth = texW * baseScale
+        let baseW = texW * scale
+        let maxW = size.width * 0.96
+        let targetW = baseW + (maxW - baseW) * effectiveFill
+        node.size = CGSize(width: targetW, height: targetHeight)
+
+        let potRenderedWidth = targetW
 
         if isHanging {
             node.anchorPoint = CGPoint(x: 0.5, y: 1.0)
