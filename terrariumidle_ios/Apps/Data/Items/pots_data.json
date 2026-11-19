@@ -109,7 +109,7 @@
         "id": "pot9",
         "name": "Chậu nhựa vàng",
         "description": "Vừa rẻ lại bền, nhưng lại ô nhiễm môi trường",
-        "image": "pot9_Asset-1",
+        "image": "pot9@4.167x",
         "priceStore": 1000,
         "priceOxygen": 700,
         "currencyUnit": "oxygen",
@@ -119,10 +119,10 @@
         "levelUnlock": 12
     },
     {
-        "id": "pot11",
+        "id": "pot10",
         "name": "Chậu gỗ sơn hồng",
         "description": "Chậu gỗ, nhưng được sơn lớp màu hồng bền mà lại đẹp",
-        "image": "pot11_Asset-1",
+        "image": "Pot10-1@4.167x",
         "priceStore": 1000,
         "priceOxygen": 1700,
         "currencyUnit": "gemstone",
@@ -132,7 +132,7 @@
         "levelUnlock": 15
     },
     {
-        "id": "pot10",
+        "id": "pot11",
         "name": "Chậu đất tím",
         "description": "Chậu khá nặng, nhưng khá tốt",
         "image": "pot10_Asset-1",
