@@ -55,3 +55,49 @@ flowchart LR
 
 2. **Cơ chế Fallback Procedural**:
    - Luôn định nghĩa `leavesMetadata` chuẩn để nếu file `.sks` chưa tải được thì code vẫn render chính xác 100% hình thể cây.
+
+---
+
+## 4. Bóc tách Toạ độ từ SVG & Công thức chuyển đổi SpriteKit (SVG Extraction & Coordinate Conversion)
+
+Khi Designer hoàn thiện cây trên **Figma** hoặc **Adobe Illustrator**, họ có thể xuất một file `.svg` chứa toàn bộ các layer bộ phận cây (hoặc ảnh đặt đúng vị trí trên canvas). File SVG chứa các thẻ `<image>` hoặc layer `<g id="...">` với toạ độ top-left `(x, y)` và kích thước `(width, height)`.
+
+### 4.1. Khác biệt hệ toạ độ giữa SVG và SpriteKit
+
+| Tiêu chí | Hệ toạ độ SVG / Figma | Hệ toạ độ SpriteKit Scene (`PlantXScene`) |
+| :--- | :--- | :--- |
+| **Gốc toạ độ `(0, 0)`** | **Góc Trên - Trái** (Top-Left) | **Chính Giữa - Đáy chậu** (Bottom-Center, `anchorPoint = (0.5, 0.0)`) |
+| **Trục X** | Hướng sang phải ($0 \rightarrow \text{canvasWidth}$) | Đối xứng qua tâm ($-\frac{\text{canvasWidth}}{2} \rightarrow +\frac{\text{canvasWidth}}{2}$) |
+| **Trục Y** | Hướng **chúc xuống dưới** ($+Y$ đi xuống) | Hướng **chỉ lên trên** ($+Y$ đi lên trời) |
+
+### 4.2. Công thức quy đổi chuẩn (Swift Code)
+
+Cho một phiến lá trong file SVG có toạ độ `(svgX, svgY)`, kích thước `(width, height)` trên canvas `(baseCanvasWidth, baseCanvasHeight)` và điểm neo cuống lá `(anchorX, anchorY)`:
+
+```swift
+// 1. Trục X: Dịch mốc từ mép trái SVG sang tâm giữa SpriteKit
+let skX = (svgX + anchorX * width) - (baseCanvasWidth / 2.0)
+
+// 2. Trục Y: Lật ngược trục Y từ gốc đỉnh SVG sang gốc đáy SpriteKit (kèm offset cắm vào chậu ~10px)
+let skY = baseCanvasHeight - svgY - (1.0 - anchorY) * height - 10.0
+```
+
+### 4.3. Quy chuẩn xác định Điểm Neo Cuống Lá (`anchorPoint`)
+
+Điểm neo (`anchorPoint`) là vị trí gốc/cuống của phiến lá cắm vào thân hoặc chậu, dùng làm tâm xoay khi lá đung đưa trong gió (`SKAction.rotate`):
+- **Lá hướng/nghiêng sang trái** (`isLeft: true`): Tâm cuống lá nằm ở góc dưới bên phải phiến lá $\rightarrow$ `anchorX ≈ 0.80 - 0.95`, `anchorY ≈ 0.00 - 0.05`.
+- **Lá hướng/nghiêng sang phải** (`isLeft: false`): Tâm cuống lá nằm ở góc dưới bên trái phiến lá $\rightarrow$ `anchorX ≈ 0.05 - 0.20`, `anchorY ≈ 0.00 - 0.05`.
+- **Lá mọc thẳng giữa**: Tâm cuống lá ở chính giữa đáy $\rightarrow$ `anchorX ≈ 0.50`, `anchorY ≈ 0.00`.
+
+### 4.4. Tool tự động bóc tách file SVG (`parse_plant_svg.py`)
+
+Dự án cung cấp sẵn script bóc tách tự động tại:
+`scripts/parse_plant_svg.py`
+
+Cách chạy:
+```bash
+python3 .agent/skills/plant-asset-convention/scripts/parse_plant_svg.py <path/to/plant.svg> [--offset-y 10.0]
+```
+
+Script sẽ tự động đọc canvas `viewBox`, quét toàn bộ các layer/thẻ lá (`leaf_X`, `PlantX-X`), tính toán hướng lá (`isLeft`), điểm neo (`anchorX`), toạ độ `(skX, skY)` và in ra mảng mã nguồn Swift `leavesMetadata: [LeafData]` sẵn sàng để dán vào `PlantXNode.swift`.
+

@@ -42,3 +42,26 @@ Mọi loài cây mới (`Plant2`, `Plant3`, `Plant4`, ...) **BẮT BUỘC** ph�
 - **`Asset-200`**: Trạng thái cây con (Level 2).
 - **Toạ độ ghép lá**: Phải đối chiếu pixel chính xác với ảnh avatar để đảm bảo khi ghép lại, cây hoàn toàn khớp với ảnh gốc, không bị lệch tán hay khoảng trắng.
 - **Toạ độ hạt giống & cây con**: Điểm neo `anchorPoint = (0.5, 0.05)`, vị trí trong scene đặt ngập nhẹ trong miệng chậu (`pos: (0, -18.5)`), không đặt `y > 0` gây bay lơ lửng.
+
+## Quy chuẩn & Công thức bóc tách toạ độ từ SVG (SVG Coordinate Conversion)
+
+Khi xuất cây từ Figma / Adobe Illustrator dạng file `.svg` để lấy vị trí các bộ phận:
+- **Hệ toạ độ SVG**: Gốc `(0, 0)` tại góc **Trên - Trái** (Top-Left), trục Y hướng xuống dưới (`+Y` đi xuống).
+- **Hệ toạ độ SpriteKit Scene (`PlantXScene`)**: Canvas `baseCanvasWidth x baseCanvasHeight`, gốc `(0, 0)` tại **Chính Giữa - Đáy chậu** (Bottom-Center, `anchorPoint = (0.5, 0.0)`), trục Y hướng lên trời (`+Y` đi lên).
+- **Công thức quy đổi toạ độ SpriteKit (`skX`, `skY`)**:
+  ```swift
+  // Chuyển trục X: từ mép trái sang tâm giữa canvas
+  let skX = (svgX + anchorX * width) - (baseCanvasWidth / 2.0)
+
+  // Lật ngược trục Y: từ đỉnh SVG về đáy chậu (kèm offset cắm vào miệng chậu ~10px)
+  let skY = baseCanvasHeight - svgY - (1.0 - anchorY) * height - 10.0
+  ```
+- **Quy ước điểm neo cuống lá (`anchorPoint` tại gốc lá)**:
+  - Lá nghiêng sang trái (`isLeft: true`): cuống lá ở góc dưới bên phải (`anchorX: 0.80 -> 0.95`, `anchorY: 0.00 -> 0.05`).
+  - Lá nghiêng sang phải (`isLeft: false`): cuống lá ở góc dưới bên trái (`anchorX: 0.05 -> 0.20`, `anchorY: 0.00 -> 0.05`).
+  - Lá thẳng giữa: cuống lá ở chính giữa đáy (`anchorX: 0.50`, `anchorY: 0.00`).
+- **Tool tự động trích xuất**: Dùng script `.agent/skills/plant-asset-convention/scripts/parse_plant_svg.py` để bóc tách file `.svg` thành mảng Swift `leavesMetadata` tự động:
+  ```bash
+  python3 .agent/skills/plant-asset-convention/scripts/parse_plant_svg.py <file.svg>
+  ```
+
