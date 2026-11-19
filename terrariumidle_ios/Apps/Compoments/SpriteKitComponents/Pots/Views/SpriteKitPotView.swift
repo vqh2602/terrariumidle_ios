@@ -76,7 +76,7 @@ private struct SpriteKitPotInteractiveDemoView: View {
     @State private var isHanging: Bool = false
     @State private var tapCount: Int = 0
 
-    private let potIds = ["pot1", "pot2", "pot3", "pot4", "pot5", "pot6", "pot7", "pot8"]
+    private let potIds = ["pot1", "pot2", "pot3", "pot4", "pot5", "pot6", "pot7", "pot8", "pot9", "pot10"]
 
     var body: some View {
         VStack(spacing: 20) {

@@ -148,6 +148,18 @@ public final class SpriteKitPotScene: SKScene {
             addChild(p8)
             self.customPotInteractive = p8
             return
+        case "pot9":
+            let p9 = Pot9Node(containerSize: size, isHanging: isHanging)
+            p9.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p9)
+            self.customPotInteractive = p9
+            return
+        case "pot10":
+            let p10 = Pot10Node(containerSize: size, isHanging: isHanging)
+            p10.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p10)
+            self.customPotInteractive = p10
+            return
         default:
             break
         }

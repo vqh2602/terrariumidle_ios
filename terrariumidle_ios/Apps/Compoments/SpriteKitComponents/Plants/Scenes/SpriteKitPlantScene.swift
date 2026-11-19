@@ -21,6 +21,8 @@ public final class SpriteKitPlantScene: SKScene {
     private var plant6Node: Plant6Node?
     private var plant7Node: Plant7Node?
     private var plant8Node: Plant8Node?
+    private var plant9Node: Plant9Node?
+    private var plant10Node: Plant10Node?
     private var plantId: String = "plant1"
     private var plantLevel: Int = 1
     private var isHanging: Bool = false
@@ -29,7 +31,8 @@ public final class SpriteKitPlantScene: SKScene {
 
     private var hasActivePlantNode: Bool {
         plantNode != nil || plant1Node != nil || plant2Node != nil || plant3Node != nil ||
-        plant4Node != nil || plant5Node != nil || plant6Node != nil || plant7Node != nil || plant8Node != nil
+        plant4Node != nil || plant5Node != nil || plant6Node != nil || plant7Node != nil ||
+        plant8Node != nil || plant9Node != nil || plant10Node != nil
     }
 
     // MARK: - Initializer
@@ -101,6 +104,8 @@ public final class SpriteKitPlantScene: SKScene {
         plant6Node = nil
         plant7Node = nil
         plant8Node = nil
+        plant9Node = nil
+        plant10Node = nil
         anchorPoint = CGPoint(x: 0.5, y: 0.0) // Luôn neo gốc tọa độ tại đáy giữa
 
         // ĐẶC BIỆT: Cây Cỏ Loe (plant1) hỗ trợ 3 trạng thái và 18 lá uốn lượn riêng biệt
@@ -172,6 +177,24 @@ public final class SpriteKitPlantScene: SKScene {
             p8.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p8)
             self.plant8Node = p8
+            return
+        }
+
+        // ĐẶC BIỆT: Cây Cỏ Gương (plant9 - Pilea peperomioides) với 9 bộ phận tròn đồng tiền
+        if plantId.lowercased() == "plant9" {
+            let p9 = Plant9Node(level: plantLevel, containerSize: size, isHanging: isHanging)
+            p9.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p9)
+            self.plant9Node = p9
+            return
+        }
+
+        // ĐẶC BIỆT: Cây Ráy Xẻ Mini (plant10 - Rhaphidophora tetrasperma) với 11 bộ phận leo cột
+        if plantId.lowercased() == "plant10" {
+            let p10 = Plant10Node(level: plantLevel, containerSize: size, isHanging: isHanging)
+            p10.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p10)
+            self.plant10Node = p10
             return
         }
 
@@ -272,6 +295,14 @@ public final class SpriteKitPlantScene: SKScene {
         }
         if let p8 = plant8Node {
             p8.playTapAnimation()
+            return
+        }
+        if let p9 = plant9Node {
+            p9.playTapAnimation()
+            return
+        }
+        if let p10 = plant10Node {
+            p10.playTapAnimation()
             return
         }
         guard let node = plantNode else { return }
