@@ -20,6 +20,7 @@ public final class SpriteKitPlantScene: SKScene {
     private var plant5Node: Plant5Node?
     private var plant6Node: Plant6Node?
     private var plant7Node: Plant7Node?
+    private var plant8Node: Plant8Node?
     private var plantId: String = "plant1"
     private var plantLevel: Int = 1
     private var isHanging: Bool = false
@@ -28,7 +29,7 @@ public final class SpriteKitPlantScene: SKScene {
 
     private var hasActivePlantNode: Bool {
         plantNode != nil || plant1Node != nil || plant2Node != nil || plant3Node != nil ||
-        plant4Node != nil || plant5Node != nil || plant6Node != nil || plant7Node != nil
+        plant4Node != nil || plant5Node != nil || plant6Node != nil || plant7Node != nil || plant8Node != nil
     }
 
     // MARK: - Initializer
@@ -99,6 +100,7 @@ public final class SpriteKitPlantScene: SKScene {
         plant5Node = nil
         plant6Node = nil
         plant7Node = nil
+        plant8Node = nil
         anchorPoint = CGPoint(x: 0.5, y: 0.0) // Luôn neo gốc tọa độ tại đáy giữa
 
         // ĐẶC BIỆT: Cây Cỏ Loe (plant1) hỗ trợ 3 trạng thái và 18 lá uốn lượn riêng biệt
@@ -161,6 +163,15 @@ public final class SpriteKitPlantScene: SKScene {
             p7.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
             addChild(p7)
             self.plant7Node = p7
+            return
+        }
+
+        // ĐẶC BIỆT: Cây Chân Chim (plant8 - Schefflera) với 8 tán lá xòe
+        if plantId.lowercased() == "plant8" {
+            let p8 = Plant8Node(level: plantLevel, containerSize: size, isHanging: isHanging)
+            p8.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p8)
+            self.plant8Node = p8
             return
         }
 
@@ -257,6 +268,10 @@ public final class SpriteKitPlantScene: SKScene {
         }
         if let p7 = plant7Node {
             p7.playTapAnimation()
+            return
+        }
+        if let p8 = plant8Node {
+            p8.playTapAnimation()
             return
         }
         guard let node = plantNode else { return }

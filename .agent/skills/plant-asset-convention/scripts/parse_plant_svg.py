@@ -137,11 +137,12 @@ def extract_svg_elements(svg_path):
                     all_y.append(float(coords[i+1]))
             if all_x and all_y:
                 min_x, max_x = min(all_x), max(all_x)
-                min_y, max_y = min(all_y), max(all_y)
+                min_y = min(all_y)
+                max_y = min(max(all_y), svg_h) if svg_h > 0 else max(all_y)
                 w = max_x - min_x
                 h = max_y - min_y
                 # Điểm neo cuống lá từ toạ độ đáy
-                bottom_pts = [(x, y) for x, y in zip(all_x, all_y) if y > max_y - 2.0]
+                bottom_pts = [(x, y) for x, y in zip(all_x, all_y) if y >= max_y - 3.0]
                 avg_bx = sum(x for x, y in bottom_pts) / len(bottom_pts) if bottom_pts else (min_x + max_x) / 2
                 ax = (avg_bx - min_x) / (max_x - min_x) if max_x > min_x else 0.5
                 aid = idx + 1
@@ -169,7 +170,11 @@ def update_plant_sks(plant_num, leaf_coords):
         if isinstance(obj, dict) and "_name" in obj:
             name = resolve(obj["_name"])
             if isinstance(name, str) and name in leaf_coords:
-                sk_x, sk_y, ax, ay = leaf_coords[name]
+                coord_data = leaf_coords[name]
+                sk_x, sk_y, ax, ay = coord_data[0], coord_data[1], coord_data[2], coord_data[3]
+                w = coord_data[4] if len(coord_data) > 4 else None
+                h = coord_data[5] if len(coord_data) > 5 else None
+
                 pos_dict = resolve(obj.get("_position"))
                 if isinstance(pos_dict, dict) and "NS.pointval" in pos_dict:
                     val_idx = pos_dict["NS.pointval"].data if hasattr(pos_dict["NS.pointval"], "data") else None
@@ -180,6 +185,27 @@ def update_plant_sks(plant_num, leaf_coords):
                     val_idx = anchor_dict["NS.pointval"].data if hasattr(anchor_dict["NS.pointval"], "data") else None
                     if val_idx is not None:
                         objs[val_idx] = f"{{{ax:.2f}, {ay:.2f}}}"
+
+                if w is not None and h is not None:
+                    bounds_dict = resolve(obj.get("_bounds"))
+                    if isinstance(bounds_dict, dict) and "NS.rectval" in bounds_dict:
+                        val_idx = bounds_dict["NS.rectval"].data if hasattr(bounds_dict["NS.rectval"], "data") else None
+                        if val_idx is not None:
+                            objs[val_idx] = f"{{{{{-ax * w:.2f}, {-ay * h:.2f}}}, {{{w:.0f}, {h:.0f}}}}}"
+
+                    tex_dict = resolve(obj.get("_texture"))
+                    if isinstance(tex_dict, dict):
+                        sz_dict = resolve(tex_dict.get("_size"))
+                        if isinstance(sz_dict, dict) and "NS.sizeval" in sz_dict:
+                            sz_idx = sz_dict["NS.sizeval"].data if hasattr(sz_dict["NS.sizeval"], "data") else None
+                            if sz_idx is not None:
+                                objs[sz_idx] = f"{{{w / 4.166667:.2f}, {h / 4.166667:.2f}}}"
+                        psz_dict = resolve(tex_dict.get("_pixelSize"))
+                        if isinstance(psz_dict, dict) and "NS.sizeval" in psz_dict:
+                            psz_idx = psz_dict["NS.sizeval"].data if hasattr(psz_dict["NS.sizeval"], "data") else None
+                            if psz_idx is not None:
+                                objs[psz_idx] = f"{{{w:.0f}, {h:.0f}}}"
+
                 updated += 1
 
     with open(sks_path, "wb") as f:
@@ -190,7 +216,13 @@ def update_plant_sks(plant_num, leaf_coords):
 
 def process_plant(plant_num, svg_path=None, do_update=False, offset_y=10.0):
     if not svg_path:
-        svg_path = os.path.join(RESOURCES_SVG_DIR, f"plant{plant_num}.svg")
+        for fname in [f"plant{plant_num}.svg", f"Plant{plant_num}.svg"]:
+            p = os.path.join(RESOURCES_SVG_DIR, fname)
+            if os.path.exists(p):
+                svg_path = p
+                break
+        if not svg_path:
+            svg_path = os.path.join(RESOURCES_SVG_DIR, f"plant{plant_num}.svg")
 
     if not os.path.exists(svg_path):
         print(f"❌ Lỗi: Không tìm thấy file SVG tại {svg_path}")
@@ -240,15 +272,19 @@ def process_plant(plant_num, svg_path=None, do_update=False, offset_y=10.0):
     if os.path.exists(swift_path):
         with open(swift_path, "r", encoding="utf-8") as f:
             content = f.read()
-            for m in re.finditer(r'LeafData\(assetId:\s*(\d+).*?anchorX:\s*([\d.]+),\s*anchorY:\s*([\d.]+),\s*isLeft:\s*(true|false)\s*,\s*zPos:\s*(\d+),\s*bendAngle:\s*([\d.]+),\s*duration:\s*([\d.]+)', content):
+            for m in re.finditer(r'LeafData\(assetId:\s*(\d+).*?imgX:\s*([-\d.]+),\s*imgY:\s*([-\d.]+),\s*width:\s*([-\d.]+),\s*height:\s*([-\d.]+).*?anchorX:\s*([\d.]+),\s*anchorY:\s*([\d.]+),\s*isLeft:\s*(true|false)\s*,\s*zPos:\s*(\d+),\s*bendAngle:\s*([\d.]+),\s*duration:\s*([\d.]+)', content):
                 aid = int(m.group(1))
                 existing_meta[aid] = {
-                    'anchorX': float(m.group(2)),
-                    'anchorY': float(m.group(3)),
-                    'isLeft': m.group(4) == 'true',
-                    'zPos': int(m.group(5)),
-                    'bendAngle': float(m.group(6)),
-                    'duration': float(m.group(7))
+                    'imgX': float(m.group(2)),
+                    'imgY': float(m.group(3)),
+                    'width': float(m.group(4)),
+                    'height': float(m.group(5)),
+                    'anchorX': float(m.group(6)),
+                    'anchorY': float(m.group(7)),
+                    'isLeft': m.group(8) == 'true',
+                    'zPos': int(m.group(9)),
+                    'bendAngle': float(m.group(10)),
+                    'duration': float(m.group(11))
                 }
 
     leaf_coords = {}
@@ -256,24 +292,34 @@ def process_plant(plant_num, svg_path=None, do_update=False, offset_y=10.0):
 
     for idx, it in enumerate(raw_items):
         aid = it['id']
-        ix = it['x'] * scale_x
-        iy = it['y'] * scale_y + offset_y_extra
-        w = it['w'] * scale_x
-        h = it['h'] * scale_y
+        meta = existing_meta.get(aid)
+
+        if meta and 'imgX' in meta:
+            ix = meta['imgX']
+            iy = meta['imgY']
+            w = meta['width']
+            h = meta['height']
+        else:
+            ix = max(0.0, it['x'] * scale_x)
+            iy = max(0.0, it['y'] * scale_y + offset_y_extra)
+            w = it['w'] * scale_x
+            h = it['h'] * scale_y
+            if assets and aid in assets:
+                w = float(assets[aid][0])
+                h = float(assets[aid][1])
 
         center_x = ix + w / 2.0
         calc_is_left = center_x < (canvas_w / 2.0)
 
-        meta = existing_meta.get(aid)
-        if it.get('anchor_x') is not None:
-            ax = it['anchor_x']
-        elif meta:
+        if meta and 'anchorX' in meta:
             ax = meta['anchorX']
+        elif it.get('anchor_x') is not None:
+            ax = it['anchor_x']
         else:
             ax = 0.85 if calc_is_left else 0.15
 
         ay = meta['anchorY'] if meta else 0.00
-        is_left = calc_is_left
+        is_left = meta['isLeft'] if meta else calc_is_left
         z_pos = meta['zPos'] if meta else (11 + idx)
         bend = meta['bendAngle'] if meta else 0.040
         dur = meta['duration'] if meta else 3.0
@@ -281,7 +327,7 @@ def process_plant(plant_num, svg_path=None, do_update=False, offset_y=10.0):
         sk_x = (ix + ax * w) - (canvas_w / 2.0)
         sk_y = canvas_h - iy - (1.0 - ay) * h - offset_y
 
-        leaf_coords[f"leaf_{aid}"] = (sk_x, sk_y, ax, ay)
+        leaf_coords[f"leaf_{aid}"] = (sk_x, sk_y, ax, ay, w, h)
         parsed_leaves.append({
             'aid': aid, 'ix': ix, 'iy': iy, 'w': w, 'h': h,
             'ax': ax, 'ay': ay, 'is_left': is_left, 'z_pos': z_pos,

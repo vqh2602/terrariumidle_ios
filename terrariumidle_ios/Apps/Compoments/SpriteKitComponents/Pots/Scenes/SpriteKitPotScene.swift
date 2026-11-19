@@ -142,6 +142,12 @@ public final class SpriteKitPotScene: SKScene {
             addChild(p7)
             self.customPotInteractive = p7
             return
+        case "pot8":
+            let p8 = Pot8Node(containerSize: size, isHanging: isHanging)
+            p8.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(p8)
+            self.customPotInteractive = p8
+            return
         default:
             break
         }
@@ -266,7 +272,7 @@ public final class SpriteKitPotScene: SKScene {
         "pot5": 0.55,
         "pot6": 0.40,
         "pot7": 0.50,
-        "pot8": 0.50
+        "pot8": 0.60
     ]
 
     /// Đo tỉ lệ bề rộng đáy chậu thực tế so với tổng chiều rộng ảnh

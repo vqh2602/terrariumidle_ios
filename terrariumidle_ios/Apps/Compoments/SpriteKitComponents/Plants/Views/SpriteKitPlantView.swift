@@ -22,7 +22,8 @@ public enum PlantAvailability {
         "plant4",
         "plant5",
         "plant6",
-        "plant7"
+        "plant7",
+        "plant8"
     ]
 
     /// Kiểm tra xem loài cây này đã có trong phiên bản hiện tại chưa
