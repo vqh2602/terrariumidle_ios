@@ -65,15 +65,15 @@ public final class Plant9Node: SKNode {
 
     /// Tọa độ pixel và điểm neo cuống lá Pilea peperomioides (Canvas 530 x 745)
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId:  2, imgX:  45, imgY:  27, width: 402, height: 718, anchorX: 0.50, anchorY: 0.01, isLeft: true , zPos: 11, bendAngle: 0.020, duration: 3.6),
-        LeafData(assetId:  3, imgX:   1, imgY: 273, width: 124, height: 194, anchorX: 0.38, anchorY: 0.76, isLeft: true , zPos: 12, bendAngle: 0.040, duration: 2.8),
-        LeafData(assetId:  4, imgX: 120, imgY:  74, width: 160, height: 211, anchorX: 0.50, anchorY: 0.52, isLeft: true , zPos: 13, bendAngle: 0.035, duration: 3.2),
-        LeafData(assetId:  5, imgX: 141, imgY: 270, width: 166, height: 218, anchorX: 0.44, anchorY: 0.78, isLeft: true , zPos: 14, bendAngle: 0.045, duration: 3.0),
-        LeafData(assetId:  6, imgX: 393, imgY:   0, width: 137, height: 122, anchorX: 0.37, anchorY: 0.74, isLeft: false, zPos: 15, bendAngle: 0.040, duration: 2.6),
-        LeafData(assetId:  7, imgX: 261, imgY:  91, width: 227, height: 241, anchorX: 0.50, anchorY: 0.52, isLeft: false, zPos: 16, bendAngle: 0.035, duration: 3.4),
-        LeafData(assetId:  8, imgX: 308, imgY: 338, width: 151, height: 205, anchorX: 0.48, anchorY: 0.51, isLeft: false, zPos: 17, bendAngle: 0.045, duration: 2.8),
-        LeafData(assetId:  9, imgX: 199, imgY: 519, width: 127, height: 149, anchorX: 0.49, anchorY: 0.55, isLeft: false, zPos: 18, bendAngle: 0.040, duration: 3.0),
-        LeafData(assetId: 10, imgX:  34, imgY: 473, width: 151, height: 171, anchorX: 0.49, anchorY: 0.73, isLeft: true , zPos: 19, bendAngle: 0.045, duration: 3.2),
+        LeafData(assetId:  2, imgX:  45, imgY:  27, width: 402, height: 718, anchorX: 0.50, anchorY: 0.01, isLeft: true , zPos: 11, bendAngle: 0.020, duration: 4.0),
+        LeafData(assetId:  3, imgX:   1, imgY: 273, width: 124, height: 194, anchorX: 0.69, anchorY: 0.59, isLeft: true , zPos: 12, bendAngle: 0.085, duration: 2.6),
+        LeafData(assetId:  4, imgX: 120, imgY:  74, width: 160, height: 211, anchorX: 0.59, anchorY: 0.40, isLeft: true , zPos: 13, bendAngle: 0.075, duration: 2.9),
+        LeafData(assetId:  5, imgX: 141, imgY: 270, width: 166, height: 218, anchorX: 0.54, anchorY: 0.50, isLeft: true , zPos: 14, bendAngle: 0.080, duration: 2.7),
+        LeafData(assetId:  6, imgX: 393, imgY:   0, width: 137, height: 122, anchorX: 0.21, anchorY: 0.63, isLeft: false, zPos: 15, bendAngle: 0.085, duration: 2.5),
+        LeafData(assetId:  7, imgX: 261, imgY:  91, width: 227, height: 241, anchorX: 0.25, anchorY: 0.58, isLeft: false, zPos: 16, bendAngle: 0.070, duration: 3.0),
+        LeafData(assetId:  8, imgX: 308, imgY: 338, width: 151, height: 205, anchorX: 0.32, anchorY: 0.59, isLeft: false, zPos: 17, bendAngle: 0.085, duration: 2.6),
+        LeafData(assetId:  9, imgX: 199, imgY: 519, width: 127, height: 149, anchorX: 0.20, anchorY: 0.60, isLeft: false, zPos: 18, bendAngle: 0.080, duration: 2.8),
+        LeafData(assetId: 10, imgX:  34, imgY: 473, width: 151, height: 171, anchorX: 0.69, anchorY: 0.49, isLeft: true , zPos: 19, bendAngle: 0.090, duration: 2.7),
     ]
 
     // MARK: - Properties
@@ -300,10 +300,15 @@ public final class Plant9Node: SKNode {
                 leaf.speed = 1.0
                 leafNodes.append(leaf)
 
+                // leaf_2 là thân cọc & các nhánh cuống: không lắc riêng lẻ để tránh tách rời cuống khỏi lá
+                if assetNum == 2 {
+                    continue
+                }
+
                 let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
                 let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
-                let bendAngle = meta?.bendAngle ?? 0.035
-                let duration = meta?.duration ?? 3.0
+                let bendAngle = meta?.bendAngle ?? 0.080
+                let duration = meta?.duration ?? 2.8
                 let phaseDelay = Double(idx) * 0.12
 
                 startCoinLeafAnimation(leaf: leaf, isLeft: isLeft, bendAngle: bendAngle, duration: duration, phaseDelay: phaseDelay)
@@ -338,6 +343,10 @@ public final class Plant9Node: SKNode {
             fallbackGroup.addChild(leaf)
             leafNodes.append(leaf)
 
+            if data.assetId == 2 {
+                continue
+            }
+
             let phaseDelay = Double(idx) * 0.12
             startCoinLeafAnimation(leaf: leaf, isLeft: data.isLeft, bendAngle: data.bendAngle, duration: data.duration, phaseDelay: phaseDelay)
         }
@@ -350,9 +359,10 @@ public final class Plant9Node: SKNode {
         plantRootNode.isPaused = false
         plantRootNode.speed = 1.0
 
-        let swayLeft = SKAction.rotate(byAngle: 0.012, duration: 4.2)
+        // Đung đưa nhẹ nhàng cả bụi cây (thân và tất cả các lá cùng nghiêng đồng bộ theo gió)
+        let swayLeft = SKAction.rotate(byAngle: 0.008, duration: 4.2)
         swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(byAngle: -0.012, duration: 4.2)
+        let swayRight = SKAction.rotate(byAngle: -0.008, duration: 4.2)
         swayRight.timingMode = .easeInEaseOut
         let trunkSeq = SKAction.sequence([swayLeft, swayRight])
         plantRootNode.run(SKAction.repeatForever(trunkSeq), withKey: "trunkSway")
@@ -403,19 +413,21 @@ public final class Plant9Node: SKNode {
         leaf.isPaused = false
         leaf.speed = 1.0
 
-        let primaryAngle = isLeft ? bendAngle : -bendAngle
-        let rotOut = SKAction.rotate(byAngle: primaryAngle, duration: duration)
+        let angleDelta = isLeft ? -bendAngle : bendAngle
+
+        let rotOut = SKAction.rotate(byAngle: angleDelta, duration: duration * 0.5)
         rotOut.timingMode = .easeInEaseOut
-        let rotIn = SKAction.rotate(byAngle: -primaryAngle, duration: duration)
+        let rotIn = SKAction.rotate(byAngle: -angleDelta, duration: duration * 0.5)
         rotIn.timingMode = .easeInEaseOut
 
-        let stretchOut = SKAction.scaleY(to: 1.025, duration: duration)
-        stretchOut.timingMode = .easeInEaseOut
-        let stretchIn = SKAction.scaleY(to: 0.975, duration: duration)
-        stretchIn.timingMode = .easeInEaseOut
+        // Nhịp thở nhún nhảy đặc trưng của lá tròn đồng tiền (Pilea coin leaf bounce)
+        let flexOut = SKAction.scaleX(to: 1.06, y: 0.95, duration: duration * 0.5)
+        flexOut.timingMode = .easeInEaseOut
+        let flexIn = SKAction.scaleX(to: 0.95, y: 1.05, duration: duration * 0.5)
+        flexIn.timingMode = .easeInEaseOut
 
-        let wave1 = SKAction.group([rotOut, stretchOut])
-        let wave2 = SKAction.group([rotIn, stretchIn])
+        let wave1 = SKAction.group([rotOut, flexOut])
+        let wave2 = SKAction.group([rotIn, flexIn])
         let cycle = SKAction.sequence([wave1, wave2])
 
         if phaseDelay > 0 {
@@ -437,50 +449,79 @@ public final class Plant9Node: SKNode {
             seed.removeAction(forKey: "seedTap")
             seed.position = initialSeedPosition
 
-            let squash = SKAction.scaleX(to: 1.18, y: 0.82, duration: 0.10)
-            squash.timingMode = .easeOut
-            let stretch = SKAction.scaleX(to: 0.88, y: 1.15, duration: 0.14)
-            stretch.timingMode = .easeInEaseOut
-            let settle = SKAction.scale(to: 1.0, duration: 0.16)
-            settle.timingMode = .easeOut
-            seed.run(SKAction.sequence([squash, stretch, settle]), withKey: "seedTap")
-            spawnOxygenBubbles(count: 2, from: seed.position)
+            let squash = SKAction.scaleX(to: 1.28, y: 0.75, duration: 0.08)
+            squash.timingMode = .easeIn
+            let stretch = SKAction.scaleX(to: 0.82, y: 1.25, duration: 0.12)
+            stretch.timingMode = .easeOut
+            let bounceBack = SKAction.scaleX(to: 1.08, y: 0.95, duration: 0.10)
+            let settle = SKAction.scale(to: 1.0, duration: 0.12)
+            settle.timingMode = .easeInEaseOut
+            seed.run(SKAction.sequence([squash, stretch, bounceBack, settle]), withKey: "seedTap")
+            spawnOxygenBubbles(count: 3, from: seed.position)
 
         case .sprout:
             guard let sprout = sproutNode else { return }
             sprout.removeAction(forKey: "sproutTap")
             sprout.position = initialSproutPosition
 
-            let squash = SKAction.scaleX(to: 1.15, y: 0.85, duration: 0.11)
-            squash.timingMode = .easeOut
-            let stretch = SKAction.scaleX(to: 0.90, y: 1.12, duration: 0.15)
-            stretch.timingMode = .easeInEaseOut
-            let settle = SKAction.scale(to: 1.0, duration: 0.16)
-            settle.timingMode = .easeOut
-            sprout.run(SKAction.sequence([squash, stretch, settle]), withKey: "sproutTap")
-            spawnOxygenBubbles(count: 3, from: CGPoint(x: sprout.position.x, y: sprout.position.y + 40))
+            let squash = SKAction.scaleX(to: 1.25, y: 0.78, duration: 0.08)
+            squash.timingMode = .easeIn
+            let stretch = SKAction.scaleX(to: 0.85, y: 1.20, duration: 0.12)
+            stretch.timingMode = .easeOut
+            let bounceBack = SKAction.scaleX(to: 1.06, y: 0.96, duration: 0.10)
+            let settle = SKAction.scale(to: 1.0, duration: 0.12)
+            settle.timingMode = .easeInEaseOut
+
+            let shakeL = SKAction.rotate(toAngle: -0.12, duration: 0.07)
+            let shakeR = SKAction.rotate(toAngle: 0.12, duration: 0.08)
+            let shakeBack = SKAction.rotate(toAngle: 0, duration: 0.07)
+            let shakeSeq = SKAction.sequence([shakeL, shakeR, shakeBack])
+
+            let combined = SKAction.group([
+                SKAction.sequence([squash, stretch, bounceBack, settle]),
+                shakeSeq
+            ])
+            sprout.run(combined, withKey: "sproutTap")
+            spawnOxygenBubbles(count: 4, from: CGPoint(x: sprout.position.x, y: sprout.position.y + 40))
 
         case .mature:
             guard !leafNodes.isEmpty else { return }
             plantRootNode.removeAction(forKey: "matureTapBounce")
 
-            let squash = SKAction.scaleX(to: baseScale * 1.06, y: baseScale * 0.94, duration: 0.10)
-            squash.timingMode = .easeOut
-            let stretch = SKAction.scaleX(to: baseScale * 0.96, y: baseScale * 1.05, duration: 0.14)
-            stretch.timingMode = .easeInEaseOut
-            let settle = SKAction.scale(to: baseScale, duration: 0.18)
-            settle.timingMode = .easeOut
-            plantRootNode.run(SKAction.sequence([squash, stretch, settle]), withKey: "matureTapBounce")
+            // 1. Squash & Stretch cả cây cỏ gương
+            let squash = SKAction.scaleX(to: baseScale * 1.12, y: baseScale * 0.88, duration: 0.08)
+            squash.timingMode = .easeIn
+            let stretch = SKAction.scaleX(to: baseScale * 0.92, y: baseScale * 1.12, duration: 0.12)
+            stretch.timingMode = .easeOut
+            let bounce = SKAction.scaleX(to: baseScale * 1.04, y: baseScale * 0.97, duration: 0.10)
+            let settle = SKAction.scale(to: baseScale, duration: 0.10)
+            settle.timingMode = .easeInEaseOut
 
+            plantRootNode.run(SKAction.sequence([squash, stretch, bounce, settle]), withKey: "matureTapBounce")
+
+            // 2. Các lá tròn đồng tiền rung rinh vẫy mạnh như lò xo
             for (idx, leaf) in leafNodes.enumerated() {
-                let flutterAngle: CGFloat = (idx % 2 == 0) ? 0.055 : -0.055
-                let flutterOut = SKAction.rotate(byAngle: flutterAngle, duration: 0.08)
-                let flutterIn = SKAction.rotate(byAngle: -flutterAngle, duration: 0.12)
-                let flutter = SKAction.sequence([flutterOut, flutterIn])
-                leaf.run(flutter)
+                let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+                let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
+                let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
+                let impulseAngle: CGFloat = (isLeft ? -1.0 : 1.0) * CGFloat.random(in: 0.12...0.18)
+
+                let delay = SKAction.wait(forDuration: Double(idx) * 0.02)
+                let jiggleOut = SKAction.rotate(byAngle: impulseAngle, duration: 0.08)
+                jiggleOut.timingMode = .easeOut
+                let jiggleBack = SKAction.rotate(byAngle: -impulseAngle, duration: 0.13)
+                jiggleBack.timingMode = .easeInEaseOut
+
+                let flutterScaleOut = SKAction.scaleY(to: 1.09, duration: 0.08)
+                let flutterScaleIn = SKAction.scaleY(to: 1.0, duration: 0.13)
+
+                let swingGroup1 = SKAction.group([jiggleOut, flutterScaleOut])
+                let swingGroup2 = SKAction.group([jiggleBack, flutterScaleIn])
+
+                leaf.run(SKAction.sequence([delay, swingGroup1, swingGroup2]))
             }
 
-            spawnOxygenBubbles(count: 5, from: CGPoint(x: 0, y: 160))
+            spawnOxygenBubbles(count: 8, from: CGPoint(x: 0, y: 160))
         }
     }
 
