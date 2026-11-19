@@ -102,6 +102,9 @@ public struct SpriteKitPlantView: View {
                 .frame(width: width, height: height)
                 .background(Color.clear)
                 .contentShape(Rectangle())
+                .onAppear {
+                    scene.configure(plantId: plantId, level: plantLevel, isHanging: isHanging)
+                }
                 .onTapGesture {
                     scene.playTapAnimation()
                     let soundName = ItemDataManager.shared.getPlant(byId: plantId)?.clickSound ?? "tap"

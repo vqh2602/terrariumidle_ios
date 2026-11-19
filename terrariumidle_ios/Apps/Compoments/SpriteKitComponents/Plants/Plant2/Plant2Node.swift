@@ -158,15 +158,15 @@ public final class Plant2Node: SKNode {
 
         guard let seedTexture = loadTexture(assetId: 100) else { return }
 
-        // Kích thước hạt giống nằm gọn trên miệng chậu (~28% chiều rộng container)
-        let targetW = containerSize.width * 0.28
-        let aspect: CGFloat = 200.0 / 259.0
+        // Kích thước hạt mầm gieo nhỏ gọn trên miệng chậu (~20% chiều rộng container)
+        let targetW = containerSize.width * 0.20
+        let aspect: CGFloat = 257.0 / 259.0
         let targetH = targetW * aspect
 
         let node = SKSpriteNode(texture: seedTexture)
         node.size = CGSize(width: targetW, height: targetH)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        let seedY: CGFloat = isHanging ? containerSize.height * 0.70 : containerSize.height * 0.10
+        let seedY: CGFloat = isHanging ? containerSize.height * 0.70 : containerSize.height * 0.08
         node.position = CGPoint(x: 0, y: seedY)
         node.zPosition = 10
         node.isPaused = false
@@ -188,7 +188,7 @@ public final class Plant2Node: SKNode {
         tiltR.timingMode = .easeInEaseOut
         node.run(SKAction.repeatForever(SKAction.sequence([tiltL, tiltR])), withKey: "seedWiggle")
 
-        startSeedGlowEffect(on: node, radius: targetW * 0.55)
+        startSeedGlowEffect(on: node, radius: targetW * 0.45)
     }
 
     private func startSeedGlowEffect(on node: SKNode, radius: CGFloat = 14) {
@@ -224,10 +224,10 @@ public final class Plant2Node: SKNode {
 
         guard let sproutTexture = loadTexture(assetId: 200) else { return }
 
-        // Kích thước mầm cây con nhỏ xinh mới nhú (~36% chiều cao container)
-        let targetH = containerSize.height * 0.36
-        let aspect: CGFloat = 235.0 / 203.0
-        let targetW = min(targetH * aspect, containerSize.width * 0.40)
+        // Kích thước mầm cây con nhỏ xinh mới nhú (~38% chiều cao container)
+        let targetH = containerSize.height * 0.38
+        let aspect: CGFloat = 235.0 / 253.0
+        let targetW = min(targetH * aspect, containerSize.width * 0.42)
 
         let node = SKSpriteNode(texture: sproutTexture)
         node.size = CGSize(width: targetW, height: targetH)
@@ -242,26 +242,26 @@ public final class Plant2Node: SKNode {
         self.sproutNode = node
         self.initialSproutPosition = node.position
 
-        let swayLeft = SKAction.rotate(toAngle: -0.15, duration: 1.6)
+        let swayLeft = SKAction.rotate(toAngle: -0.06, duration: 1.8)
         swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(toAngle: 0.15, duration: 1.6)
+        let swayRight = SKAction.rotate(toAngle: 0.06, duration: 1.8)
         swayRight.timingMode = .easeInEaseOut
         node.run(SKAction.repeatForever(SKAction.sequence([swayLeft, swayRight])), withKey: "sproutSway")
 
-        let bobUp = SKAction.scaleY(to: 1.08, duration: 1.3)
+        let bobUp = SKAction.scaleY(to: 1.05, duration: 1.5)
         bobUp.timingMode = .easeInEaseOut
-        let bobDown = SKAction.scaleY(to: 0.92, duration: 1.3)
+        let bobDown = SKAction.scaleY(to: 0.95, duration: 1.5)
         bobDown.timingMode = .easeInEaseOut
         node.run(SKAction.repeatForever(SKAction.sequence([bobUp, bobDown])), withKey: "sproutBob")
 
-        startSproutGlowEffect(on: node, radius: targetW * 0.50)
+        startSproutGlowEffect(on: node, radius: targetW * 0.45, targetH: targetH)
     }
 
-    private func startSproutGlowEffect(on node: SKNode, radius: CGFloat = 16) {
+    private func startSproutGlowEffect(on node: SKNode, radius: CGFloat = 16, targetH: CGFloat = 50) {
         let glowNode = SKShapeNode(circleOfRadius: radius)
         glowNode.fillColor = UIColor(red: 0.40, green: 0.92, blue: 0.65, alpha: 0.22)
         glowNode.strokeColor = .clear
-        glowNode.position = CGPoint(x: 0, y: radius * 0.8)
+        glowNode.position = CGPoint(x: 0, y: targetH * 0.52)
         glowNode.zPosition = -1
         glowNode.name = "sproutGlowNode"
         node.addChild(glowNode)

@@ -68,9 +68,10 @@ class FireStoreService: ObservableObject {
                 self.dataGraden = data
                 do {
                     let model = try GardenModel(dict: data)
+                    let sanitized = self.sanitizeGardenModel(model)
                     DispatchQueue.main.async {
-                        self.gradenModel = model
-                        print("User realtime:", model.user.userName, "Plants:", model.user.userFloor)
+                        self.gradenModel = sanitized
+                        print("User realtime:", sanitized.user.userName, "Plants:", sanitized.user.userFloor)
                     }
                 } catch {
                     print("Failed to parse GardenModel: \(error)")
@@ -89,11 +90,12 @@ class FireStoreService: ObservableObject {
             dataGraden = dict
             // Parse GardenModel from the dictionary if possible
             let model = try GardenModel(dict: dict)
+            let sanitized = sanitizeGardenModel(model)
             await MainActor.run {
-                self.gradenModel = model
+                self.gradenModel = sanitized
             }
-            print("User:", model.user.userName, "Plants:", model.user.userFloor)
-            return model
+            print("User:", sanitized.user.userName, "Plants:", sanitized.user.userFloor)
+            return sanitized
         } catch {
             print("Error loading garden: \(error)")
             return nil
@@ -158,6 +160,29 @@ class FireStoreService: ObservableObject {
         }
     }
 
+    // MARK: - Garden Model Sanitization
+
+    /// Khử trùng lặp cây cùng vị trí và đảm bảo tính nhất quán của dữ liệu
+    public func sanitizeGardenModel(_ model: GardenModel) -> GardenModel {
+        var uniquePlants: [String: GardenModel.Plant] = [:]
+        for plant in model.plants {
+            let key = plant.position
+            if let existing = uniquePlants[key] {
+                // Ưu tiên bản ghi có ID không rỗng và có plantLevel cao nhất
+                if existing.idPlant.isEmpty && !plant.idPlant.isEmpty {
+                    uniquePlants[key] = plant
+                } else if !plant.idPlant.isEmpty && plant.plantLevel >= existing.plantLevel {
+                    uniquePlants[key] = plant
+                }
+            } else {
+                uniquePlants[key] = plant
+            }
+        }
+        var cleaned = model
+        cleaned.plants = Array(uniquePlants.values)
+        return cleaned
+    }
+
     // MARK: - Update User Data
 
     /// Cập nhật dữ liệu khu vườn:
@@ -167,9 +192,10 @@ class FireStoreService: ObservableObject {
     /// - `debounce == false`: Ghi ngay lập tức lên Firestore ở background thread (không block Main UI).
     @MainActor
     func saveGarden(gardenModel: GardenModel, debounce: Bool = false) {
+        let sanitized = sanitizeGardenModel(gardenModel)
         // Cập nhật ngay local model để UI phản hồi ngay lập tức
-        self.gradenModel = gardenModel
-        self.pendingGardenModel = gardenModel
+        self.gradenModel = sanitized
+        self.pendingGardenModel = sanitized
 
         if debounce {
             debounceTask?.cancel()
@@ -190,7 +216,7 @@ class FireStoreService: ObservableObject {
             debounceTask?.cancel()
             debounceTask = nil
             pendingGardenModel = nil
-            let modelToSave = gardenModel
+            let modelToSave = sanitized
             Task.detached(priority: .background) { [weak self] in
                 await self?.performFirestoreUpdate(gardenModel: modelToSave)
             }

@@ -14,7 +14,7 @@ public final class SpriteKitPotScene: SKScene {
 
     private var potNode: SKSpriteNode?
     private var pot1Node: Pot1Node?
-    private var shadowNode: SKShapeNode?
+    private var shadowNode: SKNode?
     private var potId: String = "pot1"
     private var isHanging: Bool = false
     private var baseScale: CGFloat = 1.0
@@ -92,36 +92,52 @@ public final class SpriteKitPotScene: SKScene {
             return
         }
 
-        // 1. Bóng đổ dưới đáy chậu (nếu không treo)
-        if !isHanging {
-            let shadowWidth = size.width * 0.65
-            let shadowHeight = size.height * 0.12
-            let shadow = SKShapeNode(ellipseOf: CGSize(width: shadowWidth, height: shadowHeight))
-            shadow.fillColor = UIColor.black.withAlphaComponent(0.18)
-            shadow.strokeColor = .clear
-            shadow.position = CGPoint(x: 0, y: size.height * 0.06)
-            shadow.zPosition = 1
-            addChild(shadow)
-            self.shadowNode = shadow
-        }
-
-        // 2. Chậu cây chính
-        let texture = loadPotTexture()
+        // 1. Chậu cây chính
+        let (texture, loadedImage) = loadPotTextureAndImage()
         let node = SKSpriteNode(texture: texture)
 
-        let fitWidth = (size.width * 0.85) / texture.size().width
-        let fitHeight = (size.height * 0.82) / texture.size().height
-        self.baseScale = min(fitWidth, fitHeight)
+        let texW = texture.size().width
+        let texH = texture.size().height
+
+        // Fit hình chậu theo chiều cao container: Chậu luôn cao chạm mép trên để không bao giờ có khoảng trắng hở
+        let targetHeight = size.height * (isHanging ? 0.98 : 0.98)
+        var scale = targetHeight / texH
+
+        // Giới hạn an toàn chiều ngang không vượt quá 96% container width
+        if texW * scale > size.width * 0.96 {
+            scale = (size.width * 0.96) / texW
+        }
+        self.baseScale = scale
         node.setScale(baseScale)
+
+        let potRenderedWidth = texW * baseScale
 
         if isHanging {
             node.anchorPoint = CGPoint(x: 0.5, y: 1.0)
             node.position = CGPoint(x: 0, y: size.height)
         } else {
-            node.anchorPoint = CGPoint(x: 0.5, y: 0.08)
+            // Đáy chậu nằm ngay ngắn, chuẩn xác trên mặt kệ (y = 0)
+            node.anchorPoint = CGPoint(x: 0.5, y: 0.0)
             node.position = CGPoint(x: 0, y: 0)
         }
         node.zPosition = 10
+
+        // 2. Bóng đổ dưới đáy chậu (nếu không treo)
+        // Đo chính xác bề rộng đáy chậu (kể cả chậu đáy hẹp như pot3) để bóng đổ tự nhiên, ôm sát đáy
+        if !isHanging {
+            let baseRatio = Self.detectBaseRatio(for: potId, image: loadedImage)
+            let baseContactWidth = potRenderedWidth * baseRatio
+            let shadowWidth = max(22.0, baseContactWidth * 1.12)
+            let shadowHeight = max(5.0, min(10.0, shadowWidth * 0.16))
+
+            let shadowTex = Self.createSoftShadowTexture(width: shadowWidth, height: shadowHeight)
+            let shadow = SKSpriteNode(texture: shadowTex, size: CGSize(width: shadowWidth, height: shadowHeight))
+            shadow.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            shadow.position = CGPoint(x: 0, y: shadowHeight * 0.35)
+            shadow.zPosition = 1
+            addChild(shadow)
+            self.shadowNode = shadow
+        }
 
         addChild(node)
         self.potNode = node
@@ -153,9 +169,96 @@ public final class SpriteKitPotScene: SKScene {
         }
     }
 
+    // MARK: - Soft Shadow Generator
+
+    /// Tạo texture bóng đổ radial gradient mềm mại, tự nhiên, không bị viền sắc
+    public static func createSoftShadowTexture(width: CGFloat, height: CGFloat) -> SKTexture {
+        let w = max(16.0, width)
+        let h = max(6.0, height)
+        let size = CGSize(width: w, height: h)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let img = renderer.image { ctx in
+            let cg = ctx.cgContext
+            let colors = [
+                UIColor.black.withAlphaComponent(0.28).cgColor,
+                UIColor.black.withAlphaComponent(0.14).cgColor,
+                UIColor.black.withAlphaComponent(0.0).cgColor
+            ] as CFArray
+            let locations: [CGFloat] = [0.0, 0.52, 1.0]
+            guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: locations) else { return }
+
+            cg.saveGState()
+            cg.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+            cg.scaleBy(x: 1.0, y: size.height / size.width)
+            let radius = size.width / 2.0
+            cg.drawRadialGradient(gradient, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: radius, options: [.drawsAfterEndLocation])
+            cg.restoreGState()
+        }
+        return SKTexture(image: img)
+    }
+
+    // MARK: - Base Width Ratio Detection
+
+    private static let knownBaseRatios: [String: CGFloat] = [
+        "pot1": 0.52,
+        "pot2": 0.78,
+        "pot3": 0.22,
+        "pot4": 0.45,
+        "pot5": 0.55,
+        "pot6": 0.40,
+        "pot7": 0.50,
+        "pot8": 0.50
+    ]
+
+    /// Đo tỉ lệ bề rộng đáy chậu thực tế so với tổng chiều rộng ảnh
+    private static func detectBaseRatio(for potId: String, image: UIImage?) -> CGFloat {
+        let cleanId = potId.lowercased().trimmingCharacters(in: .whitespaces)
+        if let ratio = knownBaseRatios[cleanId] {
+            return ratio
+        }
+        guard let cgImg = image?.cgImage else { return 0.50 }
+        let w = cgImg.width
+        let h = cgImg.height
+        guard w > 0, h > 0 else { return 0.50 }
+
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bytesPerPixel = 4
+        let bytesPerRow = bytesPerPixel * w
+        var rawData = [UInt8](repeating: 0, count: bytesPerRow * h)
+        guard let context = CGContext(
+            data: &rawData,
+            width: w,
+            height: h,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        ) else { return 0.50 }
+
+        context.draw(cgImg, in: CGRect(x: 0, y: 0, width: w, height: h))
+
+        // Trong toạ độ CGContext, y=0 là đáy dưới cùng
+        let maxScanY = min(h, max(1, Int(Double(h) * 0.15)))
+        for y in 0..<maxScanY {
+            var minX = w, maxX = 0
+            let rowOffset = y * bytesPerRow
+            for x in 0..<w {
+                let alpha = rawData[rowOffset + x * bytesPerPixel + 3]
+                if alpha > 35 {
+                    if x < minX { minX = x }
+                    if x > maxX { maxX = x }
+                }
+            }
+            if minX < maxX && (maxX - minX) > 8 {
+                return CGFloat(maxX - minX) / CGFloat(w)
+            }
+        }
+        return 0.50
+    }
+
     // MARK: - Texture Loader & Procedural Fallback
 
-    private func loadPotTexture() -> SKTexture {
+    private func loadPotTextureAndImage() -> (texture: SKTexture, image: UIImage?) {
         let potNumber = potId.filter(\.isNumber)
         let candidates = [
             "\(potId)-Asset-1@4.167x",
@@ -172,27 +275,26 @@ public final class SpriteKitPotScene: SKScene {
         ]
         for name in candidates {
             if let image = UIImage(named: name) {
-                return SKTexture(image: image)
+                return (SKTexture(image: image), image)
             }
         }
 
         if let imageField = ItemDataManager.shared.getPot(byId: potId)?.image {
             for name in [imageField, "\(imageField)@4.167x"] {
                 if let image = UIImage(named: name) {
-                    return SKTexture(image: image)
+                    return (SKTexture(image: image), image)
                 }
             }
         }
 
-        return Self.generateProceduralPotTexture(potId: potId, isHanging: isHanging)
+        let proc = Self.generateProceduralPotTexture(potId: potId, isHanging: isHanging)
+        return (proc.texture, proc.image)
     }
 
-    public static func generateProceduralPotTexture(potId: String, isHanging: Bool) -> SKTexture {
+    public static func generateProceduralPotTexture(potId: String, isHanging: Bool) -> (texture: SKTexture, image: UIImage) {
         let size = CGSize(width: 120, height: 100)
         let renderer = UIGraphicsImageRenderer(size: size)
         let image = renderer.image { ctx in
-            let context = ctx.cgContext
-
             if isHanging {
                 // Dây treo macrame từ trên xuống
                 let stringPath = UIBezierPath()
@@ -240,6 +342,6 @@ public final class SpriteKitPotScene: SKScene {
                 band.stroke()
             }
         }
-        return SKTexture(image: image)
+        return (SKTexture(image: image), image)
     }
 }

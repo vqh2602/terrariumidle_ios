@@ -155,6 +155,7 @@ struct PlantItemView: View {
                             handleDetailTap()
                         }
                     )
+                    .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)-hanging")
                 }
                 .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)")
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -172,6 +173,7 @@ struct PlantItemView: View {
                             handleDetailTap()
                         }
                     )
+                    .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)-normal")
                     .zIndex(1)
 
                     // Hiển thị Pot với idPot từ data
@@ -300,9 +302,10 @@ struct PlantItemView: View {
 
             // Update plant in plants array
             var updatedPlants = gardenModel.plants
-            guard let plantIndex = updatedPlants.firstIndex(where: {
-                $0.position == "\(rowIndex),\(columnIndex)"
-            }) else { return }
+            let targetPos = "\(rowIndex),\(columnIndex)"
+            guard let plantIndex = updatedPlants.lastIndex(where: {
+                $0.position == targetPos && !$0.idPlant.isEmpty
+            }) ?? updatedPlants.firstIndex(where: { $0.position == targetPos }) else { return }
 
             var updatedPlant = updatedPlants[plantIndex]
             updatedPlant.platLevelExp += 100
@@ -317,7 +320,9 @@ struct PlantItemView: View {
                 }
             }
 
-            updatedPlants[plantIndex] = updatedPlant
+            // Xoá mọi bản ghi trùng tại toạ độ này và cập nhật lại bằng bản ghi mới nhất
+            updatedPlants.removeAll { $0.position == targetPos }
+            updatedPlants.append(updatedPlant)
 
             // Add EXP to user
             var updatedUser = gardenModel.user
@@ -375,15 +380,18 @@ struct PlantItemView: View {
 
         // Find the plant
         var updatedPlants = gardenModel.plants
-        guard let plantIndex = updatedPlants.firstIndex(where: {
-            $0.position == "\(rowIndex),\(columnIndex)"
-        }) else { return }
+        let targetPos = "\(rowIndex),\(columnIndex)"
+        guard let plantIndex = updatedPlants.lastIndex(where: {
+            $0.position == targetPos && !$0.idPlant.isEmpty
+        }) ?? updatedPlants.firstIndex(where: { $0.position == targetPos }) else { return }
 
         var updatedPlant = updatedPlants[plantIndex]
 
         // Increase plant level by 1 (no cap when using fertilizer)
         updatedPlant.plantLevel += 1
-        updatedPlants[plantIndex] = updatedPlant
+        // Xoá mọi bản ghi trùng tại toạ độ này và cập nhật lại bằng bản ghi mới nhất
+        updatedPlants.removeAll { $0.position == targetPos }
+        updatedPlants.append(updatedPlant)
 
         // Deduct 10 fertilizer
         var updatedItem = gardenModel.item

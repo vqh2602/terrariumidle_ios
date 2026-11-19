@@ -27,7 +27,7 @@ public final class Pot1Node: SKNode {
     /// Sprite hiển thị chậu cây
     private var potNode: SKSpriteNode?
     /// Bóng đổ dưới đáy chậu
-    private var shadowNode: SKShapeNode?
+    private var shadowNode: SKNode?
 
     /// Toạ độ ban đầu của chậu (chống trôi toạ độ khi tap liên tục)
     private var initialPotPosition: CGPoint = .zero
@@ -75,18 +75,20 @@ public final class Pot1Node: SKNode {
 
         // Tỉ lệ ảnh gốc: 276 x 195 (aspect ~ 0.7065)
         let aspect: CGFloat = 195.0 / 276.0
-        let fitW = containerSize.width * 0.90
-        let targetH = min(fitW * aspect, containerSize.height * 0.88)
-        let targetW = targetH / aspect
+        // Fit theo chiều cao container để chậu chạm mép trên, không bao giờ có khoảng trắng hở
+        let targetH = containerSize.height * 0.98
+        let targetW = min(targetH / aspect, containerSize.width * 0.96)
 
         // 1. Bóng đổ dưới đáy chậu (nếu không phải chậu treo)
+        // pot1 có đáy chiếm ~52% bề rộng, bóng đổ radial gradient ôm sát đáy chậu mềm mại tự nhiên
         if !isHanging {
-            let shadowW = targetW * 0.86
-            let shadowH = targetH * 0.18
-            let shadow = SKShapeNode(ellipseOf: CGSize(width: shadowW, height: shadowH))
-            shadow.fillColor = UIColor.black.withAlphaComponent(0.20)
-            shadow.strokeColor = .clear
-            shadow.position = CGPoint(x: 0, y: 0)
+            let baseContactW = targetW * 0.52
+            let shadowW = max(28.0, baseContactW * 1.12)
+            let shadowH = max(5.0, min(10.0, shadowW * 0.16))
+            let shadowTex = SpriteKitPotScene.createSoftShadowTexture(width: shadowW, height: shadowH)
+            let shadow = SKSpriteNode(texture: shadowTex, size: CGSize(width: shadowW, height: shadowH))
+            shadow.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            shadow.position = CGPoint(x: 0, y: shadowH * 0.35)
             shadow.zPosition = 1
             potRootNode.addChild(shadow)
             self.shadowNode = shadow
@@ -171,7 +173,7 @@ public final class Pot1Node: SKNode {
         }
 
         // Fallback procedural
-        return SpriteKitPotScene.generateProceduralPotTexture(potId: "pot1", isHanging: isHanging)
+        return SpriteKitPotScene.generateProceduralPotTexture(potId: "pot1", isHanging: isHanging).texture
     }
 
     // MARK: - Hiệu ứng Idle: "Đá lấp lánh" (Sparkle Twinkle)

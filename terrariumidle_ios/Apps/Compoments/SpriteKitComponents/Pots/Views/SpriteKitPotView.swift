@@ -46,6 +46,9 @@ public struct SpriteKitPotView: View {
             .frame(width: width, height: height)
             .background(Color.clear)
             .contentShape(Rectangle())
+            .onAppear {
+                scene.configure(potId: potId, isHanging: isHanging)
+            }
             .onTapGesture {
                 scene.playTapAnimation()
                 let soundName = ItemDataManager.shared.getPot(byId: potId)?.clickSound ?? "tap"
