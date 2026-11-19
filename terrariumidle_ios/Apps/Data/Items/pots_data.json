@@ -103,7 +103,6 @@
         "type": "pot",
         "effect": "Lá rơi - overlay1",
         "itemTypeAttribute": "none",
-        "widthFill": 0.25,
         "levelUnlock": 9
     },
     {
@@ -130,7 +129,6 @@
         "type": "pot",
         "effect": "Mong một ngày mưa - m3",
         "itemTypeAttribute": "none",
-        "widthFill": 0.2,
         "levelUnlock": 15
     },
     {
@@ -144,7 +142,6 @@
         "type": "pot",
         "effect": "N.A",
         "itemTypeAttribute": "none",
-        "widthFill": 0.3,
         "levelUnlock": 20
     },
     {
@@ -158,7 +155,6 @@
         "type": "pot",
         "effect": "N.A",
         "itemTypeAttribute": "none",
-        "widthFill": 0.25,
         "levelUnlock": 22
     },
     {
@@ -172,7 +168,6 @@
         "type": "pot",
         "effect": "N.A",
         "itemTypeAttribute": "none",
-        "widthFill": 0.67,
         "levelUnlock": 25
     },
     {

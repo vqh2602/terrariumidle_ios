@@ -9,10 +9,13 @@ import SwiftUI
 
 /// SwiftUI Component chuyên biệt cho Chậu 13: "Chậu đất nung chấm bi" (pot13)
 public struct Pot13View: View {
+    /// Độ giãn phủ chiều rộng mặc định của Chậu 13 (0.0 -> 1.0)
+    public static var defaultWidthFill: CGFloat = 0.35
+
     public var isHanging: Bool = false
     public var width: CGFloat
     public var height: CGFloat
-    public var widthFill: CGFloat = 0.67
+    public var widthFill: CGFloat = Pot13View.defaultWidthFill
     public var onTap: (() -> Void)? = nil
 
     /// Bí danh (alias) tương thích cho thuộc tính widthFill
@@ -25,7 +28,7 @@ public struct Pot13View: View {
         isHanging: Bool = false,
         width: CGFloat = 120,
         height: CGFloat = 95,
-        widthFill: CGFloat = 0.67,
+        widthFill: CGFloat = Pot13View.defaultWidthFill,
         onTap: (() -> Void)? = nil
     ) {
         self.isHanging = isHanging
@@ -51,7 +54,7 @@ public struct Pot13View: View {
 // MARK: - Interactive Preview Struct
 private struct Pot13InteractiveDemoView: View {
     @State private var isHanging: Bool = false
-    @State private var widthFill: CGFloat = 0.67
+    @State private var widthFill: CGFloat = Pot13View.defaultWidthFill
     @State private var tapCount: Int = 0
 
     var body: some View {

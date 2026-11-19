@@ -101,15 +101,8 @@ public final class SpriteKitPotScene: SKScene {
 
         let cleanId = potId.lowercased().trimmingCharacters(in: .whitespaces)
 
-        // Sử dụng widthFill được cấu hình từ View, nếu 0.0 thì kiểm tra cấu hình mặc định (pots_data.json / PotDefaults)
-        let effectiveFill: CGFloat
-        if widthFill > 0.001 {
-            effectiveFill = widthFill
-        } else if let dataFill = ItemDataManager.shared.getPot(byId: cleanId)?.widthFill, dataFill > 0.001 {
-            effectiveFill = CGFloat(dataFill)
-        } else {
-            effectiveFill = PotDefaults.defaultWidthFill(for: cleanId)
-        }
+        // Sử dụng trực tiếp widthFill được cấu hình từ View (0.0 = chỉ fillheight, 100% giữ nguyên aspect ratio, không méo)
+        let effectiveFill = min(max(widthFill, 0.0), 1.0)
 
         // TỰ ĐỘNG NẠP CÁC NODE CHẬU CHUYÊN BIỆT (Pot1 -> Pot14)
         switch cleanId {

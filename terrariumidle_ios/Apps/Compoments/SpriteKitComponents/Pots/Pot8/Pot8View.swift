@@ -11,10 +11,13 @@ import SwiftUI
 /// - Tái sử dụng SpriteKitPotView (PotView) để tránh lặp lại code SpriteView và quản lý Scene lifecycle
 /// - Chất liệu đan từ tre nứa nhẹ nhàng, thanh thoát + phản hồi nén nảy tự nhiên
 public struct Pot8View: View {
+    /// Độ giãn phủ chiều rộng mặc định của Chậu 8 (0.0 -> 1.0)
+    public static var defaultWidthFill: CGFloat = 0.0
+
     public var isHanging: Bool = false
     public var width: CGFloat
     public var height: CGFloat
-    public var widthFill: CGFloat = 0.0
+    public var widthFill: CGFloat = Pot8View.defaultWidthFill
     public var onTap: (() -> Void)? = nil
 
     /// Bí danh (alias) tương thích cho thuộc tính widthFill
@@ -27,7 +30,7 @@ public struct Pot8View: View {
         isHanging: Bool = false,
         width: CGFloat = 120,
         height: CGFloat = 95,
-        widthFill: CGFloat = 0.0,
+        widthFill: CGFloat = Pot8View.defaultWidthFill,
         onTap: (() -> Void)? = nil
     ) {
         self.isHanging = isHanging

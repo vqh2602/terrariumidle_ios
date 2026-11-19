@@ -11,10 +11,13 @@ import SwiftUI
 /// - Tái sử dụng SpriteKitPotView (PotView) để tránh lặp lại code SpriteView và quản lý Scene lifecycle
 /// - Hiệu ứng đặc trưng "Tam thạch anh hồng" (Rose quartz crystals glow & crystal burst)
 public struct Pot6View: View {
+    /// Độ giãn phủ chiều rộng mặc định của Chậu 6 (0.0 -> 1.0)
+    public static var defaultWidthFill: CGFloat = 0.0
+
     public var isHanging: Bool = false
     public var width: CGFloat
     public var height: CGFloat
-    public var widthFill: CGFloat = 0.0
+    public var widthFill: CGFloat = Pot6View.defaultWidthFill
     public var onTap: (() -> Void)? = nil
 
     /// Bí danh (alias) tương thích cho thuộc tính widthFill
@@ -27,7 +30,7 @@ public struct Pot6View: View {
         isHanging: Bool = false,
         width: CGFloat = 120,
         height: CGFloat = 85,
-        widthFill: CGFloat = 0.0,
+        widthFill: CGFloat = Pot6View.defaultWidthFill,
         onTap: (() -> Void)? = nil
     ) {
         self.isHanging = isHanging

@@ -11,28 +11,32 @@ import SwiftUI
 /// Typealias ngắn gọn để tái sử dụng thuận tiện ở các nơi
 public typealias PotView = SpriteKitPotView
 
-// MARK: - Pot Default Dimensions & Presets
-public enum PotDefaults {
-    /// Độ giãn nở chiều rộng mặc định cho các chậu có dáng dọc cao (tall / upright pots)
+// MARK: - Pot View Registry
+public enum PotRegistry {
+    /// Lấy độ giãn bề rộng mặc định của loài chậu tương ứng từ chính View của chậu đó
     public static func defaultWidthFill(for potId: String) -> CGFloat {
         let cleanId = potId.lowercased().trimmingCharacters(in: .whitespaces)
         switch cleanId {
-        case "pot13":
-            return 0.67
-        case "pot11":
-            return 0.30
-        case "pot8":
-            return 0.25
-        case "pot12":
-            return 0.25
-        case "pot10":
-            return 0.20
-        default:
-            return 0.0
+        case "pot1": return Pot1View.defaultWidthFill
+        case "pot2": return Pot2View.defaultWidthFill
+        case "pot3": return Pot3View.defaultWidthFill
+        case "pot4": return Pot4View.defaultWidthFill
+        case "pot5": return Pot5View.defaultWidthFill
+        case "pot6": return Pot6View.defaultWidthFill
+        case "pot7": return Pot7View.defaultWidthFill
+        case "pot8": return Pot8View.defaultWidthFill
+        case "pot9": return Pot9View.defaultWidthFill
+        case "pot10": return Pot10View.defaultWidthFill
+        case "pot11": return Pot11View.defaultWidthFill
+        case "pot12": return Pot12View.defaultWidthFill
+        case "pot13": return Pot13View.defaultWidthFill
+        case "pot14": return Pot14View.defaultWidthFill
+        default: return 0.0
         }
     }
 }
 
+// MARK: - SpriteKit Pot View
 /// SwiftUI Component hiển thị chậu cây bằng SpriteKit
 /// - Đổ bóng tự nhiên dưới đáy
 /// - Phản hồi nảy đàn hồi (spring bounce) khi chạm vào
@@ -42,25 +46,24 @@ public struct SpriteKitPotView: View {
     public var isHanging: Bool = false
     public var width: CGFloat
     public var height: CGFloat
-    /// Độ giãn phủ chiều rộng (0.0 = giữ aspect ratio tự nhiên, 1.0 = fill tối đa chiều rộng container)
+    /// Độ giãn phủ chiều rộng (nil = tự động lấy defaultWidthFill của loài chậu đó, hoặc 0.0 ... 1.0 nếu caller truyền cụ thể)
     public var widthFill: CGFloat? = nil
     public var onTap: (() -> Void)? = nil
 
     /// Bí danh (alias) tương thích cho thuộc tính widthFill
     public var fillWidth: CGFloat {
-        get { widthFill ?? effectiveWidthFill }
+        get { widthFill ?? resolvedWidthFill }
         set { widthFill = newValue }
     }
 
-    /// Tính toán widthFill hiệu dụng: ưu tiên caller truyền vào > cấu hình trong pots_data.json > PotDefaults
-    public var effectiveWidthFill: CGFloat {
+    /// Tính toán widthFill hiệu dụng:
+    /// Nếu caller truyền giá trị rõ ràng (kể cả 0.0 hoặc 1.0) -> dùng giá trị đó
+    /// Nếu caller không truyền (nil) -> lấy từ defaultWidthFill của loài chậu tương ứng (PotXView.defaultWidthFill)
+    public var resolvedWidthFill: CGFloat {
         if let explicit = widthFill {
             return min(max(explicit, 0.0), 1.0)
         }
-        if let dataFill = ItemDataManager.shared.getPot(byId: potId)?.widthFill {
-            return CGFloat(min(max(dataFill, 0.0), 1.0))
-        }
-        return PotDefaults.defaultWidthFill(for: potId)
+        return PotRegistry.defaultWidthFill(for: potId)
     }
 
     @State private var scene: SpriteKitPotScene
@@ -83,10 +86,8 @@ public struct SpriteKitPotView: View {
         let cleanFill: CGFloat
         if let explicit = widthFill {
             cleanFill = min(max(explicit, 0.0), 1.0)
-        } else if let df = ItemDataManager.shared.getPot(byId: potId)?.widthFill {
-            cleanFill = CGFloat(min(max(df, 0.0), 1.0))
         } else {
-            cleanFill = PotDefaults.defaultWidthFill(for: potId)
+            cleanFill = PotRegistry.defaultWidthFill(for: potId)
         }
 
         let initialScene = Self.makeScene(potId: potId, isHanging: isHanging, width: width, height: height, widthFill: cleanFill)
@@ -94,7 +95,7 @@ public struct SpriteKitPotView: View {
     }
 
     public var body: some View {
-        let activeFill = effectiveWidthFill
+        let activeFill = resolvedWidthFill
         let currentScene = scene
         currentScene.configure(potId: potId, isHanging: isHanging, widthFill: activeFill)
 
@@ -113,7 +114,8 @@ public struct SpriteKitPotView: View {
                 onTap?()
             }
             .onChange(of: potId) { newId in
-                currentScene.configure(potId: newId, isHanging: isHanging, widthFill: activeFill)
+                let newFill = widthFill ?? PotRegistry.defaultWidthFill(for: newId)
+                currentScene.configure(potId: newId, isHanging: isHanging, widthFill: newFill)
             }
             .onChange(of: isHanging) { newHanging in
                 currentScene.configure(potId: potId, isHanging: newHanging, widthFill: activeFill)

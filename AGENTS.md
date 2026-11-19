@@ -103,10 +103,12 @@ Mọi Chậu cây (`SpriteKitPotView`, `PotView`, và các View chuyên biệt `
    - Khi `0 < widthFill < 1`: mở rộng mượt mà theo tỉ lệ phần trăm giữa `naturalW` và `maxW`.
 3. **Bóng đổ tự động co giãn (`shadowNode`)**:
    - Luôn tính bề rộng bóng đổ dựa theo `targetW` đã qua co giãn (`baseContactW = targetW * ratio`), đảm bảo bóng đổ luôn ôm sát đáy chậu khi kéo rộng.
-4. **Cơ chế Phân giải Mặc định & Định danh SwiftUI (`effectiveWidthFill` & `.id`)**:
-   - Các chậu có tỉ lệ đứng cao ($H/W \ge 1.0$) có giá trị `defaultWidthFill` thiết lập sẵn trong `PotDefaults` và `pots_data.json` (ví dụ `pot13` = `0.67`, `pot11` = `0.30`, `pot8` = `0.25`, `pot12` = `0.25`, `pot10` = `0.20`).
-   - Thứ tự ưu tiên nạp `widthFill`: Tham số truyền trực tiếp từ caller > Cấu hình trong `pots_data.json` > `PotDefaults.defaultWidthFill` > `0.0` (giữ nguyên aspect ratio).
-   - `SpriteKitPotView` **BẮT BUỘC** phải gán modifier `.id("\(potId)-\(isHanging)-\(activeFill)-\(width)-\(height)")` cho `SpriteView` và gọi `scene.configure` đồng bộ trong `body` để tránh lỗi cache `@State` của SwiftUI khi thay đổi `widthFill` hoặc reload Preview.
+4. **Định danh SwiftUI & Cập nhật Thời gian thực (`.id` & `PotRegistry`)**:
+   - Mỗi View chậu (`PotXView`) có thể thiết lập `public static var defaultWidthFill: CGFloat` riêng (mặc định các chậu là `0.0`, riêng `pot13` là `0.35`).
+   - `PotRegistry.defaultWidthFill(for: potId)` tự động liên kết giá trị này với `SpriteKitPotView` khi màn hình chính (`PlantItemView`) hiển thị chậu mà không truyền `widthFill`.
+   - Khi sửa `defaultWidthFill` trong bất kỳ `PotXView.swift`, cả Preview và màn hình chính trang chủ đều tự động nhận giá trị đó ngay lập tức.
+   - Khi caller chủ động truyền tham số `widthFill` cụ thể (kể cả `0.0`), giá trị truyền vào luôn có độ ưu tiên cao nhất.
+   - `SpriteKitPotView` **BẮT BUỘC** phải gán modifier `.id("\(potId)-\(isHanging)-\(activeFill)-\(width)-\(height)")` cho `SpriteView` và gọi `scene.configure` đồng bộ trong `body` để đảm bảo khi `widthFill` thay đổi thì SpriteKit cập nhật kích thước ngay lập tức mà không bị cache `@State`.
 
 
 

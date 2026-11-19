@@ -18,7 +18,7 @@ public final class Pot13Node: SKNode, PotInteractiveNode {
 
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
-    private var widthFill: CGFloat = 0.67
+    private var widthFill: CGFloat = Pot13View.defaultWidthFill
 
     /// Gốc rễ chậu và hiệu ứng
     private let potRootNode = SKNode()
@@ -37,7 +37,7 @@ public final class Pot13Node: SKNode, PotInteractiveNode {
 
     // MARK: - Initializer
 
-    public init(containerSize: CGSize = CGSize(width: 120, height: 95), isHanging: Bool = false, widthFill: CGFloat = 0.67) {
+    public init(containerSize: CGSize = CGSize(width: 120, height: 95), isHanging: Bool = false, widthFill: CGFloat = Pot13View.defaultWidthFill) {
         self.containerSize = containerSize
         self.isHanging = isHanging
         self.widthFill = min(max(widthFill, 0.0), 1.0)
@@ -54,7 +54,7 @@ public final class Pot13Node: SKNode, PotInteractiveNode {
 
     // MARK: - Configuration
 
-    public func configure(containerSize: CGSize, isHanging: Bool = false, widthFill: CGFloat = 0.67) {
+    public func configure(containerSize: CGSize, isHanging: Bool = false, widthFill: CGFloat = Pot13View.defaultWidthFill) {
         self.containerSize = containerSize
         self.isHanging = isHanging
         self.widthFill = min(max(widthFill, 0.0), 1.0)
