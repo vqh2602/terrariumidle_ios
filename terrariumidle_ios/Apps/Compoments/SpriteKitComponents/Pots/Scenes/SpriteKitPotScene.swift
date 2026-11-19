@@ -101,9 +101,15 @@ public final class SpriteKitPotScene: SKScene {
 
         let cleanId = potId.lowercased().trimmingCharacters(in: .whitespaces)
 
-        // Lấy widthFill hiệu lực: ưu tiên tham số truyền vào, nếu = 0 thì lấy từ pots_data.json nếu có
-        let configuredFill = ItemDataManager.shared.getPot(byId: cleanId)?.widthFill ?? 0.0
-        let effectiveFill = widthFill > 0 ? widthFill : CGFloat(configuredFill)
+        // Sử dụng widthFill được cấu hình từ View, nếu 0.0 thì kiểm tra cấu hình mặc định (pots_data.json / PotDefaults)
+        let effectiveFill: CGFloat
+        if widthFill > 0.001 {
+            effectiveFill = widthFill
+        } else if let dataFill = ItemDataManager.shared.getPot(byId: cleanId)?.widthFill, dataFill > 0.001 {
+            effectiveFill = CGFloat(dataFill)
+        } else {
+            effectiveFill = PotDefaults.defaultWidthFill(for: cleanId)
+        }
 
         // TỰ ĐỘNG NẠP CÁC NODE CHẬU CHUYÊN BIỆT (Pot1 -> Pot14)
         switch cleanId {
@@ -202,18 +208,11 @@ public final class SpriteKitPotScene: SKScene {
         let texW = texture.size().width
         let texH = texture.size().height
 
-        // Fit hình chậu theo chiều cao container
+        // Fit hình chậu theo chiều cao container (Fill height): giữ nguyên 100% tỉ lệ gốc khi widthFill = 0.0
         let targetHeight = size.height * (isHanging ? 0.98 : 0.98)
-        var scale = targetHeight / texH
-
-        // Giới hạn an toàn chiều ngang không vượt quá 96% container width
-        if texW * scale > size.width * 0.96 {
-            scale = (size.width * 0.96) / texW
-        }
-
-        let baseW = texW * scale
-        let maxW = size.width * 0.96
-        let targetW = baseW + (maxW - baseW) * effectiveFill
+        let naturalW = targetHeight * (texW / texH)
+        let maxW = max(naturalW, size.width * 0.96)
+        let targetW = naturalW + (maxW - naturalW) * effectiveFill
         node.size = CGSize(width: targetW, height: targetHeight)
 
         let potRenderedWidth = targetW

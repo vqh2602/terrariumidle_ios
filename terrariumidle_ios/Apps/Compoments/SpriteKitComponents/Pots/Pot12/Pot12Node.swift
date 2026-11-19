@@ -79,9 +79,9 @@ public final class Pot12Node: SKNode, PotInteractiveNode {
         // Tỉ lệ ảnh gốc: 213 x 216 (aspect ~ 1.0141)
         let aspect: CGFloat = 216.0 / 213.0
         let targetH = containerSize.height * 0.98
-        let baseW = min(containerSize.width * 0.96, targetH / aspect)
-        let maxW = containerSize.width * 0.96
-        let targetW = baseW + (maxW - baseW) * widthFill
+        let naturalW = targetH / aspect
+        let maxW = max(naturalW, containerSize.width * 0.96)
+        let targetW = naturalW + (maxW - naturalW) * widthFill
 
         // 1. Bóng đổ dưới đáy chậu (nếu không phải chậu treo)
         if !isHanging {

@@ -142,6 +142,7 @@ struct PlantItemView: View {
                             handleDetailTap()
                         }
                     )
+                    .id("\(plantData?.idPot ?? "pot1")-pot-hanging")
                     .frame(maxWidth: .infinity)
 
                     // Plant phủ xuống - full width
@@ -186,6 +187,7 @@ struct PlantItemView: View {
                             handleDetailTap()
                         }
                     )
+                    .id("\(plantData?.idPot ?? "pot1")-pot-normal")
                     .zIndex(2)
                 }
                 .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)")

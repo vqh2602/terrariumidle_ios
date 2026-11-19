@@ -302,9 +302,10 @@ public final class Plant14Node: SKNode {
                 let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
                 let bendAngle = meta?.bendAngle ?? 0.060
                 let duration = meta?.duration ?? 3.2
-                let phaseDelay = Double(idx) * 0.15
+                let phaseDelay = Double(idx) * 0.18
+                let isTrunk = (assetNum == 1)
 
-                startHeartleafAnimation(leaf: leaf, isLeft: isLeft, bendAngle: bendAngle, duration: duration, phaseDelay: phaseDelay)
+                startHeartleafAnimation(leaf: leaf, isLeft: isLeft, bendAngle: bendAngle, duration: duration, phaseDelay: phaseDelay, isTrunk: isTrunk)
             }
 
             addTrunkSwayAnimation()
@@ -336,8 +337,9 @@ public final class Plant14Node: SKNode {
             fallbackGroup.addChild(leaf)
             leafNodes.append(leaf)
 
-            let phaseDelay = Double(idx) * 0.15
-            startHeartleafAnimation(leaf: leaf, isLeft: data.isLeft, bendAngle: data.bendAngle, duration: data.duration, phaseDelay: phaseDelay)
+            let phaseDelay = Double(idx) * 0.18
+            let isTrunk = (data.assetId == 1)
+            startHeartleafAnimation(leaf: leaf, isLeft: data.isLeft, bendAngle: data.bendAngle, duration: data.duration, phaseDelay: phaseDelay, isTrunk: isTrunk)
         }
 
         addTrunkSwayAnimation()
@@ -348,9 +350,9 @@ public final class Plant14Node: SKNode {
         plantRootNode.isPaused = false
         plantRootNode.speed = 1.0
 
-        let swayLeft = SKAction.rotate(byAngle: 0.005, duration: 5.2)
+        let swayLeft = SKAction.rotate(toAngle: -0.022, duration: 2.8)
         swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(byAngle: -0.005, duration: 5.2)
+        let swayRight = SKAction.rotate(toAngle: 0.022, duration: 2.8)
         swayRight.timingMode = .easeInEaseOut
         let trunkSeq = SKAction.sequence([swayLeft, swayRight])
         plantRootNode.run(SKAction.repeatForever(trunkSeq), withKey: "trunkSway")
@@ -396,26 +398,27 @@ public final class Plant14Node: SKNode {
 
     // MARK: - Animation: Nhánh trầu bà lá tim mềm mại (Level 3+)
 
-    private func startHeartleafAnimation(leaf: SKSpriteNode, isLeft: Bool, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: Double) {
+    private func startHeartleafAnimation(leaf: SKSpriteNode, isLeft: Bool, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: Double, isTrunk: Bool = false) {
         leaf.removeAction(forKey: "heartleafWind")
         leaf.isPaused = false
         leaf.speed = 1.0
 
-        let angleDelta = isLeft ? -bendAngle : bendAngle
+        // Reset scale về 1.0 chuẩn (loại bỏ hoàn toàn hiệu ứng scale/zoom lên xuống)
+        leaf.xScale = 1.0
+        leaf.yScale = 1.0
 
-        let bendForward = SKAction.rotate(byAngle: angleDelta, duration: duration * 0.5)
-        bendForward.timingMode = .easeInEaseOut
-        let bendBack = SKAction.rotate(byAngle: -angleDelta, duration: duration * 0.5)
-        bendBack.timingMode = .easeInEaseOut
+        let restAngle = leaf.zRotation
+        // Thân chính chỉ đung đưa nhẹ, các nhánh lá tim đung đưa rõ nét theo chiều gió
+        let swayAngle: CGFloat = isTrunk ? 0.012 : max(0.045, bendAngle)
 
-        let flexOut = SKAction.scaleX(to: 1.04, y: 0.97, duration: duration * 0.5)
-        flexOut.timingMode = .easeInEaseOut
-        let flexIn = SKAction.scaleX(to: 0.97, y: 1.03, duration: duration * 0.5)
-        flexIn.timingMode = .easeInEaseOut
+        // Gió thổi qua lại: nghiêng sang trái rồi nghiêng sang phải quanh góc cân bằng
+        let swayLeft = SKAction.rotate(toAngle: restAngle - swayAngle, duration: duration * 0.5)
+        swayLeft.timingMode = .easeInEaseOut
 
-        let forwardGroup = SKAction.group([bendForward, flexOut])
-        let backwardGroup = SKAction.group([bendBack, flexIn])
-        let cycle = SKAction.sequence([forwardGroup, backwardGroup])
+        let swayRight = SKAction.rotate(toAngle: restAngle + swayAngle, duration: duration * 0.5)
+        swayRight.timingMode = .easeInEaseOut
+
+        let cycle = SKAction.sequence([swayLeft, swayRight])
 
         if phaseDelay > 0 {
             leaf.run(SKAction.sequence([

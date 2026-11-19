@@ -83,9 +83,9 @@ public final class Pot1Node: SKNode, PotInteractiveNode {
         let aspect: CGFloat = 195.0 / 276.0
         // Fit theo chiều cao container để chậu chạm mép trên, không bao giờ có khoảng trắng hở
         let targetH = containerSize.height * 0.98
-        let baseW = min(targetH / aspect, containerSize.width * 0.96)
-        let maxW = containerSize.width * 0.96
-        let targetW = baseW + (maxW - baseW) * widthFill
+        let naturalW = targetH / aspect
+        let maxW = max(naturalW, containerSize.width * 0.96)
+        let targetW = naturalW + (maxW - naturalW) * widthFill
 
         // 1. Bóng đổ dưới đáy chậu (nếu không phải chậu treo)
         // pot1 có đáy chiếm ~52% bề rộng, bóng đổ radial gradient ôm sát đáy chậu mềm mại tự nhiên

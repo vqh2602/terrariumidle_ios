@@ -12,7 +12,7 @@ public struct Pot13View: View {
     public var isHanging: Bool = false
     public var width: CGFloat
     public var height: CGFloat
-    public var widthFill: CGFloat = 0.0
+    public var widthFill: CGFloat = 0.67
     public var onTap: (() -> Void)? = nil
 
     /// Bí danh (alias) tương thích cho thuộc tính widthFill
@@ -25,7 +25,7 @@ public struct Pot13View: View {
         isHanging: Bool = false,
         width: CGFloat = 120,
         height: CGFloat = 95,
-        widthFill: CGFloat = 0.3,
+        widthFill: CGFloat = 0.67,
         onTap: (() -> Void)? = nil
     ) {
         self.isHanging = isHanging
@@ -44,12 +44,14 @@ public struct Pot13View: View {
             widthFill: widthFill,
             onTap: onTap
         )
+        .id("pot13-\(isHanging)-\(widthFill)-\(width)-\(height)")
     }
 }
 
 // MARK: - Interactive Preview Struct
 private struct Pot13InteractiveDemoView: View {
     @State private var isHanging: Bool = false
+    @State private var widthFill: CGFloat = 0.67
     @State private var tapCount: Int = 0
 
     var body: some View {
@@ -70,13 +72,27 @@ private struct Pot13InteractiveDemoView: View {
                     isHanging: isHanging,
                     width: isHanging ? 150 : 160,
                     height: isHanging ? 150 : 120,
+                    widthFill: widthFill,
                     onTap: {
                         tapCount += 1
                     }
                 )
                 .padding(.top, isHanging ? 16 : 0)
                 .padding(.bottom, isHanging ? 0 : 20)
+                .id("\(isHanging)-\(widthFill)")
             }
+
+            VStack(spacing: 6) {
+                HStack {
+                    Text("Độ rộng (widthFill):")
+                        .font(.caption)
+                    Spacer()
+                    Text("\(Int(widthFill * 100))%")
+                        .font(.caption).bold()
+                }
+                Slider(value: $widthFill, in: 0.0...1.0, step: 0.05)
+            }
+            .padding(.horizontal, 30)
 
             Text("Đã chạm: \(tapCount) lần")
                 .font(.caption)

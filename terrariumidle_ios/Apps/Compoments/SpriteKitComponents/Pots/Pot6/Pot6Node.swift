@@ -82,9 +82,9 @@ public final class Pot6Node: SKNode, PotInteractiveNode {
         // Tỉ lệ ảnh gốc: 361 x 207 (aspect ~ 0.5734)
         let aspect: CGFloat = 207.0 / 361.0
         let targetH = containerSize.height * 0.98
-        let baseW = min(targetH / aspect, containerSize.width * 0.96)
-        let maxW = containerSize.width * 0.96
-        let targetW = baseW + (maxW - baseW) * widthFill
+        let naturalW = targetH / aspect
+        let maxW = max(naturalW, containerSize.width * 0.96)
+        let targetW = naturalW + (maxW - naturalW) * widthFill
 
         // 1. Bóng đổ dưới đáy chậu (nếu không phải chậu treo)
         // pot6 có thân bè rộng nhưng đáy tiếp xúc chỉ ~40% bề rộng

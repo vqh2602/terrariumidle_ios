@@ -80,9 +80,9 @@ public final class Pot3Node: SKNode, PotInteractiveNode {
         // Tỉ lệ ảnh gốc: 308 x 260 (aspect ~ 0.8441)
         let aspect: CGFloat = 260.0 / 308.0
         let targetH = containerSize.height * 0.98
-        let baseW = min(targetH / aspect, containerSize.width * 0.96)
-        let maxW = containerSize.width * 0.96
-        let targetW = baseW + (maxW - baseW) * widthFill
+        let naturalW = targetH / aspect
+        let maxW = max(naturalW, containerSize.width * 0.96)
+        let targetW = naturalW + (maxW - naturalW) * widthFill
 
         // 1. Bóng đổ dưới đáy chậu (nếu không phải chậu treo)
         // pot3 có đáy hẹp đặc trưng (~22% bề rộng), bóng đổ gọn gàng ôm sát đế

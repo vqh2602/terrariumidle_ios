@@ -11,6 +11,28 @@ import SwiftUI
 /// Typealias ngắn gọn để tái sử dụng thuận tiện ở các nơi
 public typealias PotView = SpriteKitPotView
 
+// MARK: - Pot Default Dimensions & Presets
+public enum PotDefaults {
+    /// Độ giãn nở chiều rộng mặc định cho các chậu có dáng dọc cao (tall / upright pots)
+    public static func defaultWidthFill(for potId: String) -> CGFloat {
+        let cleanId = potId.lowercased().trimmingCharacters(in: .whitespaces)
+        switch cleanId {
+        case "pot13":
+            return 0.67
+        case "pot11":
+            return 0.30
+        case "pot8":
+            return 0.25
+        case "pot12":
+            return 0.25
+        case "pot10":
+            return 0.20
+        default:
+            return 0.0
+        }
+    }
+}
+
 /// SwiftUI Component hiển thị chậu cây bằng SpriteKit
 /// - Đổ bóng tự nhiên dưới đáy
 /// - Phản hồi nảy đàn hồi (spring bounce) khi chạm vào
@@ -21,13 +43,24 @@ public struct SpriteKitPotView: View {
     public var width: CGFloat
     public var height: CGFloat
     /// Độ giãn phủ chiều rộng (0.0 = giữ aspect ratio tự nhiên, 1.0 = fill tối đa chiều rộng container)
-    public var widthFill: CGFloat = 0.0
+    public var widthFill: CGFloat? = nil
     public var onTap: (() -> Void)? = nil
 
     /// Bí danh (alias) tương thích cho thuộc tính widthFill
     public var fillWidth: CGFloat {
-        get { widthFill }
+        get { widthFill ?? effectiveWidthFill }
         set { widthFill = newValue }
+    }
+
+    /// Tính toán widthFill hiệu dụng: ưu tiên caller truyền vào > cấu hình trong pots_data.json > PotDefaults
+    public var effectiveWidthFill: CGFloat {
+        if let explicit = widthFill {
+            return min(max(explicit, 0.0), 1.0)
+        }
+        if let dataFill = ItemDataManager.shared.getPot(byId: potId)?.widthFill {
+            return CGFloat(min(max(dataFill, 0.0), 1.0))
+        }
+        return PotDefaults.defaultWidthFill(for: potId)
     }
 
     @State private var scene: SpriteKitPotScene
@@ -37,42 +70,56 @@ public struct SpriteKitPotView: View {
         isHanging: Bool = false,
         width: CGFloat = 120,
         height: CGFloat = 80,
-        widthFill: CGFloat = 0.0,
+        widthFill: CGFloat? = nil,
         onTap: (() -> Void)? = nil
     ) {
         self.potId = potId
         self.isHanging = isHanging
         self.width = width
         self.height = height
-        self.widthFill = min(max(widthFill, 0.0), 1.0)
+        self.widthFill = widthFill
         self.onTap = onTap
 
-        let initialScene = Self.makeScene(potId: potId, isHanging: isHanging, width: width, height: height, widthFill: widthFill)
+        let cleanFill: CGFloat
+        if let explicit = widthFill {
+            cleanFill = min(max(explicit, 0.0), 1.0)
+        } else if let df = ItemDataManager.shared.getPot(byId: potId)?.widthFill {
+            cleanFill = CGFloat(min(max(df, 0.0), 1.0))
+        } else {
+            cleanFill = PotDefaults.defaultWidthFill(for: potId)
+        }
+
+        let initialScene = Self.makeScene(potId: potId, isHanging: isHanging, width: width, height: height, widthFill: cleanFill)
         _scene = State(initialValue: initialScene)
     }
 
     public var body: some View {
-        SpriteView(scene: scene, options: [.allowsTransparency])
+        let activeFill = effectiveWidthFill
+        let currentScene = scene
+        currentScene.configure(potId: potId, isHanging: isHanging, widthFill: activeFill)
+
+        return SpriteView(scene: currentScene, options: [.allowsTransparency])
             .frame(width: width, height: height)
             .background(Color.clear)
             .contentShape(Rectangle())
+            .id("\(potId)-\(isHanging)-\(activeFill)-\(width)-\(height)")
             .onAppear {
-                scene.configure(potId: potId, isHanging: isHanging, widthFill: widthFill)
+                currentScene.configure(potId: potId, isHanging: isHanging, widthFill: activeFill)
             }
             .onTapGesture {
-                scene.playTapAnimation()
+                currentScene.playTapAnimation()
                 let soundName = ItemDataManager.shared.getPot(byId: potId)?.clickSound ?? "tap"
                 AudioPlayer.shared.playClickSound(named: soundName)
                 onTap?()
             }
             .onChange(of: potId) { newId in
-                scene.configure(potId: newId, isHanging: isHanging, widthFill: widthFill)
+                currentScene.configure(potId: newId, isHanging: isHanging, widthFill: activeFill)
             }
             .onChange(of: isHanging) { newHanging in
-                scene.configure(potId: potId, isHanging: newHanging, widthFill: widthFill)
+                currentScene.configure(potId: potId, isHanging: newHanging, widthFill: activeFill)
             }
-            .onChange(of: widthFill) { newFill in
-                scene.configure(potId: potId, isHanging: isHanging, widthFill: newFill)
+            .onChange(of: activeFill) { newFill in
+                currentScene.configure(potId: potId, isHanging: isHanging, widthFill: newFill)
             }
     }
 

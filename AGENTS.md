@@ -94,17 +94,19 @@ Mọi Chậu cây (`SpriteKitPotView`, `PotView`, và các View chuyên biệt `
 2. **Công thức tính toán độ rộng chuẩn (`targetW`)**:
    ```swift
    let targetH = containerSize.height * 0.98
-   let baseW = min(containerSize.width * 0.96, targetH / aspect)
-   let maxW = containerSize.width * 0.96
-   let targetW = baseW + (maxW - baseW) * min(max(widthFill, 0.0), 1.0)
+   let naturalW = targetH / aspect
+   let maxW = max(naturalW, containerSize.width * 0.96)
+   let targetW = naturalW + (maxW - naturalW) * min(max(widthFill, 0.0), 1.0)
    ```
-   - Khi `widthFill == 0`: chậu giữ nguyên tỉ lệ nguyên bản tự nhiên (`baseW`).
-   - Khi `widthFill == 1.0`: chậu phủ tối đa chiều rộng cho phép (`maxW = containerSize.width * 0.96`).
-   - Khi `0 < widthFill < 1`: mở rộng mượt mà theo tỉ lệ phần trăm giữa `baseW` và `maxW`.
+   - Khi `widthFill == 0`: chậu chỉ fill theo chiều cao (`targetH`), bề rộng tính tự nhiên theo `naturalW = targetH / aspect` giữ nguyên $100\%$ tỉ lệ gốc không bao giờ bị méo.
+   - Khi `widthFill == 1.0`: chậu phủ tối đa chiều rộng cho phép (`maxW`).
+   - Khi `0 < widthFill < 1`: mở rộng mượt mà theo tỉ lệ phần trăm giữa `naturalW` và `maxW`.
 3. **Bóng đổ tự động co giãn (`shadowNode`)**:
    - Luôn tính bề rộng bóng đổ dựa theo `targetW` đã qua co giãn (`baseContactW = targetW * ratio`), đảm bảo bóng đổ luôn ôm sát đáy chậu khi kéo rộng.
-4. **Cấu hình mặc định trong `pots_data.json`**:
-   - `ItemData` hỗ trợ thuộc tính `widthFill: Double?`.
-   - Các chậu có tỉ lệ hẹp tự nhiên có thể khai báo trước `"widthFill": 0.40 ~ 0.45` trong `pots_data.json` để tự động hiển thị cân đối trong `PlantItemView` ngay cả khi View gọi không truyền tham số riêng.
+4. **Cơ chế Phân giải Mặc định & Định danh SwiftUI (`effectiveWidthFill` & `.id`)**:
+   - Các chậu có tỉ lệ đứng cao ($H/W \ge 1.0$) có giá trị `defaultWidthFill` thiết lập sẵn trong `PotDefaults` và `pots_data.json` (ví dụ `pot13` = `0.67`, `pot11` = `0.30`, `pot8` = `0.25`, `pot12` = `0.25`, `pot10` = `0.20`).
+   - Thứ tự ưu tiên nạp `widthFill`: Tham số truyền trực tiếp từ caller > Cấu hình trong `pots_data.json` > `PotDefaults.defaultWidthFill` > `0.0` (giữ nguyên aspect ratio).
+   - `SpriteKitPotView` **BẮT BUỘC** phải gán modifier `.id("\(potId)-\(isHanging)-\(activeFill)-\(width)-\(height)")` cho `SpriteView` và gọi `scene.configure` đồng bộ trong `body` để tránh lỗi cache `@State` của SwiftUI khi thay đổi `widthFill` hoặc reload Preview.
+
 
 

@@ -18,7 +18,7 @@ public final class Pot13Node: SKNode, PotInteractiveNode {
 
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
-    private var widthFill: CGFloat = 0.0
+    private var widthFill: CGFloat = 0.67
 
     /// Gốc rễ chậu và hiệu ứng
     private let potRootNode = SKNode()
@@ -37,7 +37,7 @@ public final class Pot13Node: SKNode, PotInteractiveNode {
 
     // MARK: - Initializer
 
-    public init(containerSize: CGSize = CGSize(width: 120, height: 95), isHanging: Bool = false, widthFill: CGFloat = 0.0) {
+    public init(containerSize: CGSize = CGSize(width: 120, height: 95), isHanging: Bool = false, widthFill: CGFloat = 0.67) {
         self.containerSize = containerSize
         self.isHanging = isHanging
         self.widthFill = min(max(widthFill, 0.0), 1.0)
@@ -54,7 +54,7 @@ public final class Pot13Node: SKNode, PotInteractiveNode {
 
     // MARK: - Configuration
 
-    public func configure(containerSize: CGSize, isHanging: Bool = false, widthFill: CGFloat = 0.0) {
+    public func configure(containerSize: CGSize, isHanging: Bool = false, widthFill: CGFloat = 0.67) {
         self.containerSize = containerSize
         self.isHanging = isHanging
         self.widthFill = min(max(widthFill, 0.0), 1.0)
@@ -79,9 +79,9 @@ public final class Pot13Node: SKNode, PotInteractiveNode {
         // Tỉ lệ ảnh gốc: 214 x 276 (aspect ~ 1.2897)
         let aspect: CGFloat = 276.0 / 214.0
         let targetH = containerSize.height * 0.98
-        let baseW = min(containerSize.width * 0.96, targetH / aspect)
-        let maxW = containerSize.width * 0.96
-        let targetW = baseW + (maxW - baseW) * widthFill
+        let naturalW = targetH / aspect
+        let maxW = max(naturalW, containerSize.width * 0.96)
+        let targetW = naturalW + (maxW - naturalW) * widthFill
 
         // 1. Bóng đổ dưới đáy chậu (nếu không phải chậu treo)
         if !isHanging {
