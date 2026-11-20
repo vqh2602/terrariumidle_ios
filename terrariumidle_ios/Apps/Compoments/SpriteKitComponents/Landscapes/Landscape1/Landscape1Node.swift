@@ -105,10 +105,14 @@ public final class Landscape1Node: SKNode, LandscapeInteractiveNode {
         // 1. Nạp bgNode
         if let bg = scene.childNode(withName: "bgNode") as? SKSpriteNode {
             bg.removeFromParent()
+            bg.anchorPoint = CGPoint(x: 0.5, y: 0.5)
             bg.position = CGPoint(x: containerSize.width / 2.0, y: containerSize.height / 2.0)
-            let fillSize = max(containerSize.width, containerSize.height) * 1.1
+            let fillSize = max(containerSize.width, containerSize.height) * 1.3
             bg.size = CGSize(width: fillSize, height: fillSize)
             bg.zPosition = 0
+            if bg.texture == nil {
+                bg.texture = loadTexture(name: "bg1-1@4.167x")
+            }
             landscapeRootNode.addChild(bg)
             self.bgNode = bg
         }
@@ -166,8 +170,9 @@ public final class Landscape1Node: SKNode, LandscapeInteractiveNode {
     private func buildProceduralFallback() {
         // 1. Nền
         let bgTex = loadTexture(name: "bg1-1@4.167x")
-        let fillSize = max(containerSize.width, containerSize.height) * 1.1
+        let fillSize = max(containerSize.width, containerSize.height) * 1.3
         let bg = SKSpriteNode(texture: bgTex, size: CGSize(width: fillSize, height: fillSize))
+        bg.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         bg.position = CGPoint(x: containerSize.width / 2.0, y: containerSize.height / 2.0)
         bg.zPosition = 0
         landscapeRootNode.addChild(bg)
@@ -252,6 +257,10 @@ public final class Landscape1Node: SKNode, LandscapeInteractiveNode {
 
     private func loadTexture(name: String) -> SKTexture? {
         if let img = UIImage(named: name) {
+            return SKTexture(image: img)
+        }
+        let cleanName = name.replacingOccurrences(of: "@4.167x", with: "")
+        if let img = UIImage(named: cleanName) {
             return SKTexture(image: img)
         }
         return nil

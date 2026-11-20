@@ -38,7 +38,7 @@ public final class SparkleBurstEffect: PotTapEffect {
             let startX = CGFloat.random(in: (potFrame.minX + potFrame.width * 0.15)...(potFrame.maxX - potFrame.width * 0.15))
             let startY = CGFloat.random(in: (potFrame.minY + potFrame.height * 0.18)...(potFrame.maxY - potFrame.height * 0.15))
             star.position = CGPoint(x: startX, y: startY)
-            star.zPosition = 50
+            star.zPosition = 150
             star.alpha = 0.0
             star.setScale(0.25)
             containerNode.addChild(star)

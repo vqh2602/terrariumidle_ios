@@ -32,6 +32,8 @@ Mọi loài cây mới (`Plant2`, `Plant3`, `Plant4`, ...) **BẮT BUỘC** ph�
      - Kích thước bọt chuẩn theo `containerSize`: Hạt (radius $1.8 \dots 3.0$), Cây con ($2.2 \dots 3.8$), Trưởng thành ($3.5 \dots 7.5$, $8 \dots 12$ bọt).
      - Phân bổ vị trí sinh bọt: Chuyển đổi vị trí lá sang toạ độ cây (`randomLeaf.parent?.convert(randomLeaf.position, to: self)`) hoặc trải đều tự nhiên khắp khung cây ($-44\% \dots +44\%$ chiều rộng, $18\% \dots 90\%$ chiều cao) với quãng đường bay $60 \dots 115\text{pt}$ và độ giãn nở `scaleUp: 1.30`.
      - Thân cọc/trụ leo (`assetId: 2` ở cây leo hoặc cây có thân riêng) không lắc độc lập làm rời cuống lá khỏi cành, thân chính chỉ đung đưa rất nhẹ ($0.003 \dots 0.008\text{rad}$).
+     - **Danh sách Hiệu ứng Chạm Cây (`tapEffects: [PlantTapEffect]`)**: Tương tự như Chậu, mọi loài cây quản lý hiệu ứng tap qua mảng `public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: ...)]`. Cho phép gán nhiều hiệu ứng đồng thời (Bọt khí Oxy, Bụi phấn hoa `SparklePollenEffect`, Cánh hoa rơi `FloatingPetalsEffect`) và khởi tạo động qua `PlantTapEffectFactory`.
+     - **Quy chuẩn Z-Index Hiệu ứng Chậu & Cây**: Mọi hiệu ứng hạt của Chậu (`PotTapEffect`) **BẮT BUỘC** có `zPosition = 150` (nằm trước thân chậu z = 50 và dây treo z = 100), hiệu ứng hạt/bọt khí của Cây (`PlantTapEffect`) có `zPosition = 200`.
 
 3. **`PlantXView.swift` (Xem trước độc lập)**:
    - Bọc `PlantView(plantId: "plantX", ...)` kèm SwiftUI `#Preview` với các nút chuyển trạng thái (Lv.1 Hạt giống, Lv.2 Cây con, Lv.3 Trưởng thành, Lv.10 Cực đại).

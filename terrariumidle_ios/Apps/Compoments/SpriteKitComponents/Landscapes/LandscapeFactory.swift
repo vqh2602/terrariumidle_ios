@@ -15,7 +15,7 @@ public final class LandscapeFactory {
         let cleanId = id.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 
         switch cleanId {
-        case "landscape1", "land1", "sky_sun_day":
+        case "landscape1", "land1", "sky_sun_day", "i_sky_sun_day":
             return Landscape1Node(containerSize: containerSize)
         default:
             // Mặc định hoặc fallback về Landscape1

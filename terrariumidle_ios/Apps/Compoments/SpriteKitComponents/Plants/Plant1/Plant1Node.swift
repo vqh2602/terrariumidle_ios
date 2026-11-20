@@ -89,6 +89,9 @@ public final class Plant1Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
+    /// Danh sách các hiệu ứng thị giác khi tap vào cây (mặc định Bọt khí Oxy ngọc lục bảo)
+    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
+
     /// Gốc rễ của các lá và thân cây
     private let plantRootNode = SKNode()
     /// Danh sách các sprite lá đang hiển thị để quản lý hiệu ứng
@@ -530,8 +533,11 @@ public final class Plant1Node: SKNode {
             playMatureTapAnimation()
         }
 
-        // Nhả bong bóng oxy tương ứng theo giai đoạn
-        spawnOxygenBubbles()
+        // Kích hoạt toàn bộ danh sách hiệu ứng tap đã đăng ký (Bọt khí Oxy, phấn hoa...)
+        let lvl = growthState.rawLevel
+        for effect in tapEffects {
+            effect.trigger(on: self, containerSize: containerSize, level: lvl, leaves: leafNodes)
+        }
     }
 
     /// Hiệu ứng khi tap vào hạt giống: Nảy tưng lên phấn khích + bừng sáng hào quang

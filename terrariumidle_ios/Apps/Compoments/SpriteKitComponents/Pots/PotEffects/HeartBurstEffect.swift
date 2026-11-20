@@ -37,7 +37,7 @@ public final class HeartBurstEffect: PotTapEffect {
             let startX = CGFloat.random(in: (potFrame.minX + potFrame.width * 0.2)...(potFrame.maxX - potFrame.width * 0.2))
             let startY = CGFloat.random(in: (potFrame.minY + potFrame.height * 0.3)...(potFrame.maxY - potFrame.height * 0.2))
             heart.position = CGPoint(x: startX, y: startY)
-            heart.zPosition = 50
+            heart.zPosition = 150
             heart.alpha = 0.0
             heart.setScale(0.3)
             containerNode.addChild(heart)

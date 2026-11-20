@@ -32,7 +32,7 @@ public final class StoneDustEffect: PotTapEffect {
             let startX = CGFloat.random(in: (potFrame.minX + potFrame.width * 0.2)...(potFrame.maxX - potFrame.width * 0.2))
             let startY = CGFloat.random(in: (potFrame.minY + potFrame.height * 0.25)...(potFrame.maxY - potFrame.height * 0.25))
             spark.position = CGPoint(x: startX, y: startY)
-            spark.zPosition = 35
+            spark.zPosition = 150
             spark.alpha = 0.0
             containerNode.addChild(spark)
 

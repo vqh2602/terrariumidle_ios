@@ -79,6 +79,9 @@ public final class Plant15Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
+    /// Danh sách các hiệu ứng thị giác khi tap vào cây (mặc định Bọt khí Oxy Deep Ocean)
+    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .deepOcean)]
+
     private let plantRootNode = SKNode()
     private var leafNodes: [SKSpriteNode] = []
     private var seedNode: SKSpriteNode?
@@ -401,8 +404,11 @@ public final class Plant15Node: SKNode {
             playMatureTapAnimation()
         }
 
-        // Bọt khí Oxy chuẩn Deep Ocean 3D
-        spawnOxygenBubbles()
+        // Kích hoạt danh sách hiệu ứng tap đã đăng ký (Bọt khí Oxy Deep Ocean 3D...)
+        let lvl = growthState.rawLevel
+        for effect in tapEffects {
+            effect.trigger(on: self, containerSize: containerSize, level: lvl, leaves: leafNodes)
+        }
     }
 
     private func playSeedTapAnimation() {

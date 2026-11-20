@@ -51,14 +51,17 @@ public struct SpriteKitBackgroundView: View {
                         let newScene: SpriteKitBackgroundScene
                         if let sksScene = SpriteKitBackgroundScene(fileNamed: "BackgroundScene.sks") ?? SpriteKitBackgroundScene(fileNamed: "BackgroundScene") {
                             sksScene.size = geometry.size
+                            sksScene.anchorPoint = .zero
                             newScene = sksScene
                         } else {
                             newScene = SpriteKitBackgroundScene(size: geometry.size)
                         }
+                        newScene.anchorPoint = .zero
                         newScene.configure(themeId: backgroundId)
                         self.scene = newScene
                     }
             }
         }
+        .ignoresSafeArea(.all)
     }
 }

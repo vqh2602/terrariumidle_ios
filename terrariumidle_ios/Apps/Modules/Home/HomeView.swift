@@ -109,6 +109,7 @@ struct HomeView: View {
                     // 100% SpriteKit Background
                     SpriteKitBackgroundView(backgroundId: backgroundRive)
                         .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
+                        .ignoresSafeArea(.all)
 
                     HStack(spacing: 0) {
                         Image("r1").resizable()

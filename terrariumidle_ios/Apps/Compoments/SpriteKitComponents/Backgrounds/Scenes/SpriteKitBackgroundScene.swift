@@ -36,12 +36,14 @@ public final class SpriteKitBackgroundScene: SKScene {
     private func setupBasics() {
         backgroundColor = .clear
         scaleMode = .resizeFill
+        anchorPoint = .zero
     }
 
     // MARK: - Configuration
 
     public func configure(themeId: String) {
         self.currentThemeId = themeId
+        anchorPoint = .zero
         if size.width > 0 && size.height > 0 {
             rebuildScene()
         }
@@ -50,6 +52,7 @@ public final class SpriteKitBackgroundScene: SKScene {
     public override func didMove(to view: SKView) {
         super.didMove(to: view)
         view.allowsTransparency = true
+        anchorPoint = .zero
         if !isConfigured && size.width > 0 && size.height > 0 {
             rebuildScene()
         }
@@ -57,6 +60,7 @@ public final class SpriteKitBackgroundScene: SKScene {
 
     public override func didChangeSize(_ oldSize: CGSize) {
         super.didChangeSize(oldSize)
+        anchorPoint = .zero
         if size.width > 0 && size.height > 0 {
             if let custom = activeLandscapeNode {
                 custom.configure(containerSize: size)
@@ -78,6 +82,7 @@ public final class SpriteKitBackgroundScene: SKScene {
 
     private func rebuildScene() {
         guard size.width > 0, size.height > 0 else { return }
+        anchorPoint = .zero
         isConfigured = true
         removeAllChildren()
         removeAllActions()
@@ -170,8 +175,9 @@ public final class SpriteKitBackgroundScene: SKScene {
         }
 
         let bgNode = SKSpriteNode(texture: SKTexture(image: gradientImage))
+        bgNode.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         bgNode.position = CGPoint(x: size.width / 2, y: size.height / 2)
-        bgNode.size = size
+        bgNode.size = CGSize(width: size.width * 1.1, height: size.height * 1.1)
         bgNode.zPosition = -100
         addChild(bgNode)
     }

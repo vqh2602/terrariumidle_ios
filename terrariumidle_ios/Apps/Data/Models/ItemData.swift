@@ -232,7 +232,13 @@ class ItemDataManager {
     }
 
     func getLandscape(byIdOrImage idOrImage: String) -> ItemData? {
-        return allLandscapes.first { $0.id == idOrImage || $0.image == idOrImage }
+        return allLandscapes.first {
+            $0.id == idOrImage ||
+            $0.image == idOrImage ||
+            $0.image == "i_\(idOrImage)" ||
+            idOrImage == "i_\($0.image)" ||
+            (idOrImage == "sky_sun_day" && $0.id == "landscape1")
+        }
     }
 
     func getAllMusics() -> [ItemData] {

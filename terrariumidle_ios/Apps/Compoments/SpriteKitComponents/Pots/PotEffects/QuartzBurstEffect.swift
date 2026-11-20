@@ -37,7 +37,7 @@ public final class QuartzBurstEffect: PotTapEffect {
             let startX = CGFloat.random(in: (potFrame.minX + potFrame.width * 0.15)...(potFrame.maxX - potFrame.width * 0.15))
             let startY = CGFloat.random(in: (potFrame.minY + potFrame.height * 0.25)...(potFrame.maxY - potFrame.height * 0.15))
             crystal.position = CGPoint(x: startX, y: startY)
-            crystal.zPosition = 50
+            crystal.zPosition = 150
             crystal.alpha = 0.0
             crystal.setScale(0.2)
             containerNode.addChild(crystal)
