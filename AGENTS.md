@@ -142,20 +142,21 @@ Mọi Node Chậu (`PotInteractiveNode`) đều cung cấp:
 - Tương thích ngược: `SpriteKitPotView` và `SpriteKitPlantView` độc lập vẫn được giữ nguyên cho màn hình Shop và Preview đơn lẻ.
 
 ### 4. Cấu hình Vị trí Layer Cây theo JSON (`itemTypeAttribute`)
-Mỗi loài cây trong [plants_data.json](file:///Users/vuongquanghuy/code/prj_ios/terrariumidle_ios/terrariumidle_ios/Apps/Data/Items/plants_data.json) được cấu hình thuộc tính `"itemTypeAttribute"` điều khiển Z-Index phân tầng tự động:
+Mỗi loài cây trong [plants_data.json](file:///Users/vuongquanghuy/code/prj_ios/terrariumidle_ios/terrariumidle_ios/Apps/Data/Items/plants_data.json) được cấu hình thuộc tính `"itemTypeAttribute"` điều khiển Z-Index phân tầng tự động.
+Thuộc tính này hỗ trợ kết hợp nhiều cờ thuộc tính phân tách bằng dấu phẩy:
 - `"none"` (mặc định cho cây để bàn đứng thẳng): Cây nằm **SAU** mặt trước của chậu (cắm vào `plantMount` z = 10, tổng z các lá 21..29 < `potBody` 50). Gốc cây cắm ngập trong lòng đất, vết cắt cuống được che giấu tự nhiên sau thành chậu (ví dụ: `plant1`, `plant2`, `plant3`, v.v.).
 - `"front"` (cho cây dây leo, cành rủ): Cây nằm **TRƯỚC** mặt chậu (`plant.asNode.zPosition = 60` trong `plantMount`, tổng z các lá 81..89 > `potBody` 50). Toàn bộ cành lá phủ rủ xuống qua miệng chậu và đè lên mặt trước của chậu (ví dụ: `plant13` Philodendron hederaceum, `plant14` Heartleaf philodendron).
-- `"hanging"`: Cây treo móc ngược từ trên trần/kệ chúc xuống.
+- `"hanging"`: Cây chậu treo, chúc ngược từ móc hoặc lòng chậu treo xuống.
+- **`"hanging,front"` (kết hợp đa thuộc tính)**: Vừa là cây chậu treo (`isHanging = true`), vừa có cành lá vươn phủ đè ra **TRƯỚC** mặt chậu (`isInFront = true`).
 - **Cơ chế Data-Driven**: `TerrariumSlotScene` và `TerrariumSlotView` tự động truy vấn `itemTypeAttribute` từ `ItemDataManager.shared.getPlant(byId: plantId)` nếu caller không truyền thủ công. Khi sửa thuộc tính này trong JSON, app tự động áp dụng ngay mà không cần sửa code Swift.
 - Trong Swift Model: `ItemData.swift` định nghĩa:
   ```swift
-  public enum ItemTypeAttribute: String, Codable {
-      case none
-      case hanging
-      case front
-
-      public var isInFront: Bool { self == .front }
-      public var isHanging: Bool { self == .hanging }
+  public struct ItemTypeAttribute: RawRepresentable, Codable, Hashable, Equatable, ExpressibleByStringLiteral {
+      public var rawValue: String
+      public var isHanging: Bool { flags.contains("hanging") }
+      public var isInFront: Bool { flags.contains("front") }
+      public var isNone: Bool { flags.contains("none") || flags.isEmpty || (!isHanging && !isInFront) }
+      public func contains(_ flag: String) -> Bool { flags.contains(flag) }
   }
   ```
 

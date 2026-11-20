@@ -51,23 +51,97 @@ struct ItemData: Codable, Identifiable {
     let widthFill: Double?
 }
 
-// MARK: - Item Type Attribute
+// MARK: - Item Type Attribute (Hỗ trợ đa thuộc tính: "none", "hanging", "front", "hanging,front", v.v.)
 
-public enum ItemTypeAttribute: String, Codable {
-    /// Cây để bàn thông thường, mọc từ lòng chậu, nằm SAU mặt trước của chậu (z = 10 < pot 20)
-    case none
-    /// Cây treo từ móc trần rủ xuống
-    case hanging
-    /// Cây nằm TRƯỚC mặt chậu, cành lá/dây leo phủ tràn qua miệng chậu (z = 25 > pot 20)
-    case front
+public struct ItemTypeAttribute: RawRepresentable, Codable, Hashable, Equatable, ExpressibleByStringLiteral, CustomStringConvertible {
+    public var rawValue: String
 
-    public var isInFront: Bool {
-        return self == .front
+    public init(rawValue: String) {
+        self.rawValue = rawValue
     }
 
+    public init(stringLiteral value: String) {
+        self.rawValue = value
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if container.decodeNil() {
+            self.rawValue = "none"
+        } else {
+            let str = try container.decode(String.self)
+            self.rawValue = str.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+
+    public var description: String {
+        return rawValue
+    }
+
+    /// Tập hợp các thuộc tính thành phần (phân tách bởi dấu phẩy, chữ thường, bỏ khoảng trắng)
+    public var flags: Set<String> {
+        let items = rawValue
+            .lowercased()
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return Set(items)
+    }
+
+    /// Cây hoặc chậu dạng treo ("hanging")
     public var isHanging: Bool {
-        return self == .hanging
+        return flags.contains("hanging")
     }
+
+    /// Cây có cành lá/dây leo nằm TRƯỚC mặt chậu ("front")
+    public var isInFront: Bool {
+        return flags.contains("front")
+    }
+
+    /// Không có cờ đặc biệt (mặc định để bàn, thân sau chậu)
+    public var isNone: Bool {
+        return flags.contains("none") || flags.isEmpty || (!isHanging && !isInFront)
+    }
+
+    /// Kiểm tra xem có chứa thuộc tính cụ thể hay không (ví dụ: .contains("hanging"))
+    public func contains(_ flag: String) -> Bool {
+        return flags.contains(flag.lowercased().trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    /// Kiểm tra xem có khớp/tương thích với thuộc tính khác hay không
+    public func matches(_ other: ItemTypeAttribute) -> Bool {
+        if other.isNone { return self.isNone }
+        if other.isHanging && !self.isHanging { return false }
+        if other.isInFront && !self.isInFront { return false }
+        return true
+    }
+
+    // MARK: - Equatable & Hashable theo tập flags chuẩn hóa
+
+    public static func == (lhs: ItemTypeAttribute, rhs: ItemTypeAttribute) -> Bool {
+        if lhs.isNone && rhs.isNone { return true }
+        return lhs.flags == rhs.flags
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        if isNone {
+            hasher.combine("none")
+        } else {
+            hasher.combine(flags)
+        }
+    }
+
+    // MARK: - Constants tĩnh tiện dụng
+
+    public static let none: ItemTypeAttribute = ItemTypeAttribute(rawValue: "none")
+    public static let hanging: ItemTypeAttribute = ItemTypeAttribute(rawValue: "hanging")
+    public static let front: ItemTypeAttribute = ItemTypeAttribute(rawValue: "front")
+    public static let hangingFront: ItemTypeAttribute = ItemTypeAttribute(rawValue: "hanging,front")
 }
 
 // MARK: - Item Data Manager
@@ -196,11 +270,11 @@ class ItemDataManager {
     // MARK: - Filter by Attribute
 
     func getPlants(byAttribute attribute: ItemTypeAttribute) -> [ItemData] {
-        return allPlants.filter { $0.itemTypeAttribute == attribute }
+        return allPlants.filter { $0.itemTypeAttribute.matches(attribute) }
     }
 
     func getPots(byAttribute attribute: ItemTypeAttribute) -> [ItemData] {
-        return allPots.filter { $0.itemTypeAttribute == attribute }
+        return allPots.filter { $0.itemTypeAttribute.matches(attribute) }
     }
 
     // MARK: - Filter by Currency

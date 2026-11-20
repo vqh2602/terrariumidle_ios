@@ -67,18 +67,19 @@ public final class TerrariumSlotScene: SKScene {
         let cleanPlant = plantId.lowercased().trimmingCharacters(in: .whitespaces)
         let cleanFill = min(max(widthFill, 0.0), 1.0)
         let resolvedAttribute = itemTypeAttribute ?? ItemDataManager.shared.getPlant(byId: cleanPlant)?.itemTypeAttribute ?? .none
+        let effectiveHanging = isHanging || resolvedAttribute.isHanging
 
         let changed = self.potId != cleanPot ||
                       self.plantId != cleanPlant ||
                       self.plantLevel != plantLevel ||
-                      self.isHanging != isHanging ||
+                      self.isHanging != effectiveHanging ||
                       self.itemTypeAttribute != resolvedAttribute ||
                       abs(self.widthFill - cleanFill) > 0.001
 
         self.potId = cleanPot
         self.plantId = cleanPlant
         self.plantLevel = plantLevel
-        self.isHanging = isHanging
+        self.isHanging = effectiveHanging
         self.widthFill = cleanFill
         self.itemTypeAttribute = resolvedAttribute
         self.onTap = onTap

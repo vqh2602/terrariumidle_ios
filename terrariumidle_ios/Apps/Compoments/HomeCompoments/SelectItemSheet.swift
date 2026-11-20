@@ -241,8 +241,8 @@ struct SelectItemSheet: View {
             return true // No conflict if either is not selected
         }
 
-        let plantIsHanging = plant.itemTypeAttribute == .hanging
-        let potIsHanging = pot.itemTypeAttribute == .hanging
+        let plantIsHanging = plant.itemTypeAttribute.isHanging
+        let potIsHanging = pot.itemTypeAttribute.isHanging
 
         return plantIsHanging == potIsHanging
     }
@@ -314,7 +314,7 @@ struct SelectItemSheet: View {
            let potId = selectedPotId
         {
             // Create plant with pot
-            let isHanging = plant.itemTypeAttribute == .hanging
+            let isHanging = plant.itemTypeAttribute.isHanging
 
             let newPlant = GardenModel.Plant(
                 harvestTime: currentTime,
@@ -333,7 +333,7 @@ struct SelectItemSheet: View {
         } else if selectionMode == .decorationOnly,
                   let decorationId = selectedDecorationId
         {
-            let isHanging = ItemDataManager.shared.getItem(byId: decorationId)?.itemTypeAttribute == .hanging
+            let isHanging = ItemDataManager.shared.getItem(byId: decorationId)?.itemTypeAttribute.isHanging ?? false
             // Create decoration (both idPlant and idPot set to sticker id)
             let newDecoration = GardenModel.Plant(
                 harvestTime: currentTime,

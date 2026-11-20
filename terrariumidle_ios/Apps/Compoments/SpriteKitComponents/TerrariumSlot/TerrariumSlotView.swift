@@ -155,6 +155,7 @@ public struct TerrariumSlotView: View {
             case "none": return ItemTypeAttribute.none
             case "front": return ItemTypeAttribute.front
             case "hanging": return ItemTypeAttribute.hanging
+            case "hanging,front": return ItemTypeAttribute.hangingFront
             default: return nil
             }
         }
@@ -213,12 +214,20 @@ public struct TerrariumSlotView: View {
                             Text("itemTypeAttribute (Z-Index Cây/Chậu):")
                                 .font(.caption.bold())
                             Picker("Vị trí Z-Index", selection: $selectedAttribute) {
-                                Text("Auto (JSON)").tag("auto")
-                                Text("none (sau chậu)").tag("none")
-                                Text("front (trước chậu)").tag("front")
-                                Text("hanging (treo)").tag("hanging")
+                                Text("Auto").tag("auto")
+                                Text("none").tag("none")
+                                Text("front").tag("front")
+                                Text("hanging").tag("hanging")
+                                Text("hanging,front").tag("hanging,front")
                             }
                             .pickerStyle(.segmented)
+                            .onChange(of: selectedAttribute) { _, newVal in
+                                if newVal == "hanging" || newVal == "hanging,front" {
+                                    isHanging = true
+                                } else if newVal == "none" || newVal == "front" {
+                                    isHanging = false
+                                }
+                            }
                         }
 
                         HStack {

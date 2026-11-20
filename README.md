@@ -260,10 +260,11 @@ Tất cả cấu hình được đưa về các file JSON trong `Apps/Data/Items
     "levelUnlock": 17
 }
 ```
-> **Thuộc tính `"itemTypeAttribute"` cho cây trồng:**
+> **Thuộc tính `"itemTypeAttribute"` cho cây trồng (hỗ trợ phân tách bằng dấu phẩy):**
 > - `"none"` (mặc định): Cây cắm trong chậu, thân nằm sau thành chậu (cắm vào `plantMount` `z = 10`, tổng z các lá `21..29 < potBody 50`).
 > - `"front"`: Cây dây leo/thân rủ, cành lá vươn đè ra mặt trước chậu (`z = 70 > potBody 50`, ví dụ: `plant13`, `plant14`).
-> - `"hanging"`: Cây thuộc dạng chậu treo chúc xuống.
+> - `"hanging"`: Cây dạng chậu treo chúc xuống.
+> - `"hanging,front"`: Cây vừa thuộc dạng chậu treo (`isHanging = true`), vừa có cành lá vươn phủ đè ra trước mặt chậu (`isInFront = true`).
 
 ### Ví dụ cấu hình trong `effects_data.json`:
 ```json
