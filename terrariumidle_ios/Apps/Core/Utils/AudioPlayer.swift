@@ -20,12 +20,12 @@ final class AudioPlayer {
     }
 
     /// Cấu hình AudioSession bất đồng bộ trên background thread hoàn toàn,
-    /// tránh chặn UI main thread và loại bỏ cảnh báo UI unresponsiveness
+    /// sử dụng category .playback (không có .mixWithOthers) để kích hoạt Now Playing trên thanh thông báo/màn hình khóa iOS
     private func configureAudioSessionAsync() {
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 let session = AVAudioSession.sharedInstance()
-                try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                try session.setCategory(.playback, mode: .default, options: [])
                 try session.setActive(true)
             } catch {
                 print("⚠️ Lỗi thiết lập AVAudioSession:", error)

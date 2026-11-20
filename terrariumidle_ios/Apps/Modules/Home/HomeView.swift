@@ -62,7 +62,7 @@ struct HomeView: View {
     init() {
         print("play sound tap")
         //            AudioPlayer.shared.playBGM(fileName:"peacefulgarden" )
-        BackgroundAudioManager.shared.switchBGM(id: "m0", fileName: "peacefulgarden", title: "Mặc định")
+        BackgroundAudioManager.shared.switchBGM(id: "m0", fileName: "m0", title: "Relax...", image: "m0")
     }
 
     private func autoSelectOverlay() {

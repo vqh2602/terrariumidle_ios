@@ -9,17 +9,28 @@ import AVFoundation
 import Combine
 import Foundation
 import MediaPlayer
+import UIKit
 
 @MainActor
 final class BackgroundAudioManager: ObservableObject {
     static let shared = BackgroundAudioManager()
 
+    // MARK: - Published Properties
+
     @Published private(set) var isPlaying: Bool = false
     @Published var currentBGMId: String? = nil
-    @Published var activeSFXIds: Set<String> = []
-    @Published var bgmVolume: Float = 0.6
-    @Published var sfxVolume: Float = 0.6
     @Published var currentBGMTitle: String = "Terrarium Idle"
+    @Published var currentBGMImage: String? = nil
+    @Published var bgmVolume: Float = 0.6
+    @Published var sfxVolume: Float = 0.6 // Master SFX volume
+
+    /// Danh sách các SFX đang phát đồng thời
+    @Published var activeSFXIds: Set<String> = []
+
+    /// Âm lượng riêng cho từng SFX (0.0 ... 1.0)
+    @Published var sfxVolumes: [String: Float] = [:]
+
+    // MARK: - Private Players
 
     private var player: AVAudioPlayer?
     private var sfxPlayers: [String: AVAudioPlayer] = [:]
@@ -31,8 +42,9 @@ final class BackgroundAudioManager: ObservableObject {
 
     private static var isSessionConfigured = false
 
-    /// Cấu hình AudioSession bất đồng bộ trên background thread hoàn toàn,
-    /// tuyệt đối không gọi setActive trên Main Thread để tránh cảnh báo UI unresponsiveness
+    /// Cấu hình AudioSession bất đồng bộ trên background thread hoàn toàn.
+    /// Dùng category .playback (không có .mixWithOthers) để kích hoạt Remote Controls và Now Playing
+    /// trên thanh thông báo (Notification Center), màn hình khóa (Lock Screen) và Control Center.
     private func ensureAudioSession() {
         guard !Self.isSessionConfigured else { return }
         Self.isSessionConfigured = true
@@ -40,7 +52,7 @@ final class BackgroundAudioManager: ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 let session = AVAudioSession.sharedInstance()
-                try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                try session.setCategory(.playback, mode: .default, options: [])
                 try session.setActive(true)
             } catch {
                 print("⚠️ Lỗi thiết lập AVAudioSession:", error)
@@ -48,12 +60,42 @@ final class BackgroundAudioManager: ObservableObject {
         }
     }
 
-    // MARK: - BGM
+    // MARK: - Audio File Resolution Helper
 
-    func startBGM(fileName: String, ext: String = "mp3", title: String = "Terrarium Idle") {
+    private func findAudioURL(fileName: String, ext: String = "mp3") -> URL? {
+        // 1. Tìm chính xác
+        if let url = Bundle.main.url(forResource: fileName, withExtension: ext) {
+            return url
+        }
+        // 2. Tìm với đuôi hoa (ví dụ: m5.MP3)
+        if let url = Bundle.main.url(forResource: fileName, withExtension: ext.uppercased()) {
+            return url
+        }
+        // 3. Fallback m0 <-> peacefulgarden
+        if fileName == "m0" {
+            if let url = Bundle.main.url(forResource: "peacefulgarden", withExtension: "mp3") {
+                return url
+            }
+        } else if fileName == "peacefulgarden" {
+            if let url = Bundle.main.url(forResource: "m0", withExtension: "mp3") {
+                return url
+            }
+        }
+        return nil
+    }
+
+    // MARK: - BGM Controls
+
+    func startBGM(
+        fileName: String,
+        ext: String = "mp3",
+        title: String = "Terrarium Idle",
+        image: String? = nil,
+        id: String? = nil
+    ) {
         ensureAudioSession()
 
-        guard let url = Bundle.main.url(forResource: fileName, withExtension: ext) else {
+        guard let url = findAudioURL(fileName: fileName, ext: ext) else {
             print("❌ Missing BGM: \(fileName).\(ext)")
             return
         }
@@ -67,23 +109,39 @@ final class BackgroundAudioManager: ObservableObject {
 
             isPlaying = true
             currentBGMTitle = title
+            if let id = id {
+                currentBGMId = id
+            }
+            if let image = image {
+                currentBGMImage = image
+            } else if currentBGMImage == nil {
+                currentBGMImage = currentBGMId
+            }
+
             updateNowPlaying(title: title)
+            print("🎵 BGM playing: \(title) (\(fileName))")
 
         } catch {
             print("❌ startBGM error:", error)
         }
     }
 
-    /// Switch to a different BGM track by item id
-    func switchBGM(id: String, fileName: String, title: String = "Terrarium Idle") {
+    /// Chuyển đổi sang bài BGM khác
+    func switchBGM(
+        id: String,
+        fileName: String,
+        title: String = "Terrarium Idle",
+        image: String? = nil
+    ) {
         stop()
         currentBGMId = id
-        startBGM(fileName: fileName, title: title)
+        currentBGMTitle = title
+        currentBGMImage = image ?? id
+        startBGM(fileName: fileName, title: title, image: currentBGMImage, id: id)
     }
 
     func pause() {
         player?.pause()
-        // Also pause all SFX
         for (_, sfxPlayer) in sfxPlayers {
             sfxPlayer.pause()
         }
@@ -93,7 +151,6 @@ final class BackgroundAudioManager: ObservableObject {
 
     func resume() {
         player?.play()
-        // Also resume all SFX
         for (_, sfxPlayer) in sfxPlayers {
             sfxPlayer.play()
         }
@@ -109,8 +166,13 @@ final class BackgroundAudioManager: ObservableObject {
         player?.stop()
         player = nil
         isPlaying = false
-        currentBGMId = nil
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+        updatePlaybackState()
+    }
+
+    func seek(to time: TimeInterval) {
+        guard let p = player else { return }
+        p.currentTime = max(0, min(time, p.duration))
+        updateNowPlaying()
     }
 
     func setBGMVolume(_ vol: Float) {
@@ -118,88 +180,178 @@ final class BackgroundAudioManager: ObservableObject {
         player?.volume = bgmVolume
     }
 
-    func setSFXVolume(_ vol: Float) {
-        sfxVolume = max(0, min(1, vol))
-        // Update volume for all active SFX players
-        for (_, sfxPlayer) in sfxPlayers {
-            sfxPlayer.volume = sfxVolume
-        }
+    // MARK: - Next / Previous Track (Remote Command Support)
+
+    func playNextTrack() {
+        let allMusics = ItemDataManager.shared.getAllMusics()
+        guard !allMusics.isEmpty else { return }
+
+        let unlockedIds = MusicUnlockHelper.getUnlockedMusicIds(from: FireStoreService.shared.gradenModel)
+        let unlockedTracks = allMusics.filter { unlockedIds.contains($0.id) }
+        let playlist = unlockedTracks.isEmpty ? allMusics : unlockedTracks
+
+        let currentIndex = playlist.firstIndex(where: { $0.id == currentBGMId }) ?? 0
+        let nextIndex = (currentIndex + 1) % playlist.count
+        let nextTrack = playlist[nextIndex]
+
+        switchBGM(
+            id: nextTrack.id,
+            fileName: nextTrack.id,
+            title: nextTrack.name,
+            image: nextTrack.image
+        )
     }
 
-    // MARK: - SFX (layered ambient sounds, looping)
+    func playPreviousTrack() {
+        if let p = player, p.currentTime > 3.0 {
+            seek(to: 0)
+            return
+        }
+
+        let allMusics = ItemDataManager.shared.getAllMusics()
+        guard !allMusics.isEmpty else { return }
+
+        let unlockedIds = MusicUnlockHelper.getUnlockedMusicIds(from: FireStoreService.shared.gradenModel)
+        let unlockedTracks = allMusics.filter { unlockedIds.contains($0.id) }
+        let playlist = unlockedTracks.isEmpty ? allMusics : unlockedTracks
+
+        let currentIndex = playlist.firstIndex(where: { $0.id == currentBGMId }) ?? 0
+        let prevIndex = (currentIndex - 1 + playlist.count) % playlist.count
+        let prevTrack = playlist[prevIndex]
+
+        switchBGM(
+            id: prevTrack.id,
+            fileName: prevTrack.id,
+            title: prevTrack.name,
+            image: prevTrack.image
+        )
+    }
+
+    // MARK: - SFX (Layered Multi-SFX Management & Mixer)
 
     func toggleSFX(id: String, fileName: String, ext: String = "mp3") {
         if activeSFXIds.contains(id) {
-            // Stop this SFX
-            sfxPlayers[id]?.stop()
-            sfxPlayers.removeValue(forKey: id)
-            activeSFXIds.remove(id)
-            print("🔇 SFX stopped: \(id)")
+            stopSFX(id: id)
         } else {
-            // Start this SFX
-            guard let url = Bundle.main.url(forResource: fileName, withExtension: ext) else {
-                print("❌ Missing SFX: \(fileName).\(ext)")
-                return
-            }
-            do {
-                let p = try AVAudioPlayer(contentsOf: url)
-                p.numberOfLoops = -1
-                p.volume = sfxVolume
-                p.prepareToPlay()
-                p.play()
-                sfxPlayers[id] = p
-                activeSFXIds.insert(id)
-                print("🔊 SFX playing: \(id)")
-            } catch {
-                print("❌ SFX error:", error)
-            }
+            startSFX(id: id, fileName: fileName, ext: ext)
         }
+    }
+
+    func startSFX(id: String, fileName: String, ext: String = "mp3") {
+        guard let url = findAudioURL(fileName: fileName, ext: ext) else {
+            print("❌ Missing SFX: \(fileName).\(ext)")
+            return
+        }
+
+        do {
+            let p = try AVAudioPlayer(contentsOf: url)
+            p.numberOfLoops = -1
+
+            let indVol = sfxVolumes[id] ?? 1.0
+            p.volume = indVol * sfxVolume
+            p.prepareToPlay()
+            p.play()
+
+            sfxPlayers[id] = p
+            activeSFXIds.insert(id)
+            if sfxVolumes[id] == nil {
+                sfxVolumes[id] = 1.0
+            }
+            print("🔊 SFX playing: \(id) (vol: \(p.volume))")
+        } catch {
+            print("❌ SFX error:", error)
+        }
+    }
+
+    func stopSFX(id: String) {
+        sfxPlayers[id]?.stop()
+        sfxPlayers.removeValue(forKey: id)
+        activeSFXIds.remove(id)
+        print("🔇 SFX stopped: \(id)")
     }
 
     func stopAllSFX() {
         sfxPlayers.values.forEach { $0.stop() }
         sfxPlayers.removeAll()
         activeSFXIds.removeAll()
+        print("🔇 All SFX stopped")
     }
 
-    // MARK: - Now Playing
+    /// Điều chỉnh âm lượng riêng cho 1 hiệu ứng SFX cụ thể (0.0 ... 1.0)
+    func setIndividualSFXVolume(id: String, volume: Float) {
+        let clamped = max(0, min(1, volume))
+        sfxVolumes[id] = clamped
+        if let p = sfxPlayers[id] {
+            p.volume = clamped * sfxVolume
+        }
+    }
 
-    private func updateNowPlaying(title: String) {
+    func getIndividualSFXVolume(id: String) -> Float {
+        return sfxVolumes[id] ?? 1.0
+    }
+
+    /// Điều chỉnh âm lượng tổng thể cho toàn bộ SFX
+    func setSFXVolume(_ vol: Float) {
+        sfxVolume = max(0, min(1, vol))
+        for (id, p) in sfxPlayers {
+            let indVol = sfxVolumes[id] ?? 1.0
+            p.volume = indVol * sfxVolume
+        }
+    }
+
+    // MARK: - Now Playing (Notification Center / Lock Screen / Control Center)
+
+    func updateNowPlaying(title: String? = nil) {
+        let displayTitle = title ?? currentBGMTitle
+
         var info: [String: Any] = [
-            MPMediaItemPropertyTitle: title,
+            MPMediaItemPropertyTitle: displayTitle,
             MPMediaItemPropertyArtist: "Terrarium Idle",
+            MPMediaItemPropertyAlbumTitle: "Nhạc thư giãn",
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: player?.currentTime ?? 0,
         ]
 
-        if let duration = player?.duration {
+        if let duration = player?.duration, duration > 0 {
             info[MPMediaItemPropertyPlaybackDuration] = duration
         }
 
-        // Add artwork if app icon is available
-        if let image = UIImage(named: "AppIcon") {
+        // Tải ảnh bìa bài hát từ Assets (m0, m1, ...)
+        let imageName = currentBGMImage ?? currentBGMId ?? "m0"
+        if let image = UIImage(named: imageName) {
             let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
             info[MPMediaItemPropertyArtwork] = artwork
         }
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
     }
 
     private func updatePlaybackState() {
-        guard var info = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
+        guard var info = MPNowPlayingInfoCenter.default().nowPlayingInfo else {
+            updateNowPlaying()
+            return
+        }
         info[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
         info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player?.currentTime ?? 0
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
     }
 
-    // MARK: - Remote controls (Control Center / Lock Screen)
+    // MARK: - Remote Commands (Lock Screen / Notification Center / Control Center)
 
     private func setupRemoteCommands() {
+        // Cho phép nhận sự kiện điều khiển từ xa
+        UIApplication.shared.beginReceivingRemoteControlEvents()
+
         let center = MPRemoteCommandCenter.shared()
 
         center.playCommand.isEnabled = true
         center.pauseCommand.isEnabled = true
         center.togglePlayPauseCommand.isEnabled = true
+        center.nextTrackCommand.isEnabled = true
+        center.previousTrackCommand.isEnabled = true
+        center.changePlaybackPositionCommand.isEnabled = true
 
         center.playCommand.addTarget { [weak self] _ in
             Task { @MainActor in self?.resume() }
@@ -213,6 +365,24 @@ final class BackgroundAudioManager: ObservableObject {
 
         center.togglePlayPauseCommand.addTarget { [weak self] _ in
             Task { @MainActor in self?.toggle() }
+            return .success
+        }
+
+        center.nextTrackCommand.addTarget { [weak self] _ in
+            Task { @MainActor in self?.playNextTrack() }
+            return .success
+        }
+
+        center.previousTrackCommand.addTarget { [weak self] _ in
+            Task { @MainActor in self?.playPreviousTrack() }
+            return .success
+        }
+
+        center.changePlaybackPositionCommand.addTarget { [weak self] event in
+            guard let event = event as? MPChangePlaybackPositionCommandEvent else {
+                return .commandFailed
+            }
+            Task { @MainActor in self?.seek(to: event.positionTime) }
             return .success
         }
     }
