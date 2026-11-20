@@ -138,8 +138,8 @@ public final class TerrariumSlotScene: SKScene {
         if hasPot {
             let potH: CGFloat
             if isHanging {
-                // Chậu treo: dây treo + bầu chậu chiếm khoảng 75% chiều cao khung slot
-                potH = baseH * 0.78
+                // Chậu treo: dây treo + bầu chậu chiếm khoảng 70% chiều cao khung slot
+                potH = baseH * 0.70
             } else {
                 // Chậu để bàn: chiếm khoảng 25% ~ 30% chiều cao khung slot
                 potH = min(baseH * 0.28, baseW * 0.46)
@@ -154,8 +154,8 @@ public final class TerrariumSlotScene: SKScene {
             )
 
             if isHanging {
-                // Neo tại đỉnh slot (y = baseH)
-                pot.asNode.position = CGPoint(x: 0, y: baseH)
+                // Neo chính xác tại đỉnh cao nhất của Scene (y = size.height) để dính sát mép trên thanh kệ
+                pot.asNode.position = CGPoint(x: 0, y: size.height)
             } else {
                 // Đáy chậu nằm ngay ngắn trên mặt kệ (y = 0)
                 pot.asNode.position = CGPoint(x: 0, y: 0)
@@ -167,11 +167,15 @@ public final class TerrariumSlotScene: SKScene {
             self.potNode = pot
 
             // Xác định điểm cắm cây (Mount Point) từ chậu
-            let localMount = pot.plantMountPoint
-            slotMountPosition = pot.asNode.convert(localMount, to: self)
+            if let mountNode = pot.plantMountNode, let mountParent = mountNode.parent {
+                slotMountPosition = mountParent.convert(mountNode.position, to: self)
+            } else {
+                let localMount = pot.plantMountPoint
+                slotMountPosition = pot.asNode.convert(localMount, to: self)
+            }
         } else {
             // Không có chậu: điểm cắm ở đáy slot
-            slotMountPosition = CGPoint(x: 0, y: isHanging ? baseH : 0)
+            slotMountPosition = CGPoint(x: 0, y: isHanging ? size.height : 0)
         }
 
         // ==========================================

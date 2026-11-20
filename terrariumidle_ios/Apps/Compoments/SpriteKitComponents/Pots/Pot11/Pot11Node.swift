@@ -121,9 +121,14 @@ public final class Pot11Node: SKNode, PotInteractiveNode {
                 mount.removeFromParent()
                 mount.isHidden = false
                 mount.isPaused = false
-                let scaleX = targetW / 226.0
-                let scaleY = targetH / 244.0
-                mount.position = CGPoint(x: mount.position.x * scaleX, y: mount.position.y * scaleY)
+                if isHanging {
+                    // Khi treo: miệng chậu nằm ở toạ độ âm tính từ đỉnh móc treo
+                    mount.position = CGPoint(x: 0, y: -targetH * 0.65)
+                } else {
+                    let scaleX = targetW / 226.0
+                    let scaleY = targetH / 244.0
+                    mount.position = CGPoint(x: mount.position.x * scaleX, y: mount.position.y * scaleY)
+                }
                 mount.zPosition = 10
                 potRootNode.addChild(mount)
                 self.plantMountNode = mount
@@ -160,6 +165,15 @@ public final class Pot11Node: SKNode, PotInteractiveNode {
         mount.zPosition = 10
         potRootNode.addChild(mount)
         self.plantMountNode = mount
+    }
+
+    // MARK: - Mount Point
+    public var plantMountPoint: CGPoint {
+        if let mount = plantMountNode {
+            return mount.position
+        }
+        let targetH = containerSize.height * 0.98
+        return CGPoint(x: 0, y: isHanging ? -targetH * 0.65 : targetH * 0.88)
     }
 
     // MARK: - Scene Template Loader

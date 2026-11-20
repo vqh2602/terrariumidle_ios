@@ -152,7 +152,7 @@ struct HomeView: View {
                                                 if isEmpty && !isEdit {
                                                     // Empty slot in non-edit mode: Spacer to maintain layout, no interaction
                                                     Color.clear
-                                                        .frame(width: itemWidth, height: 150)
+                                                        .frame(width: itemWidth, height: itemWidth * 1.95)
                                                         .allowsHitTesting(false)
                                                         .id("\(rowIndex)-\(columnIndex)-empty")
                                                 } else {

@@ -189,6 +189,22 @@ Tương tự như Cây, các Chậu trong [pots_data.json](file:///Users/vuongqu
   ```
   - Gắn `.contentShape(Rectangle())` sau frame gốc `(width x height)`: Giữ trọn vẹn $100\%$ độ chính xác khi chạm tap từng ô mà không bị bấm nhầm sang ô bên cạnh.
 
+### 7. Quy chuẩn Full Height Tầng Kệ & Chậu Treo Dính Đỉnh (Full Height Shelf & Top-Anchored Hanging Pot)
+Để toàn bộ các tầng kệ có chiều cao đồng nhất, xoá bỏ hiện tượng chậu treo lơ lửng chơi vơi giữa không trung:
+- **Chiều cao cố định chuẩn cho một tầng kệ (`slotHeight`)**:
+  - `let slotHeight = itemWidth * 1.95`: Áp dụng đồng nhất cho **TẤT CẢ** các ô (ô có cây để bàn, ô có chậu treo, ô trống `Color.clear` và ô thêm cây `isEditing`).
+  - Hàng kệ không bị co giãn méo mó theo từng ô.
+- **Cơ chế Neo Toạ độ Đỉnh / Đáy (Geometric Anchor Alignment)**:
+  - **Chậu để bàn (`isHanging == false`)**:
+    * SwiftUI: `alignment: .bottom`.
+    * SpriteKit: `pot.asNode.position = CGPoint(x: 0, y: 0)`.
+    * Đáy chậu nằm chính xác trên mặt thanh kệ dưới. Cây mọc vươn từ dưới lên: cây thấp (mầm, sen đá) có ngọn ở giữa tầng, cây cao vươn lên đỉnh tầng, tạo cảnh quan tự nhiên phong phú.
+  - **Chậu treo (`isHanging == true`)**:
+    * SwiftUI: `alignment: .top`.
+    * SpriteKit: `pot.asNode.position = CGPoint(x: 0, y: size.height)`.
+    * Đỉnh móc chậu dính chặt 100% vào mép dưới thanh kệ gỗ phía trên. Dây treo và bầu chậu buông rủ xuống phía dưới.
+    * Socket cắm cây `plantMountPoint` của chậu treo có toạ độ Y âm tính từ đỉnh móc treo (ví dụ `-targetH * 0.65`). Khi cắm cây, cây cắm vào miệng chậu và buông rủ xuống tự nhiên.
+
 
 
 

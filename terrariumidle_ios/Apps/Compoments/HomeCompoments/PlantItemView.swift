@@ -41,6 +41,12 @@ struct PlantItemView: View {
         plantData?.isHanging ?? false
     }
 
+    /// Chiều cao cố định chuẩn cho một tầng kệ, giúp tất cả các ô trên kệ đồng nhất
+    /// và cho phép chậu treo dính sát đỉnh trên cùng của kệ
+    private var slotHeight: CGFloat {
+        itemWidth * 1.95
+    }
+
     private var hasEmptyIds: Bool {
         !isSticker && (
             plantData?.idPlant.isEmpty == true ||
@@ -80,7 +86,7 @@ struct PlantItemView: View {
                                 .foregroundColor(.gray)
                         }
                     }
-                    .frame(width: itemWidth, height: 150).onTapGesture {
+                    .frame(width: itemWidth, height: slotHeight).onTapGesture {
                         showSheet.toggle()
                     }
                 } else {
@@ -140,7 +146,7 @@ struct PlantItemView: View {
                     plantLevel: plantData?.plantLevel ?? 1,
                     isHanging: isHanging,
                     width: itemWidth,
-                    height: isHanging ? (itemWidth * 1.6) : (itemWidth * 1.88),
+                    height: slotHeight,
                     onTap: {
                         handleDetailTap()
                     }
