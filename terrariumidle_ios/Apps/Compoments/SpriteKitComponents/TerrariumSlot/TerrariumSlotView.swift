@@ -147,7 +147,7 @@ public struct TerrariumSlotView: View {
         @State private var widthFill: CGFloat = 0.0
         @State private var selectedAttribute: String = "auto" // auto, none, front, hanging
 
-        let plants = (1...14).map { "plant\($0)" }
+        let plants = (1...15).map { "plant\($0)" }
         let pots = (1...15).map { "pot\($0)" }
 
         private var currentAttribute: ItemTypeAttribute? {
