@@ -25,9 +25,20 @@ public struct TerrariumSlotView: View {
     public var width: CGFloat
     public var height: CGFloat
     public var widthFill: CGFloat? = nil
+    /// Tỉ lệ vùng đệm an toàn để cành lá đung đưa không chạm biên render (Anti-Clipping Padding)
+    public var overflowRatioX: CGFloat = 0.12
+    public var overflowRatioY: CGFloat = 0.08
     public var onTap: (() -> Void)? = nil
 
     @State private var currentScene: TerrariumSlotScene? = nil
+
+    private var renderWidth: CGFloat {
+        width * (1.0 + overflowRatioX)
+    }
+
+    private var renderHeight: CGFloat {
+        height * (1.0 + overflowRatioY)
+    }
 
     // MARK: - Initializer
 
@@ -40,6 +51,8 @@ public struct TerrariumSlotView: View {
         width: CGFloat,
         height: CGFloat,
         widthFill: CGFloat? = nil,
+        overflowRatioX: CGFloat = 0.12,
+        overflowRatioY: CGFloat = 0.08,
         onTap: (() -> Void)? = nil
     ) {
         self.potId = potId
@@ -50,9 +63,13 @@ public struct TerrariumSlotView: View {
         self.width = width
         self.height = height
         self.widthFill = widthFill
+        self.overflowRatioX = overflowRatioX
+        self.overflowRatioY = overflowRatioY
         self.onTap = onTap
 
         let activeFill = widthFill ?? PotRegistry.defaultWidthFill(for: potId)
+        let rWidth = width * (1.0 + overflowRatioX)
+        let rHeight = height * (1.0 + overflowRatioY)
         let initialScene = Self.makeScene(
             potId: potId,
             plantId: plantId,
@@ -60,8 +77,10 @@ public struct TerrariumSlotView: View {
             isHanging: isHanging,
             itemTypeAttribute: itemTypeAttribute,
             widthFill: activeFill,
-            width: width,
-            height: height,
+            slotWidth: width,
+            slotHeight: height,
+            renderWidth: rWidth,
+            renderHeight: rHeight,
             onTap: onTap
         )
         _currentScene = State(initialValue: initialScene)
@@ -79,8 +98,10 @@ public struct TerrariumSlotView: View {
             isHanging: isHanging,
             itemTypeAttribute: itemTypeAttribute,
             widthFill: activeFill,
-            width: width,
-            height: height,
+            slotWidth: width,
+            slotHeight: height,
+            renderWidth: renderWidth,
+            renderHeight: renderHeight,
             onTap: onTap
         )
 
@@ -90,13 +111,15 @@ public struct TerrariumSlotView: View {
             plantId: plantId,
             plantLevel: plantLevel,
             isHanging: isHanging,
+            slotSize: CGSize(width: width, height: height),
             widthFill: activeFill,
             itemTypeAttribute: itemTypeAttribute,
             onTap: onTap
         )
 
         return SpriteView(scene: scene, options: [.allowsTransparency])
-            .frame(width: width, height: height)
+            .frame(width: renderWidth, height: renderHeight)
+            .frame(width: width, height: height, alignment: isHanging ? .top : .bottom)
             .contentShape(Rectangle())
             .onTapGesture {
                 scene.handleTap()
@@ -118,16 +141,19 @@ public struct TerrariumSlotView: View {
         isHanging: Bool,
         itemTypeAttribute: ItemTypeAttribute? = nil,
         widthFill: CGFloat,
-        width: CGFloat,
-        height: CGFloat,
+        slotWidth: CGFloat,
+        slotHeight: CGFloat,
+        renderWidth: CGFloat,
+        renderHeight: CGFloat,
         onTap: (() -> Void)?
     ) -> TerrariumSlotScene {
-        let newScene = TerrariumSlotScene(size: CGSize(width: width, height: height))
+        let newScene = TerrariumSlotScene(size: CGSize(width: renderWidth, height: renderHeight))
         newScene.configure(
             potId: potId,
             plantId: plantId,
             plantLevel: level,
             isHanging: isHanging,
+            slotSize: CGSize(width: slotWidth, height: slotHeight),
             widthFill: widthFill,
             itemTypeAttribute: itemTypeAttribute,
             onTap: onTap

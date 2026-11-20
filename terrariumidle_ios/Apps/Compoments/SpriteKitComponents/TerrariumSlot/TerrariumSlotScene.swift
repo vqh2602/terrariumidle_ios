@@ -20,6 +20,7 @@ public final class TerrariumSlotScene: SKScene {
     private var plantId: String = "plant1"
     private var plantLevel: Int = 1
     private var isHanging: Bool = false
+    private var slotSize: CGSize = .zero
     private var widthFill: CGFloat = 0.0
     private var itemTypeAttribute: ItemTypeAttribute = .none
 
@@ -59,6 +60,7 @@ public final class TerrariumSlotScene: SKScene {
         plantId: String,
         plantLevel: Int = 1,
         isHanging: Bool = false,
+        slotSize: CGSize = .zero,
         widthFill: CGFloat = 0.0,
         itemTypeAttribute: ItemTypeAttribute? = nil,
         onTap: (() -> Void)? = nil
@@ -74,12 +76,15 @@ public final class TerrariumSlotScene: SKScene {
                       self.plantLevel != plantLevel ||
                       self.isHanging != effectiveHanging ||
                       self.itemTypeAttribute != resolvedAttribute ||
+                      abs(self.slotSize.width - slotSize.width) > 1 ||
+                      abs(self.slotSize.height - slotSize.height) > 1 ||
                       abs(self.widthFill - cleanFill) > 0.001
 
         self.potId = cleanPot
         self.plantId = cleanPlant
         self.plantLevel = plantLevel
         self.isHanging = effectiveHanging
+        self.slotSize = slotSize
         self.widthFill = cleanFill
         self.itemTypeAttribute = resolvedAttribute
         self.onTap = onTap
@@ -125,19 +130,22 @@ public final class TerrariumSlotScene: SKScene {
         let hasPot = !potId.isEmpty && potId != "none"
         let hasPlant = !plantId.isEmpty && plantId != "none"
 
+        let baseW = slotSize.width > 0 ? slotSize.width : size.width
+        let baseH = slotSize.height > 0 ? slotSize.height : size.height
+
         var slotMountPosition = CGPoint.zero
 
         if hasPot {
             let potH: CGFloat
             if isHanging {
                 // Chậu treo: dây treo + bầu chậu chiếm khoảng 75% chiều cao khung slot
-                potH = size.height * 0.78
+                potH = baseH * 0.78
             } else {
                 // Chậu để bàn: chiếm khoảng 25% ~ 30% chiều cao khung slot
-                potH = min(size.height * 0.28, size.width * 0.46)
+                potH = min(baseH * 0.28, baseW * 0.46)
             }
 
-            let potContainerSize = CGSize(width: size.width, height: potH)
+            let potContainerSize = CGSize(width: baseW, height: potH)
             let pot = PotFactory.createPot(
                 id: potId,
                 containerSize: potContainerSize,
@@ -146,8 +154,8 @@ public final class TerrariumSlotScene: SKScene {
             )
 
             if isHanging {
-                // Neo tại đỉnh slot (y = size.height)
-                pot.asNode.position = CGPoint(x: 0, y: size.height)
+                // Neo tại đỉnh slot (y = baseH)
+                pot.asNode.position = CGPoint(x: 0, y: baseH)
             } else {
                 // Đáy chậu nằm ngay ngắn trên mặt kệ (y = 0)
                 pot.asNode.position = CGPoint(x: 0, y: 0)
@@ -163,23 +171,26 @@ public final class TerrariumSlotScene: SKScene {
             slotMountPosition = pot.asNode.convert(localMount, to: self)
         } else {
             // Không có chậu: điểm cắm ở đáy slot
-            slotMountPosition = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            slotMountPosition = CGPoint(x: 0, y: isHanging ? baseH : 0)
         }
 
         // ==========================================
         // 2. XÂY DỰNG CÂY (PLANT NODE)
         // ==========================================
         if hasPlant {
+            // Giữ cây nằm gọn gàng, vừa vặn trong khung ô (fitRatio ~ 88% width, 86% height)
+            // Không bị phóng to quá cỡ, không tràn lấn át cây bên cạnh và không đâm vào thanh kệ trên
+            let plantFitW = baseW * 0.88
             let plantContainerH: CGFloat
             if isHanging {
-                // Cây treo: mọc/rủ từ bầu chậu xuống phía dưới
-                plantContainerH = max(size.height * 0.65, size.height - (size.height - slotMountPosition.y))
+                // Cây treo: mọc/rủ từ bầu chậu xuống phía dưới vừa vặn khung slot
+                plantContainerH = baseH * 0.68
             } else {
-                // Cây để bàn: vươn từ miệng chậu lên đến đỉnh khung slot
-                plantContainerH = max(size.height * 0.74, size.height - slotMountPosition.y)
+                // Cây để bàn: vươn từ miệng chậu lên, giữ khoảng đệm 14% dưới thanh kệ trên
+                plantContainerH = max(baseH * 0.50, (baseH - slotMountPosition.y) * 0.86)
             }
 
-            let plantContainerSize = CGSize(width: size.width, height: plantContainerH)
+            let plantContainerSize = CGSize(width: plantFitW, height: plantContainerH)
             if let plant = PlantFactory.createPlant(
                 id: plantId,
                 level: plantLevel,

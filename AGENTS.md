@@ -172,6 +172,23 @@ Tương tự như Cây, các Chậu trong [pots_data.json](file:///Users/vuongqu
     * `frontLeftRope` (`Pot15-2@4.167x`, `z = 100`) & `frontRightRope` (`Pot15-3@4.167x`, `z = 100`): Hai dây treo đằng trước vắt ngang **đè lên trên** toàn bộ cành lá cây.
   - Khi tương tác chạm (Tap): Toàn bộ móc treo, các dây và bầu chậu đu đưa vật lý (Pendulum Swing) quanh đỉnh móc treo `(0, 0)`.
 
+### 6. Quy chuẩn Khung Ô Gọn Gàng & Vùng Đệm Chống Cắt Biên (Fit Frame & Anti-Clipping Buffer)
+Để cây luôn nằm gọn gàng, thanh lịch trong khung ô của mình mà không bao giờ bị cắt cụt mép lá:
+- **Kích thước Cây chuẩn (`plantContainerSize`)**:
+  - `plantFitW = baseW * 0.88`: Khống chế bề rộng tối đa của cây ở mức $88\%$ bề rộng ô kệ, để lại khoảng đệm an toàn $6\%$ mỗi bên trái/phải. Cây không bao giờ bị to quá cỡ hay lấn át sang cây khác.
+  - `plantFitH = (baseH - slotMountPosition.y) * 0.86`: Khống chế chiều cao ngọn cây dừng lại ở $86\%$ khoảng cách lên thanh kệ trên, không đâm vào thanh kệ gỗ phía trên.
+- **Vùng đệm an toàn chống cắt mép (Anti-Clipping Buffer)**:
+  - `overflowRatioX = 0.12` ($+6\%$ mỗi bên trái/phải) và `overflowRatioY = 0.08` ($+8\%$ đỉnh/đáy).
+  - Biên canvas render mở rộng nhẹ để khi cành lá đung đưa lắc lư tự nhiên theo gió, mép lá không bao giờ chạm vào biên render của Metal GPU (triệt tiêu 100% hiện tượng hard-clip).
+- **SwiftUI Viewport**:
+  ```swift
+  SpriteView(scene: scene, options: [.allowsTransparency])
+      .frame(width: renderWidth, height: renderHeight)
+      .frame(width: width, height: height, alignment: isHanging ? .top : .bottom)
+      .contentShape(Rectangle())
+  ```
+  - Gắn `.contentShape(Rectangle())` sau frame gốc `(width x height)`: Giữ trọn vẹn $100\%$ độ chính xác khi chạm tap từng ô mà không bị bấm nhầm sang ô bên cạnh.
+
 
 
 
