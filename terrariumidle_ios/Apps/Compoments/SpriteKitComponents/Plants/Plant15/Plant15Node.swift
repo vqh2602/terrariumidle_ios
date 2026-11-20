@@ -64,13 +64,14 @@ public final class Plant15Node: SKNode {
     }
 
     /// Tọa độ pixel và điểm neo cuống dây lá tim Ceropegia woodii (Canvas 657 x 763)
+    /// Đung đưa mềm mại tự nhiên như dây leo rủ trong gió
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId: 2, imgX:  94.0, imgY: 178.0, width: 263, height: 260, anchorX: 0.85, anchorY: 0.01, isLeft: true , zPos: 13, bendAngle: 0.055, duration: 3.2),
-        LeafData(assetId: 3, imgX: 169.0, imgY:   0.0, width: 204, height: 436, anchorX: 0.75, anchorY: 0.01, isLeft: true , zPos: 11, bendAngle: 0.025, duration: 4.5),
-        LeafData(assetId: 4, imgX: 387.0, imgY: 304.0, width: 197, height: 134, anchorX: 0.15, anchorY: 0.01, isLeft: false, zPos: 14, bendAngle: 0.065, duration: 2.8),
-        LeafData(assetId: 5, imgX: 367.0, imgY: 110.0, width: 194, height: 326, anchorX: 0.15, anchorY: 0.01, isLeft: false, zPos: 12, bendAngle: 0.040, duration: 3.6),
-        LeafData(assetId: 6, imgX: 335.0, imgY: 392.0, width: 322, height: 371, anchorX: 0.12, anchorY: 0.01, isLeft: false, zPos: 16, bendAngle: 0.045, duration: 3.8),
-        LeafData(assetId: 7, imgX:   0.0, imgY: 336.0, width: 322, height: 230, anchorX: 0.88, anchorY: 0.01, isLeft: true , zPos: 15, bendAngle: 0.060, duration: 3.0),
+        LeafData(assetId: 2, imgX:  94.0, imgY: 178.0, width: 263, height: 260, anchorX: 0.85, anchorY: 0.01, isLeft: true , zPos: 13, bendAngle: 0.095, duration: 4.2),
+        LeafData(assetId: 3, imgX: 169.0, imgY:   0.0, width: 204, height: 436, anchorX: 0.75, anchorY: 0.01, isLeft: true , zPos: 11, bendAngle: 0.060, duration: 5.4),
+        LeafData(assetId: 4, imgX: 387.0, imgY: 304.0, width: 197, height: 134, anchorX: 0.15, anchorY: 0.01, isLeft: false, zPos: 14, bendAngle: 0.110, duration: 3.8),
+        LeafData(assetId: 5, imgX: 367.0, imgY: 110.0, width: 194, height: 326, anchorX: 0.15, anchorY: 0.01, isLeft: false, zPos: 12, bendAngle: 0.080, duration: 4.8),
+        LeafData(assetId: 6, imgX: 335.0, imgY: 392.0, width: 322, height: 371, anchorX: 0.12, anchorY: 0.01, isLeft: false, zPos: 16, bendAngle: 0.090, duration: 4.5),
+        LeafData(assetId: 7, imgX:   0.0, imgY: 336.0, width: 322, height: 230, anchorX: 0.88, anchorY: 0.01, isLeft: true , zPos: 15, bendAngle: 0.105, duration: 4.0),
     ]
 
     // MARK: - Properties
@@ -452,31 +453,33 @@ public final class Plant15Node: SKNode {
     }
 
     private func playMatureTapAnimation() {
-        plantRootNode.removeAction(forKey: "matureTapBounce")
-
-        let squash = SKAction.scaleX(to: baseScale * 1.08, y: baseScale * 0.92, duration: 0.08)
-        squash.timingMode = .easeIn
-        let stretch = SKAction.scaleX(to: baseScale * 0.94, y: baseScale * 1.08, duration: 0.12)
-        stretch.timingMode = .easeOut
-        let bounce = SKAction.scaleX(to: baseScale * 1.02, y: baseScale * 0.99, duration: 0.10)
-        let settle = SKAction.scale(to: baseScale, duration: 0.10)
-        settle.timingMode = .easeInEaseOut
-
-        plantRootNode.run(SKAction.sequence([squash, stretch, bounce, settle]), withKey: "matureTapBounce")
-
+        // Cây dây leo chuỗi tim: khi tap thì cành lá đung đưa lắc lư tự nhiên theo gió thay vì nhún nhảy co giãn
         for (idx, leaf) in leafNodes.enumerated() {
             let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
             let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
             let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
-            let impulseAngle: CGFloat = (isLeft ? -1.0 : 1.0) * CGFloat.random(in: 0.08...0.14)
+            let impulseAngle: CGFloat = (isLeft ? -1.0 : 1.0) * CGFloat.random(in: 0.12...0.18)
 
-            let delay = SKAction.wait(forDuration: Double(idx) * 0.03)
-            let jiggleOut = SKAction.rotate(byAngle: impulseAngle, duration: 0.08)
-            jiggleOut.timingMode = .easeOut
-            let jiggleBack = SKAction.rotate(byAngle: -impulseAngle, duration: 0.14)
-            jiggleBack.timingMode = .easeInEaseOut
+            let delay = SKAction.wait(forDuration: Double(idx) * 0.04)
+            // Lượn mạnh theo chiều gió rồi đung đưa êm dần về nhịp đung đưa tự nhiên
+            let sway1 = SKAction.rotate(byAngle: impulseAngle, duration: 0.35)
+            sway1.timingMode = .easeOut
+            let sway2 = SKAction.rotate(byAngle: -impulseAngle * 1.4, duration: 0.55)
+            sway2.timingMode = .easeInEaseOut
+            let sway3 = SKAction.rotate(byAngle: impulseAngle * 0.6, duration: 0.50)
+            sway3.timingMode = .easeInEaseOut
+            let swayBack = SKAction.rotate(toAngle: 0.0, duration: 0.40)
+            swayBack.timingMode = .easeInEaseOut
 
-            let flutter = SKAction.sequence([delay, jiggleOut, jiggleBack])
+            let resumeNormalSway = SKAction.run { [weak self, weak leaf] in
+                guard let self = self, let leaf = leaf else { return }
+                let bendAngle = meta?.bendAngle ?? 0.09
+                let duration = meta?.duration ?? 4.0
+                let isMainVine = (assetNum == 3)
+                self.startVineAnimation(leaf: leaf, isLeft: isLeft, bendAngle: bendAngle, duration: duration, phaseDelay: 0, isMainVine: isMainVine)
+            }
+
+            let flutter = SKAction.sequence([delay, sway1, sway2, sway3, swayBack, resumeNormalSway])
             leaf.run(flutter, withKey: "leafTapJiggle")
         }
     }

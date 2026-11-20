@@ -29,39 +29,52 @@ public struct SpriteKitBackgroundView: View {
 
     public var body: some View {
         GeometryReader { geometry in
-            if let scene = scene {
-                SpriteView(scene: scene, isPaused: isPaused, options: [.allowsTransparency])
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .background(Color.clear)
-                    .ignoresSafeArea(.all)
-                    .allowsHitTesting(false)
-                    .onChange(of: geometry.size) { newSize in
-                        scene.size = newSize
-                    }
-                    .onChange(of: backgroundId) { newId in
-                        scene.configure(themeId: newId)
-                    }
-                    .onChange(of: isPaused) { paused in
-                        scene.isPaused = paused
-                    }
-            } else {
-                Color.clear
-                    .onAppear {
-                        // Ưu tiên nạp từ BackgroundScene.sks nếu có
-                        let newScene: SpriteKitBackgroundScene
-                        if let sksScene = SpriteKitBackgroundScene(fileNamed: "BackgroundScene.sks") ?? SpriteKitBackgroundScene(fileNamed: "BackgroundScene") {
-                            sksScene.size = geometry.size
-                            sksScene.anchorPoint = .zero
-                            newScene = sksScene
-                        } else {
-                            newScene = SpriteKitBackgroundScene(size: geometry.size)
-                        }
-                        newScene.anchorPoint = .zero
-                        newScene.configure(themeId: backgroundId)
-                        self.scene = newScene
-                    }
-            }
+            let currentScene = getOrCreateScene(size: geometry.size)
+
+            SpriteView(scene: currentScene, isPaused: isPaused, options: [.allowsTransparency])
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .background(Color.clear)
+                .ignoresSafeArea(.all)
+                .allowsHitTesting(false)
+                .id("\(backgroundId)-\(geometry.size.width)-\(geometry.size.height)")
+                .onAppear {
+                    currentScene.isPaused = false
+                    currentScene.configure(themeId: backgroundId)
+                }
+                .onChange(of: geometry.size) { newSize in
+                    currentScene.size = newSize
+                }
+                .onChange(of: backgroundId) { newId in
+                    currentScene.configure(themeId: newId)
+                }
+                .onChange(of: isPaused) { paused in
+                    currentScene.isPaused = paused
+                }
         }
         .ignoresSafeArea(.all)
+    }
+
+    private func getOrCreateScene(size: CGSize) -> SpriteKitBackgroundScene {
+        if let existing = scene {
+            if size.width > 0 && size.height > 0 && (abs(existing.size.width - size.width) > 1 || abs(existing.size.height - size.height) > 1) {
+                existing.size = size
+            }
+            return existing
+        }
+
+        let newScene: SpriteKitBackgroundScene
+        if let sksScene = SpriteKitBackgroundScene(fileNamed: "BackgroundScene.sks") ?? SpriteKitBackgroundScene(fileNamed: "BackgroundScene") {
+            sksScene.size = size
+            sksScene.anchorPoint = .zero
+            newScene = sksScene
+        } else {
+            newScene = SpriteKitBackgroundScene(size: size)
+        }
+        newScene.anchorPoint = .zero
+        newScene.configure(themeId: backgroundId)
+        DispatchQueue.main.async {
+            self.scene = newScene
+        }
+        return newScene
     }
 }

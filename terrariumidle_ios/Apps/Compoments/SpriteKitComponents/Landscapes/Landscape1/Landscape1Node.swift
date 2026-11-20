@@ -110,8 +110,11 @@ public final class Landscape1Node: SKNode, LandscapeInteractiveNode {
             let fillSize = max(containerSize.width, containerSize.height) * 1.3
             bg.size = CGSize(width: fillSize, height: fillSize)
             bg.zPosition = 0
-            if bg.texture == nil {
-                bg.texture = loadTexture(name: "bg1-1@4.167x")
+            bg.isPaused = false
+            bg.speed = 1.0
+            // Luôn nạp đè texture thật từ bundle
+            if let realBgTex = loadTexture(name: "bg1-1@4.167x") {
+                bg.texture = realBgTex
             }
             landscapeRootNode.addChild(bg)
             self.bgNode = bg
@@ -126,15 +129,33 @@ public final class Landscape1Node: SKNode, LandscapeInteractiveNode {
             sunGroup.position = CGPoint(x: sunX, y: sunY)
             sunGroup.setScale(activeScale)
             sunGroup.zPosition = 10
+            sunGroup.isPaused = false
+            sunGroup.speed = 1.0
             landscapeRootNode.addChild(sunGroup)
             self.sunGroupNode = sunGroup
 
             if let core = sunGroup.childNode(withName: "sunCore") as? SKSpriteNode {
+                if let coreTex = loadTexture(name: "sunbg1-2@4.167x") {
+                    core.texture = coreTex
+                }
+                core.isPaused = false
+                core.speed = 1.0
                 self.sunCore = core
             }
 
-            for auraName in ["sunAura1", "sunAura2", "sunAura3", "sunAura4"] {
-                if let aura = sunGroup.childNode(withName: auraName) as? SKSpriteNode {
+            let auraMap: [(name: String, tex: String)] = [
+                ("sunAura1", "sunbg1-3@4.167x"),
+                ("sunAura2", "sunbg1-4@4.167x"),
+                ("sunAura3", "sunbg1-5@4.167x"),
+                ("sunAura4", "sunbg1-6@4.167x")
+            ]
+            for item in auraMap {
+                if let aura = sunGroup.childNode(withName: item.name) as? SKSpriteNode {
+                    if let auraTex = loadTexture(name: item.tex) {
+                        aura.texture = auraTex
+                    }
+                    aura.isPaused = false
+                    aura.speed = 1.0
                     self.sunAuras.append(aura)
                 }
             }
@@ -145,11 +166,21 @@ public final class Landscape1Node: SKNode, LandscapeInteractiveNode {
             cloudsGroup.removeFromParent()
             cloudsGroup.position = .zero
             cloudsGroup.zPosition = 20
+            cloudsGroup.isPaused = false
+            cloudsGroup.speed = 1.0
             landscapeRootNode.addChild(cloudsGroup)
             self.cloudsGroupNode = cloudsGroup
 
             for i in 1...8 {
                 if let cloud = cloudsGroup.childNode(withName: "cloud_\(i)") as? SKSpriteNode {
+                    // Luôn luôn nạp đè texture thật để tránh lỗi unarchived resource
+                    if let cloudTex = loadTexture(name: "Cloudbg1-\(i)@4.167x") {
+                        cloud.texture = cloudTex
+                    }
+                    cloud.isHidden = false
+                    cloud.isPaused = false
+                    cloud.speed = 1.0
+
                     // Chuẩn hoá toạ độ mây theo tỉ lệ container thực tế
                     let normX = (cloud.position.x / (baseDesignWidth / 2.0)) * (containerSize.width / 2.0) + (containerSize.width / 2.0)
                     let normY = (cloud.position.y / (baseDesignHeight / 2.0)) * (containerSize.height / 2.0) + (containerSize.height / 2.0)
@@ -157,8 +188,8 @@ public final class Landscape1Node: SKNode, LandscapeInteractiveNode {
                     cloud.size = CGSize(width: cloud.size.width * activeScale, height: cloud.size.height * activeScale)
                     cloudSprites.append(cloud)
 
-                    // Vận tốc mây trôi parallax (từ 10 đến 26 pt/giây)
-                    let baseSpeed: CGFloat = CGFloat(8 + (i * 3) % 18)
+                    // Vận tốc mây trôi rõ nét, sinh động (từ 28 đến 55 pt/giây)
+                    let baseSpeed: CGFloat = CGFloat(28 + (i * 7) % 28)
                     cloudSpeeds.append(baseSpeed)
                 }
             }
@@ -223,14 +254,14 @@ public final class Landscape1Node: SKNode, LandscapeInteractiveNode {
         self.cloudsGroupNode = cloudsGroup
 
         let cloudConfigs: [(tex: String, pos: CGPoint, size: CGSize, alpha: CGFloat, speed: CGFloat)] = [
-            ("Cloudbg1-1@4.167x", CGPoint(x: containerSize.width * 0.25, y: containerSize.height * 0.85), CGSize(width: 320, height: 185), 0.85, 12.0),
-            ("Cloudbg1-2@4.167x", CGPoint(x: containerSize.width * 0.75, y: containerSize.height * 0.68), CGSize(width: 280, height: 160), 0.90, 16.0),
-            ("Cloudbg1-3@4.167x", CGPoint(x: containerSize.width * 0.35, y: containerSize.height * 0.58), CGSize(width: 340, height: 140), 0.75, 10.0),
-            ("Cloudbg1-4@4.167x", CGPoint(x: containerSize.width * 0.70, y: containerSize.height * 0.80), CGSize(width: 310, height: 190), 0.80, 18.0),
-            ("Cloudbg1-5@4.167x", CGPoint(x: containerSize.width * 0.20, y: containerSize.height * 0.72), CGSize(width: 180, height: 130), 0.70, 22.0),
-            ("Cloudbg1-6@4.167x", CGPoint(x: containerSize.width * 0.55, y: containerSize.height * 0.90), CGSize(width: 150, height: 135), 0.65, 25.0),
-            ("Cloudbg1-7@4.167x", CGPoint(x: containerSize.width * 0.40, y: containerSize.height * 0.48), CGSize(width: 360, height: 160), 0.85, 14.0),
-            ("Cloudbg1-8@4.167x", CGPoint(x: containerSize.width * 0.80, y: containerSize.height * 0.52), CGSize(width: 220, height: 150), 0.80, 20.0)
+            ("Cloudbg1-1@4.167x", CGPoint(x: containerSize.width * 0.25, y: containerSize.height * 0.85), CGSize(width: 320, height: 185), 0.85, 26.0),
+            ("Cloudbg1-2@4.167x", CGPoint(x: containerSize.width * 0.75, y: containerSize.height * 0.68), CGSize(width: 280, height: 160), 0.90, 32.0),
+            ("Cloudbg1-3@4.167x", CGPoint(x: containerSize.width * 0.35, y: containerSize.height * 0.58), CGSize(width: 340, height: 140), 0.75, 24.0),
+            ("Cloudbg1-4@4.167x", CGPoint(x: containerSize.width * 0.70, y: containerSize.height * 0.80), CGSize(width: 310, height: 190), 0.80, 36.0),
+            ("Cloudbg1-5@4.167x", CGPoint(x: containerSize.width * 0.20, y: containerSize.height * 0.72), CGSize(width: 180, height: 130), 0.70, 42.0),
+            ("Cloudbg1-6@4.167x", CGPoint(x: containerSize.width * 0.55, y: containerSize.height * 0.90), CGSize(width: 150, height: 135), 0.65, 46.0),
+            ("Cloudbg1-7@4.167x", CGPoint(x: containerSize.width * 0.40, y: containerSize.height * 0.48), CGSize(width: 360, height: 160), 0.85, 28.0),
+            ("Cloudbg1-8@4.167x", CGPoint(x: containerSize.width * 0.80, y: containerSize.height * 0.52), CGSize(width: 220, height: 150), 0.80, 38.0)
         ]
 
         for (index, cfg) in cloudConfigs.enumerated() {
@@ -240,6 +271,8 @@ public final class Landscape1Node: SKNode, LandscapeInteractiveNode {
                 cloud.position = cfg.pos
                 cloud.alpha = cfg.alpha
                 cloud.zPosition = CGFloat(20 + index)
+                cloud.isPaused = false
+                cloud.speed = 1.0
                 cloudsGroup.addChild(cloud)
                 cloudSprites.append(cloud)
                 cloudSpeeds.append(cfg.speed)
@@ -269,6 +302,16 @@ public final class Landscape1Node: SKNode, LandscapeInteractiveNode {
     // MARK: - Animations (Diễn hoạt Mặt Trời & Mây Trôi)
 
     private func startAnimations() {
+        // Đảm bảo toàn bộ hệ thống node không bị paused
+        isPaused = false
+        speed = 1.0
+        landscapeRootNode.isPaused = false
+        landscapeRootNode.speed = 1.0
+        cloudsGroupNode?.isPaused = false
+        cloudsGroupNode?.speed = 1.0
+        sunGroupNode?.isPaused = false
+        sunGroupNode?.speed = 1.0
+
         // 1. Hoạt ảnh Mặt trời chính (Thở nhẹ)
         if let core = sunCore {
             core.removeAllActions()
@@ -304,9 +347,11 @@ public final class Landscape1Node: SKNode, LandscapeInteractiveNode {
             aura.run(SKAction.repeatForever(SKAction.sequence([fadeOut, fadeIn])))
         }
 
-        // 3. Hoạt ảnh Mây trôi Parallax (Drifting & Wrap-around)
+        // 3. Hoạt ảnh Mây trôi Parallax (Di chuyển liên tục không ngắt quãng bằng repeatForever)
         for (index, cloud) in cloudSprites.enumerated() {
-            cloud.removeAllActions()
+            cloud.removeAction(forKey: "cloudDrift")
+            cloud.isPaused = false
+            cloud.speed = 1.0
             let speed = cloudSpeeds[min(index, cloudSpeeds.count - 1)]
             animateDriftingCloud(cloud, speed: speed)
         }
@@ -314,22 +359,32 @@ public final class Landscape1Node: SKNode, LandscapeInteractiveNode {
 
     private func animateDriftingCloud(_ cloud: SKSpriteNode, speed: CGFloat) {
         let screenW = containerSize.width
-        let cloudW = cloud.size.width
-        let targetX = screenW + cloudW * 0.6
-        let distance = targetX - cloud.position.x
-        let duration = max(4.0, Double(distance / speed))
+        let cloudW = max(cloud.size.width, 100.0)
+        let targetX = screenW + cloudW * 0.7
+        let resetX = -cloudW * 0.7
+        let currentX = cloud.position.x
+        let safeSpeed = max(15.0, speed)
 
-        let moveRight = SKAction.moveTo(x: targetX, duration: duration)
-        let resetLeft = SKAction.run { [weak cloud, weak self] in
+        // 1. Quãng đường ban đầu từ vị trí hiện tại đến mép phải
+        let distanceInitial = max(5.0, targetX - currentX)
+        let durationInitial = Double(distanceInitial / safeSpeed)
+        let initialMove = SKAction.moveTo(x: targetX, duration: durationInitial)
+
+        // 2. Chu kỳ trôi toàn phần lặp vô tận từ resetX sang targetX
+        let fullDistance = targetX - resetX
+        let fullDuration = Double(fullDistance / safeSpeed)
+        let resetPos = SKAction.run { [weak cloud, weak self] in
             guard let cloud = cloud, let self = self else { return }
-            cloud.position.x = -cloudW * 0.6
-            // Nhẹ nhàng đổi độ cao Y ngẫu nhiên tự nhiên
-            let deltaY = CGFloat.random(in: -25.0...25.0)
+            cloud.position.x = resetX
+            // Đổi nhẹ độ cao Y ngẫu nhiên tự nhiên
+            let deltaY = CGFloat.random(in: -15.0...15.0)
             cloud.position.y = max(self.containerSize.height * 0.35, min(self.containerSize.height * 0.92, cloud.position.y + deltaY))
-            self.animateDriftingCloud(cloud, speed: speed)
         }
+        let fullMove = SKAction.moveTo(x: targetX, duration: fullDuration)
+        let fullCycle = SKAction.repeatForever(SKAction.sequence([resetPos, fullMove]))
 
-        cloud.run(SKAction.sequence([moveRight, resetLeft]))
+        // Ghép bước đầu và vòng lặp vô tận
+        cloud.run(SKAction.sequence([initialMove, fullCycle]), withKey: "cloudDrift")
     }
 
     // MARK: - Tap Interaction Animation
