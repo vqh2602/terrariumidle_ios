@@ -215,30 +215,25 @@ public final class TerrariumSlotScene: SKScene {
 
     // MARK: - Touch Interaction
 
-    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first else { return }
-        let location = touch.location(in: self)
+    private var lastTapTime: TimeInterval = 0
 
-        // Phân biệt tap vào vùng chậu hay vùng cây:
-        // Nếu chạm ở nửa dưới (gần chậu) -> ưu tiên tap chậu
-        let isLowerHalf: Bool
-        if isHanging {
-            // Chậu treo: bầu chậu ở khoảng giữa/trên
-            isLowerHalf = location.y > size.height * 0.5
-        } else {
-            // Chậu để bàn: chậu ở 30% phía dưới
-            isLowerHalf = location.y < size.height * 0.32
-        }
+    /// Kích hoạt hiệu ứng tap đồng thời cho cả Cây và Chậu (tránh xung đột vùng bấm và không bị miss tap)
+    public func handleTap() {
+        let now = CACurrentMediaTime()
+        guard now - lastTapTime > 0.08 else { return } // Debounce 80ms chống tap đúp
+        lastTapTime = now
 
-        if isLowerHalf, let pot = potNode {
-            pot.playTapAnimation()
-        } else if let plant = plantNode {
-            plant.playTapAnimation()
-        } else if let pot = potNode {
-            pot.playTapAnimation()
-        }
+        // ÁP DỤNG HIỆU ỨNG TAP ĐỒNG THỜI CHO CẢ CHẬU VÀ CÂY:
+        // - Chậu: nhún nảy squash & stretch đàn hồi, bóng đổ co giãn, sparkle/hiệu ứng đá
+        // - Cây: nhún nảy nẩy cành lá, nhả bọt khí Oxy +O2 bay lên
+        potNode?.playTapAnimation()
+        plantNode?.playTapAnimation()
 
         // Bắn callback ra ngoài SwiftUI
         onTap?()
+    }
+
+    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        handleTap()
     }
 }

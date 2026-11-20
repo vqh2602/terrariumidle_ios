@@ -138,7 +138,7 @@ Mọi Node Chậu (`PotInteractiveNode`) đều cung cấp:
 
 ### 3. Thành phần Hợp nhất `TerrariumSlotView`
 - Được sử dụng trên màn hình chính ([PlantItemView.swift](file:///Users/vuongquanghuy/code/prj_ios/terrariumidle_ios/terrariumidle_ios/Apps/Compoments/HomeCompoments/PlantItemView.swift)).
-- Nhận diện chạm thông minh: tap nửa dưới slot kích hoạt hiệu ứng chậu (`pot.playTapAnimation()`), tap nửa trên kích hoạt hiệu ứng cây (`plant.playTapAnimation()`).
+- **Quy chuẩn Chạm Hợp nhất (Unified Tap Interaction)**: Chạm vào bất kỳ vị trí nào trên Slot (cây hoặc chậu) đều kích hoạt **ĐỒNG THỜI** cả hiệu ứng chậu (`pot.playTapAnimation()`) và hiệu ứng cây (`plant.playTapAnimation()`), loại bỏ hoàn toàn xung đột phân vùng bấm. Được bọc `.contentShape(Rectangle())` và `.onTapGesture` kèm debounce 80ms chống tap đúp, đảm bảo nhận diện ngay lập tức 100% từ lần chạm đầu tiên.
 - Tương thích ngược: `SpriteKitPotView` và `SpriteKitPlantView` độc lập vẫn được giữ nguyên cho màn hình Shop và Preview đơn lẻ.
 
 ### 4. Cấu hình Vị trí Layer Cây theo JSON (`itemTypeAttribute`)

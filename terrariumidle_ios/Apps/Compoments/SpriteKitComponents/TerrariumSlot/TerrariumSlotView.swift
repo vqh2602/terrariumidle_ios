@@ -97,6 +97,10 @@ public struct TerrariumSlotView: View {
 
         return SpriteView(scene: scene, options: [.allowsTransparency])
             .frame(width: width, height: height)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                scene.handleTap()
+            }
             .id("slot-\(potId)-\(plantId)-\(plantLevel)-\(isHanging)-\(itemTypeAttribute?.rawValue ?? "auto")-\(activeFill)-\(width)-\(height)")
             .onAppear {
                 if currentScene == nil {

@@ -207,6 +207,7 @@ struct HomeView: View {
                         .padding(.top, geo.safeAreaInsets.top + 40)
                         .padding(.horizontal)
                 }
+                .frame(height: 120)
             }
 
             .task {

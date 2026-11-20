@@ -186,6 +186,7 @@ struct PlantItemView: View {
                         .opacity(item.offset == 0 ? 1 : 0)
                 }
             }
+            .allowsHitTesting(false)
         )
 
         // MARK: - Drag and Drop (Edit Mode Only - Conditionally Applied)
@@ -203,19 +204,14 @@ struct PlantItemView: View {
 
         // MARK: - Visual Feedback
 
-//        .overlay(
-//            // Blue overlay on source plant being dragged
-//            draggedPlant?.sourceRow == rowIndex &&
-//                draggedPlant?.sourceColumn == columnIndex ?
-//                Color.blue.opacity(0.3).cornerRadius(12) : nil
-//        )
         .overlay(
             // Green border on potential drop zones (when dragging)
-            isEditing && draggedPlant != nil &&
+            (isEditing && draggedPlant != nil &&
                 !(draggedPlant?.sourceRow == rowIndex && draggedPlant?.sourceColumn == columnIndex) ?
                 RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.green.opacity(0.6), lineWidth: 3)
-                : nil
+                : nil)
+                .allowsHitTesting(false)
         )
 
         // MARK: - Confirmation Alerts
