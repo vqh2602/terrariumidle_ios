@@ -266,6 +266,32 @@ Tất cả cấu hình được đưa về các file JSON trong `Apps/Data/Items
 > - `"hanging"`: Cây dạng chậu treo chúc xuống.
 > - `"hanging,front"`: Cây vừa thuộc dạng chậu treo (`isHanging = true`), vừa có cành lá vươn phủ đè ra trước mặt chậu (`isInFront = true`).
 
+### Ví dụ cấu hình trong `pots_data.json`:
+```json
+{
+    "id": "pot15",
+    "name": "Chậu sứ Msuit",
+    "description": "Chậu sứ trắng, trọng lượng nhẹ dễ dàng treo lên cao",
+    "image": "Pot15@4.167x",
+    "priceStore": 199,
+    "priceOxygen": 5000,
+    "currencyUnit": "gemstone",
+    "type": "pot",
+    "effect": "N.A",
+    "itemTypeAttribute": "hanging,front",
+    "levelUnlock": 17
+}
+```
+> **Thuộc tính `"itemTypeAttribute"` cho chậu cây:**
+> - `"none"` (mặc định): Chậu để bàn thông thường, hiển thị nguyên khối kèm bóng đổ đáy (`shadowNode`).
+> - `"hanging"`: Chậu treo thông thường (nguyên khối).
+> - `"hanging,front"` (Chậu Treo Phân Lớp - Layered Hanging Pot, ví dụ `pot15`): Chậu được bóc tách theo asset và SVG (`Pot15.svg`):
+>   * `backRope` (`Pot15-4@4.167x`, `z = 5`): Dây treo ở giữa nằm **sau** cây.
+>   * `plantMount` (`z = 10`): Socket cắm cây.
+>   * `potBody` (`Pot15-5@4.167x`, `z = 50`): Bầu chậu sứ trắng che giấu cuống cây đứng (`none`), nằm sau cành lá rủ (`front`).
+>   * `frontLeftRope` (`Pot15-2@4.167x`, `z = 100`) & `frontRightRope` (`Pot15-3@4.167x`, `z = 100`): Dây treo trước vắt ngang **đè lên trên** cành lá cây.
+
+
 ### Ví dụ cấu hình trong `effects_data.json`:
 ```json
 {

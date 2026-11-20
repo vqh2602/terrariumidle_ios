@@ -185,15 +185,15 @@
     },
     {
         "id": "plant15",
-        "name": "Cỏ đinh ba",
+        "name": "Ceropegia woodii",
         "description": "Loài cỏ lá kim, khi trưởng thành có những chùm tua xuống như cây đinh ba của một vị thần",
-        "image": "plant15_Asset-1",
+        "image": "Ceropegia-woodii@4.167x",
         "priceStore": 10500,
         "priceOxygen": 15500,
         "currencyUnit": "oxygen",
         "type": "plant",
         "effect": "Tiếng bão - sfx7",
-        "itemTypeAttribute": "hanging",
+        "itemTypeAttribute": "hanging,front",
         "levelUnlock": 20
     },
     {

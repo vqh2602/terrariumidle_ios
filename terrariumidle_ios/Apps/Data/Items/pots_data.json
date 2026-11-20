@@ -187,13 +187,13 @@
         "id": "pot15",
         "name": "Chậu sứ Msuit",
         "description": "Chậu sứ trắng, trọng lượng nhẹ dễ dàng treo lên cao",
-        "image": "pot15_Asset-1",
+        "image": "Pot15@4.167x",
         "priceStore": 199,
         "priceOxygen": 5000,
         "currencyUnit": "gemstone",
         "type": "pot",
         "effect": "N.A",
-        "itemTypeAttribute": "hanging",
+        "itemTypeAttribute": "hanging,front",
         "levelUnlock": 17
     },
     {

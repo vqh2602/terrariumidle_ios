@@ -160,6 +160,19 @@ Thuộc tính này hỗ trợ kết hợp nhiều cờ thuộc tính phân tách
   }
   ```
 
+### 5. Cấu hình Vị trí Layer Chậu theo JSON (`pots_data.json` & Chậu Phân Lớp - Layered Pot)
+Tương tự như Cây, các Chậu trong [pots_data.json](file:///Users/vuongquanghuy/code/prj_ios/terrariumidle_ios/terrariumidle_ios/Apps/Data/Items/pots_data.json) cũng hỗ trợ cấu hình đa thuộc tính `"itemTypeAttribute"`:
+- `"none"` (mặc định): Chậu để bàn thông thường, hiển thị nguyên khối kèm bóng đổ đáy (`shadowNode`).
+- `"hanging"`: Chậu treo thông thường (nguyên khối), treo từ đỉnh slot xuống.
+- **`"hanging,front"` (Chậu Treo Phân Lớp - Layered Hanging Pot, điển hình `pot15` "Chậu sứ Msuit")**:
+  - Chậu được bóc tách thành các thành phần asset riêng biệt theo file SVG thiết kế (`Pot15.svg`):
+    * `backRope` (`Pot15-4@4.167x`, `z = 5`): Dây treo ở giữa nằm **phía sau** cây.
+    * `plantMount` (Socket cắm cây, `z = 10`): Điểm gắn gốc cây.
+    * `potBody` (`Pot15-5@4.167x`, `z = 50`): Bầu chậu sứ trắng che giấu cuống cây đứng (`none`), nằm sau cành lá rủ (`front`).
+    * `frontLeftRope` (`Pot15-2@4.167x`, `z = 100`) & `frontRightRope` (`Pot15-3@4.167x`, `z = 100`): Hai dây treo đằng trước vắt ngang **đè lên trên** toàn bộ cành lá cây.
+  - Khi tương tác chạm (Tap): Toàn bộ móc treo, các dây và bầu chậu đu đưa vật lý (Pendulum Swing) quanh đỉnh móc treo `(0, 0)`.
+
+
 
 
 

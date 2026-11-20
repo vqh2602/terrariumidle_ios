@@ -49,6 +49,8 @@ public enum PotFactory {
             return Pot13Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
         case "pot14":
             return Pot14Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
+        case "pot15":
+            return Pot15Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
         default:
             return Pot1Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
         }
