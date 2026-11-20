@@ -13,20 +13,7 @@ public final class SpriteKitPlantScene: SKScene {
     // MARK: - Properties
 
     private var plantNode: SKSpriteNode?
-    private var plant1Node: Plant1Node?
-    private var plant2Node: Plant2Node?
-    private var plant3Node: Plant3Node?
-    private var plant4Node: Plant4Node?
-    private var plant5Node: Plant5Node?
-    private var plant6Node: Plant6Node?
-    private var plant7Node: Plant7Node?
-    private var plant8Node: Plant8Node?
-    private var plant9Node: Plant9Node?
-    private var plant10Node: Plant10Node?
-    private var plant11Node: Plant11Node?
-    private var plant12Node: Plant12Node?
-    private var plant13Node: Plant13Node?
-    private var plant14Node: Plant14Node?
+    private var customPlantInteractive: PlantInteractiveNode?
     private var plantId: String = "plant1"
     private var plantLevel: Int = 1
     private var isHanging: Bool = false
@@ -34,10 +21,7 @@ public final class SpriteKitPlantScene: SKScene {
     private var baseScale: CGFloat = 1.0
 
     private var hasActivePlantNode: Bool {
-        plantNode != nil || plant1Node != nil || plant2Node != nil || plant3Node != nil ||
-        plant4Node != nil || plant5Node != nil || plant6Node != nil || plant7Node != nil ||
-        plant8Node != nil || plant9Node != nil || plant10Node != nil || plant11Node != nil ||
-        plant12Node != nil || plant13Node != nil || plant14Node != nil
+        plantNode != nil || customPlantInteractive != nil
     }
 
     // MARK: - Initializer
@@ -101,145 +85,14 @@ public final class SpriteKitPlantScene: SKScene {
         guard size.width > 0, size.height > 0 else { return }
         removeAllChildren()
         plantNode = nil
-        plant1Node = nil
-        plant2Node = nil
-        plant3Node = nil
-        plant4Node = nil
-        plant5Node = nil
-        plant6Node = nil
-        plant7Node = nil
-        plant8Node = nil
-        plant9Node = nil
-        plant10Node = nil
-        plant11Node = nil
-        plant12Node = nil
-        plant13Node = nil
-        plant14Node = nil
+        customPlantInteractive = nil
         anchorPoint = CGPoint(x: 0.5, y: 0.0) // Luôn neo gốc tọa độ tại đáy giữa
 
-        // ĐẶC BIỆT: Cây Cỏ Loe (plant1) hỗ trợ 3 trạng thái và 18 lá uốn lượn riêng biệt
-        if plantId.lowercased() == "plant1" {
-            let p1 = Plant1Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p1.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p1)
-            self.plant1Node = p1
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Nha Đam (plant2 - Aloe Vera) với 8 bẹ mọng nước uốn lượn
-        if plantId.lowercased() == "plant2" {
-            let p2 = Plant2Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p2.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p2)
-            self.plant2Node = p2
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Begonia Rex (plant3 - Thu hải đường lá rộng) với 15 phiến lá bản rộng
-        if plantId.lowercased() == "plant3" {
-            let p3 = Plant3Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p3.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p3)
-            self.plant3Node = p3
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Ráy Alocasia Morocco (plant4) với 8 phiến lá uốn lượn mềm mại
-        if plantId.lowercased() == "plant4" {
-            let p4 = Plant4Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p4.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p4)
-            self.plant4Node = p4
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Trầu Bà Vàng (plant5 - Epipremnum Aureum) với 12 phiến lá dạng dây leo
-        if plantId.lowercased() == "plant5" {
-            let p5 = Plant5Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p5.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p5)
-            self.plant5Node = p5
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Vạn Niên Thanh Đốm (plant6 - Dieffenbachia Seguine) với 11 phiến lá lớn bản rộng
-        if plantId.lowercased() == "plant6" {
-            let p6 = Plant6Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p6.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p6)
-            self.plant6Node = p6
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Thiết Mộc Lan (plant7 - Fragrant Dracaena) với 19 phiến lá vươn xòe
-        if plantId.lowercased() == "plant7" {
-            let p7 = Plant7Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p7.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p7)
-            self.plant7Node = p7
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Chân Chim (plant8 - Schefflera) với 8 tán lá xòe
-        if plantId.lowercased() == "plant8" {
-            let p8 = Plant8Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p8.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p8)
-            self.plant8Node = p8
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Cỏ Gương (plant9 - Pilea peperomioides) với 9 bộ phận tròn đồng tiền
-        if plantId.lowercased() == "plant9" {
-            let p9 = Plant9Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p9.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p9)
-            self.plant9Node = p9
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Ráy Xẻ Mini (plant10 - Rhaphidophora tetrasperma) với 11 bộ phận leo cột
-        if plantId.lowercased() == "plant10" {
-            let p10 = Plant10Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p10.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p10)
-            self.plant10Node = p10
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Lưỡi Hổ (plant11 - Dracaena trifasciata) với 7 phiến lá
-        if plantId.lowercased() == "plant11" {
-            let p11 = Plant11Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p11.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p11)
-            self.plant11Node = p11
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Cau Vàng (plant12 - Dypsis lutescens) với 4 cụm cành
-        if plantId.lowercased() == "plant12" {
-            let p12 = Plant12Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p12.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p12)
-            self.plant12Node = p12
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Trầu Bà Dây Leo (plant13 - Philodendron hederaceum) với 8 bộ phận
-        if plantId.lowercased() == "plant13" {
-            let p13 = Plant13Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p13.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p13)
-            self.plant13Node = p13
-            return
-        }
-
-        // ĐẶC BIỆT: Cây Trầu Bà Lá Tim (plant14 - Heartleaf philodendron) với 7 bộ phận
-        if plantId.lowercased() == "plant14" {
-            let p14 = Plant14Node(level: plantLevel, containerSize: size, isHanging: isHanging)
-            p14.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
-            addChild(p14)
-            self.plant14Node = p14
+        // TỰ ĐỘNG NẠP CÁC NODE CÂY CHUYÊN BIỆT (Plant1 -> Plant14) QUA PLANTFACTORY
+        if let custom = PlantFactory.createPlant(id: plantId, level: plantLevel, containerSize: size, isHanging: isHanging) {
+            custom.asNode.position = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            addChild(custom.asNode)
+            self.customPlantInteractive = custom
             return
         }
 
@@ -310,60 +163,8 @@ public final class SpriteKitPlantScene: SKScene {
     // MARK: - Animation: Phản hồi khi người dùng chạm vào cây (Tap Bounce)
 
     public func playTapAnimation() {
-        if let p1 = plant1Node {
-            p1.playTapAnimation()
-            return
-        }
-        if let p2 = plant2Node {
-            p2.playTapAnimation()
-            return
-        }
-        if let p3 = plant3Node {
-            p3.playTapAnimation()
-            return
-        }
-        if let p4 = plant4Node {
-            p4.playTapAnimation()
-            return
-        }
-        if let p5 = plant5Node {
-            p5.playTapAnimation()
-            return
-        }
-        if let p6 = plant6Node {
-            p6.playTapAnimation()
-            return
-        }
-        if let p7 = plant7Node {
-            p7.playTapAnimation()
-            return
-        }
-        if let p8 = plant8Node {
-            p8.playTapAnimation()
-            return
-        }
-        if let p9 = plant9Node {
-            p9.playTapAnimation()
-            return
-        }
-        if let p10 = plant10Node {
-            p10.playTapAnimation()
-            return
-        }
-        if let p11 = plant11Node {
-            p11.playTapAnimation()
-            return
-        }
-        if let p12 = plant12Node {
-            p12.playTapAnimation()
-            return
-        }
-        if let p13 = plant13Node {
-            p13.playTapAnimation()
-            return
-        }
-        if let p14 = plant14Node {
-            p14.playTapAnimation()
+        if let custom = customPlantInteractive {
+            custom.playTapAnimation()
             return
         }
         guard let node = plantNode else { return }

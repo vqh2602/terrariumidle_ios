@@ -27,6 +27,8 @@ public final class Pot3Node: SKNode, PotInteractiveNode {
     private var potNode: SKSpriteNode?
     /// Bóng đổ dưới đáy chậu
     private var shadowNode: SKNode?
+    /// Socket cắm cây
+    public private(set) var plantMountNode: SKNode?
 
     /// Toạ độ ban đầu của chậu (chống trôi toạ độ khi tap liên tục)
     private var initialPotPosition: CGPoint = .zero
@@ -69,6 +71,7 @@ public final class Pot3Node: SKNode, PotInteractiveNode {
         potRootNode.removeAllActions()
         potNode = nil
         shadowNode = nil
+        plantMountNode = nil
 
         self.isPaused = false
         self.speed = 1.0
@@ -107,15 +110,24 @@ public final class Pot3Node: SKNode, PotInteractiveNode {
             templatePot.isHidden = false
             templatePot.isPaused = false
             templatePot.speed = 1.0
-            if widthFill > 0 {
-                let extraW = (containerSize.width * 0.96 - templatePot.size.width) * widthFill
-                if extraW > 0 {
-                    templatePot.size.width += extraW
-                }
-            }
+            templatePot.size = CGSize(width: targetW, height: targetH)
+            templatePot.anchorPoint = CGPoint(x: 0.5, y: isHanging ? 1.0 : 0.0)
+            templatePot.position = CGPoint(x: 0, y: 0)
+            templatePot.zPosition = 20
             potRootNode.addChild(templatePot)
             self.potNode = templatePot
             self.initialPotPosition = templatePot.position
+
+            // Nạp socket cắm cây từ scene Pot3Scene.sks
+            if let mount = scene.childNode(withName: "plantMount") {
+                mount.removeFromParent()
+                let scaleX = targetW / 308.0
+                let scaleY = targetH / 260.0
+                mount.position = CGPoint(x: mount.position.x * scaleX, y: mount.position.y * scaleY)
+                mount.zPosition = 10
+                potRootNode.addChild(mount)
+                self.plantMountNode = mount
+            }
             return
         }
 
@@ -125,7 +137,7 @@ public final class Pot3Node: SKNode, PotInteractiveNode {
         let node = SKSpriteNode(texture: texture)
         node.name = "potNode"
         node.size = CGSize(width: targetW, height: targetH)
-        node.zPosition = 10
+        node.zPosition = 20
         node.isPaused = false
         node.speed = 1.0
 
@@ -140,6 +152,14 @@ public final class Pot3Node: SKNode, PotInteractiveNode {
         potRootNode.addChild(node)
         self.potNode = node
         self.initialPotPosition = node.position
+
+        // Socket cắm cây mặc định nếu chưa nạp được scene
+        let mount = SKNode()
+        mount.name = "plantMount"
+        mount.position = CGPoint(x: 0, y: isHanging ? -targetH * 0.65 : targetH * 0.88)
+        mount.zPosition = 10
+        potRootNode.addChild(mount)
+        self.plantMountNode = mount
     }
 
     // MARK: - Scene Template Loader

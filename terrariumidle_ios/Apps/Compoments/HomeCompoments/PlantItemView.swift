@@ -128,70 +128,25 @@ struct PlantItemView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
-            } else if isHanging {
-                // HANGING PLANT LAYOUT - Cây treo
-                // Pot ở trên, Plant phủ xuống dưới
-                ZStack(alignment: .top) {
-                    // Pot ở trên cùng (topCenter)
-                    SpriteKitPotView(
-                        potId: plantData?.idPot ?? "pot1",
-                        isHanging: true,
-                        width: itemWidth * 1.0,
-                        height: itemWidth + itemWidth * 0.2,
-                        onTap: {
-                            handleDetailTap()
-                        }
-                    )
-                    .id("\(plantData?.idPot ?? "pot1")-pot-hanging")
-                    .frame(maxWidth: .infinity)
-
-                    // Plant phủ xuống - full width
-                    SpriteKitPlantView(
-                        plantId: plantData?.idPlant ?? "plant1",
-                        plantLevel: plantData?.plantLevel ?? 3,
-                        isHanging: true,
-                        width: itemWidth,
-                        height: itemWidth + itemWidth * 0.5,
-                        onTap: {
-                            handleDetailTap()
-                        }
-                    )
-                    .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)-hanging")
-                }
-                .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)")
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else {
-                // NORMAL PLANT LAYOUT
-                VStack(spacing: -itemWidth * 0.02) {
-                    // Hiển thị Plant với idPlant từ data (không dùng mockup, cây chưa có sẽ hiện <update app để hiển thị>)
-                    SpriteKitPlantView(
-                        plantId: plantData?.idPlant ?? "plant1",
-                        plantLevel: plantData?.plantLevel ?? 1,
-                        isHanging: false,
-                        width: itemWidth,
-                        height: itemWidth + itemWidth * 0.5,
-                        onTap: {
-                            handleDetailTap()
-                        }
-                    )
-                    .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)-normal")
-                    .zIndex(1)
-
-                    // Hiển thị Pot với idPot từ data
-                    SpriteKitPotView(
-                        potId: plantData?.idPot ?? "pot1",
-                        isHanging: false,
-                        width: itemWidth,
-                        height: itemWidth * 0.4,
-                        onTap: {
-                            handleDetailTap()
-                        }
-                    )
-                    .id("\(plantData?.idPot ?? "pot1")-pot-normal")
-                    .zIndex(2)
-                }
-                .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)")
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                // UNIFIED PLANT & POT LAYOUT (TerrariumSlotView)
+                // Hợp nhất Cây và Chậu vào chung 1 Scene SpriteKit:
+                // - Đan xen chiều sâu: lá rủ ra trước thành chậu, dây treo trước vắt qua lá
+                // - Chậu treo tự động định vị lòng chậu qua plantMount socket
+                // - Giảm 50% Metal SKView trên màn hình chính
+                TerrariumSlotView(
+                    potId: plantData?.idPot ?? "pot1",
+                    plantId: plantData?.idPlant ?? "plant1",
+                    plantLevel: plantData?.plantLevel ?? 1,
+                    isHanging: isHanging,
+                    width: itemWidth,
+                    height: isHanging ? (itemWidth * 1.6) : (itemWidth * 1.88),
+                    onTap: {
+                        handleDetailTap()
+                    }
+                )
+                .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)-\(isHanging)")
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isHanging ? .top : .bottom)
             }
         }
             .customContextMenu(menuItems: {

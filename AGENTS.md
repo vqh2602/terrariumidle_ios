@@ -110,5 +110,37 @@ Mọi Chậu cây (`SpriteKitPotView`, `PotView`, và các View chuyên biệt `
    - Khi caller chủ động truyền tham số `widthFill` cụ thể (kể cả `0.0`), giá trị truyền vào luôn có độ ưu tiên cao nhất.
    - `SpriteKitPotView` **BẮT BUỘC** phải gán modifier `.id("\(potId)-\(isHanging)-\(activeFill)-\(width)-\(height)")` cho `SpriteView` và gọi `scene.configure` đồng bộ trong `body` để đảm bảo khi `widthFill` thay đổi thì SpriteKit cập nhật kích thước ngay lập tức mà không bị cache `@State`.
 
+## Quy chuẩn Kiến trúc Slot Hợp nhất (Unified Terrarium Slot: Cây + Chậu)
+
+Để giải quyết triệt để các vấn đề:
+1. **Lá rủ qua mặt trước chậu** (draping leaves in front of the pot rim).
+2. **Dây treo vắt đè lên lá** (hanging cords in front of leaves).
+3. **Định vị chính xác gốc cây cho chậu treo** qua socket `plantMount`.
+4. **Tối ưu 50% số lượng `SKView` trên màn hình chính** (gộp 2 SKView thành 1 SKView duy nhất trên mỗi ô kệ).
+
+### 1. Ma trận Chiều sâu Phân tầng (Z-Layer Interleaving Convention)
+Trong một Scene SpriteKit duy nhất (`TerrariumSlotScene`), độ sâu hiển thị được quản lý bằng `zPosition`:
+- `z = 0`: Dây treo phía sau (`backRopes` - chỉ có ở chậu treo).
+- `z = 1`: Bóng đổ dưới đáy chậu (`shadowNode` - chỉ có ở chậu để bàn).
+- `z = 5`: Lòng đất và thành sau chậu (`soilNode` / `backRim`).
+- `z = 10`: Mỏ neo cắm cây (`plantMount` SKNode) & thân cây, cọc leo, các lá mọc phía sau (`backLeaves`).
+- `z = 20`: Thân chậu & thành trước của chậu (`potBody` / `frontRim`) -> che khuất gốc cây tự nhiên.
+- `z = 30`: Các phiến lá mọc tản / rủ xuống qua mặt trước miệng chậu (`frontLeaves` / `drapingLeaves`).
+- `z = 40`: Dây treo phía trước (`frontRopes` - chỉ có ở chậu treo) -> vắt ngang đè lên trên các phiến lá.
+- `z = 50`: Hiệu ứng hạt bụi khí Oxy, bong bóng, đá lấp lánh (Sparkle, Twinkle, Oxygen bubbles).
+
+### 2. Socket Mount Node (`plantMount`) trong Chậu
+Mọi Node Chậu (`PotInteractiveNode`) đều cung cấp:
+- `var plantMountNode: SKNode?`: Node rỗng mang tên `"plantMount"` trong `PotXScene.sks` (hoặc tạo bằng code).
+- `var plantMountPoint: CGPoint`: Toạ độ điểm cắm cây (Mount Point).
+  - Với chậu để bàn: gốc cây cắm tại miệng chậu (`(0, targetH * 0.88)`).
+  - Với chậu treo: gốc cây cắm trong lòng bầu chậu treo (`(0, -targetH * 0.65)` tính từ móc treo).
+
+### 3. Thành phần Hợp nhất `TerrariumSlotView`
+- Được sử dụng trên màn hình chính ([PlantItemView.swift](file:///Users/vuongquanghuy/code/prj_ios/terrariumidle_ios/terrariumidle_ios/Apps/Compoments/HomeCompoments/PlantItemView.swift)).
+- Nhận diện chạm thông minh: tap nửa dưới slot kích hoạt hiệu ứng chậu (`pot.playTapAnimation()`), tap nửa trên kích hoạt hiệu ứng cây (`plant.playTapAnimation()`).
+- Tương thích ngược: `SpriteKitPotView` và `SpriteKitPlantView` độc lập vẫn được giữ nguyên cho màn hình Shop và Preview đơn lẻ.
+
+
 
 
