@@ -205,6 +205,22 @@ Tương tự như Cây, các Chậu trong [pots_data.json](file:///Users/vuongqu
     * Đỉnh móc chậu dính chặt 100% vào mép dưới thanh kệ gỗ phía trên. Dây treo và bầu chậu buông rủ xuống phía dưới.
     * Socket cắm cây `plantMountPoint` của chậu treo có toạ độ Y âm tính từ đỉnh móc treo (ví dụ `-targetH * 0.65`). Khi cắm cây, cây cắm vào miệng chậu và buông rủ xuống tự nhiên.
 
+## Quy chuẩn Phong cảnh Nền SpriteKit (Landscapes Architecture)
+
+Tương tự như `Pots` và `Plants`, mọi Phong cảnh nền (`Landscape1`, `Landscape2`, ...) đều áp dụng mô hình Kiến trúc Lai SpriteKit:
+1. **Cấu trúc bộ 3 file & thư mục**:
+   - `LandscapeXScene.sks` (Thiết kế trực quan trong Xcode Scene Editor): Canvas dọc $750 \times 1334$, `anchorPoint = (0.5, 0.5)` ở tâm.
+   - `LandscapeXNode.swift`: Kế thừa `SKNode` và tuân thủ `LandscapeInteractiveNode`, ưu tiên nạp từ file `.sks` kèm Fallback code procedural an toàn.
+   - `LandscapeXView.swift`: View SwiftUI xem trước độc lập kèm `#Preview`.
+   - Đăng ký khởi tạo qua `LandscapeFactory.createLandscape(id:containerSize:)`.
+2. **Quy chuẩn phân tầng Layer (`Landscape1` làm chuẩn)**:
+   - `z = 0`: `bgNode` (`bg1-1@4.167x`) phủ tràn toàn màn hình dọc (Aspect Fill).
+   - `z = 10`: `sunGroup` (Mặt trời & Hào quang đồng tâm):
+     * `sunCore` (`sunbg1-2@4.167x`, z = 15): Mặt trời chính nhịp thở nhẹ nhàng.
+     * `sunAura1` -> `sunAura4` (`sunbg1-3` -> `sunbg1-6`, z = 14..11): Các lớp hào quang xoay đa chiều ngược nhau, mờ tỏ nhịp nhàng.
+   - `z = 20`: `cloudsGroup` (8 cụm mây `Cloudbg1-1` -> `Cloudbg1-8`): Trôi Parallax nhiều tầng vận tốc, tự động wrap vòng quanh màn hình.
+   - `z = 35`: Hiệu ứng hạt bụi nắng / lấp lánh (Sparkle particles) sinh ra khi tương tác chạm tap.
+
 
 
 

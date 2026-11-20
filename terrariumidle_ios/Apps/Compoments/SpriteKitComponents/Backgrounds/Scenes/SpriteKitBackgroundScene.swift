@@ -14,6 +14,7 @@ public final class SpriteKitBackgroundScene: SKScene {
 
     private var currentThemeId: String = "sky_sun_day"
     private var isConfigured = false
+    private var activeLandscapeNode: LandscapeInteractiveNode?
 
     // MARK: - Initializer
 
@@ -57,7 +58,19 @@ public final class SpriteKitBackgroundScene: SKScene {
     public override func didChangeSize(_ oldSize: CGSize) {
         super.didChangeSize(oldSize)
         if size.width > 0 && size.height > 0 {
-            rebuildScene()
+            if let custom = activeLandscapeNode {
+                custom.configure(containerSize: size)
+            } else {
+                rebuildScene()
+            }
+        }
+    }
+
+    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        if let touch = touches.first {
+            let loc = touch.location(in: self)
+            activeLandscapeNode?.playTapAnimation(at: loc)
         }
     }
 
@@ -68,8 +81,17 @@ public final class SpriteKitBackgroundScene: SKScene {
         isConfigured = true
         removeAllChildren()
         removeAllActions()
+        activeLandscapeNode = nil
 
         let item = ItemDataManager.shared.getLandscape(byIdOrImage: currentThemeId)
+        let resolvedId = item?.id ?? currentThemeId
+
+        // 1. ƯU TIÊN NẠP LANDSCAPE NODE CHUYÊN BIỆT TỪ FACTORY (VD: Landscape1Node nạp từ Landscape1Scene.sks)
+        if let customLandscape = LandscapeFactory.createLandscape(id: resolvedId, containerSize: size) {
+            addChild(customLandscape.asNode)
+            self.activeLandscapeNode = customLandscape
+            return
+        }
 
         // 1. Lớp màu nền Gradient động từ mảng skyGradient trong JSON
         buildGradientBackground(item: item)

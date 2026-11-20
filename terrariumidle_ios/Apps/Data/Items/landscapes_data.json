@@ -4,6 +4,7 @@
         "name": "Ban công quang đãng",
         "description": "Bầu trời ban ngày quang đãng, mây trắng bồng bềnh",
         "image": "i_sky_sun_day",
+        "sksFile": "Landscape1Scene.sks",
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
