@@ -37,26 +37,40 @@ final class BackgroundAudioManager: ObservableObject {
 
     private init() {
         setupRemoteCommands()
+        setupInterruptionObserver()
         ensureAudioSession()
     }
 
     private static var isSessionConfigured = false
 
-    /// Cấu hình AudioSession bất đồng bộ trên background thread hoàn toàn.
+    /// Gọi từ AppDelegate sau khi session đã được set từ bên ngoài
+    static func markSessionConfigured() {
+        isSessionConfigured = true
+    }
+
+    /// Cấu hình AudioSession đồng bộ ngay trước khi phát nhạc.
     /// Dùng category .playback (không có .mixWithOthers) để kích hoạt Remote Controls và Now Playing
     /// trên thanh thông báo (Notification Center), màn hình khóa (Lock Screen) và Control Center.
     private func ensureAudioSession() {
-        guard !Self.isSessionConfigured else { return }
+        if Self.isSessionConfigured {
+            // Session đã active (set từ AppDelegate), chỉ cần verify category
+            let session = AVAudioSession.sharedInstance()
+            if session.category != .playback {
+                try? session.setCategory(.playback, mode: .default, options: [])
+                try? session.setActive(true)
+                print("✅ BackgroundAudioManager: Re-activate AVAudioSession .playback")
+            }
+            return
+        }
         Self.isSessionConfigured = true
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                let session = AVAudioSession.sharedInstance()
-                try session.setCategory(.playback, mode: .default, options: [])
-                try session.setActive(true)
-            } catch {
-                print("⚠️ Lỗi thiết lập AVAudioSession:", error)
-            }
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .default, options: [])
+            try session.setActive(true)
+            print("✅ BackgroundAudioManager: Đã cấu hình AVAudioSession .playback thành công")
+        } catch {
+            print("⚠️ Lỗi thiết lập AVAudioSession:", error)
         }
     }
 
@@ -105,7 +119,6 @@ final class BackgroundAudioManager: ObservableObject {
             player?.numberOfLoops = -1
             player?.volume = bgmVolume
             player?.prepareToPlay()
-            player?.play()
 
             isPlaying = true
             currentBGMTitle = title
@@ -118,8 +131,14 @@ final class BackgroundAudioManager: ObservableObject {
                 currentBGMImage = currentBGMId
             }
 
-            updateNowPlaying(title: title)
+            player?.play()
             print("🎵 BGM playing: \(title) (\(fileName))")
+
+            // Cập nhật Now Playing SAU khi player thực sự bắt đầu phát
+            // Delay nhỏ để iOS nhận được audio session active + player.isPlaying = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                self?.updateNowPlaying(title: title)
+            }
 
         } catch {
             print("❌ startBGM error:", error)
@@ -138,6 +157,12 @@ final class BackgroundAudioManager: ObservableObject {
         currentBGMTitle = title
         currentBGMImage = image ?? id
         startBGM(fileName: fileName, title: title, image: currentBGMImage, id: id)
+    }
+
+    /// Phát bản nhạc BGM mặc định ("m0" - "Relax...") nếu chưa có nhạc đang phát
+    func startDefaultBGM() {
+        guard !isPlaying else { return }
+        switchBGM(id: "m0", fileName: "m0", title: "Relax...", image: "m0")
     }
 
     func pause() {
@@ -309,7 +334,9 @@ final class BackgroundAudioManager: ObservableObject {
             MPMediaItemPropertyArtist: "Terrarium Idle",
             MPMediaItemPropertyAlbumTitle: "Nhạc thư giãn",
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
+            MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: player?.currentTime ?? 0,
+            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
         ]
 
         if let duration = player?.duration, duration > 0 {
@@ -325,6 +352,7 @@ final class BackgroundAudioManager: ObservableObject {
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
         MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
+        print("📻 Now Playing updated: [\(displayTitle)] isPlaying: \(isPlaying)")
     }
 
     private func updatePlaybackState() {
@@ -345,6 +373,14 @@ final class BackgroundAudioManager: ObservableObject {
         UIApplication.shared.beginReceivingRemoteControlEvents()
 
         let center = MPRemoteCommandCenter.shared()
+
+        // Xóa target cũ để tránh trùng lặp
+        center.playCommand.removeTarget(nil)
+        center.pauseCommand.removeTarget(nil)
+        center.togglePlayPauseCommand.removeTarget(nil)
+        center.nextTrackCommand.removeTarget(nil)
+        center.previousTrackCommand.removeTarget(nil)
+        center.changePlaybackPositionCommand.removeTarget(nil)
 
         center.playCommand.isEnabled = true
         center.pauseCommand.isEnabled = true
@@ -384,6 +420,30 @@ final class BackgroundAudioManager: ObservableObject {
             }
             Task { @MainActor in self?.seek(to: event.positionTime) }
             return .success
+        }
+    }
+
+    private func setupInterruptionObserver() {
+        NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let userInfo = notification.userInfo,
+                  let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+                return
+            }
+            if type == .began {
+                self?.pause()
+            } else if type == .ended {
+                if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
+                    let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+                    if options.contains(.shouldResume) {
+                        self?.resume()
+                    }
+                }
+            }
         }
     }
 }

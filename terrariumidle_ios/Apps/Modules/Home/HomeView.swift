@@ -235,6 +235,11 @@ struct HomeView: View {
 
             SpeedDial(isEditing: $isEdit, backgroundRive: $backgroundRive, overlayRive: $overlayRive)
         } // Full màn hình, bao gồm status bar
+        .onAppear {
+            if !BackgroundAudioManager.shared.isPlaying {
+                BackgroundAudioManager.shared.startDefaultBGM()
+            }
+        }
     }
 
     // MARK: - Helper Function
