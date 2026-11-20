@@ -50,24 +50,34 @@ public protocol PotTapEffect: AnyObject {
 - `containerNode`: Node gốc của chậu (`potRootNode`). Hạt được add vào đây để không bị méo biến dạng khi `potNode` nảy co giãn đàn hồi.
 - `isHanging`: Cờ báo chậu treo hay chậu để bàn (để đảo chiều bay nếu cần).
 
-### 3.2. Nhà máy `PotTapEffectFactory`
-Khởi tạo hiệu ứng động qua chuỗi cấu hình từ `pots_data.json`:
+### 3.2. Cấu Hình Hiệu Ứng Tap Trong Node (Không Đưa Ra JSON)
+> [!IMPORTANT]
+> **Quy chuẩn phân định rõ giữa JSON và Node Code**:
+> - Các hiệu ứng hạt lấp lánh, đốm sáng, nhịp tim hay bong bóng tap **BẮT BUỘC ĐƯỢC CẤU HÌNH TRỰC TIẾP TRONG FILE NODE** (`PotXNode.swift`) thông qua mảng `public var tapEffects: [PotTapEffect]`.
+> - **TUYỆT ĐỐI KHÔNG** đưa các hiệu ứng tap cục bộ của chậu này vào trường `effect` trong JSON.
+> - Trường `effect` trong file JSON chỉ dành riêng cho việc kích hoạt/mở khóa hiệu ứng phủ màn hình (**Overlay Effects** như `overlay1`, `overlay2` - lá rơi, hoa đào rơi).
+
+Khởi tạo và gán trực tiếp trong từng Node Chậu:
 ```swift
-// Tự động gán hiệu ứng dựa theo thuộc tính "effect" trong pots_data.json
-if let effect = PotTapEffectFactory.create(named: potData.effect) {
-    potNode.tapEffects = [effect]
-}
+// Trong Pot1Node.swift:
+public var tapEffects: [PotTapEffect] = [SparkleBurstEffect()]
+
+// Trong Pot4Node.swift:
+public var tapEffects: [PotTapEffect] = [HeartBurstEffect()]
+
+// Trong Pot6Node.swift:
+public var tapEffects: [PotTapEffect] = [QuartzBurstEffect()]
 ```
 
 ### 3.3. Tích hợp trong từng Node Chậu (`PotXNode.swift`)
-Mỗi Node chậu khai báo danh sách hiệu ứng có thể kích hoạt:
+Mỗi Node chậu khai báo danh sách hiệu ứng có thể kích hoạt khi tap:
 ```swift
 public var tapEffects: [PotTapEffect] = [SparkleBurstEffect()]
 
 public func playTapAnimation() {
     guard let node = potNode else { return }
     // 1. Nảy đàn hồi vật lý
-    PotBounceAnimator.applyBounce(to: node, ...)
+    PotBounceAnimator.applyBounce(to: node, containerSize: containerSize, isHanging: isHanging)
     // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap
     for effect in tapEffects {
         effect.trigger(on: node, in: potRootNode, isHanging: isHanging)
@@ -77,11 +87,29 @@ public func playTapAnimation() {
 
 ---
 
-## 4. Hướng Dẫn Thêm Hiệu Ứng Chậu Mới
+## 4. Quy Chuẩn Cấu Trúc JSON Mới (`pots_data.json` & `plants_data.json`)
+
+Mỗi item trong JSON quản lý độc lập các trường mở khóa và mô tả:
+
+| Trường JSON | Kiểu Dữ Liệu | Mục Đích & Ý Nghĩa | Ví Dụ |
+| :--- | :--- | :--- | :--- |
+| `effect` | `String` | Danh sách ID hiệu ứng overlay mở khóa khi trồng (phân tách bởi dấu phẩy `,`) | `"overlay1"`, `"overlay1,overlay2"`, `""` |
+| `effectDescription` | `String` | Mô tả chi tiết hiệu ứng overlay | `"Lá rơi xanh ngọc"` |
+| `sound` | `String` | Âm thanh phát ra khi tap vào (chỉ áp dụng với plant, mặc định `"tap"`) | `"tap"` |
+| `music` | `String` | Danh sách ID bài hát BGM mở khóa (phân tách bởi `,`) | `"m0"`, `"m0,m1"`, `"m3"` |
+| `musicDescription` | `String` | Mô tả bài hát nhạc nền mở khóa | `"Mong một ngày mưa"`, `"Relax"` |
+| `effectLandscape` | `String` | Danh sách ID phong cảnh nền mở khóa (phân tách bởi `,`) | `"landscape5"` |
+| `effectLandscapeDescription` | `String` | Mô tả phong cảnh mở khóa | `"Đêm muộn trời sao"` |
+| `effectSfx` | `String` | Danh sách ID âm thanh SFX mở khóa (phân tách bởi `,`) | `"sfx5"`, `"sfx1,sfx2"` |
+| `effectSfxDescription` | `String` | Mô tả âm thanh SFX | `"Tiếng nước chảy"` |
+
+---
+
+## 5. Hướng Dẫn Thêm Hiệu Ứng Chậu Mới
 
 1. Tạo file mới `[TenHieuUng]Effect.swift` trong thư mục `PotEffects/`.
 2. Cho class kế thừa `PotTapEffect`:
-   - Gán `particle.zPosition = 150` để nổi trên chậu.
+   - Gán `particle.zPosition = 150` để nổi trên thân chậu và dây treo.
    - Sử dụng `SKAction` chuỗi `[delay, fadeIn, group([move, rotate, scale]), fadeOut, removeFromParent()]`.
-3. Khai báo thêm enum case trong `PotTapEffectType`.
-4. Đăng ký từ khoá nhận diện trong `PotTapEffectFactory.create(named:)`.
+3. Gán hiệu ứng trực tiếp vào mảng `tapEffects` trong `PotXNode.swift`.
+4. (Tuỳ chọn) Khai báo thêm enum case trong `PotTapEffectType` và `PotTapEffectFactory` nếu muốn hỗ trợ tạo động.

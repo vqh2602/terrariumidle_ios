@@ -18,12 +18,13 @@ struct ItemData: Codable, Identifiable {
     let priceOxygen: Int
     let currencyUnit: String
     let type: String // "plant", "pot", "decoration", "music", "overlay"
-    let effect: String
+    let effect: String // ID(s) hiệu ứng overlay (phân tách bởi dấu phẩy, ví dụ: "overlay1", "overlay1,overlay2")
+    let effectDescription: String? // Mô tả hiệu ứng (ví dụ: "Lá rơi xanh ngọc")
     let itemTypeAttribute: ItemTypeAttribute
     let levelUnlock: Int
 
     // MARK: - Cấu hình âm thanh khi tap
-    let sound: String?
+    let sound: String? // Âm thanh click vào (mặc định "tap", chỉ áp dụng với plant)
     let tapSound: String?
 
     var clickSound: String {
@@ -34,6 +35,66 @@ struct ItemData: Codable, Identifiable {
             return ts.trimmingCharacters(in: .whitespaces)
         }
         return "tap"
+    }
+
+    // MARK: - Mở khóa Âm nhạc, Phong cảnh, SFX khi trồng cây/chậu
+    let music: String? // ID(s) âm nhạc mở khóa ("m0,m1")
+    let musicDescription: String? // Mô tả nhạc mở khóa ("Relax")
+    let effectLandscape: String? // ID(s) phong cảnh mở khóa ("landscape1,landscape2")
+    let effectLandscapeDescription: String? // Mô tả phong cảnh ("Ban công quang đãng")
+    let effectSfx: String? // ID(s) âm thanh sfx mở khóa ("sfx1,sfx5")
+    let effectSfxDescription: String? // Mô tả sfx ("Tiếng nước chảy")
+
+    // MARK: - Helper trích xuất danh sách ID mở khóa
+    var unlockedMusicIds: [String] {
+        guard let music = music else { return [] }
+        return music.split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && $0 != "none" && $0 != "N.A" }
+    }
+
+    var unlockedEffectIds: [String] {
+        return effect.split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && $0 != "none" && $0 != "N.A" }
+    }
+
+    var unlockedLandscapeIds: [String] {
+        guard let landscapes = effectLandscape else { return [] }
+        return landscapes.split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && $0 != "none" && $0 != "N.A" }
+    }
+
+    var unlockedSfxIds: [String] {
+        guard let sfx = effectSfx else { return [] }
+        return sfx.split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && $0 != "none" && $0 != "N.A" }
+    }
+
+    /// Mô tả tổng hợp hiệu ứng để hiển thị trên UI Store & Selection cards
+    var displayEffect: String {
+        var parts: [String] = []
+        if let ed = effectDescription, !ed.isEmpty && ed != "N.A" && ed != "none" {
+            parts.append(ed)
+        }
+        if let md = musicDescription, !md.isEmpty && md != "N.A" && md != "none" {
+            parts.append("Nhạc: \(md)")
+        }
+        if let ld = effectLandscapeDescription, !ld.isEmpty && ld != "N.A" && ld != "none" {
+            parts.append("Cảnh: \(ld)")
+        }
+        if let sd = effectSfxDescription, !sd.isEmpty && sd != "N.A" && sd != "none" {
+            parts.append("SFX: \(sd)")
+        }
+        if !parts.isEmpty {
+            return parts.joined(separator: ", ")
+        }
+        if effect != "none" && effect != "N.A" && !effect.isEmpty {
+            return effect
+        }
+        return "N.A"
     }
 
     // MARK: - Cấu hình động SpriteKit từ file JSON (loại bỏ switch-case thủ công)
@@ -49,6 +110,107 @@ struct ItemData: Codable, Identifiable {
 
     // MARK: - Cấu hình độ rộng chậu cây (0.0 -> 1.0)
     let widthFill: Double?
+
+    // MARK: - Codable Custom Keys & Fallback
+    enum CodingKeys: String, CodingKey {
+        case id, name, description, image, priceStore, priceOxygen, currencyUnit, type, effect
+        case effectDescription, effectdescription
+        case itemTypeAttribute, levelUnlock
+        case sound, tapSound
+        case music, musicDescription, musicdescription
+        case effectLandscape, effectlandscape, effectLancape, effectlancape
+        case effectLandscapeDescription, effectlandscapedescription, effectLancapedescription
+        case effectSfx, effectsfx
+        case effectSfxDescription, effectsfxdescription, effectsfxdesdescription
+        case kind, sksFile, images, wind, density, speed, particleCount, skyGradient, elements, widthFill
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        description = try container.decode(String.self, forKey: .description)
+        image = try container.decode(String.self, forKey: .image)
+        priceStore = try container.decode(Int.self, forKey: .priceStore)
+        priceOxygen = try container.decode(Int.self, forKey: .priceOxygen)
+        currencyUnit = try container.decode(String.self, forKey: .currencyUnit)
+        type = try container.decode(String.self, forKey: .type)
+        effect = (try? container.decode(String.self, forKey: .effect)) ?? ""
+
+        effectDescription = (try? container.decode(String.self, forKey: .effectDescription))
+            ?? (try? container.decode(String.self, forKey: .effectdescription))
+
+        itemTypeAttribute = (try? container.decode(ItemTypeAttribute.self, forKey: .itemTypeAttribute)) ?? .none
+        levelUnlock = try container.decode(Int.self, forKey: .levelUnlock)
+
+        sound = try? container.decode(String.self, forKey: .sound)
+        tapSound = try? container.decode(String.self, forKey: .tapSound)
+
+        music = try? container.decode(String.self, forKey: .music)
+        musicDescription = (try? container.decode(String.self, forKey: .musicDescription))
+            ?? (try? container.decode(String.self, forKey: .musicdescription))
+
+        effectLandscape = (try? container.decode(String.self, forKey: .effectLandscape))
+            ?? (try? container.decode(String.self, forKey: .effectlandscape))
+            ?? (try? container.decode(String.self, forKey: .effectLancape))
+            ?? (try? container.decode(String.self, forKey: .effectlancape))
+
+        effectLandscapeDescription = (try? container.decode(String.self, forKey: .effectLandscapeDescription))
+            ?? (try? container.decode(String.self, forKey: .effectlandscapedescription))
+            ?? (try? container.decode(String.self, forKey: .effectLancapedescription))
+
+        effectSfx = (try? container.decode(String.self, forKey: .effectSfx))
+            ?? (try? container.decode(String.self, forKey: .effectsfx))
+
+        effectSfxDescription = (try? container.decode(String.self, forKey: .effectSfxDescription))
+            ?? (try? container.decode(String.self, forKey: .effectsfxdescription))
+            ?? (try? container.decode(String.self, forKey: .effectsfxdesdescription))
+
+        kind = try? container.decode(String.self, forKey: .kind)
+        sksFile = try? container.decode(String.self, forKey: .sksFile)
+        images = try? container.decode([String].self, forKey: .images)
+        wind = try? container.decode(String.self, forKey: .wind)
+        density = try? container.decode(String.self, forKey: .density)
+        speed = try? container.decode(String.self, forKey: .speed)
+        particleCount = try? container.decode(Int.self, forKey: .particleCount)
+        skyGradient = try? container.decode([String].self, forKey: .skyGradient)
+        elements = try? container.decode([String].self, forKey: .elements)
+        widthFill = try? container.decode(Double.self, forKey: .widthFill)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(description, forKey: .description)
+        try container.encode(image, forKey: .image)
+        try container.encode(priceStore, forKey: .priceStore)
+        try container.encode(priceOxygen, forKey: .priceOxygen)
+        try container.encode(currencyUnit, forKey: .currencyUnit)
+        try container.encode(type, forKey: .type)
+        try container.encode(effect, forKey: .effect)
+        try container.encodeIfPresent(effectDescription, forKey: .effectDescription)
+        try container.encode(itemTypeAttribute, forKey: .itemTypeAttribute)
+        try container.encode(levelUnlock, forKey: .levelUnlock)
+        try container.encodeIfPresent(sound, forKey: .sound)
+        try container.encodeIfPresent(tapSound, forKey: .tapSound)
+        try container.encodeIfPresent(music, forKey: .music)
+        try container.encodeIfPresent(musicDescription, forKey: .musicDescription)
+        try container.encodeIfPresent(effectLandscape, forKey: .effectLandscape)
+        try container.encodeIfPresent(effectLandscapeDescription, forKey: .effectLandscapeDescription)
+        try container.encodeIfPresent(effectSfx, forKey: .effectSfx)
+        try container.encodeIfPresent(effectSfxDescription, forKey: .effectSfxDescription)
+        try container.encodeIfPresent(kind, forKey: .kind)
+        try container.encodeIfPresent(sksFile, forKey: .sksFile)
+        try container.encodeIfPresent(images, forKey: .images)
+        try container.encodeIfPresent(wind, forKey: .wind)
+        try container.encodeIfPresent(density, forKey: .density)
+        try container.encodeIfPresent(speed, forKey: .speed)
+        try container.encodeIfPresent(particleCount, forKey: .particleCount)
+        try container.encodeIfPresent(skyGradient, forKey: .skyGradient)
+        try container.encodeIfPresent(elements, forKey: .elements)
+        try container.encodeIfPresent(widthFill, forKey: .widthFill)
+    }
 }
 
 // MARK: - Item Type Attribute (Hỗ trợ đa thuộc tính: "none", "hanging", "front", "hanging,front", v.v.)

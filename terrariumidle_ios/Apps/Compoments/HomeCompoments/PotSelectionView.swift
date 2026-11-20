@@ -108,8 +108,8 @@ struct PotItemRow: View {
                         .foregroundColor(.gray)
                         .lineLimit(2)
 
-                    if pot.effect != "N.A" && !pot.effect.isEmpty {
-                        Text("Hiệu ứng: \(pot.effect)")
+                    if pot.displayEffect != "N.A" && !pot.displayEffect.isEmpty {
+                        Text("Hiệu ứng: \(pot.displayEffect)")
                             .font(.system(size: 12))
                             .foregroundColor(.blue)
                     }

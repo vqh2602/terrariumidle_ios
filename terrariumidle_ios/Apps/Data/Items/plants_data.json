@@ -8,10 +8,17 @@
         "priceOxygen": 200,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "Relax - m0",
+        "effect": "",
         "itemTypeAttribute": "none",
         "levelUnlock": 1,
-        "sound": "tap"
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "m0",
+        "musicDescription": "Relax",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant2",
@@ -22,10 +29,17 @@
         "priceOxygen": 200,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
         "levelUnlock": 1,
-        "sound": "tap"
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant3",
@@ -36,9 +50,17 @@
         "priceOxygen": 1000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "Tiếng nước chảy - sfx5",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 2
+        "levelUnlock": 2,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "sfx5",
+        "effectSfxDescription": "Tiếng nước chảy"
     },
     {
         "id": "plant4",
@@ -49,9 +71,17 @@
         "priceOxygen": 500,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 3
+        "levelUnlock": 3,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant5",
@@ -62,9 +92,17 @@
         "priceOxygen": 2000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 4
+        "levelUnlock": 4,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant6",
@@ -75,9 +113,17 @@
         "priceOxygen": 1000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 5
+        "levelUnlock": 5,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant7",
@@ -88,9 +134,17 @@
         "priceOxygen": 5500,
         "currencyUnit": "gemstone",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 5
+        "levelUnlock": 5,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant8",
@@ -101,9 +155,17 @@
         "priceOxygen": 11500,
         "currencyUnit": "ticket",
         "type": "plant",
-        "effect": "Nhạc thư thái - m1",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 10
+        "levelUnlock": 10,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "m1",
+        "musicDescription": "Nhạc thư thái",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant9",
@@ -114,9 +176,17 @@
         "priceOxygen": 7500,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "Thời tiết - landscape1",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 13
+        "levelUnlock": 13,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "landscape1",
+        "effectLandscapeDescription": "Ban công quang đãng",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant10",
@@ -127,9 +197,17 @@
         "priceOxygen": 20000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "Kết thúc mùa xuân - m2",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 15
+        "levelUnlock": 15,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "m2",
+        "musicDescription": "Kết thúc mùa xuân",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant11",
@@ -140,9 +218,17 @@
         "priceOxygen": 20000,
         "currencyUnit": "ticket",
         "type": "plant",
-        "effect": "Cánh hoa oải hương - overlay3",
+        "effect": "overlay3",
         "itemTypeAttribute": "none",
-        "levelUnlock": 15
+        "levelUnlock": 15,
+        "sound": "tap",
+        "effectDescription": "Cánh hoa oải hương",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant12",
@@ -153,9 +239,17 @@
         "priceOxygen": 5500,
         "currencyUnit": "gemstone",
         "type": "plant",
-        "effect": "Thời tiết - landscape4",
-       "itemTypeAttribute": "none",
-        "levelUnlock": 17
+        "effect": "",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 17,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "landscape4",
+        "effectLandscapeDescription": "Ban công trời sao",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant13",
@@ -166,9 +260,17 @@
         "priceOxygen": 7500,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "Tiếng sóng biển - sfx6",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 17
+        "levelUnlock": 17,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "sfx6",
+        "effectSfxDescription": "Tiếng sóng biển"
     },
     {
         "id": "plant14",
@@ -179,9 +281,17 @@
         "priceOxygen": 7500,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 7
+        "levelUnlock": 7,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant15",
@@ -192,9 +302,17 @@
         "priceOxygen": 15500,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "Tiếng bão - sfx7",
+        "effect": "",
         "itemTypeAttribute": "hanging,front",
-        "levelUnlock": 20
+        "levelUnlock": 20,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "sfx7",
+        "effectSfxDescription": "Tiếng bão"
     },
     {
         "id": "plant16",
@@ -205,9 +323,17 @@
         "priceOxygen": 12500,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 22
+        "levelUnlock": 22,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant17",
@@ -218,9 +344,17 @@
         "priceOxygen": 20500,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "Thời tiết - landscape3",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 25
+        "levelUnlock": 25,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "landscape3",
+        "effectLandscapeDescription": "Ban công mưa bão",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant18",
@@ -231,9 +365,17 @@
         "priceOxygen": 30000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "Thời tiết - landscape2",
+        "effect": "",
         "itemTypeAttribute": "hanging",
-        "levelUnlock": 27
+        "levelUnlock": 27,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "landscape2",
+        "effectLandscapeDescription": "Ban công chiều tà",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant19",
@@ -244,9 +386,17 @@
         "priceOxygen": 35000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "hanging",
-        "levelUnlock": 30
+        "levelUnlock": 30,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant20",
@@ -257,9 +407,17 @@
         "priceOxygen": 20000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 33
+        "levelUnlock": 33,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant21",
@@ -270,9 +428,17 @@
         "priceOxygen": 50000,
         "currencyUnit": "ticket",
         "type": "plant",
-        "effect": "Đom đóm - overlay4",
+        "effect": "overlay4",
         "itemTypeAttribute": "none",
-        "levelUnlock": 35
+        "levelUnlock": 35,
+        "sound": "tap",
+        "effectDescription": "Đom đóm",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant22",
@@ -283,9 +449,17 @@
         "priceOxygen": 25000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 37
+        "levelUnlock": 37,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant23",
@@ -296,9 +470,17 @@
         "priceOxygen": 10000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "hanging",
-        "levelUnlock": 40
+        "levelUnlock": 40,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant24",
@@ -309,9 +491,17 @@
         "priceOxygen": 50000,
         "currencyUnit": "ticket",
         "type": "plant",
-        "effect": "Hoa đào mùa xuân - overlay5",
+        "effect": "overlay5",
         "itemTypeAttribute": "none",
-        "levelUnlock": 42
+        "levelUnlock": 42,
+        "sound": "tap",
+        "effectDescription": "Hoa đào mùa xuân",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant25",
@@ -322,9 +512,17 @@
         "priceOxygen": 18000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 43
+        "levelUnlock": 43,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant26",
@@ -335,9 +533,17 @@
         "priceOxygen": 10000,
         "currencyUnit": "gemstone",
         "type": "plant",
-        "effect": "Minamoto no Yuuhi - landscape6",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 45
+        "levelUnlock": 45,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "landscape6",
+        "effectLandscapeDescription": "Minamoto no Yuuhi",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant27",
@@ -348,9 +554,17 @@
         "priceOxygen": 20000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 46
+        "levelUnlock": 46,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant28",
@@ -361,9 +575,17 @@
         "priceOxygen": 31000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 48
+        "levelUnlock": 48,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant29",
@@ -374,9 +596,17 @@
         "priceOxygen": 35000,
         "currencyUnit": "oxygen",
         "type": "plant",
-        "effect": "Thần Sơn Huyễn Cảnh - landscape7",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 50
+        "levelUnlock": 50,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "landscape7",
+        "effectLandscapeDescription": "Thần Sơn Huyễn Cảnh",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "plant30",
@@ -387,8 +617,16 @@
         "priceOxygen": 35000,
         "currencyUnit": "gemstone",
         "type": "plant",
-        "effect": "Lạc lõng khoảng trời - m6",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 50
+        "levelUnlock": 50,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "m6",
+        "musicDescription": "Lạc lõng khoảng trời",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     }
 ]

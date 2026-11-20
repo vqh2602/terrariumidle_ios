@@ -8,9 +8,16 @@
         "priceOxygen": 25000,
         "currencyUnit": "oxygen",
         "type": "sticker",
-        "effect": "Tiếng gió - sfx4",
+        "effect": "",
         "itemTypeAttribute": "hanging",
-        "levelUnlock": 50
+        "levelUnlock": 50,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "sfx4",
+        "effectSfxDescription": "Tiếng gió"
     },
     {
         "id": "sticker2",
@@ -21,9 +28,16 @@
         "priceOxygen": 25000,
         "currencyUnit": "oxygen",
         "type": "sticker",
-        "effect": "Tiếng chim - sfx1",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 50
+        "levelUnlock": 50,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "sfx1",
+        "effectSfxDescription": "Tiếng chim"
     },
     {
         "id": "sticker3",
@@ -34,9 +48,16 @@
         "priceOxygen": 25000,
         "currencyUnit": "oxygen",
         "type": "sticker",
-        "effect": "Tiếng ếch - sfx2",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 50
+        "levelUnlock": 50,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "sfx2",
+        "effectSfxDescription": "Tiếng ếch"
     },
     {
         "id": "sticker4",
@@ -47,8 +68,15 @@
         "priceOxygen": 25000,
         "currencyUnit": "oxygen",
         "type": "sticker",
-        "effect": "Tiếng mưa - sfx3",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 50
+        "levelUnlock": 50,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "sfx3",
+        "effectSfxDescription": "Tiếng mưa"
     }
 ]

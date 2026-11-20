@@ -98,8 +98,8 @@ struct DecorationItemRow: View {
                         .foregroundColor(.gray)
                         .lineLimit(2)
 
-                    if decoration.effect != "N.A" && !decoration.effect.isEmpty {
-                        Text("Hiệu ứng: \(decoration.effect)")
+                    if decoration.displayEffect != "N.A" && !decoration.displayEffect.isEmpty {
+                        Text("Hiệu ứng: \(decoration.displayEffect)")
                             .font(.system(size: 12))
                             .foregroundColor(.blue)
                     }

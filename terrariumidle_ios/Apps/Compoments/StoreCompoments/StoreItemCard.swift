@@ -44,8 +44,8 @@ struct StoreItemCard: View {
                     .foregroundColor(.gray)
                     .lineLimit(2)
 
-                if item.effect != "N.A" && !item.effect.isEmpty {
-                    Text("Hiệu ứng: \(item.effect)")
+                if item.displayEffect != "N.A" && !item.displayEffect.isEmpty {
+                    Text("Hiệu ứng: \(item.displayEffect)")
                         .font(.system(size: 12))
                         .foregroundColor(.blue)
                 }

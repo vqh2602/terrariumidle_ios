@@ -146,8 +146,8 @@ struct PlantItemRow: View {
                         .foregroundColor(.gray)
                         .lineLimit(2)
 
-                    if plant.effect != "N.A" {
-                        Text("Hiệu ứng: \(plant.effect)")
+                    if plant.displayEffect != "N.A" && !plant.displayEffect.isEmpty {
+                        Text("Hiệu ứng: \(plant.displayEffect)")
                             .font(.system(size: 12))
                             .foregroundColor(.blue)
                     }

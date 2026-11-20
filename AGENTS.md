@@ -223,7 +223,26 @@ Tương tự như `Pots` và `Plants`, mọi Phong cảnh nền (`Landscape1`, `
    - `z = 20`: `cloudsGroup` (8 cụm mây `Cloudbg1-1` -> `Cloudbg1-8`): Trôi Parallax nhiều tầng vận tốc, tự động wrap vòng quanh màn hình.
    - `z = 35`: Hiệu ứng hạt bụi nắng / lấp lánh (Sparkle particles) sinh ra khi tương tác chạm tap.
 
+## Quy chuẩn Cấu hình Dữ liệu JSON Mới & Âm Thanh Chạm (Data Schema & Audio Convention)
 
+### 1. Phân định rõ giữa Code Node SpriteKit và File JSON
+- **Hiệu ứng Tap hạt / hoạt ảnh chậu & cây (`tapEffects: [PotTapEffect]`, `[PlantTapEffect]`)**:
+  * BẮT BUỘC cấu hình trực tiếp bên trong file Node (`PlantXNode.swift`, `PotXNode.swift`).
+  * **TUYỆT ĐỐI KHÔNG** đưa các hiệu ứng tap cục bộ (bong bóng oxy, đá lấp lánh, trái tim nhịp đập, v.v.) vào trường `effect` của JSON.
+- **Trường dữ liệu JSON (`plants_data.json`, `pots_data.json`, `stickers_data.json`)**:
+  * Quản lý độc lập âm thanh tap click và các item mở khóa khi trồng:
+    - `sound`: Âm thanh khi click vào cây, mặc định `"tap"` (chỉ áp dụng với `plants_data.json`).
+    - `effect`: Danh sách ID hiệu ứng overlay mở khóa khi trồng (phân tách bởi dấu phẩy `,`, ví dụ: `"overlay1,overlay2"`).
+    - `effectDescription`: Mô tả các hiệu ứng overlay (ví dụ: `"Lá rơi xanh ngọc"`).
+    - `music`: Danh sách ID bài hát BGM mở khóa (ví dụ: `"m0,m1"`, `"m3"`).
+    - `musicDescription`: Mô tả bài hát BGM mở khóa (ví dụ: `"Relax"`, `"Mong một ngày mưa"`).
+    - `effectLandscape`: Danh sách ID phong cảnh nền mở khóa (ví dụ: `"landscape1"`, `"landscape5"`).
+    - `effectLandscapeDescription`: Mô tả phong cảnh mở khóa (ví dụ: `"Ban công quang đãng"`).
+    - `effectSfx`: Danh sách ID âm thanh SFX mở khóa (ví dụ: `"sfx5"`, `"sfx7"`).
+    - `effectSfxDescription`: Mô tả âm thanh SFX mở khóa (ví dụ: `"Tiếng nước chảy"`).
 
-
+### 2. Quy chuẩn Phát Âm Thanh Tap Trên Ban Công
+- Khi chạm (tap/click) vào bất kỳ vị trí nào trên ô cây hoặc chậu trên ban công:
+  * `TerrariumSlotScene.handleTap()` **BẮT BUỘC** gọi `AudioPlayer.shared.playClickSound(named: soundName)`.
+  * `soundName` ưu tiên lấy từ thuộc tính `plant.clickSound` (mặc định `"tap"`), nếu ô không có cây (chỉ có chậu/sticker) thì fallback sang `pot.clickSound` hoặc `"tap"`.
 

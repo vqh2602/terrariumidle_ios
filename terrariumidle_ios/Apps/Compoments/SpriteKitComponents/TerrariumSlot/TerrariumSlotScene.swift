@@ -251,6 +251,13 @@ public final class TerrariumSlotScene: SKScene {
         potNode?.playTapAnimation()
         plantNode?.playTapAnimation()
 
+        // PHÁT ÂM THANH TAP KHI CHẠM VÀO CÂY/CHẬU TRÊN BAN CÔNG:
+        // Ưu tiên sound của Cây ("tap"), nếu không có cây thì dùng sound của Chậu (hoặc fallback "tap")
+        let plantSound = hasPlant ? ItemDataManager.shared.getPlant(byId: plantId)?.clickSound : nil
+        let potSound = hasPot ? ItemDataManager.shared.getPot(byId: potId)?.clickSound : nil
+        let soundName = plantSound ?? potSound ?? "tap"
+        AudioPlayer.shared.playClickSound(named: soundName)
+
         // Bắn callback ra ngoài SwiftUI
         onTap?()
     }

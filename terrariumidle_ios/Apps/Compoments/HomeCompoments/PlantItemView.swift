@@ -110,7 +110,10 @@ struct PlantItemView: View {
                             potId: plantData?.idPot ?? "pot15",
                             isHanging: true,
                             width: itemWidth * 1.0,
-                            height: itemWidth + itemWidth * 0.2
+                            height: itemWidth + itemWidth * 0.2,
+                            onTap: {
+                                handleDetailTap()
+                            }
                         )
                         .frame(maxWidth: .infinity)
                     }
@@ -129,7 +132,10 @@ struct PlantItemView: View {
                             potId: plantData?.idPot ?? "pot1",
                             isHanging: false,
                             width: itemWidth,
-                            height: 155
+                            height: 155,
+                            onTap: {
+                                handleDetailTap()
+                            }
                         )
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)

@@ -91,3 +91,23 @@ plantNode.tapEffects = [
     SparklePollenEffect()
 ]
 ```
+
+---
+
+## 6. Quy Chuẩn Cấu Trúc JSON Mới (`plants_data.json`)
+
+> [!IMPORTANT]
+> - Các hiệu ứng hạt bọt khí Oxy 3D (`OxygenBubblesEffect`), phấn hoa, cánh hoa rụng khi chạm vào cây **BẮT BUỘC ĐƯỢC CẤU HÌNH TRONG CODE SWIFT NODE (`PlantXNode.swift`)**, **KHÔNG đưa vào JSON**.
+> - File `plants_data.json` chỉ cấu hình âm thanh tap click và các item mở khóa khi trồng cây:
+
+| Trường JSON | Kiểu Dữ Liệu | Mô Tả & Ý Nghĩa | Ví Dụ |
+| :--- | :--- | :--- | :--- |
+| `sound` | `String` | Âm thanh phát ra khi tap vào cây (mặc định `"tap"`) | `"tap"` |
+| `effect` | `String` | Danh sách ID hiệu ứng overlay mở khóa khi trồng (phân tách bởi `,`) | `"overlay3"`, `"overlay4,overlay5"` |
+| `effectDescription` | `String` | Mô tả hiệu ứng overlay | `"Cánh hoa oải hương"` |
+| `music` | `String` | Danh sách ID bài hát BGM mở khóa (phân tách bởi `,`) | `"m0"`, `"m1"`, `"m0,m1"` |
+| `musicDescription` | `String` | Mô tả bài hát BGM mở khóa | `"Relax"`, `"Một ngày thư thái"` |
+| `effectLandscape` | `String` | Danh sách ID phong cảnh nền mở khóa (phân tách bởi `,`) | `"landscape1"`, `"landscape3"` |
+| `effectLandscapeDescription` | `String` | Mô tả phong cảnh mở khóa | `"Ban công quang đãng"` |
+| `effectSfx` | `String` | Danh sách ID âm thanh SFX mở khóa (phân tách bởi `,`) | `"sfx5"`, `"sfx6,sfx7"` |
+| `effectSfxDescription` | `String` | Mô tả âm thanh SFX | `"Tiếng nước chảy"`, `"Tiếng bão"` |

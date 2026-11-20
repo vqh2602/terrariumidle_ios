@@ -8,10 +8,16 @@
         "priceOxygen": 500,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "Đá lấp lánh",
+        "effect": "",
         "itemTypeAttribute": "none",
         "levelUnlock": 1,
-        "sound": "tap"
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot2",
@@ -22,10 +28,16 @@
         "priceOxygen": 500,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
         "levelUnlock": 1,
-        "sound": "tap"
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot3",
@@ -36,9 +48,16 @@
         "priceOxygen": 500,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 2
+        "levelUnlock": 2,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot4",
@@ -49,9 +68,16 @@
         "priceOxygen": 5500,
         "currencyUnit": "gemstone",
         "type": "pot",
-        "effect": "Trái tim nhịp đập",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 3
+        "levelUnlock": 3,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot5",
@@ -62,9 +88,16 @@
         "priceOxygen": 1500,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 4
+        "levelUnlock": 4,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot6",
@@ -75,9 +108,16 @@
         "priceOxygen": 5500,
         "currencyUnit": "gemstone",
         "type": "pot",
-        "effect": "Tam thạch anh hồng",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 5
+        "levelUnlock": 5,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot7",
@@ -88,9 +128,16 @@
         "priceOxygen": 3500,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 6
+        "levelUnlock": 6,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot8",
@@ -101,9 +148,16 @@
         "priceOxygen": 7500,
         "currencyUnit": "ticket",
         "type": "pot",
-        "effect": "Lá rơi - overlay1",
+        "effect": "overlay1",
         "itemTypeAttribute": "none",
-        "levelUnlock": 9
+        "levelUnlock": 9,
+        "effectDescription": "Lá rơi xanh ngọc",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot9",
@@ -114,9 +168,16 @@
         "priceOxygen": 700,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 12
+        "levelUnlock": 12,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot10",
@@ -127,9 +188,16 @@
         "priceOxygen": 1700,
         "currencyUnit": "gemstone",
         "type": "pot",
-        "effect": "Mong một ngày mưa - m3",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 15
+        "levelUnlock": 15,
+        "effectDescription": "",
+        "music": "m3",
+        "musicDescription": "Mong một ngày mưa",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot11",
@@ -140,9 +208,16 @@
         "priceOxygen": 4700,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 20
+        "levelUnlock": 20,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot12",
@@ -153,9 +228,16 @@
         "priceOxygen": 4700,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 22
+        "levelUnlock": 22,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot13",
@@ -166,9 +248,16 @@
         "priceOxygen": 4700,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 25
+        "levelUnlock": 25,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot14",
@@ -179,9 +268,16 @@
         "priceOxygen": 10000,
         "currencyUnit": "ticket",
         "type": "pot",
-        "effect": "Vân đá, Lá thu rơi - overlay2",
+        "effect": "overlay2",
         "itemTypeAttribute": "none",
-        "levelUnlock": 30
+        "levelUnlock": 30,
+        "effectDescription": "Lá thu rơi",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot15",
@@ -192,9 +288,16 @@
         "priceOxygen": 5000,
         "currencyUnit": "gemstone",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "hanging,front",
-        "levelUnlock": 17
+        "levelUnlock": 17,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot16",
@@ -205,9 +308,16 @@
         "priceOxygen": 9000,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "hanging",
-        "levelUnlock": 17
+        "levelUnlock": 17,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot17",
@@ -218,9 +328,16 @@
         "priceOxygen": 10000,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "hanging",
-        "levelUnlock": 20
+        "levelUnlock": 20,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot18",
@@ -231,9 +348,16 @@
         "priceOxygen": 15000,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 25
+        "levelUnlock": 25,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot19",
@@ -244,9 +368,16 @@
         "priceOxygen": 30000,
         "currencyUnit": "gemstone",
         "type": "pot",
-        "effect": "Đêm dài - m4",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 25
+        "levelUnlock": 25,
+        "effectDescription": "",
+        "music": "m4",
+        "musicDescription": "Đêm dài",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot20",
@@ -257,9 +388,16 @@
         "priceOxygen": 11000,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 30
+        "levelUnlock": 30,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot21",
@@ -270,9 +408,16 @@
         "priceOxygen": 12500,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 33
+        "levelUnlock": 33,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot22",
@@ -283,9 +428,16 @@
         "priceOxygen": 52500,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "Vân đá, Ngày dông bão - m5",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 33
+        "levelUnlock": 33,
+        "effectDescription": "",
+        "music": "m5",
+        "musicDescription": "Ngày dông bão",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot23",
@@ -296,9 +448,16 @@
         "priceOxygen": 12500,
         "currencyUnit": "gemstone",
         "type": "pot",
-        "effect": "Vân đá, Đêm muộn trời sao - landscape5",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 33
+        "levelUnlock": 33,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "landscape5",
+        "effectLandscapeDescription": "Đêm muộn trời sao",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot24",
@@ -309,9 +468,16 @@
         "priceOxygen": 15500,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 35
+        "levelUnlock": 35,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot25",
@@ -322,9 +488,16 @@
         "priceOxygen": 34500,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 40
+        "levelUnlock": 40,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "pot26",
@@ -335,8 +508,15 @@
         "priceOxygen": 20500,
         "currencyUnit": "oxygen",
         "type": "pot",
-        "effect": "N.A",
+        "effect": "",
         "itemTypeAttribute": "none",
-        "levelUnlock": 43
+        "levelUnlock": 43,
+        "effectDescription": "",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     }
 ]
