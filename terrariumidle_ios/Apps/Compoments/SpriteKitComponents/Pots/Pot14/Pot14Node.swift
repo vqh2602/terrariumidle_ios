@@ -111,7 +111,7 @@ public final class Pot14Node: SKNode, PotInteractiveNode {
             templatePot.size = CGSize(width: targetW, height: targetH)
             templatePot.anchorPoint = CGPoint(x: 0.5, y: isHanging ? 1.0 : 0.0)
             templatePot.position = CGPoint(x: 0, y: 0)
-            templatePot.zPosition = 20
+            templatePot.zPosition = 50
             potRootNode.addChild(templatePot)
             self.potNode = templatePot
             self.initialPotPosition = templatePot.position
@@ -135,7 +135,7 @@ public final class Pot14Node: SKNode, PotInteractiveNode {
         let node = SKSpriteNode(texture: texture)
         node.name = "potNode"
         node.size = CGSize(width: targetW, height: targetH)
-        node.zPosition = 20
+        node.zPosition = 50
         node.isPaused = false
         node.speed = 1.0
 

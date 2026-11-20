@@ -53,9 +53,21 @@ struct ItemData: Codable, Identifiable {
 
 // MARK: - Item Type Attribute
 
-enum ItemTypeAttribute: String, Codable {
+public enum ItemTypeAttribute: String, Codable {
+    /// Cây để bàn thông thường, mọc từ lòng chậu, nằm SAU mặt trước của chậu (z = 10 < pot 20)
     case none
+    /// Cây treo từ móc trần rủ xuống
     case hanging
+    /// Cây nằm TRƯỚC mặt chậu, cành lá/dây leo phủ tràn qua miệng chậu (z = 25 > pot 20)
+    case front
+
+    public var isInFront: Bool {
+        return self == .front
+    }
+
+    public var isHanging: Bool {
+        return self == .hanging
+    }
 }
 
 // MARK: - Item Data Manager

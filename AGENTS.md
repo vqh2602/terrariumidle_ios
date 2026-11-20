@@ -123,15 +123,15 @@ Trong một Scene SpriteKit duy nhất (`TerrariumSlotScene`), độ sâu hiển
 - `z = 0`: Dây treo phía sau (`backRopes` - chỉ có ở chậu treo).
 - `z = 1`: Bóng đổ dưới đáy chậu (`shadowNode` - chỉ có ở chậu để bàn).
 - `z = 5`: Lòng đất và thành sau chậu (`soilNode` / `backRim`).
-- `z = 10`: Mỏ neo cắm cây (`plantMount` SKNode) & thân cây, cọc leo, các lá mọc phía sau (`backLeaves`).
-- `z = 20`: Thân chậu & thành trước của chậu (`potBody` / `frontRim`) -> che khuất gốc cây tự nhiên.
-- `z = 30`: Các phiến lá mọc tản / rủ xuống qua mặt trước miệng chậu (`frontLeaves` / `drapingLeaves`).
-- `z = 40`: Dây treo phía trước (`frontRopes` - chỉ có ở chậu treo) -> vắt ngang đè lên trên các phiến lá.
-- `z = 50`: Hiệu ứng hạt bụi khí Oxy, bong bóng, đá lấp lánh (Sparkle, Twinkle, Oxygen bubbles).
+- `z = 10`: Mỏ neo cắm cây (`plantMount` SKNode) & thân cây, cọc leo, các lá mọc phía sau (`backLeaves`, các lá có zPos từ 11 đến 19, tổng tích luỹ 21..29 < potBody 50).
+- `z = 50`: Thân chậu & thành trước của chậu (`potBody` / `frontRim`) -> che khuất gốc cây tự nhiên.
+- `z = 70`: Các phiến lá mọc tản / rủ xuống qua mặt trước miệng chậu (`frontLeaves` / `drapingLeaves`, tổng tích luỹ 81..89 > potBody 50).
+- `z = 100`: Dây treo phía trước (`frontRopes` - chỉ có ở chậu treo) -> vắt ngang đè lên trên các phiến lá.
+- `z = 200`: Hiệu ứng hạt bụi khí Oxy, bong bóng, đá lấp lánh (Sparkle, Twinkle, Oxygen bubbles).
 
 ### 2. Socket Mount Node (`plantMount`) trong Chậu
 Mọi Node Chậu (`PotInteractiveNode`) đều cung cấp:
-- `var plantMountNode: SKNode?`: Node rỗng mang tên `"plantMount"` trong `PotXScene.sks` (hoặc tạo bằng code).
+- `var plantMountNode: SKNode?`: Node mang tên `"plantMount"` trong `PotXScene.sks` (hoặc tạo bằng code), luôn có `zPosition = 10` nằm SAU mặt trước của chậu (`potNode` z = 50).
 - `var plantMountPoint: CGPoint`: Toạ độ điểm cắm cây (Mount Point).
   - Với chậu để bàn: gốc cây cắm tại miệng chậu (`(0, targetH * 0.88)`).
   - Với chậu treo: gốc cây cắm trong lòng bầu chậu treo (`(0, -targetH * 0.65)` tính từ móc treo).
@@ -140,6 +140,24 @@ Mọi Node Chậu (`PotInteractiveNode`) đều cung cấp:
 - Được sử dụng trên màn hình chính ([PlantItemView.swift](file:///Users/vuongquanghuy/code/prj_ios/terrariumidle_ios/terrariumidle_ios/Apps/Compoments/HomeCompoments/PlantItemView.swift)).
 - Nhận diện chạm thông minh: tap nửa dưới slot kích hoạt hiệu ứng chậu (`pot.playTapAnimation()`), tap nửa trên kích hoạt hiệu ứng cây (`plant.playTapAnimation()`).
 - Tương thích ngược: `SpriteKitPotView` và `SpriteKitPlantView` độc lập vẫn được giữ nguyên cho màn hình Shop và Preview đơn lẻ.
+
+### 4. Cấu hình Vị trí Layer Cây theo JSON (`itemTypeAttribute`)
+Mỗi loài cây trong [plants_data.json](file:///Users/vuongquanghuy/code/prj_ios/terrariumidle_ios/terrariumidle_ios/Apps/Data/Items/plants_data.json) được cấu hình thuộc tính `"itemTypeAttribute"` điều khiển Z-Index phân tầng tự động:
+- `"none"` (mặc định cho cây để bàn đứng thẳng): Cây nằm **SAU** mặt trước của chậu (cắm vào `plantMount` z = 10, tổng z các lá 21..29 < `potBody` 50). Gốc cây cắm ngập trong lòng đất, vết cắt cuống được che giấu tự nhiên sau thành chậu (ví dụ: `plant1`, `plant2`, `plant3`, v.v.).
+- `"front"` (cho cây dây leo, cành rủ): Cây nằm **TRƯỚC** mặt chậu (`plant.asNode.zPosition = 60` trong `plantMount`, tổng z các lá 81..89 > `potBody` 50). Toàn bộ cành lá phủ rủ xuống qua miệng chậu và đè lên mặt trước của chậu (ví dụ: `plant13` Philodendron hederaceum, `plant14` Heartleaf philodendron).
+- `"hanging"`: Cây treo móc ngược từ trên trần/kệ chúc xuống.
+- **Cơ chế Data-Driven**: `TerrariumSlotScene` và `TerrariumSlotView` tự động truy vấn `itemTypeAttribute` từ `ItemDataManager.shared.getPlant(byId: plantId)` nếu caller không truyền thủ công. Khi sửa thuộc tính này trong JSON, app tự động áp dụng ngay mà không cần sửa code Swift.
+- Trong Swift Model: `ItemData.swift` định nghĩa:
+  ```swift
+  public enum ItemTypeAttribute: String, Codable {
+      case none
+      case hanging
+      case front
+
+      public var isInFront: Bool { self == .front }
+      public var isHanging: Bool { self == .hanging }
+  }
+  ```
 
 
 

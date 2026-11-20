@@ -224,12 +224,46 @@ flowchart LR
 
 4. **Pots (Chậu tương tác)**:
    - Chậu đổ bóng mềm, nảy lò xo khi nhấn (`spring compression`). Phản hồi đồng bộ cùng cây khi người chơi tap vào màn hình.
+   - Hỗ trợ tham số `widthFill: 0.0 ... 1.0` giúp tinh chỉnh độ rộng chậu linh hoạt mà không làm biến dạng tỷ lệ tự nhiên.
+
+5. **TerrariumSlot (Kiến trúc Slot Hợp nhất Cây & Chậu)**:
+   - Gộp 2 `SKView` riêng rẽ (Cây + Chậu) trên màn hình chính thành 1 `TerrariumSlotView` / `TerrariumSlotScene` duy nhất, tiết kiệm 50% tài nguyên render Metal.
+   - Phân tầng chiều sâu linh hoạt:
+     - `z = 1`: Bóng đổ đáy chậu.
+     - `z = 5`: Lòng đất & thành sau chậu.
+     - `z = 10`: Mỏ neo cắm cây `plantMount` (cây nằm sau thành chậu với thuộc tính `"itemTypeAttribute": "none"`, các lá `z = 21..29 < potBody 50`).
+     - `z = 50`: Thân & mặt trước chậu (`potBody`, che cuống và gốc cây).
+     - `z = 70`: Cây rủ phủ ra trước mặt chậu (thuộc tính `"itemTypeAttribute": "front"`, các lá `z = 81..89 > potBody 50`).
+     - `z = 100`: Dây treo trước chậu vắt qua lá.
+     - `z = 200`: Hiệu ứng bọt khí Oxy bay lên.
+   - Socket `plantMount` tự động neo gốc cây chính xác vào miệng chậu để bàn hoặc lòng bầu chậu treo.
 
 ---
 
 ## 📊 Cơ chế cấu hình Data-Driven JSON
 
-Tất cả cấu hình được đưa về các file JSON trong `Apps/Data/Items/`, giúp lập trình viên hoặc Game Designer có thể thêm mới vật phẩm mà **không cần viết thêm bất kỳ câu lệnh `switch/case` nào trong mã nguồn Swift**:
+Tất cả cấu hình được đưa về các file JSON trong `Apps/Data/Items/`, giúp lập trình viên hoặc Game Designer có thể thêm mới vật phẩm hoặc thay đổi hành vi hiển thị mà **không cần viết thêm bất kỳ câu lệnh `switch/case` nào trong mã nguồn Swift**:
+
+### Ví dụ cấu hình trong `plants_data.json`:
+```json
+{
+    "id": "plant13",
+    "name": "Philodendron hederaceum",
+    "description": "Loài cây dại, sức sống tốt, có hiệu quả lọc không khí",
+    "image": "Philodendron-hederaceum@4.167x",
+    "priceStore": 5700,
+    "priceOxygen": 7500,
+    "currencyUnit": "oxygen",
+    "type": "plant",
+    "effect": "Tiếng sóng biển - sfx6",
+    "itemTypeAttribute": "front",
+    "levelUnlock": 17
+}
+```
+> **Thuộc tính `"itemTypeAttribute"` cho cây trồng:**
+> - `"none"` (mặc định): Cây cắm trong chậu, thân nằm sau thành chậu (cắm vào `plantMount` `z = 10`, tổng z các lá `21..29 < potBody 50`).
+> - `"front"`: Cây dây leo/thân rủ, cành lá vươn đè ra mặt trước chậu (`z = 70 > potBody 50`, ví dụ: `plant13`, `plant14`).
+> - `"hanging"`: Cây thuộc dạng chậu treo chúc xuống.
 
 ### Ví dụ cấu hình trong `effects_data.json`:
 ```json

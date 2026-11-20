@@ -21,6 +21,7 @@ public struct TerrariumSlotView: View {
     public var plantId: String = "plant1"
     public var plantLevel: Int = 1
     public var isHanging: Bool = false
+    public var itemTypeAttribute: ItemTypeAttribute? = nil
     public var width: CGFloat
     public var height: CGFloat
     public var widthFill: CGFloat? = nil
@@ -35,6 +36,7 @@ public struct TerrariumSlotView: View {
         plantId: String = "plant1",
         plantLevel: Int = 1,
         isHanging: Bool = false,
+        itemTypeAttribute: ItemTypeAttribute? = nil,
         width: CGFloat,
         height: CGFloat,
         widthFill: CGFloat? = nil,
@@ -44,6 +46,7 @@ public struct TerrariumSlotView: View {
         self.plantId = plantId
         self.plantLevel = plantLevel
         self.isHanging = isHanging
+        self.itemTypeAttribute = itemTypeAttribute
         self.width = width
         self.height = height
         self.widthFill = widthFill
@@ -55,6 +58,7 @@ public struct TerrariumSlotView: View {
             plantId: plantId,
             level: plantLevel,
             isHanging: isHanging,
+            itemTypeAttribute: itemTypeAttribute,
             widthFill: activeFill,
             width: width,
             height: height,
@@ -73,6 +77,7 @@ public struct TerrariumSlotView: View {
             plantId: plantId,
             level: plantLevel,
             isHanging: isHanging,
+            itemTypeAttribute: itemTypeAttribute,
             widthFill: activeFill,
             width: width,
             height: height,
@@ -86,12 +91,13 @@ public struct TerrariumSlotView: View {
             plantLevel: plantLevel,
             isHanging: isHanging,
             widthFill: activeFill,
+            itemTypeAttribute: itemTypeAttribute,
             onTap: onTap
         )
 
         return SpriteView(scene: scene, options: [.allowsTransparency])
             .frame(width: width, height: height)
-            .id("slot-\(potId)-\(plantId)-\(plantLevel)-\(isHanging)-\(activeFill)-\(width)-\(height)")
+            .id("slot-\(potId)-\(plantId)-\(plantLevel)-\(isHanging)-\(itemTypeAttribute?.rawValue ?? "auto")-\(activeFill)-\(width)-\(height)")
             .onAppear {
                 if currentScene == nil {
                     currentScene = scene
@@ -106,6 +112,7 @@ public struct TerrariumSlotView: View {
         plantId: String,
         level: Int,
         isHanging: Bool,
+        itemTypeAttribute: ItemTypeAttribute? = nil,
         widthFill: CGFloat,
         width: CGFloat,
         height: CGFloat,
@@ -118,6 +125,7 @@ public struct TerrariumSlotView: View {
             plantLevel: level,
             isHanging: isHanging,
             widthFill: widthFill,
+            itemTypeAttribute: itemTypeAttribute,
             onTap: onTap
         )
         return newScene
@@ -129,13 +137,23 @@ public struct TerrariumSlotView: View {
 #Preview("Terrarium Slot - Preview Đan Xen Chiều Sâu") {
     struct SlotInteractivePreview: View {
         @State private var potId: String = "pot1"
-        @State private var plantId: String = "plant1"
+        @State private var plantId: String = "plant13"
         @State private var level: Int = 3
         @State private var isHanging: Bool = false
         @State private var widthFill: CGFloat = 0.0
+        @State private var selectedAttribute: String = "auto" // auto, none, front, hanging
 
         let plants = (1...14).map { "plant\($0)" }
         let pots = (1...14).map { "pot\($0)" }
+
+        private var currentAttribute: ItemTypeAttribute? {
+            switch selectedAttribute {
+            case "none": return ItemTypeAttribute.none
+            case "front": return ItemTypeAttribute.front
+            case "hanging": return ItemTypeAttribute.hanging
+            default: return nil
+            }
+        }
 
         var body: some View {
             VStack(spacing: 20) {
@@ -157,6 +175,7 @@ public struct TerrariumSlotView: View {
                         plantId: plantId,
                         plantLevel: level,
                         isHanging: isHanging,
+                        itemTypeAttribute: currentAttribute,
                         width: 180,
                         height: 260,
                         widthFill: widthFill,
@@ -185,6 +204,18 @@ public struct TerrariumSlotView: View {
                             }
                         }
                         .pickerStyle(.menu)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("itemTypeAttribute (Z-Index Cây/Chậu):")
+                                .font(.caption.bold())
+                            Picker("Vị trí Z-Index", selection: $selectedAttribute) {
+                                Text("Auto (JSON)").tag("auto")
+                                Text("none (sau chậu)").tag("none")
+                                Text("front (trước chậu)").tag("front")
+                                Text("hanging (treo)").tag("hanging")
+                            }
+                            .pickerStyle(.segmented)
+                        }
 
                         HStack {
                             Text("Cấp độ: Lv.\(level)")

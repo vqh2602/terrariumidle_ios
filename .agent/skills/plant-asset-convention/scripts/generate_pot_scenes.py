@@ -81,8 +81,8 @@ def generate_pot_scene(pot_id, meta):
     bounds_obj_uid = add_obj({"NS.rectval": bounds_val_uid, "$class": plistlib.UID(5), "NS.special": 3})
     pot_node["_bounds"] = bounds_obj_uid
 
-    # zPosition = 20.0 (Mặt trước chậu)
-    zpos_uid = add_obj(20.0)
+    # zPosition = 50.0 (Mặt trước chậu)
+    zpos_uid = add_obj(50.0)
     pot_node["_zPosition"] = zpos_uid
 
     # Texture
@@ -111,9 +111,9 @@ def generate_pot_scene(pot_id, meta):
     mount_node["_children"] = mount_children_uid
     mount_node_uid = add_obj(mount_node)
 
-    # 4. Gắn vào root children
+    # 4. Gắn vào root children: plantMount xếp trước (z=10), potNode xếp sau (z=50) để plantMount nằm SAU chậu
     root_children_uid = root["_children"].data
-    objs[root_children_uid]["NS.objects"] = [pot_node_uid, mount_node_uid]
+    objs[root_children_uid]["NS.objects"] = [mount_node_uid, pot_node_uid]
 
     out_dir = os.path.join(POTS_DIR, f"Pot{pot_id}")
     os.makedirs(out_dir, exist_ok=True)

@@ -21,6 +21,7 @@ public final class TerrariumSlotScene: SKScene {
     private var plantLevel: Int = 1
     private var isHanging: Bool = false
     private var widthFill: CGFloat = 0.0
+    private var itemTypeAttribute: ItemTypeAttribute = .none
 
     private var potNode: PotInteractiveNode?
     private var plantNode: PlantInteractiveNode?
@@ -59,16 +60,19 @@ public final class TerrariumSlotScene: SKScene {
         plantLevel: Int = 1,
         isHanging: Bool = false,
         widthFill: CGFloat = 0.0,
+        itemTypeAttribute: ItemTypeAttribute? = nil,
         onTap: (() -> Void)? = nil
     ) {
         let cleanPot = potId.lowercased().trimmingCharacters(in: .whitespaces)
         let cleanPlant = plantId.lowercased().trimmingCharacters(in: .whitespaces)
         let cleanFill = min(max(widthFill, 0.0), 1.0)
+        let resolvedAttribute = itemTypeAttribute ?? ItemDataManager.shared.getPlant(byId: cleanPlant)?.itemTypeAttribute ?? .none
 
         let changed = self.potId != cleanPot ||
                       self.plantId != cleanPlant ||
                       self.plantLevel != plantLevel ||
                       self.isHanging != isHanging ||
+                      self.itemTypeAttribute != resolvedAttribute ||
                       abs(self.widthFill - cleanFill) > 0.001
 
         self.potId = cleanPot
@@ -76,6 +80,7 @@ public final class TerrariumSlotScene: SKScene {
         self.plantLevel = plantLevel
         self.isHanging = isHanging
         self.widthFill = cleanFill
+        self.itemTypeAttribute = resolvedAttribute
         self.onTap = onTap
 
         if (changed || (potNode == nil && plantNode == nil)) && size.width > 0 && size.height > 0 {
@@ -148,7 +153,7 @@ public final class TerrariumSlotScene: SKScene {
             }
 
             // Gán zPosition cơ sở cho chậu
-            pot.asNode.zPosition = 5
+            pot.asNode.zPosition = 0
             addChild(pot.asNode)
             self.potNode = pot
 
@@ -180,15 +185,29 @@ public final class TerrariumSlotScene: SKScene {
                 containerSize: plantContainerSize,
                 isHanging: isHanging
             ) {
-                // Gắn cây chính xác vào điểm mount
-                plant.asNode.position = slotMountPosition
-                
-                // zPosition của cây:
-                // z = 10 đảm bảo gốc cây mọc sau thân trước của chậu (z = 20)
-                // trong khi các lá vươn trước hoặc rủ xuống có thể có z = 15..25
-                plant.asNode.zPosition = 10
-                
-                addChild(plant.asNode)
+                // PHÂN TẦNG CHIỀU SÂU Z-INDEX DỰA THEO itemTypeAttribute CỦA CÂY:
+                // - .front: Cây nằm TRƯỚC mặt chậu (z = 70 > potBody 50) -> cành lá/dây leo phủ tràn qua miệng chậu
+                // - .none: Cây mọc từ lòng chậu và nằm SAU mặt trước chậu (mount z = 10, các lá 21..29 < potBody 50) -> che giấu vết cắt cuống
+                // - .hanging: Cây treo từ trên chúc xuống
+                if let pot = potNode, let mount = pot.plantMountNode {
+                    // Cây cắm trực tiếp vào socket plantMount của chậu
+                    plant.asNode.position = .zero
+                    if itemTypeAttribute.isInFront {
+                        plant.asNode.zPosition = 60 // Tổng z = 10 + 60 = 70 > potNode (50) -> nằm TRƯỚC chậu
+                    } else {
+                        plant.asNode.zPosition = 0  // Tổng z = 10 + 0 = 10 (các lá 21..29 < potNode 50) -> nằm SAU chậu
+                    }
+                    mount.addChild(plant.asNode)
+                    self.plantMountSocket = mount
+                } else {
+                    plant.asNode.position = slotMountPosition
+                    if itemTypeAttribute.isInFront {
+                        plant.asNode.zPosition = 70
+                    } else {
+                        plant.asNode.zPosition = 10
+                    }
+                    addChild(plant.asNode)
+                }
                 self.plantNode = plant
             }
         }

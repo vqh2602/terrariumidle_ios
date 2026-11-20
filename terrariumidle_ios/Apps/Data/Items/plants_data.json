@@ -167,7 +167,7 @@
         "currencyUnit": "oxygen",
         "type": "plant",
         "effect": "Tiếng sóng biển - sfx6",
-       "itemTypeAttribute": "none",
+        "itemTypeAttribute": "front",
         "levelUnlock": 17
     },
     {
@@ -180,7 +180,7 @@
         "currencyUnit": "oxygen",
         "type": "plant",
         "effect": "N.A",
-      "itemTypeAttribute": "none",
+        "itemTypeAttribute": "front",
         "levelUnlock": 7
     },
     {
