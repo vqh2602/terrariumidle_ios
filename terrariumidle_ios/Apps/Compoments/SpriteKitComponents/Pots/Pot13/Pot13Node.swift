@@ -119,6 +119,8 @@ public final class Pot13Node: SKNode, PotInteractiveNode {
             // Nạp socket cắm cây từ scene Pot13Scene.sks
             if let mount = scene.childNode(withName: "plantMount") {
                 mount.removeFromParent()
+                mount.isHidden = false
+                mount.isPaused = false
                 let scaleX = targetW / 214.0
                 let scaleY = targetH / 276.0
                 mount.position = CGPoint(x: mount.position.x * scaleX, y: mount.position.y * scaleY)

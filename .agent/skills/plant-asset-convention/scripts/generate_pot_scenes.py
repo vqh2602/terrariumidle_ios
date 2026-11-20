@@ -107,6 +107,8 @@ def generate_pot_scene(pot_id, meta):
     mount_node["_position"] = mount_pos_obj_uid
     mount_zpos_uid = add_obj(10.0)
     mount_node["_zPosition"] = mount_zpos_uid
+    # BỎ HIDE: plantMount BẮT BUỘC KHÔNG ĐƯỢC ẨN (_hidden = false -> index 26) để không làm ẩn cây con/cây trưởng thành cắm vào
+    mount_node["_hidden"] = plistlib.UID(26)
     mount_children_uid = add_obj({"NS.objects": [], "$class": plistlib.UID(25)})
     mount_node["_children"] = mount_children_uid
     mount_node_uid = add_obj(mount_node)

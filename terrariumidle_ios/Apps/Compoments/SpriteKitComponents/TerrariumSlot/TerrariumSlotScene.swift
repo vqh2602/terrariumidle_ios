@@ -191,6 +191,10 @@ public final class TerrariumSlotScene: SKScene {
                 // - .hanging: Cây treo từ trên chúc xuống
                 if let pot = potNode, let mount = pot.plantMountNode {
                     // Cây cắm trực tiếp vào socket plantMount của chậu
+                    mount.isHidden = false
+                    mount.isPaused = false
+                    plant.asNode.isHidden = false
+                    plant.asNode.isPaused = false
                     plant.asNode.position = .zero
                     if itemTypeAttribute.isInFront {
                         plant.asNode.zPosition = 60 // Tổng z = 10 + 60 = 70 > potNode (50) -> nằm TRƯỚC chậu
@@ -200,6 +204,8 @@ public final class TerrariumSlotScene: SKScene {
                     mount.addChild(plant.asNode)
                     self.plantMountSocket = mount
                 } else {
+                    plant.asNode.isHidden = false
+                    plant.asNode.isPaused = false
                     plant.asNode.position = slotMountPosition
                     if itemTypeAttribute.isInFront {
                         plant.asNode.zPosition = 70
