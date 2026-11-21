@@ -329,7 +329,7 @@
         "currencyUnit": "oxygen",
         "type": "pot",
         "effect": "",
-        "itemTypeAttribute": "hanging",
+        "itemTypeAttribute": "hanging,front",
         "levelUnlock": 20,
         "effectDescription": "",
         "music": "",
