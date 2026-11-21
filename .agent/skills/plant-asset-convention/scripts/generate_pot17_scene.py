@@ -110,6 +110,9 @@ def create_pot17_scene():
     # 3. potBody (Bầu chậu đất nung): z = 50.0
     pot_body_uid = make_sprite("potBody", "pot17-3@4.167x", 0.0, -678.0, 355.0, 410.0, 50.0)
 
+    # 3b. potBody2 (Họa tiết đan chậu potBody2): z = 49.0 (nằm sau potBody 50.0)
+    pot_body2_uid = make_sprite("potBody2", "pot17-5@4.167x", 0.0, -678.0, 349.0, 408.0, 49.0)
+
     # 4. frontRope (Dây treo trước): z = 100.0
     front_rope_uid = make_sprite("frontRope", "pot17-4@4.167x", 13.0, -250.0, 212.0, 462.0, 100.0)
 
@@ -118,6 +121,7 @@ def create_pot17_scene():
         back_rope_uid,
         plant_mount_uid,
         pot_body_uid,
+        pot_body2_uid,
         front_rope_uid
     ]
 

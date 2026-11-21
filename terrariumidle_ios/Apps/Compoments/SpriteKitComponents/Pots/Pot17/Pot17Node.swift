@@ -32,6 +32,7 @@ public final class Pot17Node: SKNode, PotInteractiveNode {
     /// Các layer thành phần của chậu
     private var backRopeNode: SKSpriteNode?
     private var potBodyNode: SKSpriteNode?
+    private var potBody2Node: SKSpriteNode?
     private var frontRopeNode: SKSpriteNode?
 
     /// Socket cắm cây
@@ -91,6 +92,7 @@ public final class Pot17Node: SKNode, PotInteractiveNode {
 
         backRopeNode = nil
         potBodyNode = nil
+        potBody2Node = nil
         frontRopeNode = nil
         plantMountNode = nil
 
@@ -153,6 +155,18 @@ public final class Pot17Node: SKNode, PotInteractiveNode {
                 self.potBodyNode = potBody
             }
 
+            // Nạp Họa tiết đan chậu potBody2 (z = 49)
+            if let potBody2 = scene.childNode(withName: "potBody2") as? SKSpriteNode {
+                potBody2.removeFromParent()
+                potBody2.isHidden = false
+                potBody2.isPaused = false
+                potBody2.size = CGSize(width: potBody2.size.width * scaleX, height: potBody2.size.height * scaleY)
+                potBody2.position = CGPoint(x: potBody2.position.x * scaleX, y: potBody2.position.y * scaleY)
+                potBody2.zPosition = 49
+                hangingRigNode.addChild(potBody2)
+                self.potBody2Node = potBody2
+            }
+
             // Nạp Dây trước frontRope (z = 100)
             if let frontRope = scene.childNode(withName: "frontRope") as? SKSpriteNode {
                 frontRope.removeFromParent()
@@ -203,6 +217,18 @@ public final class Pot17Node: SKNode, PotInteractiveNode {
             potBody.zPosition = 50
             hangingRigNode.addChild(potBody)
             self.potBodyNode = potBody
+        }
+
+        // 3b. Họa tiết đan chậu potBody2
+        if let body2Tex = loadTexture(name: "pot17-5@4.167x") {
+            let potBody2 = SKSpriteNode(texture: body2Tex)
+            potBody2.name = "potBody2"
+            potBody2.size = CGSize(width: 349.0 * scaleX, height: 408.0 * scaleY)
+            potBody2.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            potBody2.position = CGPoint(x: 0, y: -678.0 * scaleY)
+            potBody2.zPosition = 51
+            hangingRigNode.addChild(potBody2)
+            self.potBody2Node = potBody2
         }
 
         // 4. Dây treo trước

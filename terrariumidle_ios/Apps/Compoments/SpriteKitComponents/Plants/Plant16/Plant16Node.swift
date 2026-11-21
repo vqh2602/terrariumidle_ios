@@ -64,30 +64,30 @@ public final class Plant16Node: SKNode {
     }
 
     /// Tọa độ pixel và điểm neo cuống lá Cỏ Lan Chi (Canvas 721 x 552)
-    /// Đung đưa mềm mại tự nhiên như các tán lá dài buông xòe trong gió
+    /// Đung đưa mềm mại, biên độ rõ nét cho toàn bộ cành và các dải nhánh dây nhện vươn dài
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId:  2, imgX: 242.0, imgY:  77.7, width: 163, height: 322, anchorX: 0.07, anchorY: 0.01, isLeft: true , zPos: 11, bendAngle: 0.065, duration: 4.2),
-        LeafData(assetId:  3, imgX: 411.7, imgY:  96.6, width: 247, height: 203, anchorX: 0.01, anchorY: 0.54, isLeft: false, zPos: 12, bendAngle: 0.050, duration: 4.8),
-        LeafData(assetId:  4, imgX: 412.4, imgY: 203.6, width:  75, height: 221, anchorX: 0.83, anchorY: 0.01, isLeft: false, zPos: 13, bendAngle: 0.075, duration: 3.8),
-        LeafData(assetId:  5, imgX: 400.1, imgY:  29.4, width: 321, height: 280, anchorX: 0.01, anchorY: 0.45, isLeft: false, zPos: 14, bendAngle: 0.055, duration: 5.2),
-        LeafData(assetId:  6, imgX: 398.4, imgY: 205.9, width:  69, height: 158, anchorX: 0.86, anchorY: 0.01, isLeft: false, zPos: 15, bendAngle: 0.080, duration: 3.5),
-        LeafData(assetId:  7, imgX: 397.9, imgY: 175.7, width: 144, height: 246, anchorX: 0.48, anchorY: 0.01, isLeft: false, zPos: 16, bendAngle: 0.070, duration: 4.0),
-        LeafData(assetId:  8, imgX: 410.3, imgY: 142.0, width: 216, height: 250, anchorX: 0.72, anchorY: 0.01, isLeft: false, zPos: 17, bendAngle: 0.060, duration: 4.6),
-        LeafData(assetId:  9, imgX: 403.9, imgY:   0.7, width: 100, height: 202, anchorX: 0.03, anchorY: 0.01, isLeft: false, zPos: 18, bendAngle: 0.085, duration: 3.6),
-        LeafData(assetId: 10, imgX: 346.4, imgY: 183.6, width:  55, height: 194, anchorX: 0.34, anchorY: 0.01, isLeft: false, zPos: 19, bendAngle: 0.075, duration: 3.9),
-        LeafData(assetId: 11, imgX: 198.8, imgY:  77.6, width: 200, height: 105, anchorX: 0.99, anchorY: 0.01, isLeft: true , zPos: 20, bendAngle: 0.060, duration: 4.5),
-        LeafData(assetId: 12, imgX: 245.2, imgY: 185.8, width: 149, height: 284, anchorX: 0.52, anchorY: 0.14, isLeft: true , zPos: 21, bendAngle: 0.070, duration: 4.1),
-        LeafData(assetId: 13, imgX: 398.8, imgY: 194.2, width:  72, height: 164, anchorX: 0.58, anchorY: 0.01, isLeft: false, zPos: 22, bendAngle: 0.080, duration: 3.7),
-        LeafData(assetId: 14, imgX: 400.9, imgY: 124.5, width: 209, height:  82, anchorX: 0.01, anchorY: 0.01, isLeft: false, zPos: 23, bendAngle: 0.055, duration: 5.0),
-        LeafData(assetId: 15, imgX: 410.6, imgY:  26.6, width: 234, height: 151, anchorX: 0.01, anchorY: 0.01, isLeft: false, zPos: 24, bendAngle: 0.065, duration: 4.4),
-        LeafData(assetId: 16, imgX: 175.6, imgY:   4.4, width: 236, height: 191, anchorX: 0.89, anchorY: 0.01, isLeft: true , zPos: 25, bendAngle: 0.070, duration: 4.3),
-        LeafData(assetId: 17, imgX: 267.1, imgY: 108.2, width: 140, height:  66, anchorX: 0.98, anchorY: 0.01, isLeft: true , zPos: 26, bendAngle: 0.060, duration: 4.7),
-        LeafData(assetId: 18, imgX: 147.4, imgY: 125.7, width: 255, height: 194, anchorX: 0.89, anchorY: 0.55, isLeft: true , zPos: 27, bendAngle: 0.075, duration: 3.9),
-        LeafData(assetId: 19, imgX: 133.3, imgY: 159.5, width: 265, height: 268, anchorX: 0.36, anchorY: 0.11, isLeft: true , zPos: 28, bendAngle: 0.080, duration: 4.2),
-        LeafData(assetId: 20, imgX: 376.9, imgY: 200.0, width: 105, height: 338, anchorX: 0.23, anchorY: 0.32, isLeft: false, zPos: 29, bendAngle: 0.065, duration: 5.1),
-        LeafData(assetId: 21, imgX: 394.4, imgY: 114.1, width: 299, height: 293, anchorX: 0.01, anchorY: 0.66, isLeft: false, zPos: 30, bendAngle: 0.070, duration: 4.4),
-        LeafData(assetId: 22, imgX: 418.2, imgY: 148.1, width: 157, height: 357, anchorX: 0.50, anchorY: 0.15, isLeft: false, zPos: 31, bendAngle: 0.060, duration: 4.9),
-        LeafData(assetId: 23, imgX:  -1.1, imgY:  68.9, width: 399, height: 267, anchorX: 0.99, anchorY: 0.57, isLeft: true , zPos: 32, bendAngle: 0.085, duration: 4.6),
+        LeafData(assetId:  2, imgX: 242.0, imgY:  77.7, width: 163, height: 322, anchorX: 0.07, anchorY: 0.01, isLeft: true , zPos: 11, bendAngle: 0.125, duration: 3.8),
+        LeafData(assetId:  3, imgX: 411.7, imgY:  96.6, width: 247, height: 203, anchorX: 0.01, anchorY: 0.54, isLeft: false, zPos: 12, bendAngle: 0.140, duration: 4.2),
+        LeafData(assetId:  4, imgX: 412.4, imgY: 203.6, width:  75, height: 221, anchorX: 0.83, anchorY: 0.01, isLeft: false, zPos: 13, bendAngle: 0.110, duration: 3.4),
+        LeafData(assetId:  5, imgX: 400.1, imgY:  29.4, width: 321, height: 280, anchorX: 0.01, anchorY: 0.45, isLeft: false, zPos: 14, bendAngle: 0.155, duration: 4.5),
+        LeafData(assetId:  6, imgX: 398.4, imgY: 205.9, width:  69, height: 158, anchorX: 0.86, anchorY: 0.01, isLeft: false, zPos: 15, bendAngle: 0.105, duration: 3.2),
+        LeafData(assetId:  7, imgX: 397.9, imgY: 175.7, width: 144, height: 246, anchorX: 0.48, anchorY: 0.01, isLeft: false, zPos: 16, bendAngle: 0.115, duration: 3.6),
+        LeafData(assetId:  8, imgX: 410.3, imgY: 142.0, width: 216, height: 250, anchorX: 0.72, anchorY: 0.01, isLeft: false, zPos: 17, bendAngle: 0.135, duration: 4.0),
+        LeafData(assetId:  9, imgX: 403.9, imgY:   0.7, width: 100, height: 202, anchorX: 0.03, anchorY: 0.01, isLeft: false, zPos: 18, bendAngle: 0.120, duration: 3.3),
+        LeafData(assetId: 10, imgX: 346.4, imgY: 183.6, width:  55, height: 194, anchorX: 0.34, anchorY: 0.01, isLeft: false, zPos: 19, bendAngle: 0.100, duration: 3.5),
+        LeafData(assetId: 11, imgX: 198.8, imgY:  77.6, width: 200, height: 105, anchorX: 0.99, anchorY: 0.01, isLeft: true , zPos: 20, bendAngle: 0.115, duration: 3.9),
+        LeafData(assetId: 12, imgX: 245.2, imgY: 185.8, width: 149, height: 284, anchorX: 0.52, anchorY: 0.14, isLeft: true , zPos: 21, bendAngle: 0.130, duration: 3.7),
+        LeafData(assetId: 13, imgX: 398.8, imgY: 194.2, width:  72, height: 164, anchorX: 0.58, anchorY: 0.01, isLeft: false, zPos: 22, bendAngle: 0.105, duration: 3.4),
+        LeafData(assetId: 14, imgX: 400.9, imgY: 124.5, width: 209, height:  82, anchorX: 0.01, anchorY: 0.01, isLeft: false, zPos: 23, bendAngle: 0.125, duration: 4.3),
+        LeafData(assetId: 15, imgX: 410.6, imgY:  26.6, width: 234, height: 151, anchorX: 0.01, anchorY: 0.01, isLeft: false, zPos: 24, bendAngle: 0.135, duration: 3.8),
+        LeafData(assetId: 16, imgX: 175.6, imgY:   4.4, width: 236, height: 191, anchorX: 0.89, anchorY: 0.01, isLeft: true , zPos: 25, bendAngle: 0.140, duration: 3.9),
+        LeafData(assetId: 17, imgX: 267.1, imgY: 108.2, width: 140, height:  66, anchorX: 0.98, anchorY: 0.01, isLeft: true , zPos: 26, bendAngle: 0.110, duration: 4.1),
+        LeafData(assetId: 18, imgX: 147.4, imgY: 125.7, width: 255, height: 194, anchorX: 0.89, anchorY: 0.55, isLeft: true , zPos: 27, bendAngle: 0.150, duration: 3.5),
+        LeafData(assetId: 19, imgX: 133.3, imgY: 159.5, width: 265, height: 268, anchorX: 0.36, anchorY: 0.11, isLeft: true , zPos: 28, bendAngle: 0.160, duration: 3.7),
+        LeafData(assetId: 20, imgX: 376.9, imgY: 200.0, width: 105, height: 338, anchorX: 0.23, anchorY: 0.32, isLeft: false, zPos: 29, bendAngle: 0.145, duration: 4.4),
+        LeafData(assetId: 21, imgX: 394.4, imgY: 114.1, width: 299, height: 293, anchorX: 0.01, anchorY: 0.66, isLeft: false, zPos: 30, bendAngle: 0.165, duration: 3.9),
+        LeafData(assetId: 22, imgX: 418.2, imgY: 148.1, width: 157, height: 357, anchorX: 0.50, anchorY: 0.15, isLeft: false, zPos: 31, bendAngle: 0.155, duration: 4.2),
+        LeafData(assetId: 23, imgX:  -1.1, imgY:  68.9, width: 399, height: 267, anchorX: 0.99, anchorY: 0.57, isLeft: true , zPos: 32, bendAngle: 0.175, duration: 4.0),
     ]
 
     // MARK: - Properties
@@ -365,10 +365,10 @@ public final class Plant16Node: SKNode {
     private func addTrunkSwayAnimation() {
         plantRootNode.removeAction(forKey: "trunkSway")
 
-        let angle: CGFloat = 0.005
-        let swayLeft = SKAction.rotate(toAngle: angle, duration: 5.0)
+        let angle: CGFloat = 0.018
+        let swayLeft = SKAction.rotate(toAngle: angle, duration: 3.6)
         swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(toAngle: -angle, duration: 5.0)
+        let swayRight = SKAction.rotate(toAngle: -angle, duration: 3.6)
         swayRight.timingMode = .easeInEaseOut
 
         let sequence = SKAction.sequence([swayLeft, swayRight])
@@ -497,21 +497,34 @@ public final class Plant16Node: SKNode {
         }
     }
 
-    // MARK: - Animation tự nhiên lá Cỏ Lan Chi
+    // MARK: - Animation tự nhiên cành lá Cỏ Lan Chi (Dây nhện)
 
     private func startLeafSwayAnimation(leaf: SKSpriteNode, isLeft: Bool, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: TimeInterval) {
         leaf.removeAction(forKey: "leafSway")
 
         let primaryAngle = isLeft ? -bendAngle : bendAngle
-        let secondaryAngle = isLeft ? (bendAngle * 0.70) : (-bendAngle * 0.70)
+        let secondaryAngle = isLeft ? (bendAngle * 0.75) : (-bendAngle * 0.75)
 
-        let bendOut = SKAction.rotate(toAngle: primaryAngle, duration: duration * 0.52)
+        // Đung đưa xoay góc uyển chuyển của cành dây nhện
+        let bendOut = SKAction.rotate(toAngle: primaryAngle, duration: duration * 0.50)
         bendOut.timingMode = .easeInEaseOut
-        let bendBack = SKAction.rotate(toAngle: secondaryAngle, duration: duration * 0.48)
+        let bendBack = SKAction.rotate(toAngle: secondaryAngle, duration: duration * 0.50)
         bendBack.timingMode = .easeInEaseOut
+        let rotateCycle = SKAction.sequence([bendOut, bendBack])
 
-        let cycle = SKAction.sequence([bendOut, bendBack])
-        let repeatAction = SKAction.repeatForever(cycle)
+        // Độ nhấp nhô đàn hồi sinh động của cành nhện vươn dài
+        let bobUp = SKAction.scaleY(to: 1.025, duration: duration * 0.25)
+        bobUp.timingMode = .easeInEaseOut
+        let bobNormal = SKAction.scaleY(to: 1.0, duration: duration * 0.25)
+        bobNormal.timingMode = .easeInEaseOut
+        let bobDown = SKAction.scaleY(to: 0.980, duration: duration * 0.25)
+        bobDown.timingMode = .easeInEaseOut
+        let bobBack = SKAction.scaleY(to: 1.0, duration: duration * 0.25)
+        bobBack.timingMode = .easeInEaseOut
+        let bobCycle = SKAction.sequence([bobUp, bobNormal, bobDown, bobBack])
+
+        let swayGroup = SKAction.group([rotateCycle, bobCycle])
+        let repeatAction = SKAction.repeatForever(swayGroup)
 
         if phaseDelay > 0 {
             let wait = SKAction.wait(forDuration: phaseDelay)
