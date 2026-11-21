@@ -60,9 +60,7 @@ struct HomeView: View {
     @State var overlayRive: String? = nil
 
     init() {
-        print("play sound tap")
-        //            AudioPlayer.shared.playBGM(fileName:"peacefulgarden" )
-        BackgroundAudioManager.shared.switchBGM(id: "m0", fileName: "m0", title: "Relax...", image: "m0")
+        // BGM được tự động phát trong onAppear nếu chưa phát, không gọi switchBGM trong init() để tránh reset nhạc khi re-render
     }
 
     private func autoSelectOverlay() {

@@ -47,9 +47,20 @@ final class SplashViewModel: ObservableObject {
     // MARK: - Methods
 
     /// Kiểm tra auth và tự động chuyển trang sau 3 giây
+    /// Đồng thời preload SpriteKit texture & scene cache trong background
     func checkAuthAndNavigate() async {
-        // Delay 3 giây
-        try? await Task.sleep(nanoseconds: 3_000_000_000) // 3000ms = 3 giây
+        // Chạy song song: delay 3s + preload SpriteKit assets
+        // Preload thường hoàn thành trong < 3s nên không tốn thêm thời gian chờ
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+            }
+            group.addTask {
+                await SpriteKitPreloader.shared.preload()
+            }
+            // Chờ cả 2 task hoàn thành (sleep chắc chắn là task lâu hơn)
+            await group.waitForAll()
+        }
 
         if currentUser?.uid != nil {
             isAuthenticated = true

@@ -31,6 +31,8 @@ public struct TerrariumSlotView: View {
     public var onTap: (() -> Void)? = nil
 
     @State private var currentScene: TerrariumSlotScene? = nil
+    /// Opacity dùng để fade-in scene sau khi render frame đầu, tránh màu xám chớp lên
+    @State private var sceneOpacity: Double = 0.0
 
     private var renderWidth: CGFloat {
         width * (1.0 + overflowRatioX)
@@ -124,10 +126,27 @@ public struct TerrariumSlotView: View {
             .onTapGesture {
                 scene.handleTap()
             }
+            .opacity(sceneOpacity)
             .id("slot-\(potId)-\(plantId)-\(plantLevel)-\(isHanging)-\(itemTypeAttribute?.rawValue ?? "auto")-\(activeFill)-\(width)-\(height)")
             .onAppear {
                 if currentScene == nil {
                     currentScene = scene
+                }
+                // Fade-in sau 1 frame để tránh màu xám lúc SpriteKit chưa render xong
+                let delay = SpriteKitPreloader.shared.isReady ? 0.05 : 0.15
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    withAnimation(.easeIn(duration: 0.18)) {
+                        sceneOpacity = 1.0
+                    }
+                }
+            }
+            .onChange(of: plantId) { _, _ in
+                // Reset opacity khi đổi cây để tránh flash khi rebuild scene
+                sceneOpacity = 0.0
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    withAnimation(.easeIn(duration: 0.18)) {
+                        sceneOpacity = 1.0
+                    }
                 }
             }
     }

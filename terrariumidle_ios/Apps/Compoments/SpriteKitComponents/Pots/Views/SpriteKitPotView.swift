@@ -68,6 +68,7 @@ public struct SpriteKitPotView: View {
     }
 
     @State private var scene: SpriteKitPotScene
+    @State private var sceneOpacity: Double = 0.0
 
     public init(
         potId: String = "pot1",
@@ -104,9 +105,16 @@ public struct SpriteKitPotView: View {
             .frame(width: width, height: height)
             .background(Color.clear)
             .contentShape(Rectangle())
+            .opacity(sceneOpacity)
             .id("\(potId)-\(isHanging)-\(activeFill)-\(width)-\(height)")
             .onAppear {
                 currentScene.configure(potId: potId, isHanging: isHanging, widthFill: activeFill)
+                let delay = SpriteKitPreloader.shared.isReady ? 0.05 : 0.15
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    withAnimation(.easeIn(duration: 0.18)) {
+                        sceneOpacity = 1.0
+                    }
+                }
             }
             .onTapGesture {
                 currentScene.playTapAnimation()

@@ -51,24 +51,15 @@ final class BackgroundAudioManager: ObservableObject {
     /// Cấu hình AudioSession đồng bộ ngay trước khi phát nhạc.
     /// Dùng category .playback (không có .mixWithOthers) để kích hoạt Remote Controls và Now Playing
     /// trên thanh thông báo (Notification Center), màn hình khóa (Lock Screen) và Control Center.
-    private func ensureAudioSession() {
-        if Self.isSessionConfigured {
-            // Session đã active (set từ AppDelegate), chỉ cần verify category
-            let session = AVAudioSession.sharedInstance()
-            if session.category != .playback {
-                try? session.setCategory(.playback, mode: .default, options: [])
-                try? session.setActive(true)
-                print("✅ BackgroundAudioManager: Re-activate AVAudioSession .playback")
-            }
-            return
-        }
-        Self.isSessionConfigured = true
-
+    func ensureAudioSession() {
+        let session = AVAudioSession.sharedInstance()
         do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .default, options: [])
+            if session.category != .playback {
+                try session.setCategory(.playback, mode: .default, options: [])
+            }
             try session.setActive(true)
-            print("✅ BackgroundAudioManager: Đã cấu hình AVAudioSession .playback thành công")
+            Self.isSessionConfigured = true
+            print("✅ BackgroundAudioManager: AVAudioSession .playback active")
         } catch {
             print("⚠️ Lỗi thiết lập AVAudioSession:", error)
         }
@@ -134,9 +125,9 @@ final class BackgroundAudioManager: ObservableObject {
             player?.play()
             print("🎵 BGM playing: \(title) (\(fileName))")
 
-            // Cập nhật Now Playing SAU khi player thực sự bắt đầu phát
-            // Delay nhỏ để iOS nhận được audio session active + player.isPlaying = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            // Cập nhật Now Playing ngay lập tức và sau 0.2s để lock screen widget nhận diện
+            updateNowPlaying(title: title)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
                 self?.updateNowPlaying(title: title)
             }
 
@@ -171,27 +162,56 @@ final class BackgroundAudioManager: ObservableObject {
             sfxPlayer.pause()
         }
         isPlaying = false
-        updatePlaybackState()
+        updateNowPlaying()
+        print("⏸️ BGM paused")
     }
 
     func resume() {
-        player?.play()
+        ensureAudioSession()
+
+        // 1. Kiểm tra player BGM
+        if let p = player {
+            p.prepareToPlay()
+            let played = p.play()
+            print("🎵 resume: player.play() = \(played), currentTime = \(p.currentTime)")
+            if !played {
+                print("⚠️ player.play() returned false, re-creating player...")
+                let trackId = currentBGMId ?? "m0"
+                startBGM(fileName: trackId, title: currentBGMTitle, image: currentBGMImage, id: trackId)
+                return
+            }
+        } else {
+            // Player chưa có hoặc đã bị giải phóng -> khởi động lại track hiện tại
+            print("🔄 resume: player was nil, re-starting BGM...")
+            let trackId = currentBGMId ?? "m0"
+            startBGM(fileName: trackId, title: currentBGMTitle, image: currentBGMImage, id: trackId)
+            return
+        }
+
+        // 2. Resume các SFX đang hoạt động
         for (_, sfxPlayer) in sfxPlayers {
             sfxPlayer.play()
         }
+
         isPlaying = true
-        updatePlaybackState()
+        updateNowPlaying()
     }
 
     func toggle() {
-        isPlaying ? pause() : resume()
+        if let p = player, p.isPlaying {
+            pause()
+        } else if isPlaying {
+            pause()
+        } else {
+            resume()
+        }
     }
 
     func stop() {
         player?.stop()
         player = nil
         isPlaying = false
-        updatePlaybackState()
+        updateNowPlaying()
     }
 
     func seek(to time: TimeInterval) {
@@ -352,21 +372,28 @@ final class BackgroundAudioManager: ObservableObject {
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
         MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
-        print("📻 Now Playing updated: [\(displayTitle)] isPlaying: \(isPlaying)")
+        print("📻 Now Playing updated: [\(displayTitle)] isPlaying: \(isPlaying), time: \(player?.currentTime ?? 0)")
     }
 
     private func updatePlaybackState() {
-        guard var info = MPNowPlayingInfoCenter.default().nowPlayingInfo else {
-            updateNowPlaying()
-            return
-        }
-        info[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
-        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player?.currentTime ?? 0
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-        MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
+        updateNowPlaying()
     }
 
     // MARK: - Remote Commands (Lock Screen / Notification Center / Control Center)
+
+    private nonisolated func executeOnMain(_ block: @MainActor @escaping () -> Void) {
+        if Thread.isMainThread {
+            MainActor.assumeIsolated {
+                block()
+            }
+        } else {
+            DispatchQueue.main.sync {
+                MainActor.assumeIsolated {
+                    block()
+                }
+            }
+        }
+    }
 
     private func setupRemoteCommands() {
         // Cho phép nhận sự kiện điều khiển từ xa
@@ -390,35 +417,53 @@ final class BackgroundAudioManager: ObservableObject {
         center.changePlaybackPositionCommand.isEnabled = true
 
         center.playCommand.addTarget { [weak self] _ in
-            Task { @MainActor in self?.resume() }
+            guard let self = self else { return .commandFailed }
+            self.executeOnMain {
+                self.resume()
+            }
             return .success
         }
 
         center.pauseCommand.addTarget { [weak self] _ in
-            Task { @MainActor in self?.pause() }
+            guard let self = self else { return .commandFailed }
+            self.executeOnMain {
+                self.pause()
+            }
             return .success
         }
 
         center.togglePlayPauseCommand.addTarget { [weak self] _ in
-            Task { @MainActor in self?.toggle() }
+            guard let self = self else { return .commandFailed }
+            self.executeOnMain {
+                self.toggle()
+            }
             return .success
         }
 
         center.nextTrackCommand.addTarget { [weak self] _ in
-            Task { @MainActor in self?.playNextTrack() }
+            guard let self = self else { return .commandFailed }
+            self.executeOnMain {
+                self.playNextTrack()
+            }
             return .success
         }
 
         center.previousTrackCommand.addTarget { [weak self] _ in
-            Task { @MainActor in self?.playPreviousTrack() }
+            guard let self = self else { return .commandFailed }
+            self.executeOnMain {
+                self.playPreviousTrack()
+            }
             return .success
         }
 
         center.changePlaybackPositionCommand.addTarget { [weak self] event in
-            guard let event = event as? MPChangePlaybackPositionCommandEvent else {
+            guard let self = self,
+                  let changeEvent = event as? MPChangePlaybackPositionCommandEvent else {
                 return .commandFailed
             }
-            Task { @MainActor in self?.seek(to: event.positionTime) }
+            self.executeOnMain {
+                self.seek(to: changeEvent.positionTime)
+            }
             return .success
         }
     }
@@ -435,12 +480,16 @@ final class BackgroundAudioManager: ObservableObject {
                 return
             }
             if type == .began {
-                self?.pause()
+                Task { @MainActor [weak self] in
+                    self?.pause()
+                }
             } else if type == .ended {
                 if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
                     let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
                     if options.contains(.shouldResume) {
-                        self?.resume()
+                        Task { @MainActor [weak self] in
+                            self?.resume()
+                        }
                     }
                 }
             }
