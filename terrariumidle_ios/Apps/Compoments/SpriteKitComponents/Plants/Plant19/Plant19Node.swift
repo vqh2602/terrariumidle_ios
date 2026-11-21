@@ -163,7 +163,7 @@ public final class Plant19Node: SKNode {
         let scaleY = containerSize.height / baseCanvasH
         self.baseScale = min(scaleX, scaleY) * 0.90
         plantRootNode.setScale(baseScale)
-        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height : 0)
+        plantRootNode.position = .zero
 
         if let scene = loadSceneTemplate(),
            let seedGroup = scene.childNode(withName: "seedNode") {
@@ -213,7 +213,7 @@ public final class Plant19Node: SKNode {
         let scaleY = containerSize.height / baseCanvasH
         self.baseScale = min(scaleX, scaleY) * 0.90
         plantRootNode.setScale(baseScale)
-        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height : 0)
+        plantRootNode.position = .zero
 
         if let scene = loadSceneTemplate(),
            let sproutGroup = scene.childNode(withName: "sproutNode") {
@@ -264,7 +264,7 @@ public final class Plant19Node: SKNode {
         let scaleY = containerSize.height / baseCanvasH
         self.baseScale = min(scaleX, scaleY) * 0.95
         plantRootNode.setScale(baseScale)
-        plantRootNode.position = CGPoint(x: 0, y: isHanging ? containerSize.height : 0)
+        plantRootNode.position = .zero
 
         // 1. ƯU TIÊN KIẾN TRÚC LAI: Nạp trực tiếp matureNode từ Plant19Scene.sks
         if let scene = loadSceneTemplate(),

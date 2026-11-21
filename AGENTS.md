@@ -25,6 +25,11 @@ Mọi loài cây mới (`Plant2`, `Plant3`, `Plant4`, ...) **BẮT BUỘC** ph�
      - Tuyệt đối **KHÔNG ĐƯỢC** hardcode toạ độ Y của hạt giống/cây con bằng công thức như `containerSize.height * 0.08` làm trôi lệch vị trí và khiến cây con bay lơ lửng trên không trung.
      - Luôn có kiểm tra fallback tự fill texture: `if sprite.texture == nil { sprite.texture = loadTexture(...) }`.
      - Khi chỉnh vị trí trong Xcode `.sks`, code Swift phải tự động sử dụng vị trí mới đó mà không cần sửa code.
+     - **⚠️ QUY TẮC VÀNG `plantRootNode.position` - TUYỆT ĐỐI KHÔNG VI PHẠM**: Trong cả 3 hàm `buildSeedState`, `buildSproutState`, `buildMatureState`, `plantRootNode` **BẮT BUỘC** phải đặt:
+       ```swift
+       plantRootNode.position = .zero
+       ```
+       **TUYỆT ĐỐI KHÔNG ĐƯỢC** dùng `CGPoint(x: 0, y: isHanging ? containerSize.height : 0)` hay bất kỳ offset `containerSize.height` nào cho `plantRootNode`. **Lý do**: Vị trí của toàn bộ cây (`asNode`) đã được scene cha quản lý tập trung — `TerrariumSlotScene` cắm `plant.asNode` vào socket `plantMount` với `position = .zero`; `SpriteKitPlantScene` set `custom.asNode.position = CGPoint(x: 0, y: isHanging ? size.height : 0)`. Nếu `PlantXNode` tự thêm offset `containerSize.height` vào `plantRootNode`, cây bị **double-offset** và bay vượt ra ngoài vùng hiển thị — không thấy gì trên màn hình. *(Bug này đã xảy ra với Plant19 và phải sửa thủ công.)*
    - Luôn có cơ chế Fallback Procedural chứa toạ độ chuẩn phòng trường hợp scene chưa tải được.
    - **QUY CHUẨN HIỆU ỨNG BỌT KHÍ OXY (Oxygen Bubbles Convention - LẤY PLANT1 LÀM CHUẨN)**:
      - Bọt khí **BẮT BUỘC** phải add trực tiếp vào chính Node cây (`addChild(bubble)`), **TUYỆT ĐỐI KHÔNG** add vào `plantRootNode` vì `plantRootNode` bị `setScale(baseScale)` (thường thu nhỏ chỉ còn 0.2 ~ 0.25) khiến bọt khí bị teo nhỏ như hạt bụi và giới hạn không gian bay.
