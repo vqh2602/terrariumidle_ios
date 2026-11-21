@@ -18,6 +18,9 @@ public protocol PotInteractiveNode: AnyObject {
 
     /// Node chứa điểm cắm cây nếu có trong scene template (.sks)
     var plantMountNode: SKNode? { get }
+
+    /// Hiệu ứng chuyển động rung / nảy / đu đưa khi chạm vào chậu
+    var motionEffect: PotMotionEffect { get set }
 }
 
 extension PotInteractiveNode where Self: SKNode {

@@ -111,6 +111,20 @@ Mọi Chậu cây (`SpriteKitPotView`, `PotView`, và các View chuyên biệt `
    - Khi sửa `defaultWidthFill` trong bất kỳ `PotXView.swift`, cả Preview và màn hình chính trang chủ đều tự động nhận giá trị đó ngay lập tức.
    - Khi caller chủ động truyền tham số `widthFill` cụ thể (kể cả `0.0`), giá trị truyền vào luôn có độ ưu tiên cao nhất.
    - `SpriteKitPotView` **BẮT BUỘC** phải gán modifier `.id("\(potId)-\(isHanging)-\(activeFill)-\(width)-\(height)")` cho `SpriteView` và gọi `scene.configure` đồng bộ trong `body` để đảm bảo khi `widthFill` thay đổi thì SpriteKit cập nhật kích thước ngay lập tức mà không bị cache `@State`.
+5. **Quy chuẩn Quản lý Hiệu ứng Chạm Chậu (Pot Tap & Motion Effects Convention)**:
+   - Tách biệt rõ ràng 2 hệ thống độc lập đặt trong 2 thư mục riêng biệt: **`PotEffects/Motion/` (Hiệu ứng Chuyển động Vật lý `PotMotionEffect`)** và **`PotEffects/Tap/` (Hiệu ứng Thị giác Dạng Hạt `PotTapEffect`)**.
+   - Mọi chậu (`Pot1Node` -> `Pot18Node`) quản lý hiệu ứng rung/lắc/đu đưa qua thuộc tính:
+     ```swift
+     public var motionEffect: PotMotionEffect = ...
+     ```
+   - Các loại chuyển động tiêu chuẩn:
+     * `ElasticPendulumMotionEffect`: Chậu treo lắc con lắc vật lý quanh đỉnh móc treo (`0.045 rad`) kết hợp nhún nảy đàn hồi trục Y (`scaleY: 0.96 -> 1.025 -> 1.0`) (Mặc định: **Pot15**).
+     * `WidePendulumMotionEffect`: Chậu treo đu đưa con lắc biên độ rộng (`0.08 rad` ~ 4.6°), dao động 5 nhịp tắt dần mượt mà, thuần túy góc xoay (Mặc định: **Pot16, Pot17**).
+     * `SpringPendulumMotionEffect`: Chậu treo con lắc đàn hồi 3 nhịp + khôi phục đu đưa tự nhiên (`addIdlePendulumSway()`) (Mặc định: **Pot18**).
+     * `StandardBounceMotionEffect`: Chậu để bàn Squash & Stretch nén nảy lò xo đàn hồi tiêu chuẩn + co giãn bóng đổ đáy (Mặc định: **Pot1, 4, 6..14**).
+     * `FirmBounceMotionEffect`: Chậu để bàn đầm chắc, biên độ nhỏ cho chậu đá/gốm nặng (Mặc định: **Pot2, 3, 5**).
+     * `SubtleWobbleMotionEffect`: Rung lắc nhẹ trái/phải tần số nhanh (Micro-wobble/jiggle).
+   - Khi cần đổi kiểu rung giữa các chậu (ví dụ muốn Pot16 rung nảy giống Pot15 hoặc ngược lại), chỉ cần sửa 1 dòng khai báo `motionEffect` trong Node chậu đó. Chi tiết tra cứu tại `PotEffects/POT_EFFECTS_README.md`.
 
 ## Quy chuẩn Kiến trúc Slot Hợp nhất (Unified Terrarium Slot: Cây + Chậu)
 

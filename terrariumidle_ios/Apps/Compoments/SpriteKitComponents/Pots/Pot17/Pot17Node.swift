@@ -38,7 +38,10 @@ public final class Pot17Node: SKNode, PotInteractiveNode {
     /// Socket cắm cây
     public private(set) var plantMountNode: SKNode?
 
-    /// Danh sách hiệu ứng khi tap vào chậu
+    /// Hiệu ứng chuyển động rung / nảy / đu đưa khi tap vào chậu (mặc định: WidePendulum)
+    public var motionEffect: PotMotionEffect = WidePendulumMotionEffect()
+
+    /// Danh sách hiệu ứng thị giác dạng hạt khi tap vào chậu
     public var tapEffects: [PotTapEffect] = [StoneDustEffect()]
 
     // MARK: - Initializer
@@ -259,27 +262,19 @@ public final class Pot17Node: SKNode, PotInteractiveNode {
         return nil
     }
 
-    // MARK: - Phản hồi tương tác Tap (Pendulum Swing Animation)
+    // MARK: - Phản hồi tương tác Tap (Motion & Visual Tap Animation)
 
     public func playTapAnimation() {
-        hangingRigNode.removeAction(forKey: "hangingTapSwing")
+        // 1. Kích hoạt hiệu ứng chuyển động đu đưa con lắc biên độ rộng
+        motionEffect.apply(
+            targetNode: hangingRigNode,
+            potNode: potBodyNode,
+            shadowNode: nil,
+            initialPosition: .zero,
+            isHanging: isHanging
+        )
 
-        let swingAngle: CGFloat = 0.08
-        let swing1 = SKAction.rotate(toAngle: swingAngle, duration: 0.28)
-        swing1.timingMode = .easeOut
-        let swing2 = SKAction.rotate(toAngle: -swingAngle * 0.75, duration: 0.38)
-        swing2.timingMode = .easeInEaseOut
-        let swing3 = SKAction.rotate(toAngle: swingAngle * 0.40, duration: 0.34)
-        swing3.timingMode = .easeInEaseOut
-        let swing4 = SKAction.rotate(toAngle: -swingAngle * 0.20, duration: 0.28)
-        swing4.timingMode = .easeInEaseOut
-        let rest = SKAction.rotate(toAngle: 0.0, duration: 0.24)
-        rest.timingMode = .easeInEaseOut
-
-        let sequence = SKAction.sequence([swing1, swing2, swing3, swing4, rest])
-        hangingRigNode.run(sequence, withKey: "hangingTapSwing")
-
-        // Kích hoạt các hiệu ứng hạt tap (StoneDustEffect z = 150)
+        // 2. Kích hoạt các hiệu ứng hạt tap (StoneDustEffect z = 150)
         if let body = potBodyNode {
             for effect in tapEffects {
                 effect.trigger(on: body, in: potRootNode, isHanging: isHanging)

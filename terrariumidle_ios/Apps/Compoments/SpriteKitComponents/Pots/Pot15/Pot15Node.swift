@@ -38,7 +38,10 @@ public final class Pot15Node: SKNode, PotInteractiveNode {
     /// Socket cắm cây
     public private(set) var plantMountNode: SKNode?
 
-    /// Danh sách hiệu ứng khi tap vào chậu
+    /// Hiệu ứng chuyển động rung / nảy / đu đưa khi tap vào chậu
+    public var motionEffect: PotMotionEffect = ElasticPendulumMotionEffect()
+
+    /// Danh sách hiệu ứng thị giác dạng hạt khi tap vào chậu
     public var tapEffects: [PotTapEffect] = [SparkleBurstEffect()]
 
     // MARK: - Initializer
@@ -262,33 +265,16 @@ public final class Pot15Node: SKNode, PotInteractiveNode {
     // MARK: - Tap Animation
 
     public func playTapAnimation() {
-        hangingRigNode.removeAction(forKey: "tapAnimation")
+        // 1. Kích hoạt hiệu ứng chuyển động rung/lắc/nảy trên hangingRigNode
+        motionEffect.apply(
+            targetNode: hangingRigNode,
+            potNode: potBodyNode,
+            shadowNode: nil,
+            initialPosition: .zero,
+            isHanging: true
+        )
 
-        // 1. Hiệu ứng lắc con lắc vật lý (Pendulum Swing) quanh đỉnh móc treo (0, 0)
-        let swingLeft = SKAction.rotate(toAngle: 0.045, duration: 0.16)
-        swingLeft.timingMode = .easeOut
-        let swingRight = SKAction.rotate(toAngle: -0.038, duration: 0.20)
-        swingRight.timingMode = .easeInEaseOut
-        let swingBack = SKAction.rotate(toAngle: 0.018, duration: 0.18)
-        swingBack.timingMode = .easeInEaseOut
-        let swingRest = SKAction.rotate(toAngle: 0.0, duration: 0.22)
-        swingRest.timingMode = .easeOut
-
-        let swingAction = SKAction.sequence([swingLeft, swingRight, swingBack, swingRest])
-
-        // 2. Hiệu ứng nhún nảy nén trục Y (Elastic Bounce)
-        let squash = SKAction.scaleY(to: 0.96, duration: 0.08)
-        squash.timingMode = .easeOut
-        let stretch = SKAction.scaleY(to: 1.025, duration: 0.12)
-        stretch.timingMode = .easeInEaseOut
-        let normal = SKAction.scaleY(to: 1.0, duration: 0.12)
-        normal.timingMode = .easeOut
-
-        let bounceAction = SKAction.sequence([squash, stretch, normal])
-
-        hangingRigNode.run(SKAction.group([swingAction, bounceAction]), withKey: "tapAnimation")
-
-        // 3. Kích hoạt hiệu ứng hạt lấp lánh (Sparkle Particles)
+        // 2. Kích hoạt hiệu ứng hạt lấp lánh (Sparkle Particles)
         if let body = potBodyNode {
             for effect in tapEffects {
                 effect.trigger(on: body, in: potRootNode, isHanging: true)

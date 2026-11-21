@@ -35,6 +35,9 @@ public final class Pot3Node: SKNode, PotInteractiveNode {
     /// Tỉ lệ scale cơ sở
     private var baseScale: CGFloat = 1.0
 
+    /// Hiệu ứng chuyển động rung / nảy / đu đưa khi tap vào chậu (mặc định: FirmBounce)
+    public var motionEffect: PotMotionEffect = FirmBounceMotionEffect()
+
     /// Danh sách hiệu ứng khi tap vào chậu (có thể tùy biến, thay đổi hoặc gán thêm để tái sử dụng)
     public var tapEffects: [PotTapEffect] = [StoneDustEffect()]
 
@@ -206,18 +209,18 @@ public final class Pot3Node: SKNode, PotInteractiveNode {
         return SpriteKitPotScene.generateProceduralPotTexture(potId: "pot3", isHanging: isHanging).texture
     }
 
-    // MARK: - Phản hồi tương tác Tap (Tap Animation)
+    // MARK: - Phản hồi tương tác Tap (Motion & Visual Tap Animation)
 
     public func playTapAnimation() {
         guard let node = potNode else { return }
 
-        // 1. Squash & Stretch nén nảy đàn hồi + bóng đổ + đu đưa chậu treo
-        PotBounceAnimator.applyBounce(
-            to: node,
+        // 1. Kích hoạt hiệu ứng chuyển động rung/nảy
+        motionEffect.apply(
+            targetNode: node,
+            potNode: node,
             shadowNode: shadowNode,
             initialPosition: initialPotPosition,
-            isHanging: isHanging,
-            config: .firm
+            isHanging: isHanging
         )
 
         // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã khai báo

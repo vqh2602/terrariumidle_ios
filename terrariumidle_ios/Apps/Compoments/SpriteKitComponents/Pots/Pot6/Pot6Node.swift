@@ -37,6 +37,20 @@ public final class Pot6Node: SKNode, PotInteractiveNode {
     /// Tỉ lệ scale cơ sở
     private var baseScale: CGFloat = 1.0
 
+    /// Hiệu ứng chuyển động rung / nảy / đu đưa khi tap vào chậu (mặc định: StandardBounce)
+    public var motionEffect: PotMotionEffect = StandardBounceMotionEffect(
+        config: .init(
+            compressX: 1.11,
+            compressY: 0.89,
+            compressDuration: 0.09,
+            reboundX: 0.95,
+            reboundY: 1.07,
+            reboundDuration: 0.13,
+            settleDuration: 0.15,
+            shadowShrink: 0.86
+        )
+    )
+
     /// Danh sách hiệu ứng khi tap vào chậu (có thể tùy biến, thay đổi hoặc gán thêm để tái sử dụng)
     public var tapEffects: [PotTapEffect] = [QuartzBurstEffect()]
 
@@ -290,27 +304,18 @@ public final class Pot6Node: SKNode, PotInteractiveNode {
         sparkle.run(SKAction.group([anim, rotate]))
     }
 
-    // MARK: - Phản hồi tương tác Tap (Tap Animation)
+    // MARK: - Phản hồi tương tác Tap (Motion & Visual Tap Animation)
 
     public func playTapAnimation() {
         guard let node = potNode else { return }
 
-        // 1. Squash & Stretch nén nảy đàn hồi + bóng đổ + đu đưa chậu treo
-        PotBounceAnimator.applyBounce(
-            to: node,
+        // 1. Kích hoạt hiệu ứng chuyển động rung/nảy
+        motionEffect.apply(
+            targetNode: node,
+            potNode: node,
             shadowNode: shadowNode,
             initialPosition: initialPotPosition,
-            isHanging: isHanging,
-            config: .init(
-                compressX: 1.11,
-                compressY: 0.89,
-                compressDuration: 0.09,
-                reboundX: 0.95,
-                reboundY: 1.07,
-                reboundDuration: 0.13,
-                settleDuration: 0.15,
-                shadowShrink: 0.86
-            )
+            isHanging: isHanging
         )
 
         // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã khai báo

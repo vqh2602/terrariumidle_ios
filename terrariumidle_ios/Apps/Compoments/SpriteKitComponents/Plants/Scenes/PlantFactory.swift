@@ -54,6 +54,8 @@ public enum PlantFactory {
             return Plant16Node(level: level, containerSize: containerSize, isHanging: isHanging)
         case "plant17":
             return Plant17Node(level: level, containerSize: containerSize, isHanging: isHanging)
+        case "plant18":
+            return Plant18Node(level: level, containerSize: containerSize, isHanging: isHanging)
         default:
             return nil
         }

@@ -34,6 +34,9 @@ public final class Pot11Node: SKNode, PotInteractiveNode {
     /// Tỉ lệ scale cơ sở
     private var baseScale: CGFloat = 1.0
 
+    /// Hiệu ứng chuyển động rung / nảy / đu đưa khi tap vào chậu (mặc định: StandardBounce)
+    public var motionEffect: PotMotionEffect = StandardBounceMotionEffect()
+
     /// Danh sách hiệu ứng khi tap vào chậu
     public var tapEffects: [PotTapEffect] = [EarthenParticlesEffect()]
 
@@ -208,19 +211,21 @@ public final class Pot11Node: SKNode, PotInteractiveNode {
         return SpriteKitPotScene.generateProceduralPotTexture(potId: "pot11", isHanging: isHanging).texture
     }
 
-    // MARK: - Phản hồi tương tác Tap (Tap Animation)
+    // MARK: - Phản hồi tương tác Tap (Motion & Visual Tap Animation)
 
     public func playTapAnimation() {
         guard let node = potNode else { return }
 
-        PotBounceAnimator.applyBounce(
-            to: node,
+        // 1. Kích hoạt hiệu ứng chuyển động rung/nảy
+        motionEffect.apply(
+            targetNode: node,
+            potNode: node,
             shadowNode: shadowNode,
             initialPosition: initialPotPosition,
-            isHanging: isHanging,
-            config: .standard
+            isHanging: isHanging
         )
 
+        // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã khai báo
         for effect in tapEffects {
             effect.trigger(on: node, in: potRootNode, isHanging: isHanging)
         }
