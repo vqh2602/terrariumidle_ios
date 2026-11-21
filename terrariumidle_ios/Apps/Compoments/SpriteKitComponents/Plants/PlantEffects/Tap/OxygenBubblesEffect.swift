@@ -24,6 +24,7 @@ public final class OxygenBubblesEffect: PlantTapEffect {
         case deepOcean  // Xanh lam ngọc đại dương sâu thẳm
         case goldenSun  // Vàng ấm áp rạng ngời
         case floralPink // Hồng phấn dịu dàng
+        case amethyst   // Tím thạch anh huyền bí (dành cho cây lá tím như Oxalis)
 
         public var fillColor: UIColor {
             switch self {
@@ -35,6 +36,8 @@ public final class OxygenBubblesEffect: PlantTapEffect {
                 return UIColor(red: 1.0, green: 0.88, blue: 0.38, alpha: 0.88)
             case .floralPink:
                 return UIColor(red: 1.0, green: 0.68, blue: 0.82, alpha: 0.88)
+            case .amethyst:
+                return UIColor(red: 0.76, green: 0.42, blue: 0.88, alpha: 0.88)
             }
         }
 

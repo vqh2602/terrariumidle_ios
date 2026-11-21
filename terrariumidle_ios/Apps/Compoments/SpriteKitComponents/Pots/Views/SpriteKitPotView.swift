@@ -35,6 +35,7 @@ public enum PotRegistry {
         case "pot16": return Pot16View.defaultWidthFill
         case "pot17": return Pot17View.defaultWidthFill
         case "pot18": return Pot18View.defaultWidthFill
+        case "pot19": return Pot19View.defaultWidthFill
         default: return 0.0
         }
     }
