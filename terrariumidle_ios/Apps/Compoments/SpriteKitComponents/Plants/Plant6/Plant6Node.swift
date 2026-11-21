@@ -84,6 +84,12 @@ public final class Plant6Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
+    /// Hiệu ứng chuyển động rung lắc / nảy cành lá khi tap vào cây (mặc định: StandardPlantBounceMotionEffect)
+    public var motionEffect: PlantMotionEffect = StandardPlantBounceMotionEffect()
+
+    /// Danh sách các hiệu ứng thị giác khi tap vào cây (mặc định Bọt khí Oxy ngọc lục bảo)
+    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
+
     private let plantRootNode = SKNode()
     private var leafNodes: [SKSpriteNode] = []
     private var seedNode: SKSpriteNode?
@@ -502,15 +508,25 @@ public final class Plant6Node: SKNode {
     // MARK: - Tap Interaction
 
     public func playTapAnimation() {
-        spawnOxygenBubbles()
+        // 1. Kích hoạt hiệu ứng chuyển động cành lá
+        motionEffect.apply(
+            plantNode: self,
+            plantRootNode: plantRootNode,
+            seedNode: seedNode,
+            sproutNode: sproutNode,
+            matureNode: matureNode,
+            leafNodes: leafNodes,
+            baseScale: baseScale,
+            level: growthState.rawLevel,
+            initialSeedPosition: initialSeedPosition,
+            initialSproutPosition: initialSproutPosition,
+            containerSize: containerSize
+        )
 
-        switch growthState {
-        case .seed:
-            playSeedTapAnimation()
-        case .sprout:
-            playSproutTapAnimation()
-        case .mature:
-            playMatureTapAnimation()
+        // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã đăng ký (Bọt khí Oxy, phấn hoa...)
+        let lvl = growthState.rawLevel
+        for effect in tapEffects {
+            effect.trigger(on: self, containerSize: containerSize, level: lvl, leaves: leafNodes)
         }
     }
 

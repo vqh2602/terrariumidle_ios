@@ -11,11 +11,16 @@ import SpriteKit
 /// Giao thức chung cho mọi Node Cây SpriteKit có khả năng tương tác & diễn hoạt
 public protocol PlantInteractiveNode: AnyObject {
     var asNode: SKNode { get }
+    var motionEffect: PlantMotionEffect { get set }
     var tapEffects: [PlantTapEffect] { get set }
     func playTapAnimation()
 }
 
 extension PlantInteractiveNode {
+    public var motionEffect: PlantMotionEffect {
+        get { StandardPlantBounceMotionEffect() }
+        set { }
+    }
     public var tapEffects: [PlantTapEffect] {
         get { [] }
         set { }

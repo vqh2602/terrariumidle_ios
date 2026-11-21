@@ -81,6 +81,12 @@ public final class Plant2Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
+    /// Hiệu ứng chuyển động rung lắc / nảy cành lá khi tap vào cây (mặc định: WindSway)
+    public var motionEffect: PlantMotionEffect = WindSwayMotionEffect()
+
+    /// Danh sách các hiệu ứng thị giác khi tap vào cây (mặc định Bọt khí Oxy ngọc lục bảo)
+    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
+
     private let plantRootNode = SKNode()
     private var leafNodes: [SKSpriteNode] = []
     private var seedNode: SKSpriteNode?
@@ -497,19 +503,29 @@ public final class Plant2Node: SKNode {
         leaf.run(SKAction.sequence([initialWait, SKAction.repeatForever(bendSequence)]), withKey: "leafBend")
     }
 
-    // MARK: - Phản hồi tương tác Tap (Succulent Spring Elastic Bounce)
+    // MARK: - Phản hồi tương tác Tap (Motion & Visual Tap Animation)
 
     public func playTapAnimation() {
-        switch growthState {
-        case .seed:
-            playSeedTapAnimation()
-        case .sprout:
-            playSproutTapAnimation()
-        case .mature:
-            playMatureTapAnimation()
-        }
+        // 1. Kích hoạt hiệu ứng chuyển động cành lá
+        motionEffect.apply(
+            plantNode: self,
+            plantRootNode: plantRootNode,
+            seedNode: seedNode,
+            sproutNode: sproutNode,
+            matureNode: matureNode,
+            leafNodes: leafNodes,
+            baseScale: baseScale,
+            level: growthState.rawLevel,
+            initialSeedPosition: initialSeedPosition,
+            initialSproutPosition: initialSproutPosition,
+            containerSize: containerSize
+        )
 
-        spawnOxygenBubbles()
+        // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã đăng ký (Bọt khí Oxy, phấn hoa...)
+        let lvl = growthState.rawLevel
+        for effect in tapEffects {
+            effect.trigger(on: self, containerSize: containerSize, level: lvl, leaves: leafNodes)
+        }
     }
 
     private func playSeedTapAnimation() {

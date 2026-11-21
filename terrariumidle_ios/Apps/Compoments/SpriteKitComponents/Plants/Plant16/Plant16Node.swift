@@ -97,6 +97,9 @@ public final class Plant16Node: SKNode {
     private var isHanging: Bool = false
 
     /// Danh sách các hiệu ứng thị giác khi tap vào cây (mặc định Bọt khí Oxy Emerald)
+    /// Hiệu ứng chuyển động rung lắc / nảy cành lá khi tap vào cây (mặc định: WindSwayMotionEffect)
+    public var motionEffect: PlantMotionEffect = WindSwayMotionEffect()
+
     public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
 
     private let plantRootNode = SKNode()
@@ -411,16 +414,22 @@ public final class Plant16Node: SKNode {
     // MARK: - Animation & Phản hồi tương tác Tap
 
     public func playTapAnimation() {
-        switch growthState {
-        case .seed:
-            playSeedTapAnimation()
-        case .sprout:
-            playSproutTapAnimation()
-        case .mature:
-            playMatureTapAnimation()
-        }
+        // 1. Kích hoạt hiệu ứng chuyển động cành lá
+        motionEffect.apply(
+            plantNode: self,
+            plantRootNode: plantRootNode,
+            seedNode: seedNode,
+            sproutNode: sproutNode,
+            matureNode: matureNode,
+            leafNodes: leafNodes,
+            baseScale: baseScale,
+            level: growthState.rawLevel,
+            initialSeedPosition: initialSeedPosition,
+            initialSproutPosition: initialSproutPosition,
+            containerSize: containerSize
+        )
 
-        // Kích hoạt danh sách hiệu ứng tap đã đăng ký (Bọt khí Oxy Fresh Green 3D...)
+        // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã đăng ký (Bọt khí Oxy, phấn hoa...)
         let lvl = growthState.rawLevel
         for effect in tapEffects {
             effect.trigger(on: self, containerSize: containerSize, level: lvl, leaves: leafNodes)

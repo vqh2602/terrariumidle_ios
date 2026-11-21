@@ -82,6 +82,12 @@ public final class Plant9Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
+    /// Hiệu ứng chuyển động rung lắc / nảy cành lá khi tap vào cây (mặc định: StandardPlantBounceMotionEffect)
+    public var motionEffect: PlantMotionEffect = StandardPlantBounceMotionEffect()
+
+    /// Danh sách các hiệu ứng thị giác khi tap vào cây (mặc định Bọt khí Oxy ngọc lục bảo)
+    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
+
     private let plantRootNode = SKNode()
     private var leafNodes: [SKSpriteNode] = []
     private var seedNode: SKSpriteNode?
@@ -443,84 +449,26 @@ public final class Plant9Node: SKNode {
     // MARK: - Phản hồi tương tác Tap (Bounce & Bọt oxy)
 
     public func playTapAnimation() {
-        switch growthState {
-        case .seed:
-            guard let seed = seedNode else { return }
-            seed.removeAction(forKey: "seedTap")
-            seed.position = initialSeedPosition
+        // 1. Kích hoạt hiệu ứng chuyển động cành lá
+        motionEffect.apply(
+            plantNode: self,
+            plantRootNode: plantRootNode,
+            seedNode: seedNode,
+            sproutNode: sproutNode,
+            matureNode: matureNode,
+            leafNodes: leafNodes,
+            baseScale: baseScale,
+            level: growthState.rawLevel,
+            initialSeedPosition: initialSeedPosition,
+            initialSproutPosition: initialSproutPosition,
+            containerSize: containerSize
+        )
 
-            let squash = SKAction.scaleX(to: 1.28, y: 0.75, duration: 0.08)
-            squash.timingMode = .easeIn
-            let stretch = SKAction.scaleX(to: 0.82, y: 1.25, duration: 0.12)
-            stretch.timingMode = .easeOut
-            let bounceBack = SKAction.scaleX(to: 1.08, y: 0.95, duration: 0.10)
-            let settle = SKAction.scale(to: 1.0, duration: 0.12)
-            settle.timingMode = .easeInEaseOut
-            seed.run(SKAction.sequence([squash, stretch, bounceBack, settle]), withKey: "seedTap")
-
-        case .sprout:
-            guard let sprout = sproutNode else { return }
-            sprout.removeAction(forKey: "sproutTap")
-            sprout.position = initialSproutPosition
-
-            let squash = SKAction.scaleX(to: 1.25, y: 0.78, duration: 0.08)
-            squash.timingMode = .easeIn
-            let stretch = SKAction.scaleX(to: 0.85, y: 1.20, duration: 0.12)
-            stretch.timingMode = .easeOut
-            let bounceBack = SKAction.scaleX(to: 1.06, y: 0.96, duration: 0.10)
-            let settle = SKAction.scale(to: 1.0, duration: 0.12)
-            settle.timingMode = .easeInEaseOut
-
-            let shakeL = SKAction.rotate(toAngle: -0.12, duration: 0.07)
-            let shakeR = SKAction.rotate(toAngle: 0.12, duration: 0.08)
-            let shakeBack = SKAction.rotate(toAngle: 0, duration: 0.07)
-            let shakeSeq = SKAction.sequence([shakeL, shakeR, shakeBack])
-
-            let combined = SKAction.group([
-                SKAction.sequence([squash, stretch, bounceBack, settle]),
-                shakeSeq
-            ])
-            sprout.run(combined, withKey: "sproutTap")
-
-        case .mature:
-            guard !leafNodes.isEmpty else { return }
-            plantRootNode.removeAction(forKey: "matureTapBounce")
-
-            // 1. Squash & Stretch cả cây cỏ gương
-            let squash = SKAction.scaleX(to: baseScale * 1.12, y: baseScale * 0.88, duration: 0.08)
-            squash.timingMode = .easeIn
-            let stretch = SKAction.scaleX(to: baseScale * 0.92, y: baseScale * 1.12, duration: 0.12)
-            stretch.timingMode = .easeOut
-            let bounce = SKAction.scaleX(to: baseScale * 1.04, y: baseScale * 0.97, duration: 0.10)
-            let settle = SKAction.scale(to: baseScale, duration: 0.10)
-            settle.timingMode = .easeInEaseOut
-
-            plantRootNode.run(SKAction.sequence([squash, stretch, bounce, settle]), withKey: "matureTapBounce")
-
-            // 2. Các lá tròn đồng tiền rung rinh vẫy mạnh như lò xo
-            for (idx, leaf) in leafNodes.enumerated() {
-                let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
-                let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
-                let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
-                let impulseAngle: CGFloat = (isLeft ? -1.0 : 1.0) * CGFloat.random(in: 0.12...0.18)
-
-                let delay = SKAction.wait(forDuration: Double(idx) * 0.02)
-                let jiggleOut = SKAction.rotate(byAngle: impulseAngle, duration: 0.08)
-                jiggleOut.timingMode = .easeOut
-                let jiggleBack = SKAction.rotate(byAngle: -impulseAngle, duration: 0.13)
-                jiggleBack.timingMode = .easeInEaseOut
-
-                let flutterScaleOut = SKAction.scaleY(to: 1.09, duration: 0.08)
-                let flutterScaleIn = SKAction.scaleY(to: 1.0, duration: 0.13)
-
-                let swingGroup1 = SKAction.group([jiggleOut, flutterScaleOut])
-                let swingGroup2 = SKAction.group([jiggleBack, flutterScaleIn])
-
-                leaf.run(SKAction.sequence([delay, swingGroup1, swingGroup2]))
-            }
+        // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã đăng ký (Bọt khí Oxy, phấn hoa...)
+        let lvl = growthState.rawLevel
+        for effect in tapEffects {
+            effect.trigger(on: self, containerSize: containerSize, level: lvl, leaves: leafNodes)
         }
-
-        spawnOxygenBubbles()
     }
 
     // MARK: - Hiệu ứng bọt khí Oxy bay lên chuẩn Terrarium (toàn màn hình, dồi dào như các cây khác)
