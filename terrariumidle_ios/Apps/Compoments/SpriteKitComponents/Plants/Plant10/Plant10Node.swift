@@ -457,7 +457,6 @@ public final class Plant10Node: SKNode {
             plantRootNode: plantRootNode,
             seedNode: seedNode,
             sproutNode: sproutNode,
-            matureNode: matureNode,
             leafNodes: leafNodes,
             baseScale: baseScale,
             level: growthState.rawLevel,

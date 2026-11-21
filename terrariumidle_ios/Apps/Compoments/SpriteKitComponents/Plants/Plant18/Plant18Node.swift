@@ -80,7 +80,7 @@ public final class Plant18Node: SKNode {
 
     /// Danh sách các hiệu ứng thị giác khi tap vào cây (mặc định Bọt khí Oxy Emerald)
     /// Hiệu ứng chuyển động rung lắc / nảy cành lá khi tap vào cây (mặc định: CascadingVineMotionEffect)
-    public var motionEffect: PlantMotionEffect = CascadingVineMotionEffect()
+    public var motionEffect: PlantMotionEffect = WindSwayMotionEffect()
 
     public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
 
@@ -401,7 +401,6 @@ public final class Plant18Node: SKNode {
             plantRootNode: plantRootNode,
             seedNode: seedNode,
             sproutNode: sproutNode,
-            matureNode: matureNode,
             leafNodes: leafNodes,
             baseScale: baseScale,
             level: growthState.rawLevel,
