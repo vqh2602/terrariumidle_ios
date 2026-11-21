@@ -366,16 +366,10 @@ public final class Plant16Node: SKNode {
     }
 
     private func addTrunkSwayAnimation() {
+        // Dây nhện: gốc cố định, KHÔNG lắc plantRootNode.
+        // Từng lá/cành đã tự đung đưa quanh cuống riêng qua startLeafSwayAnimation.
         plantRootNode.removeAction(forKey: "trunkSway")
-
-        let angle: CGFloat = 0.018
-        let swayLeft = SKAction.rotate(toAngle: angle, duration: 3.6)
-        swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(toAngle: -angle, duration: 3.6)
-        swayRight.timingMode = .easeInEaseOut
-
-        let sequence = SKAction.sequence([swayLeft, swayRight])
-        plantRootNode.run(SKAction.repeatForever(sequence), withKey: "trunkSway")
+        plantRootNode.zRotation = 0
     }
 
     // MARK: - Scene Template Loader
@@ -476,69 +470,78 @@ public final class Plant16Node: SKNode {
     }
 
     private func playMatureTapAnimation() {
-        // Cỏ Lan Chi: khi tap thì các cành lá uốn lượn nhấp nhô theo gió xòe rộng
+        // Cỏ Lan Chi: tap tạo xung gió — mỗi lá giật mạnh theo hướng riêng rồi damping trở về
         for (idx, leaf) in leafNodes.enumerated() {
             let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
             let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
             let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
-            let impulseAngle: CGFloat = (isLeft ? -1.0 : 1.0) * CGFloat.random(in: 0.10...0.15)
+            let dir: CGFloat = isLeft ? -1.0 : 1.0
+            let impulse: CGFloat = dir * CGFloat.random(in: 0.09...0.14)
 
-            let delay = SKAction.wait(forDuration: Double(idx) * 0.02)
-            let sway1 = SKAction.rotate(byAngle: impulseAngle, duration: 0.32)
-            sway1.timingMode = .easeOut
-            let sway2 = SKAction.rotate(byAngle: -impulseAngle * 1.3, duration: 0.50)
-            sway2.timingMode = .easeInEaseOut
-            let sway3 = SKAction.rotate(byAngle: impulseAngle * 0.5, duration: 0.45)
-            sway3.timingMode = .easeInEaseOut
-            let swayBack = SKAction.rotate(toAngle: 0.0, duration: 0.35)
-            swayBack.timingMode = .easeInEaseOut
+            // Dừng sway cũ, giữ nguyên zRotation hiện tại làm điểm xuất phát
+            leaf.removeAction(forKey: "leafSway")
 
-            let resumeNormalSway = SKAction.run { [weak self, weak leaf] in
-                guard let self = self, let leaf = leaf else { return }
+            let delay = SKAction.wait(forDuration: Double(idx) * 0.018)
+            // Giật theo hướng gió (byAngle — tương đối)
+            let gust1 = SKAction.rotate(byAngle:  impulse,        duration: 0.22)
+            gust1.timingMode = .easeOut
+            let gust2 = SKAction.rotate(byAngle: -impulse * 1.60, duration: 0.38)
+            gust2.timingMode = .easeInEaseOut
+            let gust3 = SKAction.rotate(byAngle:  impulse * 0.65, duration: 0.30)
+            gust3.timingMode = .easeInEaseOut
+            // Về 0 (vị trí tự nhiên) rồi resume idle sway
+            let settle = SKAction.rotate(toAngle: 0.0, duration: 0.22)
+            settle.timingMode = .easeInEaseOut
+
+            let resumeSway = SKAction.run { [weak self, weak leaf] in
+                guard let self, let leaf else { return }
                 let bendAngle = meta?.bendAngle ?? 0.065
-                let duration = meta?.duration ?? 4.0
+                let duration  = meta?.duration  ?? 4.0
                 self.startLeafSwayAnimation(leaf: leaf, isLeft: isLeft, bendAngle: bendAngle, duration: duration, phaseDelay: 0)
             }
 
-            let flutter = SKAction.sequence([delay, sway1, sway2, sway3, swayBack, resumeNormalSway])
-            leaf.run(flutter, withKey: "leafTapJiggle")
+            leaf.run(SKAction.sequence([delay, gust1, gust2, gust3, settle, resumeSway]), withKey: "leafTapJiggle")
         }
     }
 
     // MARK: - Animation tự nhiên cành lá Cỏ Lan Chi (Dây nhện)
+    // Mỗi lá/cành đung đưa quanh cuống riêng (anchorPoint) theo góc TƯƠNG ĐỐI.
+    // Gốc cây (plantRootNode) đứng yên cố định — không lắc tổng thể.
 
     private func startLeafSwayAnimation(leaf: SKSpriteNode, isLeft: Bool, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: TimeInterval) {
         leaf.removeAction(forKey: "leafSway")
+        // Reset về 0 để tránh tích lũy góc từ lần trước
+        leaf.zRotation = 0
 
-        let primaryAngle = isLeft ? -bendAngle : bendAngle
-        let secondaryAngle = isLeft ? (bendAngle * 0.75) : (-bendAngle * 0.75)
+        // Hướng đong: lá bên trái đong sang trái trước, lá bên phải đong sang phải trước
+        let dir: CGFloat = isLeft ? -1.0 : 1.0
 
-        // Đung đưa xoay góc uyển chuyển của cành dây nhện
-        let bendOut = SKAction.rotate(toAngle: primaryAngle, duration: duration * 0.50)
-        bendOut.timingMode = .easeInEaseOut
-        let bendBack = SKAction.rotate(toAngle: secondaryAngle, duration: duration * 0.50)
-        bendBack.timingMode = .easeInEaseOut
-        let rotateCycle = SKAction.sequence([bendOut, bendBack])
+        // Đung đưa bằng rotate(byAngle:) — góc TƯƠNG ĐỐI quanh cuống, không phụ thuộc world space
+        let swingOut  = SKAction.rotate(byAngle:  dir * bendAngle,         duration: duration * 0.50)
+        swingOut.timingMode  = .easeInEaseOut
+        let swingBack = SKAction.rotate(byAngle: -dir * bendAngle * 1.80,  duration: duration * 0.50)
+        swingBack.timingMode = .easeInEaseOut
+        let swingReturn = SKAction.rotate(byAngle: dir * bendAngle * 0.80, duration: duration * 0.40)
+        swingReturn.timingMode = .easeInEaseOut
+        let recenter  = SKAction.rotate(byAngle: -dir * bendAngle * 0.00,  duration: duration * 0.10)
+        recenter.timingMode  = .easeInEaseOut
 
-        // Độ nhấp nhô đàn hồi sinh động của cành nhện vươn dài
-        let bobUp = SKAction.scaleY(to: 1.025, duration: duration * 0.25)
-        bobUp.timingMode = .easeInEaseOut
-        let bobNormal = SKAction.scaleY(to: 1.0, duration: duration * 0.25)
-        bobNormal.timingMode = .easeInEaseOut
-        let bobDown = SKAction.scaleY(to: 0.980, duration: duration * 0.25)
-        bobDown.timingMode = .easeInEaseOut
-        let bobBack = SKAction.scaleY(to: 1.0, duration: duration * 0.25)
-        bobBack.timingMode = .easeInEaseOut
-        let bobCycle = SKAction.sequence([bobUp, bobNormal, bobDown, bobBack])
+        let swingCycle = SKAction.sequence([swingOut, swingBack, swingReturn, recenter])
 
-        let swayGroup = SKAction.group([rotateCycle, bobCycle])
-        let repeatAction = SKAction.repeatForever(swayGroup)
+        // Nhấp nhô nhẹ theo chiều dài cành (scale Y) — cành dây nhện mềm mại
+        let elongate = SKAction.scaleY(to: 1.018, duration: duration * 0.50)
+        elongate.timingMode = .easeInEaseOut
+        let contract = SKAction.scaleY(to: 0.984, duration: duration * 0.50)
+        contract.timingMode = .easeInEaseOut
+        let bobCycle = SKAction.sequence([elongate, contract])
+
+        let combined = SKAction.group([swingCycle, bobCycle])
+        let repeatForever = SKAction.repeatForever(combined)
 
         if phaseDelay > 0 {
-            let wait = SKAction.wait(forDuration: phaseDelay)
-            leaf.run(SKAction.sequence([wait, repeatAction]), withKey: "leafSway")
+            leaf.run(SKAction.sequence([SKAction.wait(forDuration: phaseDelay), repeatForever]), withKey: "leafSway")
         } else {
-            leaf.run(repeatAction, withKey: "leafSway")
+            leaf.run(repeatForever, withKey: "leafSway")
         }
     }
 
@@ -557,12 +560,16 @@ public final class Plant16Node: SKNode {
     private func startSproutAnimation() {
         guard let node = sproutNode else { return }
         node.removeAction(forKey: "sproutSway")
+        node.zRotation = 0
 
-        let swayLeft = SKAction.rotate(toAngle: -0.04, duration: 2.2)
-        swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(toAngle: 0.04, duration: 2.2)
+        // Cây con đung đưa nhẹ quanh cuống (byAngle — tương đối, không tích lũy)
+        let swayLeft  = SKAction.rotate(byAngle: -0.04, duration: 2.2)
+        swayLeft.timingMode  = .easeInEaseOut
+        let swayRight = SKAction.rotate(byAngle:  0.08, duration: 2.2)
         swayRight.timingMode = .easeInEaseOut
+        let swayBack  = SKAction.rotate(byAngle: -0.04, duration: 2.2)
+        swayBack.timingMode  = .easeInEaseOut
 
-        node.run(SKAction.repeatForever(SKAction.sequence([swayLeft, swayRight])), withKey: "sproutSway")
+        node.run(SKAction.repeatForever(SKAction.sequence([swayLeft, swayRight, swayBack])), withKey: "sproutSway")
     }
 }
