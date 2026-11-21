@@ -61,12 +61,15 @@ public final class Plant17Node: SKNode {
         let zPos: CGFloat
         let bendAngle: CGFloat
         let duration: TimeInterval
+        let shouldSway: Bool
     }
 
-    /// Tọa độ pixel và điểm neo cuống rủ Cúc tần Ấn Độ (Canvas 611 x 858)
-    /// Dải lá rủ dài buông thõng từ miệng chậu đung đưa êm dịu, nhẹ nhàng trong gió
+    /// Tọa độ pixel và phân tách cấu trúc 2 phần của Cúc tần Ấn Độ:
+    /// - assetId 1 (Crown / Thân bụi trên miệng chậu): shouldSway = false -> Cố định trên miệng chậu, KHÔNG đung đưa theo gió!
+    /// - assetId 2 (Vines / Cành rủ buông dài): shouldSway = true -> Đung đưa mềm mại theo gió.
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId: 2, imgX: 0.0, imgY: 0.0, width: 611, height: 858, anchorX: 0.50, anchorY: 0.95, isLeft: false, zPos: 12, bendAngle: 0.042, duration: 4.6),
+        LeafData(assetId: 1, imgX: 0.0, imgY: -104.0, width: 611, height: 274, anchorX: 0.50, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: 0.0,   duration: 0.0, shouldSway: false),
+        LeafData(assetId: 2, imgX: 0.0, imgY:  -53.0, width: 611, height: 635, anchorX: 0.50, anchorY: 1.00, isLeft: false, zPos: 12, bendAngle: 0.048, duration: 3.8, shouldSway: true),
     ]
 
     // MARK: - Properties
@@ -292,14 +295,17 @@ public final class Plant17Node: SKNode {
                 leafNodes.append(leaf)
 
                 let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
-                let bendAngle = meta?.bendAngle ?? 0.042
-                let duration = meta?.duration ?? 4.6
-                let delay = Double(idx) * 0.15
+                let shouldSway = meta?.shouldSway ?? (assetNum != 1)
+                if shouldSway {
+                    let bendAngle = meta?.bendAngle ?? 0.048
+                    let duration = meta?.duration ?? 3.8
+                    let delay = Double(idx) * 0.15
 
-                startLeafSwayAnimation(leaf: leaf, bendAngle: bendAngle, duration: duration, phaseDelay: delay)
+                    startLeafSwayAnimation(leaf: leaf, bendAngle: bendAngle, duration: duration, phaseDelay: delay)
+                }
             }
 
-            addTrunkSwayAnimation()
+            addTrunkBobAnimation()
             return
         }
 
@@ -324,11 +330,13 @@ public final class Plant17Node: SKNode {
             fallbackGroup.addChild(leaf)
             leafNodes.append(leaf)
 
-            let delay = Double(idx) * 0.15
-            startLeafSwayAnimation(leaf: leaf, bendAngle: data.bendAngle, duration: data.duration, phaseDelay: delay)
+            if data.shouldSway {
+                let delay = Double(idx) * 0.15
+                startLeafSwayAnimation(leaf: leaf, bendAngle: data.bendAngle, duration: data.duration, phaseDelay: delay)
+            }
         }
 
-        addTrunkSwayAnimation()
+        addTrunkBobAnimation()
     }
 
     // MARK: - Scene Template Loader
@@ -346,8 +354,10 @@ public final class Plant17Node: SKNode {
             nameVariants = ["plant1_Asset-100@4.167x", "plant1_Asset-100", "seed"]
         case 200:
             nameVariants = ["plant1_Asset-200@4.167x", "plant1_Asset-200", "sprout"]
+        case 1:
+            nameVariants = ["plant17-crown@4.167x", "plant17-crown"]
         case 2:
-            nameVariants = ["plant17-2@4.167x", "plant17-2", "Vernonia-elliptica@4.167x", "Vernonia-elliptica"]
+            nameVariants = ["plant17-vines@4.167x", "plant17-vines", "plant17-2@4.167x", "Vernonia-elliptica@4.167x"]
         default:
             nameVariants = ["plant17-\(assetId)@4.167x", "plant17-\(assetId)"]
         }
@@ -410,6 +420,7 @@ public final class Plant17Node: SKNode {
         for (idx, leaf) in leafNodes.enumerated() {
             let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
             let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
+            guard meta?.shouldSway != false else { continue }
             let impulseAngle: CGFloat = 0.085
 
             let delay = SKAction.wait(forDuration: Double(idx) * 0.04)
@@ -424,8 +435,8 @@ public final class Plant17Node: SKNode {
 
             let resumeNormalSway = SKAction.run { [weak self, weak leaf] in
                 guard let self = self, let leaf = leaf else { return }
-                let bendAngle = meta?.bendAngle ?? 0.042
-                let duration = meta?.duration ?? 4.6
+                let bendAngle = meta?.bendAngle ?? 0.048
+                let duration = meta?.duration ?? 3.8
                 self.startLeafSwayAnimation(leaf: leaf, bendAngle: bendAngle, duration: duration, phaseDelay: 0)
             }
 
@@ -434,25 +445,27 @@ public final class Plant17Node: SKNode {
         }
     }
 
-    // MARK: - Animation tự nhiên dải lá Cúc tần Ấn Độ buông rủ
+    // MARK: - Animation tự nhiên: Cành đung đưa & Thân nhấp nhô mượt mà
 
-    private func addTrunkSwayAnimation() {
+    private func addTrunkBobAnimation() {
         plantRootNode.removeAction(forKey: "trunkSway")
+        plantRootNode.removeAction(forKey: "trunkBob")
+        plantRootNode.zRotation = 0.0
 
-        let angle: CGFloat = 0.005
-        let swayLeft = SKAction.rotate(toAngle: angle, duration: 4.8)
-        swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(toAngle: -angle, duration: 4.8)
-        swayRight.timingMode = .easeInEaseOut
+        // Thân nhấp nhô nhẹ nhàng, êm ái theo phương thẳng đứng (không rung lắc, không xoay)
+        let bobUp = SKAction.moveBy(x: 0, y: 2.0, duration: 2.8)
+        bobUp.timingMode = .easeInEaseOut
+        let bobDown = SKAction.moveBy(x: 0, y: -2.0, duration: 3.0)
+        bobDown.timingMode = .easeInEaseOut
 
-        let sequence = SKAction.sequence([swayLeft, swayRight])
-        plantRootNode.run(SKAction.repeatForever(sequence), withKey: "trunkSway")
+        let sequence = SKAction.sequence([bobUp, bobDown])
+        plantRootNode.run(SKAction.repeatForever(sequence), withKey: "trunkBob")
     }
 
     private func startLeafSwayAnimation(leaf: SKSpriteNode, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: TimeInterval) {
         leaf.removeAction(forKey: "leafSway")
 
-        // Dao động đung đưa con lắc gió êm dịu, nhẹ nhàng của dải cúc tần buông rủ
+        // Cành đung đưa con lắc gió uyển chuyển quanh cuống rủ
         let swingLeft = SKAction.rotate(toAngle: -bendAngle, duration: duration * 0.50)
         swingLeft.timingMode = .easeInEaseOut
         let swingRight = SKAction.rotate(toAngle: bendAngle, duration: duration * 0.50)

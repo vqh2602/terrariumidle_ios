@@ -17,8 +17,11 @@ OUT_DIR = os.path.join(WORKSPACE_ROOT, "terrariumidle_ios/Apps/Compoments/Sprite
 OUT_FILE = os.path.join(OUT_DIR, "Plant17Scene.sks")
 
 # (assetId, imgName, w, h, ax, ay, posX, posY, zPos)
+# leaf_1: Crown (Thân bụi trên miệng chậu) - cố định, không đung đưa theo gió
+# leaf_2: Vines (Cành rủ buông dài) - neo tại cuống rủ, đung đưa mềm mại theo gió
 LEAVES_CONFIG = [
-    ( 2, "plant17-2@4.167x", 611.0, 858.0, 0.50, 0.95, 0.0, 0.0, 12.0 ),
+    ( 1, "plant17-crown@4.167x", 611.0, 274.0, 0.50, 0.00, 0.0, -104.0, 11.0 ),
+    ( 2, "plant17-vines@4.167x", 611.0, 635.0, 0.50, 1.00, 0.0,  -53.0, 12.0 ),
 ]
 
 def generate_plant17_scene():
