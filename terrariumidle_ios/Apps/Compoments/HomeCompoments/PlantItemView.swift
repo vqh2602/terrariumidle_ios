@@ -95,48 +95,59 @@ struct PlantItemView: View {
                 }
             } else if isSticker {
                 // STICKER LAYOUT
+                let stickerId = plantData?.idPot ?? plantData?.idPlant ?? "sticker1"
                 if isHanging {
-                    // Sticker treo - hiển thị như pot treo
+                    // Sticker treo - hiển thị với SpriteKitStickerView (hoặc fallback SpriteKitPotView)
                     ZStack(alignment: .top) {
-                        /* [RIVE_DEPRECATED] Không dùng Rive nữa, thay bằng SpriteKitPotView
-                        PotRiveView(
-                            width: itemWidth * 1.0,
-                            height: itemWidth + itemWidth * 0.2, // Chiều cao pot treo
-                            potId: plantData?.idPot ?? "pot15"
-                        )
-                        .frame(maxWidth: .infinity)
-                        */
-                        SpriteKitPotView(
-                            potId: plantData?.idPot ?? "pot15",
-                            isHanging: true,
-                            width: itemWidth * 1.0,
-                            height: itemWidth + itemWidth * 0.2,
-                            onTap: {
-                                handleDetailTap()
-                            }
-                        )
-                        .frame(maxWidth: .infinity)
+                        if StickerAvailability.isAvailable(stickerId: stickerId) {
+                            SpriteKitStickerView(
+                                stickerId: stickerId,
+                                isHanging: true,
+                                width: itemWidth * 1.0,
+                                height: itemWidth + itemWidth * 0.2,
+                                onTap: {
+                                    handleDetailTap()
+                                }
+                            )
+                            .frame(maxWidth: .infinity)
+                        } else {
+                            SpriteKitPotView(
+                                potId: stickerId,
+                                isHanging: true,
+                                width: itemWidth * 1.0,
+                                height: itemWidth + itemWidth * 0.2,
+                                onTap: {
+                                    handleDetailTap()
+                                }
+                            )
+                            .frame(maxWidth: .infinity)
+                        }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 } else {
                     // Sticker không treo - chiều cao 155
                     VStack(spacing: 0) {
-                        /* [RIVE_DEPRECATED] Không dùng Rive nữa, thay bằng SpriteKitPotView
-                        PotRiveView(
-                            width: itemWidth,
-                            height: 155, // Fixed height cho sticker không treo
-                            potId: plantData?.idPot ?? "pot1"
-                        )
-                        */
-                        SpriteKitPotView(
-                            potId: plantData?.idPot ?? "pot1",
-                            isHanging: false,
-                            width: itemWidth,
-                            height: 155,
-                            onTap: {
-                                handleDetailTap()
-                            }
-                        )
+                        if StickerAvailability.isAvailable(stickerId: stickerId) {
+                            SpriteKitStickerView(
+                                stickerId: stickerId,
+                                isHanging: false,
+                                width: itemWidth,
+                                height: 155,
+                                onTap: {
+                                    handleDetailTap()
+                                }
+                            )
+                        } else {
+                            SpriteKitPotView(
+                                potId: stickerId,
+                                isHanging: false,
+                                width: itemWidth,
+                                height: 155,
+                                onTap: {
+                                    handleDetailTap()
+                                }
+                            )
+                        }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
