@@ -96,11 +96,18 @@ public final class Pot18Node: SKNode, PotInteractiveNode {
 
         guard containerSize.width > 0, containerSize.height > 0 else { return }
 
-        // Tỉ lệ ảnh gốc: 497 x 821 (aspect ~ 1.6519)
-        let aspect: CGFloat = 821.0 / 497.0
-        let targetH = containerSize.height * 0.98
-        let naturalW = targetH / aspect
-        let maxW = max(naturalW, containerSize.width * 0.96)
+        // Kích thước canvas thiết kế gốc: 497 x 821 (aspect ~ 1.6519)
+        // Chậu treo Pot18 có tỉ lệ rộng hơn các chậu treo khác, do đó cần giới hạn bề rộng fit ~ 70% containerSize.width
+        // để chậu thon gọn, thanh mảnh, không bị bè ngang hay phình to quá cỡ khung kệ.
+        let baseCanvasW: CGFloat = 497.0
+        let baseCanvasH: CGFloat = 821.0
+        let maxFitW = containerSize.width * (isHanging ? 0.70 : 0.80)
+        let maxFitH = containerSize.height * (isHanging ? 0.86 : 0.96)
+        let baseScale = min(maxFitW / baseCanvasW, maxFitH / baseCanvasH)
+
+        let naturalW = baseCanvasW * baseScale
+        let targetH = baseCanvasH * baseScale
+        let maxW = max(naturalW, containerSize.width * 0.94)
         let targetW = naturalW + (maxW - naturalW) * widthFill
 
         // 1. Bóng đổ dưới đáy chậu (nếu là chậu để bàn)
@@ -201,7 +208,12 @@ public final class Pot18Node: SKNode, PotInteractiveNode {
         if let mount = plantMountNode {
             return mount.position
         }
-        let targetH = containerSize.height * 0.98
+        let baseCanvasW: CGFloat = 497.0
+        let baseCanvasH: CGFloat = 821.0
+        let maxFitW = containerSize.width * (isHanging ? 0.70 : 0.80)
+        let maxFitH = containerSize.height * (isHanging ? 0.86 : 0.96)
+        let baseScale = min(maxFitW / baseCanvasW, maxFitH / baseCanvasH)
+        let targetH = baseCanvasH * baseScale
         let scaleY = targetH / 821.0
         return CGPoint(x: 0, y: isHanging ? -485.0 * scaleY : 336.0 * scaleY)
     }
