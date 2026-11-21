@@ -20,8 +20,8 @@ final class SpriteKitPreloader {
     // MARK: - Danh sách scene & texture cần preload
 
     /// Tên các .sks file cần warm-up (sẽ được SKScene(fileNamed:) cache lại)
-    private static let sksSceneNames: [String] = (1...15).map { "Plant\($0)Scene" }
-        + (1...15).map { "Pot\($0)Scene" }
+    private static let sksSceneNames: [String] = (1...16).map { "Plant\($0)Scene" }
+        + (1...16).map { "Pot\($0)Scene" }
         + ["Landscape1Scene"]
 
     /// Tên các texture/image từ Assets.xcassets cần preload vào GPU memory
@@ -29,7 +29,7 @@ final class SpriteKitPreloader {
     private nonisolated static let textureNames: [String] = {
         var names: [String] = []
         // Plant assets: seed (100), sprout (200), leaves (2..12)
-        for p in 1...15 {
+        for p in 1...16 {
             names.append("plant\(p)_Asset-100@4.167x")
             names.append("plant\(p)_Asset-200@4.167x")
             for leaf in 2...12 {
@@ -37,7 +37,7 @@ final class SpriteKitPreloader {
             }
         }
         // Pot assets: body (1), shadow (5..8)
-        for p in 1...15 {
+        for p in 1...16 {
             for part in 1...6 {
                 names.append("pot\(p)_Asset-\(part)@4.167x")
             }

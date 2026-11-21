@@ -42,3 +42,4 @@ extension Plant12Node: PlantInteractiveNode {}
 extension Plant13Node: PlantInteractiveNode {}
 extension Plant14Node: PlantInteractiveNode {}
 extension Plant15Node: PlantInteractiveNode {}
+extension Plant16Node: PlantInteractiveNode {}
