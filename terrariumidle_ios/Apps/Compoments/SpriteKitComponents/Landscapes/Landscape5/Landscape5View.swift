@@ -8,7 +8,7 @@
 import SpriteKit
 import SwiftUI
 
-/// View xem trước độc lập cho Landscape 5: "Ban công ô kính mưa"
+/// View xem trước độc lập cho Landscape 5: "Mưa đêm giông bão"
 public struct Landscape5View: View {
 
     @State private var scene: Landscape5PreviewScene?
@@ -72,6 +72,6 @@ final class Landscape5PreviewScene: SKScene {
     }
 }
 
-#Preview("Landscape 5 - Ban công ô kính mưa") {
+#Preview("Landscape 5 - Mưa đêm giông bão") {
     Landscape5View()
 }
