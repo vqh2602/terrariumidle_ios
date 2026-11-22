@@ -1,241 +1,201 @@
-//
-//  UserInfo.swift
-//  terrariumidle_ios
-//
-//  Created by vương quang huy on 8/2/26.
-//
-
 import SwiftUI
 
 struct UserInfoCompoment: View {
     @State private var isExpanded: Bool = false
     @StateObject var fireStore: FireStoreService = .shared
     @EnvironmentObject var router: AppRouter
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    // MARK: - EXP & Level Data
-    private var userLevel: Int {
-        fireStore.gradenModel?.user.userLevel ?? 1
-    }
-
-    private var userExp: Int {
-        fireStore.gradenModel?.user.userLevelEXP ?? 0
-    }
-
-    private var maxExp: Int {
-        max(1, ShareFunc.calculateUserMaxExp(level: userLevel))
-    }
-
-    private var expProgress: Double {
-        min(max(Double(userExp) / Double(maxExp), 0.0), 1.0)
-    }
+    private var userLevel: Int { fireStore.gradenModel?.user.userLevel ?? 1 }
+    private var userExp: Int { fireStore.gradenModel?.user.userLevelEXP ?? 0 }
+    private var maxExp: Int { max(1, ShareFunc.calculateUserMaxExp(level: userLevel)) }
+    private var progress: Double { min(max(Double(userExp) / Double(maxExp), 0), 1) }
 
     var body: some View {
-        ZStack(alignment: .leading) {
+        Group {
             if isExpanded {
-                expandedBarView
-                    .transition(
-                        .asymmetric(
-                            insertion: .scale(scale: 0.82, anchor: .topLeading).combined(with: .opacity),
-                            removal: .scale(scale: 0.82, anchor: .topLeading).combined(with: .opacity)
-                        )
-                    )
+                expandedBar
             } else {
-                collapsedCircleView
-                    .transition(
-                        .asymmetric(
-                            insertion: .scale(scale: 0.82, anchor: .center).combined(with: .opacity),
-                            removal: .scale(scale: 0.82, anchor: .center).combined(with: .opacity)
-                        )
-                    )
+                levelButton
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // MARK: - Collapsed View (Mặc định: chỉ có hình tròn với thanh tiến trình % và số level)
-    private var collapsedCircleView: some View {
-        Button {
-            withAnimation(.spring(response: 0.36, dampingFraction: 0.8)) {
-                isExpanded = true
-            }
-        } label: {
-            LevelCircularBadge(level: userLevel, progress: expProgress)
+    private var levelButton: some View {
+        Button { toggleExpanded() } label: {
+            LevelCircularBadge(level: userLevel, progress: progress)
         }
-        .buttonStyle(ScaleTouchButtonStyle())
-        .simultaneousGesture(
-            LongPressGesture(minimumDuration: 0.5).onEnded { _ in
-                router.push(.accountView)
-            }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Cấp \(userLevel), mở thanh tài nguyên")
+        .accessibilityHint("Nhấn giữ để mở tài khoản")
+        .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in
+            router.push(.accountView)
+        })
+    }
+
+    private var expandedBar: some View {
+        GardenStatusBar(
+            level: userLevel, experience: userExp, maxExperience: maxExp,
+            oxygen: fireStore.gradenModel?.money.oxygen ?? 0,
+            gemstones: fireStore.gradenModel?.money.gemstone ?? 0,
+            fertilizer: fireStore.gradenModel?.item.fertilizer ?? 0,
+            shovels: fireStore.gradenModel?.item.shovel ?? 0,
+            tickets: fireStore.gradenModel?.money.ticket ?? 0,
+            onCollapse: toggleExpanded,
+            onAccount: { router.push(.accountView) }
         )
     }
 
-    // MARK: - Expanded View (Xổ ra đầy đủ như hình)
-    private var expandedBarView: some View {
-        HStack(spacing: 8) {
-            // Level Card (Tap để thu gọn lại, Long press để xem trang Account)
-            Button {
-                withAnimation(.spring(response: 0.36, dampingFraction: 0.8)) {
-                    isExpanded = false
-                }
-            } label: {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 4) {
-                        Text("Level: \(userLevel)")
-                            .m3TextStyle(.bodyMedium)
-                            .fontWeight(.bold)
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundColor(.gray.opacity(0.75))
-                    }
-                    Text("\(formatNumberWithSeparator(userExp)) / \(formatNumberWithSeparator(maxExp))")
-                        .font(.system(size: 8, weight: .light, design: .default))
-                }
-                .foregroundColor(.black)
-                .padding(8)
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color.white))
-                .shadow(radius: 6)
-            }
-            .buttonStyle(ScaleTouchButtonStyle())
-            .simultaneousGesture(
-                LongPressGesture(minimumDuration: 0.5).onEnded { _ in
-                    router.push(.accountView)
-                }
-            )
-
-            // Resource Bar (Các đơn vị tiền tệ / vật phẩm)
-            HStack {
-                Button {} label: {
-                    HStack(spacing: 0) {
-                        Spacer()
-                        UserItemData(title: FormatNumber.formatNumber(fireStore.gradenModel?.money.oxygen ?? 0), image: "oxygen")
-                        Spacer()
-                        UserItemData(title: FormatNumber.formatNumber(fireStore.gradenModel?.money.gemstone ?? 0), image: "gemstone")
-                        Spacer()
-                        UserItemData(title: FormatNumber.formatNumber(fireStore.gradenModel?.item.fertilizer ?? 0), image: "fertilizer")
-                        Spacer()
-                        UserItemData(title: FormatNumber.formatNumber(fireStore.gradenModel?.item.shovel ?? 0), image: "shovel")
-                        Spacer()
-                        UserItemData(title: FormatNumber.formatNumber(fireStore.gradenModel?.money.ticket ?? 0), image: "ticket")
-                        Spacer()
-                    }
-                    .padding(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 8).fill(Color.white))
-            .padding(4)
-            .shadow(radius: 6)
+    private func toggleExpanded() {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+            isExpanded.toggle()
         }
-        .gesture(
-            DragGesture(minimumDistance: 15)
-                .onEnded { value in
-                    if value.translation.width < -15 || value.translation.height < -15 {
-                        withAnimation(.spring(response: 0.36, dampingFraction: 0.8)) {
-                            isExpanded = false
-                        }
-                    }
-                }
-        )
-    }
-
-    // MARK: - Format helper (dấu chấm ngăn cách phần nghìn: 42.700)
-    private func formatNumberWithSeparator(_ number: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = "."
-        return formatter.string(from: NSNumber(value: number)) ?? "\(number)"
     }
 }
 
-// MARK: - Circular Level Badge (Hình tròn với thanh tiến trình % level và số level trong cùng)
+struct GardenStatusBar: View {
+    let level: Int
+    let experience: Int
+    let maxExperience: Int
+    let oxygen: Int
+    let gemstones: Int
+    let fertilizer: Int
+    let shovels: Int
+    let tickets: Int
+    let onCollapse: () -> Void
+    let onAccount: () -> Void
+
+    private var progress: Double {
+        min(max(Double(experience) / Double(max(1, maxExperience)), 0), 1)
+    }
+
+    var body: some View {
+        VStack(spacing: 9) {
+            HStack(spacing: 8) {
+                Button(action: onCollapse) {
+                    LevelCircularBadge(level: level, progress: progress, size: 48)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Cấp \(level), thu gọn thanh tài nguyên")
+                .accessibilityHint("Nhấn giữ để mở tài khoản")
+                .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in onAccount() })
+
+                HStack(spacing: 4) {
+                    GardenResourceValue(name: "Oxy", image: "oxygen", value: oxygen)
+                    GardenResourceValue(name: "Đá quý", image: "gemstone", value: gemstones)
+                    GardenResourceValue(name: "Phân bón", image: "fertilizer", value: fertilizer)
+                    GardenResourceValue(name: "Xẻng", image: "shovel", value: shovels)
+                    GardenResourceValue(name: "Vé", image: "ticket", value: tickets)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            HStack(spacing: 8) {
+                Text("Cấp \(level)")
+                    .font(.system(size: 10, weight: .heavy, design: .rounded))
+                    .foregroundStyle(AccountStyle.green)
+                GeometryReader { geometry in
+                    Capsule()
+                        .fill(AccountStyle.green.opacity(0.15))
+                        .overlay(alignment: .leading) {
+                            Capsule()
+                                .fill(LinearGradient(colors: [Color(hex: "99B96B"), AccountStyle.green],
+                                                     startPoint: .leading, endPoint: .trailing))
+                                .frame(width: geometry.size.width * progress)
+                        }
+                }
+                .frame(height: 6)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Kinh nghiệm")
+                .accessibilityValue("\(experience) trên \(maxExperience)")
+                Text("\(experience.formatted()) / \(maxExperience.formatted()) XP")
+                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .foregroundStyle(AccountStyle.muted)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+        }
+        .padding(12)
+        .modifier(AccountPanel())
+    }
+}
+
 struct LevelCircularBadge: View {
     let level: Int
     let progress: Double
-    var size: CGFloat = 46
+    var size: CGFloat = 50
 
     var body: some View {
         ZStack {
-            // Nền hình tròn màu trắng có đổ bóng
+            Circle().fill(AccountStyle.cream)
+            Circle().strokeBorder(AccountStyle.border, lineWidth: 2)
             Circle()
-                .fill(Color.white)
-                .shadow(color: Color.black.opacity(0.15), radius: 5, x: 0, y: 2)
-
-            // Vòng tròn nền (Track)
+                .inset(by: 4)
+                .stroke(AccountStyle.green.opacity(0.15), lineWidth: 3)
             Circle()
-                .stroke(Color.gray.opacity(0.18), lineWidth: 3.5)
-                .padding(3)
-
-            // Thanh tiến trình (%) level hình tròn
-            Circle()
-                .trim(from: 0.0, to: CGFloat(max(0.005, min(progress, 1.0))))
-                .stroke(
-                    LinearGradient(
-                        colors: [
-                            Color(hex: "34D399"), // Mint / emerald
-                            Color(hex: "059669")  // Dark emerald
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    style: StrokeStyle(lineWidth: 3.5, lineCap: .round)
-                )
+                .inset(by: 4)
+                .trim(from: 0, to: min(max(progress, 0), 1))
+                .stroke(AccountStyle.green, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .padding(3)
-                .animation(.spring(response: 0.45, dampingFraction: 0.8), value: progress)
-
-            // Trong cùng là số level
-            Text("\(level)")
-                .font(.system(size: level >= 1000 ? 11 : (level >= 100 ? 13 : 15), weight: .bold, design: .rounded))
-                .foregroundColor(Color(hex: "1F2937"))
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
-                .padding(6)
+            VStack(spacing: 0) {
+                Image(systemName: "leaf.fill")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(AccountStyle.green)
+                Text("\(level)")
+                    .font(.system(size: 17, weight: .heavy, design: .rounded))
+                    .foregroundStyle(AccountStyle.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+            .padding(9)
         }
         .frame(width: size, height: size)
-        .contentShape(Circle())
+        .compositingGroup()
+        .shadow(color: AccountStyle.border.opacity(0.7), radius: 0, y: 3)
     }
 }
 
-// MARK: - Touch Feedback Style
-private struct ScaleTouchButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
-            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
-    }
-}
-
-// MARK: - Resource Item Display
-private struct UserItemData: View {
-    let title: String
+private struct GardenResourceValue: View {
+    let name: String
     let image: String
+    let value: Int
+
+    private var compactValue: String {
+        for (threshold, suffix) in [(1_000_000_000.0, "b"), (1_000_000.0, "m"), (1_000.0, "k")] {
+            if Double(value) >= threshold {
+                return String(format: "%.1f%@", Double(value) / threshold, suffix)
+            }
+        }
+        return "\(value)"
+    }
 
     var body: some View {
-        VStack(alignment: .center, spacing: 4) {
+        VStack(spacing: 4) {
             Image(image)
                 .resizable()
-                .frame(width: 25, height: 25)
-                .padding(EdgeInsets(top: 4, leading: 0, bottom: 0, trailing: 0))
-
-            Text(title)
-                .textStyle(.caption1)
-                .bold()
+                .scaledToFit()
+                .frame(width: 23, height: 23)
+            Text(compactValue)
+                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(AccountStyle.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
         }
-        .foregroundColor(.black)
-        .padding(0)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 2)
+        .frame(minWidth: 0, maxWidth: .infinity)
+        .background(AccountStyle.green.opacity(0.07), in: RoundedRectangle(cornerRadius: 11))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(name): \(value.formatted())")
     }
 }
 
-#Preview("Collapsed (Default)") {
-    ZStack {
-        Color.gray.opacity(0.2).ignoresSafeArea()
-        VStack {
-            UserInfoCompoment()
-                .padding(.horizontal, 16)
-                .padding(.top, 40)
-            Spacer()
-        }
-    }
+#Preview("Thanh thông tin · 320pt") {
+    GardenStatusBar(level: 52, experience: 42_900, maxExperience: 104_000,
+                    oxygen: 272_100_000, gemstones: 799_900_000, fertilizer: 11_800,
+                    shovels: 32, tickets: 6_585_800_000, onCollapse: {}, onAccount: {})
+        .padding(16)
+        .frame(width: 320)
+        .background(Color(hex: "E9EED9"))
 }

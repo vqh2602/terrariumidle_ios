@@ -200,13 +200,6 @@ struct HomeView: View {
                         .allowsHitTesting(false)
 
                 }.frame(alignment: .leading)
-            }.overlay(alignment: .top) {
-                GeometryReader { geo in
-                    UserInfoCompoment()
-                        .padding(.top, geo.safeAreaInsets.top + 40)
-                        .padding(.horizontal)
-                }
-                .frame(height: 120)
             }
 
             .task {
@@ -223,7 +216,7 @@ struct HomeView: View {
           
 
             .navigationBarHidden(true) // Ẩn thanh navigation
-            .ignoresSafeArea(.all)
+            .ignoresSafeArea(.container, edges: isEdit ? [.top, .leading, .trailing] : .all)
             .onChange(of: isEdit) {oldValue, newValue in
                 // Clear drag state when disabling edit mode
                 if !newValue {
@@ -231,8 +224,26 @@ struct HomeView: View {
                 }
             }
 
-            SpeedDial(isEditing: $isEdit, backgroundRive: $backgroundRive, overlayRive: $overlayRive)
+            if !isEdit {
+                SpeedDial(isEditing: $isEdit, backgroundRive: $backgroundRive, overlayRive: $overlayRive)
+            }
         } // Full màn hình, bao gồm status bar
+        .overlay(alignment: .topLeading) {
+            UserInfoCompoment()
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if isEdit {
+                LayoutEditingPanel {
+                    isEdit = false
+                    draggedPlant = nil
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+                .padding(.bottom, 8)
+            }
+        }
         .onAppear {
             if !BackgroundAudioManager.shared.isPlaying {
                 BackgroundAudioManager.shared.startDefaultBGM()
