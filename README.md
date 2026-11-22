@@ -96,6 +96,7 @@ graph TD
         JSON_Landscapes[landscapes_data.json]
         JSON_Plants[plants_data.json]
         JSON_Pots[pots_data.json]
+        JSON_Stickers[stickers_data.json]
     end
 
     subgraph Service_Layer["4. Infrastructure & Backend Layer"]
@@ -137,7 +138,7 @@ terrariumidle_ios/
 │   │
 │   ├── Data/
 │   │   ├── Models/
-│   │   │   ├── ItemData.swift               # Model cấu hình động cho cây, chậu, effect, landscape
+│   │   │   ├── ItemData.swift               # Model cấu hình động cho cây, chậu, sticker, effect, landscape
 │   │   │   ├── GardenModel.swift            # Dữ liệu cây trồng, tiền tệ, cấp độ
 │   │   │   └── UserModel.swift
 │   │   └── Items/
@@ -145,6 +146,7 @@ terrariumidle_ios/
 │   │       ├── landscapes_data.json         # Cấu hình bầu trời & phong cảnh (Landscapes)
 │   │       ├── plants_data.json             # Danh sách cây cối & thuộc tính
 │   │       ├── pots_data.json               # Danh sách chậu cây
+│   │       ├── stickers_data.json           # Danh sách sticker & vật trang trí
 │   │       ├── music_data.json              # Danh sách nhạc nền BGM
 │   │       └── shop_items_data.json
 │   │
@@ -291,6 +293,55 @@ Tất cả cấu hình được đưa về các file JSON trong `Apps/Data/Items
 >   * `potBody` (`Pot15-5@4.167x`, `z = 50`): Bầu chậu sứ trắng che giấu cuống cây đứng (`none`), nằm sau cành lá rủ (`front`).
 >   * `frontLeftRope` (`Pot15-2@4.167x`, `z = 100`) & `frontRightRope` (`Pot15-3@4.167x`, `z = 100`): Dây treo trước vắt ngang **đè lên trên** cành lá cây.
 
+
+### Ví dụ cấu hình trong `stickers_data.json`:
+
+File [stickers_data.json](terrariumidle_ios/Apps/Data/Items/stickers_data.json) chứa một mảng các đối tượng sticker / vật trang trí. Ví dụ bản ghi `sticker1`:
+
+```json
+{
+    "id": "sticker1",
+    "name": "Sunshine doll",
+    "description": "Búp bê cầu nắng treo đung đưa theo gió, mang lại ngày nắng đẹp trời.",
+    "image": "sticker1-1@4.167x",
+    "priceStore": 30000,
+    "priceOxygen": 25000,
+    "currencyUnit": "oxygen",
+    "type": "sticker",
+    "effect": "",
+    "itemTypeAttribute": "hanging,front",
+    "levelUnlock": 50,
+    "effectDescription": "Mặt trời tỏa sáng & đung đưa theo gió",
+    "music": "",
+    "musicDescription": "",
+    "effectLandscape": "",
+    "effectLandscapeDescription": "",
+    "effectSfx": "sfx4",
+    "effectSfxDescription": "Tiếng gió"
+}
+```
+
+| Trường | Ý nghĩa |
+| --- | --- |
+| `id`, `name`, `description`, `image` | ID duy nhất, tên, mô tả và tên asset ảnh đại diện. |
+| `priceStore`, `priceOxygen`, `currencyUnit` | Giá cửa hàng, giá oxy và đơn vị tiền tệ. |
+| `type`, `levelUnlock` | Loại vật phẩm `"sticker"` và cấp độ mở khóa. |
+| `itemTypeAttribute` | Thuộc tính vị trí, hỗ trợ kết hợp nhiều cờ bằng dấu phẩy. |
+| `effect`, `effectDescription` | ID hiệu ứng overlay mở khóa và mô tả. |
+| `music`, `musicDescription` | ID nhạc nền BGM mở khóa và mô tả. |
+| `effectLandscape`, `effectLandscapeDescription` | ID phong cảnh nền mở khóa và mô tả. |
+| `effectSfx`, `effectSfxDescription` | ID âm thanh SFX môi trường mở khóa và mô tả. |
+
+**Thuộc tính `itemTypeAttribute` cho sticker:**
+
+- `"none"`: Sticker để bàn, căn đáy kệ (`alignment: .bottom`, `anchorPoint = (0.5, 0.0)`), ví dụ `sticker2`, `sticker4`.
+- `"front"`: Sticker phủ mặt trước kệ, ví dụ `sticker3`.
+- `"hanging"`: Sticker treo đỉnh kệ (`alignment: .top`, `anchorPoint = (0.5, 1.0)`).
+- `"hanging,front"`: Sticker treo phân lớp, ví dụ `sticker1` với dây treo, thân búp bê và ruy băng phía trước.
+
+Các trường mở khóa nhận danh sách ID phân tách bằng dấu phẩy; dùng chuỗi rỗng `""` khi không có mục mở khóa. `effectSfx` là âm thanh môi trường mở khóa, không phải âm thanh click. Hiệu ứng chuyển động (`motionEffect`) và hiệu ứng hạt khi chạm (`tapEffects`) được cấu hình trực tiếp trong `StickerXNode.swift`; không đưa hiệu ứng tap cục bộ vào trường `effect` của JSON.
+
+Chi tiết kiến trúc và hiệu ứng sticker: [STICKER_EFFECTS_README.md](terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Stickers/StickerEffects/STICKER_EFFECTS_README.md).
 
 ### Ví dụ cấu hình trong `effects_data.json`:
 ```json
