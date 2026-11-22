@@ -48,7 +48,7 @@ def generate_landscape1_scene():
     anchor_uid = root["_anchorPoint"].data
     objs[objs[anchor_uid]["NS.pointval"].data] = "{0.5, 0.5}"
 
-    def make_sprite(name, img_name, x, y, w, h, z_pos, alpha=1.0):
+    def make_sprite(name, img_name, x, y, w, h, z_pos, alpha=1.0, scale_x=1.0, scale_y=1.0):
         sp = copy.deepcopy(objs[19])
         sp["_name"] = add_obj(name)
 
@@ -63,6 +63,8 @@ def generate_landscape1_scene():
 
         sp["_zPosition"] = add_obj(float(z_pos))
         sp["_opacity"] = add_obj(float(alpha))
+        sp["_xScale"] = add_obj(float(scale_x))
+        sp["_yScale"] = add_obj(float(scale_y))
 
         tex = copy.deepcopy(objs[sp["_texture"].data])
         tex["_imgName"] = add_obj(img_name)
@@ -87,12 +89,12 @@ def generate_landscape1_scene():
     # 1. Nền phong cảnh
     bg_sprite_uid = make_sprite("bgNode", "bg1-1@4.167x", 0.0, 0.0, 1334.0, 1334.0, 0.0)
 
-    # 2. Mặt trời và các lớp hào quang
-    sun_aura4 = make_sprite("sunAura4", "sunbg1-6@4.167x", 0.0, 0.0, 680.0, 530.0, 11.0, 0.55)
-    sun_aura3 = make_sprite("sunAura3", "sunbg1-5@4.167x", 0.0, 0.0, 500.0, 440.0, 12.0, 0.70)
-    sun_aura2 = make_sprite("sunAura2", "sunbg1-4@4.167x", 0.0, 0.0, 340.0, 340.0, 13.0, 0.82)
-    sun_aura1 = make_sprite("sunAura1", "sunbg1-3@4.167x", 0.0, 0.0, 200.0, 200.0, 14.0, 0.90)
-    sun_core  = make_sprite("sunCore",  "sunbg1-2@4.167x", 0.0, 0.0, 120.0, 120.0, 15.0, 1.0)
+    # 2. Mặt trời và các lớp hào quang (Toạ độ chuẩn sau khi tinh chỉnh)
+    sun_aura4 = make_sprite("sunAura4", "sunbg1-6@4.167x",  31.5727,  22.0004, 680.0, 530.0, 11.0, 0.55)
+    sun_aura3 = make_sprite("sunAura3", "sunbg1-5@4.167x",  10.0001,  67.0005, 500.0, 440.0, 12.0, 0.70)
+    sun_aura2 = make_sprite("sunAura2", "sunbg1-4@4.167x",  -4.9997,  99.9996, 340.0, 340.0, 13.0, 0.82)
+    sun_aura1 = make_sprite("sunAura1", "sunbg1-3@4.167x", -18.8816, 151.7301, 200.0, 200.0, 14.0, 0.90)
+    sun_core  = make_sprite("sunCore",  "sunbg1-2@4.167x", -14.4003, 136.9997, 120.0, 120.0, 15.0, 1.0, 2.0, 2.0)
 
     sun_group_uid = make_group_node("sunGroup", 140.0, 380.0, 10.0, [
         sun_aura4, sun_aura3, sun_aura2, sun_aura1, sun_core
