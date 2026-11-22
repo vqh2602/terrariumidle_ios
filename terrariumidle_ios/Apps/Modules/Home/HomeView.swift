@@ -56,7 +56,7 @@ struct HomeView: View {
 
     @State private var isEdit: Bool = false
     @State private var draggedPlant: DraggedPlantData? = nil
-    @State var backgroundRive: String = "sky_sun_day"
+    @State var backgroundRive: String = "i_sky_sun_day"
     @State var overlayRive: String? = nil
 
     init() {
@@ -71,7 +71,7 @@ struct HomeView: View {
             unlockedIds.contains($0.id)
         }
         if !unlockedLandscapes.isEmpty {
-            backgroundRive = unlockedLandscapes.randomElement()?.image ?? "sky_sun_day"
+            backgroundRive = unlockedLandscapes.randomElement()?.image ?? "i_sky_sun_day"
         }
 
         // Auto-select overlay effect (sử dụng custom SpriteKit cho tất cả các overlay)

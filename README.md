@@ -220,9 +220,18 @@ flowchart LR
    - Cho phép truyền từ **1 đến 6 ảnh PNG tùy ý** hoặc tự sinh texture vector.
    - Luôn đặt `.allowsHitTesting(false)` để chạm xuyên qua đến các nút bấm và cây bên dưới.
 
-3. **Backgrounds (Bầu trời động)**:
-   - Tự động vẽ dải màu chuyển (`Gradient`) từ mảng mã màu Hex trong JSON.
-   - Thêm các đối tượng động: Mặt trời, hoàng hôn, mây trôi tự nhiên theo gió, mặt trăng khuyết/tròn, bầu trời đầy sao lấp lánh, vệt sao băng, hạt mưa rơi tí tách.
+3. **Backgrounds & Landscapes (Phong cảnh & Bầu trời nền SpriteKit)**:
+   - **Mô hình Kiến trúc Lai SpriteKit cho Phong cảnh (LẤY LANDSCAPE1 LÀM CHUẨN)**:
+     - Tương tự như Cây (`Plant1`) và Chậu (`Pot1`), mỗi phong cảnh chuyên biệt (`Landscape1`, `Landscape2`, ...) sở hữu bộ 3 file cấu trúc chuẩn:
+       * `Landscape1Scene.sks` (Thiết kế trực quan trong Xcode Scene Editor): Canvas kích thước chuẩn, bố trí các layer nền (`bgNode`), cụm vầng hào quang mặt trời (`sunGroup`), và các lớp mây trôi (`cloudsGroup`) với toạ độ, kích thước và `zPosition` chính xác.
+       * `Landscape1Node.swift` (Lập trình Logic & Hoạt ảnh Chuyển động): Nạp node trực quan từ `.sks` qua `loadSceneTemplate()`, gắn hiệu ứng mây trôi dạt vô tận (`startInfiniteDriftAnimation`), vầng sáng mặt trời phập phồng quang học (`startSunPulseAnimation`), phản hồi chạm tap (`playTapAnimation`), kèm cơ chế Procedural Fallback phòng trường hợp scene chưa sẵn sàng.
+       * `Landscape1View.swift`: View xem trước độc lập bọc SwiftUI `#Preview`.
+       * `LandscapeFactory.swift`: Factory quản lý khởi tạo dynamic theo `id` hoặc `image` từ JSON.
+   - **Cơ chế Dựng cảnh Thủ tục (Procedural Fallback) từ JSON**:
+     - Với các phong cảnh chưa có file `.sks` riêng (`landscape2` -> `landscape7`), `SpriteKitBackgroundScene` tự động dựng cảnh 100% từ thuộc tính JSON:
+       * Tự động vẽ dải màu chuyển (`skyGradient`: mảng mã màu Hex, ví dụ hoàng hôn `["#8C478C", "#EB7352", "#FAC773"]`, đêm muộn `["#080A1A", "#141A38", "#242E52"]`).
+       * Sinh các thành phần chuyển động theo mảng `elements`: Mặt trời (`sun`, `sun_sunset`), Mây trôi (`clouds`, `clouds_sunset`, `clouds_dark`, `clouds_night`), Hạt mưa rơi tí tách (`rain` qua emitter `Rain.sks`), Mặt trăng (`moon_crescent`, `moon_full`), Bầu trời sao lấp lánh (`stars`, `stars_dense`, `shooting_stars`).
+   - **Tối ưu hiển thị**: Scene luôn đặt `anchorPoint = .zero`, `backgroundColor = .clear`, `.allowsHitTesting(false)` trong nền chính để chạm xuyên qua đến kệ vườn.
 
 4. **Pots (Chậu tương tác)**:
    - Chậu đổ bóng mềm, nảy lò xo khi nhấn (`spring compression`). Phản hồi đồng bộ cùng cây khi người chơi tap vào màn hình.
@@ -363,17 +372,90 @@ Chi tiết kiến trúc và hiệu ứng sticker: [STICKER_EFFECTS_README.md](te
 ```
 
 ### Ví dụ cấu hình trong `landscapes_data.json`:
+
+File [landscapes_data.json](terrariumidle_ios/Apps/Data/Items/landscapes_data.json) quản lý danh sách phong cảnh nền ban công (Landscapes). Hệ thống hỗ trợ 2 cơ chế: **Phong cảnh chuyên biệt theo Kiến trúc Lai SpriteKit** (`Landscape1Scene.sks` + `Landscape1Node.swift`) và **Phong cảnh Procedural tự động sinh từ JSON** (`skyGradient` + `elements`).
+
+#### 1. Bản ghi phong cảnh chuyên biệt (Lấy `landscape1` làm chuẩn):
 ```json
 {
-    "id": "landscape3",
-    "name": "Ban công mưa bão",
-    "image": "sky_rain",
-    "sksFile": "Rain.sks",
-    "skyGradient": ["#47576B", "#738594", "#99A6B3"],
-    "elements": ["clouds_dark", "rain"],
-    "type": "landscape"
+    "id": "landscape1",
+    "name": "Ban công quang đãng",
+    "description": "Bầu trời ban ngày quang đãng, mây trắng bồng bềnh",
+    "image": "i_sky_sun_day",
+    "sksFile": "Landscape1Scene.sks",
+    "priceStore": 0,
+    "priceOxygen": 0,
+    "currencyUnit": "",
+    "type": "landscape",
+    "effect": "Ban công quang đãng",
+    "itemTypeAttribute": "none",
+    "levelUnlock": 0
 }
 ```
+
+#### 2. Bản ghi phong cảnh Procedural tự sinh (ví dụ `landscape2`):
+```json
+{
+    "id": "landscape2",
+    "name": "Ban công chiều tà",
+    "description": "Hoàng hôn buông xuống rực rỡ sắc cam tím",
+    "image": "i_sky_sun_set",
+    "sksFile": "BackgroundScene.sks",
+    "skyGradient": ["#8C478C", "#EB7352", "#FAC773"],
+    "elements": ["sun_sunset", "clouds_sunset"],
+    "priceStore": 0,
+    "priceOxygen": 0,
+    "currencyUnit": "",
+    "type": "landscape",
+    "effect": "Ban công chiều tà",
+    "itemTypeAttribute": "none",
+    "levelUnlock": 0
+}
+```
+
+#### Bảng chi tiết các trường dữ liệu:
+
+| Trường | Kiểu dữ liệu | Bắt buộc | Ý nghĩa & Mô tả |
+| --- | --- | --- | --- |
+| `id` | `String` | **Có** | ID định danh duy nhất (ví dụ `"landscape1"`, `"landscape2"`, ...). |
+| `name` | `String` | **Có** | Tên hiển thị của phong cảnh trên giao diện chọn lựa (`EffectsSheetView`). |
+| `description` | `String` | Không | Mô tả ngắn về ngữ cảnh, thời tiết hoặc sắc thái của phong cảnh. |
+| `image` | `String` | **Có** | **Quy chuẩn Asset Thumbnail (Lấy `landscape1` làm chuẩn)**: Tên asset ảnh đại diện trong `Assets.xcassets/Images/effect/` (ví dụ `"i_sky_sun_day"`, `"i_sky_sun_set"`, `"i_sky_rain"`, `"i_sky_moon_night"`, `"i_sky_moon_star"`, `"i_landscape6"`, `"i_landscape7"`). **Bắt buộc có tiền tố `i_`** để khớp 100% tên file asset thực tế và tránh lỗi không hiển thị được ảnh (broken image). |
+| `sksFile` | `String` | Không | Tên file Scene Editor SpriteKit (ví dụ `"Landscape1Scene.sks"`, `"BackgroundScene.sks"`, `"Rain.sks"`). |
+| `skyGradient` | `[String]` | Không | Mảng mã màu Hex tạo dải chuyển màu nền trời từ trên xuống dưới (chỉ áp dụng cho procedural landscapes). |
+| `elements` | `[String]` | Không | Danh sách các đối tượng động tự sinh: `"sun"`, `"sun_sunset"`, `"clouds"`, `"clouds_sunset"`, `"clouds_dark"`, `"clouds_night"`, `"rain"`, `"moon_crescent"`, `"moon_full"`, `"stars"`, `"stars_dense"`, `"shooting_stars"`. |
+| `priceStore` | `Int` | **Có** | Giá mua tại cửa hàng (bằng Gemstone hoặc đơn vị tương ứng). |
+| `priceOxygen` | `Int` | **Có** | Giá mua bằng điểm Oxy tích lũy. |
+| `currencyUnit` | `String` | Không | Đơn vị tiền tệ hiển thị (ví dụ `""`, `"gemstone"`, `"oxygen"`). |
+| `type` | `String` | **Có** | Luôn mang giá trị `"landscape"`. |
+| `effect` | `String` | Không | Tên hiệu ứng mô tả đi kèm (tương thích ngược). |
+| `itemTypeAttribute` | `String` | Không | Thuộc tính vị trí hiển thị (mặc định `"none"`). |
+| `levelUnlock` | `Int` | **Có** | Cấp độ tài khoản yêu cầu để mở khóa (mặc định `0` = mở khóa sẵn). |
+
+> **Quy chuẩn Quản lý Asset & Cơ chế Mở khóa Phong cảnh:**
+> 1. **Quy chuẩn Asset Thumbnail `image`**:
+>    - Luôn lấy `landscape1` làm chuẩn: `"image": "i_sky_sun_day"`.
+>    - Mọi phong cảnh (`landscape1` -> `landscape7`) đều sử dụng asset ảnh đại diện có tiền tố `i_` nằm trong `Assets.xcassets/Images/effect/`:
+>      * `landscape1`: `"image": "i_sky_sun_day"` (Ban công quang đãng)
+>      * `landscape2`: `"image": "i_sky_sun_set"` (Ban công chiều tà)
+>      * `landscape3`: `"image": "i_sky_rain"` (Ban công mưa bão)
+>      * `landscape4`: `"image": "i_sky_moon_night"` (Ban công trời sao)
+>      * `landscape5`: `"image": "i_sky_moon_star"` (Đêm muộn trời sao)
+>      * `landscape6`: `"image": "i_landscape6"` (Minamoto no Yuuhi)
+>      * `landscape7`: `"image": "i_landscape7"` (Thần Sơn Huyễn Cảnh)
+>    - Thành phần `EffectsSheetView` được tích hợp cơ chế tự động phân giải tên asset linh hoạt, xử lý an toàn cả khi có hoặc thiếu tiền tố `i_`, đảm bảo không bao giờ xảy ra lỗi ảnh rỗng.
+> 2. **Cấu trúc Asset cho Phong cảnh chuyên biệt (`Landscape1`)**:
+>    - Thư mục: `Assets.xcassets/Landscapes/landscape1/`.
+>    - Nền: `bg1-1@4.167x`.
+>    - Mặt trời & Hào quang: `sunbg1-2@4.167x` (Lõi mặt trời) và `sunbg1-3@4.167x` -> `sunbg1-6@4.167x` (Các tầng hào quang tỏa sáng).
+>    - Mây trôi: `Cloudbg1-1@4.167x` -> `Cloudbg1-8@4.167x` (8 đám mây với kích thước và độ mờ phân lớp).
+> 3. **Cơ chế Mở khóa Phong cảnh qua Vật phẩm**:
+>    - Các loài Cây (`plants_data.json`), Chậu cây (`pots_data.json`) hoặc Sticker (`stickers_data.json`) có thể mở khóa phong cảnh kèm theo qua trường:
+>      ```json
+>      "effectLandscape": "landscape1,landscape4",
+>      "effectLandscapeDescription": "Ban công quang đãng & Ban công trời sao"
+>      ```
+>    - `MusicUnlockHelper.swift` tự động tổng hợp danh sách ID phong cảnh đã mở khóa từ khu vườn của người chơi để hiển thị trong sheet chọn phong cảnh `EffectsSheetView`.
 
 ---
 

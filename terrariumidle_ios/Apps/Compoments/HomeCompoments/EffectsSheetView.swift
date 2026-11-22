@@ -41,9 +41,13 @@ struct EffectsSheetView: View {
                         VStack(spacing: 12) {
                             ForEach(landscapes) { item in
                                 let isLocked = !unlockedIds.contains(item.id)
+                                let isSelected = selectedLandscapeId == item.image ||
+                                                 selectedLandscapeId == item.id ||
+                                                 (!selectedLandscapeId.isEmpty && selectedLandscapeId.hasPrefix("i_") && String(selectedLandscapeId.dropFirst(2)) == item.image) ||
+                                                 (!selectedLandscapeId.isEmpty && item.image.hasPrefix("i_") && selectedLandscapeId == String(item.image.dropFirst(2)))
                                 EffectCardView(
                                     item: item,
-                                    isSelected: selectedLandscapeId == item.image,
+                                    isSelected: isSelected,
                                     isLocked: isLocked,
                                     onTap: {
                                         guard !isLocked else { return }
@@ -62,9 +66,13 @@ struct EffectsSheetView: View {
                         VStack(spacing: 12) {
                             ForEach(effects) { item in
                                 let isLocked = !unlockedIds.contains(item.id)
+                                let isSelected = selectedEffectId == item.image ||
+                                                 selectedEffectId == item.id ||
+                                                 (!selectedEffectId.isEmpty && selectedEffectId.hasPrefix("i_") && String(selectedEffectId.dropFirst(2)) == item.image) ||
+                                                 (!selectedEffectId.isEmpty && item.image.hasPrefix("i_") && selectedEffectId == String(item.image.dropFirst(2)))
                                 EffectCardView(
                                     item: item,
-                                    isSelected: selectedEffectId == item.image,
+                                    isSelected: isSelected,
                                     isLocked: isLocked,
                                     onTap: {
                                         guard !isLocked else { return }
@@ -125,12 +133,33 @@ private struct EffectCardView: View {
     let isLocked: Bool
     let onTap: () -> Void
 
+    /// Tên asset thumbnail: Tự động phát hiện asset thật, hỗ trợ cả trường hợp có hoặc chưa có tiền tố "i_"
+    private var thumbnailImageName: String {
+        // 1. Thử trực tiếp tên item.image (ví dụ "i_sky_sun_day", "i_overlay1")
+        if UIImage(named: item.image) != nil {
+            return item.image
+        }
+        // 2. Thử thêm tiền tố "i_" nếu chưa có (ví dụ "sky_sun_day" -> "i_sky_sun_day", "overlay1" -> "i_overlay1")
+        let prefixed = item.image.hasPrefix("i_") ? item.image : "i_\(item.image)"
+        if UIImage(named: prefixed) != nil {
+            return prefixed
+        }
+        // 3. Thử bỏ tiền tố "i_" nếu có
+        if item.image.hasPrefix("i_") {
+            let stripped = String(item.image.dropFirst(2))
+            if UIImage(named: stripped) != nil {
+                return stripped
+            }
+        }
+        return item.image
+    }
+
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
                 // Thumbnail image
                 ZStack {
-                    Image("i_\(item.image)")
+                    Image(thumbnailImageName)
                         .resizable()
                         .aspectRatio(16 / 9, contentMode: .fill)
                         .frame(width: 120, height: 68)

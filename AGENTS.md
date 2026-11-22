@@ -277,6 +277,18 @@ Tương tự như `Pots` và `Plants`, mọi Phong cảnh nền (`Landscape1`, `
    - `z = 20`: `cloudsGroup` (8 cụm mây `Cloudbg1-1` -> `Cloudbg1-8`): Trôi Parallax nhiều tầng vận tốc, tự động wrap vòng quanh màn hình.
    - `z = 35`: Hiệu ứng hạt bụi nắng / lấp lánh (Sparkle particles) sinh ra khi tương tác chạm tap.
 
+3. **Quy chuẩn Asset Thumbnail & `landscapes_data.json` (`Landscape1` làm chuẩn)**:
+   - Trường `"image"` trong `landscapes_data.json` **BẮT BUỘC** lấy `landscape1` làm chuẩn: `"image": "i_sky_sun_day"`.
+   - Mọi phong cảnh (`landscape1` -> `landscape7`) đều sử dụng tên asset thumbnail có tiền tố `i_` trong `Assets.xcassets/Images/effect/`:
+     * `landscape1`: `"image": "i_sky_sun_day"`
+     * `landscape2`: `"image": "i_sky_sun_set"`
+     * `landscape3`: `"image": "i_sky_rain"`
+     * `landscape4`: `"image": "i_sky_moon_night"`
+     * `landscape5`: `"image": "i_sky_moon_star"`
+     * `landscape6`: `"image": "i_landscape6"`
+     * `landscape7`: `"image": "i_landscape7"`
+   - Tuyệt đối không đặt tên thiếu `i_` để tránh lỗi hình ảnh (broken image) khi render trong `EffectsSheetView`.
+
 ## Quy chuẩn Sticker & Vật trang trí SpriteKit (Sticker Architecture & stickers_data.json Convention)
 
 Mọi Sticker / Vật trang trí (`Sticker1`, `Sticker2`, ...) tuân thủ mô hình Kiến trúc Lai SpriteKit:
