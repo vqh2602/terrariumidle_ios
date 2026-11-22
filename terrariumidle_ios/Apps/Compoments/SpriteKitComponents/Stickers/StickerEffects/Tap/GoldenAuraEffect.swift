@@ -19,32 +19,43 @@ public final class GoldenAuraEffect: StickerTapEffect {
         let rig = SKNode()
         rig.zPosition = 200
 
-        let origin: CGPoint
+        let dollSprite = targetNode as? SKSpriteNode
+        let dollW = dollSprite?.size.width ?? 75.0
+        let dollH = dollSprite?.size.height ?? 170.0
+
+        let dollOrigin: CGPoint
         if let parent = targetNode.parent {
-            origin = parent.convert(targetNode.position, to: containerNode)
+            dollOrigin = parent.convert(targetNode.position, to: containerNode)
         } else {
-            origin = targetNode.position
+            dollOrigin = targetNode.position
         }
-        rig.position = CGPoint(x: origin.x, y: origin.y - (isHanging ? 85.0 : -35.0))
+
+        let originY = isHanging ? (dollOrigin.y - dollH * 0.16) : (dollOrigin.y + dollH * 0.72)
+        rig.position = CGPoint(x: dollOrigin.x, y: originY)
         containerNode.addChild(rig)
 
+        let sceneW = targetNode.scene?.size.width ?? (dollW * 1.5)
+        let sceneH = targetNode.scene?.size.height ?? (dollH * 1.3)
+        let safeRadius = max(28.0, min(sceneW * 0.34, sceneH * 0.22, 46.0))
+
+        let baseR = safeRadius * 0.42
         for ringIndex in 0..<3 {
-            let ring = SKShapeNode(circleOfRadius: 28.0 + CGFloat(ringIndex) * 8.0)
+            let ring = SKShapeNode(circleOfRadius: baseR + CGFloat(ringIndex) * 5.0)
             ring.strokeColor = UIColor(red: 1.0, green: 0.85, blue: 0.30, alpha: 0.75)
-            ring.fillColor = UIColor(red: 1.0, green: 0.92, blue: 0.50, alpha: 0.15)
-            ring.lineWidth = 1.8
+            ring.fillColor = UIColor(red: 1.0, green: 0.92, blue: 0.50, alpha: 0.12)
+            ring.lineWidth = 1.4
             ring.setScale(0.3)
             ring.alpha = 0.0
             rig.addChild(ring)
 
-            let delay = Double(ringIndex) * 0.12
+            let delay = Double(ringIndex) * 0.10
             let expand = SKAction.sequence([
                 SKAction.wait(forDuration: delay),
                 SKAction.group([
-                    SKAction.scale(to: 1.8, duration: 0.75),
+                    SKAction.scale(to: 1.45, duration: 0.65),
                     SKAction.sequence([
-                        SKAction.fadeAlpha(to: 0.8, duration: 0.2),
-                        SKAction.fadeOut(withDuration: 0.55)
+                        SKAction.fadeAlpha(to: 0.75, duration: 0.18),
+                        SKAction.fadeOut(withDuration: 0.47)
                     ])
                 ])
             ])
@@ -52,7 +63,7 @@ public final class GoldenAuraEffect: StickerTapEffect {
         }
 
         rig.run(SKAction.sequence([
-            SKAction.wait(forDuration: 1.2),
+            SKAction.wait(forDuration: 1.1),
             SKAction.removeFromParent()
         ]))
     }

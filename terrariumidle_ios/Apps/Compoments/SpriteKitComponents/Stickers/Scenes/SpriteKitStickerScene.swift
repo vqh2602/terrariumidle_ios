@@ -16,6 +16,7 @@ public final class SpriteKitStickerScene: SKScene {
     private var customStickerInteractive: StickerInteractiveNode?
     private var stickerId: String = "sticker1"
     private var isHanging: Bool = true
+    private var slotSize: CGSize = .zero
     public var onTap: (() -> Void)?
 
     // MARK: - Initializer
@@ -43,11 +44,16 @@ public final class SpriteKitStickerScene: SKScene {
 
     // MARK: - Configuration
 
-    public func configure(stickerId: String, isHanging: Bool = true) {
+    public func configure(stickerId: String, isHanging: Bool = true, slotSize: CGSize = .zero) {
         let cleanId = stickerId.lowercased().trimmingCharacters(in: .whitespaces)
-        let changed = self.stickerId != cleanId || self.isHanging != isHanging
+        let changed = self.stickerId != cleanId ||
+                      self.isHanging != isHanging ||
+                      abs(self.slotSize.width - slotSize.width) > 1 ||
+                      abs(self.slotSize.height - slotSize.height) > 1
+
         self.stickerId = cleanId
         self.isHanging = isHanging
+        self.slotSize = slotSize
 
         anchorPoint = CGPoint(x: 0.5, y: isHanging ? 1.0 : 0.0)
 
@@ -82,9 +88,12 @@ public final class SpriteKitStickerScene: SKScene {
         removeAllChildren()
         customStickerInteractive = nil
 
+        let baseW = slotSize.width > 0 ? slotSize.width : size.width
+        let baseH = slotSize.height > 0 ? slotSize.height : size.height
+
         let sticker = StickerFactory.createSticker(
             id: stickerId,
-            containerSize: size,
+            containerSize: CGSize(width: baseW, height: baseH),
             isHanging: isHanging
         )
 

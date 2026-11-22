@@ -18,8 +18,8 @@ public struct Sticker1View: View {
 
     public init(
         isHanging: Bool = true,
-        width: CGFloat = 120,
-        height: CGFloat = 180,
+        width: CGFloat = 100,
+        height: CGFloat = 150,
         onTap: (() -> Void)? = nil
     ) {
         self.isHanging = isHanging
@@ -58,17 +58,17 @@ private struct Sticker1InteractiveDemoView: View {
             ZStack(alignment: .top) {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color(UIColor.secondarySystemBackground))
-                    .frame(width: 220, height: 280)
+                    .frame(width: 180, height: 230)
 
                 Sticker1View(
                     isHanging: true,
-                    width: 140,
-                    height: 250,
+                    width: 110,
+                    height: 160,
                     onTap: {
                         tapCount += 1
                     }
                 )
-                .padding(.top, 12)
+                .padding(.top, 16)
             }
 
             VStack(spacing: 8) {

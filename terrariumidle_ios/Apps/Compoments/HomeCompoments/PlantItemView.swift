@@ -97,14 +97,15 @@ struct PlantItemView: View {
                 // STICKER LAYOUT
                 let stickerId = plantData?.idPot ?? plantData?.idPlant ?? "sticker1"
                 if isHanging {
-                    // Sticker treo - hiển thị với SpriteKitStickerView (hoặc fallback SpriteKitPotView)
+                    // Sticker treo - hiển thị nhỏ gọn, thanh thoát với SpriteKitStickerView (hoặc fallback SpriteKitPotView)
+                    let stickerH = min(slotHeight * 0.58, itemWidth * 1.15)
                     ZStack(alignment: .top) {
                         if StickerAvailability.isAvailable(stickerId: stickerId) {
                             SpriteKitStickerView(
                                 stickerId: stickerId,
                                 isHanging: true,
-                                width: itemWidth * 1.0,
-                                height: itemWidth + itemWidth * 0.2,
+                                width: itemWidth * 0.90,
+                                height: stickerH,
                                 onTap: {
                                     handleDetailTap()
                                 }
@@ -114,8 +115,8 @@ struct PlantItemView: View {
                             SpriteKitPotView(
                                 potId: stickerId,
                                 isHanging: true,
-                                width: itemWidth * 1.0,
-                                height: itemWidth + itemWidth * 0.2,
+                                width: itemWidth * 0.90,
+                                height: stickerH,
                                 onTap: {
                                     handleDetailTap()
                                 }
@@ -125,14 +126,14 @@ struct PlantItemView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 } else {
-                    // Sticker không treo - chiều cao 155
+                    // Sticker không treo - chiều cao 135
                     VStack(spacing: 0) {
                         if StickerAvailability.isAvailable(stickerId: stickerId) {
                             SpriteKitStickerView(
                                 stickerId: stickerId,
                                 isHanging: false,
                                 width: itemWidth,
-                                height: 155,
+                                height: 135,
                                 onTap: {
                                     handleDetailTap()
                                 }
@@ -142,7 +143,7 @@ struct PlantItemView: View {
                                 potId: stickerId,
                                 isHanging: false,
                                 width: itemWidth,
-                                height: 155,
+                                height: 135,
                                 onTap: {
                                     handleDetailTap()
                                 }

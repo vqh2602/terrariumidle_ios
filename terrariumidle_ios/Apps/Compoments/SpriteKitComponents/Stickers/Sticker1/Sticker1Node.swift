@@ -102,12 +102,18 @@ public final class Sticker1Node: SKNode, StickerInteractiveNode {
         let baseCanvasH: CGFloat = 375.0
         let aspect: CGFloat = baseCanvasH / baseCanvasW
 
-        let targetH = containerSize.height * 0.98
+        // Búp bê cầu nắng là vật phẩm trang trí nhỏ gọn treo trên kệ,
+        // chiếm khoảng 65% chiều cao khung treo để tạo kích thước nhỏ nhắn, thanh thoát,
+        // không che khuất hay lấn át các cây trồng và chậu xung quanh.
+        let fitRatio: CGFloat = isHanging ? 0.65 : 0.75
+        let targetH = containerSize.height * fitRatio
         let naturalW = targetH / aspect
-        let targetW = min(naturalW, containerSize.width * 0.96)
+        let targetW = min(naturalW, containerSize.width * 0.85)
 
-        let scaleX = targetW / baseCanvasW
-        let scaleY = targetH / baseCanvasH
+        // Tính tỷ lệ đồng nhất (uniform scale) giữ nguyên hình dạng nguyên bản, không méo tỷ lệ
+        let uniformScale = min(targetW / naturalW, 1.0) * (targetH / baseCanvasH)
+        let scaleX = uniformScale
+        let scaleY = uniformScale
 
         // 1. ƯU TIÊN KIẾN TRÚC LAI: Nạp các node từ file trực quan Sticker1Scene.sks
         if let scene = loadSceneTemplate() {

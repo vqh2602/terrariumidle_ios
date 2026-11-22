@@ -245,12 +245,51 @@ Tương tự như `Pots` và `Plants`, mọi Phong cảnh nền (`Landscape1`, `
    - `z = 20`: `cloudsGroup` (8 cụm mây `Cloudbg1-1` -> `Cloudbg1-8`): Trôi Parallax nhiều tầng vận tốc, tự động wrap vòng quanh màn hình.
    - `z = 35`: Hiệu ứng hạt bụi nắng / lấp lánh (Sparkle particles) sinh ra khi tương tác chạm tap.
 
+## Quy chuẩn Sticker & Vật trang trí SpriteKit (Sticker Architecture & stickers_data.json Convention)
+
+Mọi Sticker / Vật trang trí (`Sticker1`, `Sticker2`, ...) tuân thủ mô hình Kiến trúc Lai SpriteKit:
+1. **Cấu trúc bộ 3 file & thư mục (`Sticker1` làm chuẩn)**:
+   - `StickerXScene.sks` (Thiết kế trực quan trong Xcode Scene Editor): Canvas $122 \times 375$, `anchorPoint = (0.5, 1.0)` cho sticker treo (`isHanging = true`), hoặc `anchorPoint = (0.5, 0.0)` cho sticker để bàn (`isHanging = false`).
+   - `StickerXNode.swift`: Kế thừa `SKNode` và tuân thủ `StickerInteractiveNode`, ưu tiên nạp từ file `.sks` kèm Fallback code procedural an toàn.
+   - `StickerXView.swift`: View SwiftUI xem trước độc lập kèm `#Preview`.
+   - Đăng ký khởi tạo qua `StickerFactory.createSticker(id:containerSize:isHanging:)` và `StickerAvailability.supportedStickerIds`.
+
+2. **Quy chuẩn Quản lý Hiệu ứng Sticker (Sticker Tap & Motion Effects Convention)**:
+   - Tách biệt rõ ràng 2 hệ thống độc lập đặt trong 2 thư mục: **`StickerEffects/Motion/` (`StickerMotionEffect`)** và **`StickerEffects/Tap/` (`StickerTapEffect`)**.
+   - Hiệu ứng chuyển động cành lá/dây/ruy băng quản lý qua:
+     ```swift
+     public var motionEffect: StickerMotionEffect = WindSwayStickerMotionEffect()
+     ```
+     * `WindSwayStickerMotionEffect` (Mặc định: **Sticker1**): Đung đưa tự nhiên nhịp gió nhàn rỗi (`zRotation: ±0.048 rad`, trôi nổi Y `±2.2pt`), khi chạm tăng nhịp mạnh `0.160 rad` (~9.2°) rồi dịu dần về nhịp gió tự nhiên.
+     * `ElasticSwingStickerMotionEffect`: Con lắc đàn hồi quanh móc treo tần số cao + nhún nảy nén trục Y.
+     * `StandardBounceStickerMotionEffect`: Nén nảy Squash & Stretch cho sticker để bàn/dán tường.
+     * `SubtleFlutterStickerMotionEffect`: Rung rinh bay bổng vi mô.
+   - Hiệu ứng hạt thị giác quản lý qua:
+     ```swift
+     public var tapEffects: [StickerTapEffect] = [SunRadianceEffect(), SparkleBurstStickerEffect()]
+     ```
+     * `SunRadianceEffect`: Vầng hào quang bung tỏa (`halo`), mặt trời vàng mặt cười tươi rói, 12 tia nắng xoay tròn và 14 ngôi sao nắng bung lượn lấp lánh (Mặc định: **Sticker1**).
+     * `SparkleBurstStickerEffect`: Chùm sao vàng & bạc bung tỏa 360°.
+     * `RainbowGlowEffect`: Vệt cầu vồng tươi sáng sau mưa.
+     * `GoldenAuraEffect`: Vòng hào quang vàng kim đồng tâm.
+   - Chi tiết tra cứu tại `StickerEffects/STICKER_EFFECTS_README.md`.
+
+3. **Cấu hình Dữ liệu JSON `stickers_data.json`**:
+   - Quản lý danh mục trong [stickers_data.json](file:///Users/vuongquanghuy/code/prj_ios/terrariumidle_ios/terrariumidle_ios/Apps/Data/Items/stickers_data.json).
+   - Các trường dữ liệu chính: `id`, `name`, `description`, `image`, `priceStore`, `priceOxygen`, `currencyUnit`, `type` (`"sticker"`), `itemTypeAttribute`, `levelUnlock`, `effect`, `effectDescription`, `music`, `musicDescription`, `effectLandscape`, `effectLandscapeDescription`, `effectSfx`, `effectSfxDescription`.
+   - **Quy chuẩn `itemTypeAttribute`**:
+     * `"hanging"`: Sticker treo đỉnh kệ (`alignment: .top`, `anchorPoint = (0.5, 1.0)`).
+     * `"hanging,front"`: Sticker treo phân lớp đa thành phần (Dây treo z=5, Thân búp bê z=10, Ruy băng trước z=20 như `sticker1`).
+     * `"none"`: Sticker để bàn (`alignment: .bottom`, `anchorPoint = (0.5, 0.0)` như `sticker2`, `sticker3`, `sticker4`).
+     * `"front"`: Sticker phủ mặt trước kệ.
+   - **Vùng đệm an toàn chống cắt mép (Anti-Clipping Buffer)**: `SpriteKitStickerView` mở rộng biên render `overflowRatioX: 0.22`, `overflowRatioY: 0.15` và khống chế bán kính hào quang trong `safeRadius` để hiệu ứng mặt trời không bao giờ bị cắt mép.
+
 ## Quy chuẩn Cấu hình Dữ liệu JSON Mới & Âm Thanh Chạm (Data Schema & Audio Convention)
 
 ### 1. Phân định rõ giữa Code Node SpriteKit và File JSON
-- **Hiệu ứng Tap hạt / hoạt ảnh chậu & cây (`tapEffects: [PotTapEffect]`, `[PlantTapEffect]`)**:
-  * BẮT BUỘC cấu hình trực tiếp bên trong file Node (`PlantXNode.swift`, `PotXNode.swift`).
-  * **TUYỆT ĐỐI KHÔNG** đưa các hiệu ứng tap cục bộ (bong bóng oxy, đá lấp lánh, trái tim nhịp đập, v.v.) vào trường `effect` của JSON.
+- **Hiệu ứng Tap hạt / hoạt ảnh chậu, cây & sticker (`tapEffects: [PotTapEffect]`, `[PlantTapEffect]`, `[StickerTapEffect]`)**:
+  * BẮT BUỘC cấu hình trực tiếp bên trong file Node (`PlantXNode.swift`, `PotXNode.swift`, `StickerXNode.swift`).
+  * **TUYỆT ĐỐI KHÔNG** đưa các hiệu ứng tap cục bộ (bong bóng oxy, đá lấp lánh, mặt trời tỏa sáng, trái tim nhịp đập, v.v.) vào trường `effect` của JSON.
 - **Trường dữ liệu JSON (`plants_data.json`, `pots_data.json`, `stickers_data.json`)**:
   * Quản lý độc lập âm thanh tap click và các item mở khóa khi trồng:
     - `sound`: Âm thanh khi click vào cây, mặc định `"tap"` (chỉ áp dụng với `plants_data.json`).

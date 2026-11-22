@@ -14,6 +14,8 @@ import UIKit
 ///   2. **Mặt trời vàng rạng rỡ (Smiling Sun Core)**: Mặt trời tròn vàng óng với khuôn mặt cười tươi hạnh phúc và hai má hồng đáng yêu.
 ///   3. **12 Tia nắng tỏa rực (12 Rotating Sunbeams)**: Các tia sáng dài ngắn so le tỏa ra xung quanh, xoay đều nhẹ nhàng như bánh xe ánh sáng.
 ///   4. **Bụi nắng lấp lánh (Solar Sparkle Glints)**: Chùm sao vàng 4 cánh bung tỏa bay bổng lơ lửng rồi tan dần vào không trung.
+/// - **Quy chuẩn chống cắt biên (Anti-Clipping)**: Tự động tính toán bán kính an toàn (`safeRadius`)
+///   dựa trên kích thước khung ô và neo chính xác tại khuôn mặt búp bê, đảm bảo không bao giờ bị cắt mép khung.
 public final class SunRadianceEffect: StickerTapEffect {
 
     public var name: String { "sunRadiance" }
@@ -24,33 +26,53 @@ public final class SunRadianceEffect: StickerTapEffect {
         let sunRig = SKNode()
         sunRig.zPosition = 200
 
-        // Xác định tâm búp bê trong toạ độ của containerNode
-        let targetCenter: CGPoint
+        // 1. Xác định kích thước và vị trí khuôn mặt búp bê trong toạ độ containerNode
+        let dollSprite = targetNode as? SKSpriteNode
+        let dollW = dollSprite?.size.width ?? 75.0
+        let dollH = dollSprite?.size.height ?? 170.0
+
+        let dollOrigin: CGPoint
         if let parent = targetNode.parent {
-            targetCenter = parent.convert(targetNode.position, to: containerNode)
+            dollOrigin = parent.convert(targetNode.position, to: containerNode)
         } else {
-            targetCenter = targetNode.position
+            dollOrigin = targetNode.position
         }
 
-        // Vị trí mặt trời tỏa sáng: Ngay trên đầu hoặc trước ngực búp bê
-        let sunOrigin = CGPoint(x: targetCenter.x, y: targetCenter.y - (isHanging ? 85.0 : -40.0))
+        // Với anchorPoint (0.5, 1.0), đỉnh đầu búp bê ở dollOrigin.y.
+        // Khuôn mặt cười của búp bê nằm ở khoảng 16% chiều cao búp bê tính từ đỉnh đầu xuống.
+        let sunY: CGFloat
+        if isHanging {
+            sunY = dollOrigin.y - (dollH * 0.16)
+        } else {
+            sunY = dollOrigin.y + (dollH * 0.72)
+        }
+        let sunOrigin = CGPoint(x: dollOrigin.x, y: sunY)
         sunRig.position = sunOrigin
         containerNode.addChild(sunRig)
 
+        // 2. Tính toán bán kính an toàn (Safe Radius) chống cắt mép khung
+        let sceneW = targetNode.scene?.size.width ?? (dollW * 1.5)
+        let sceneH = targetNode.scene?.size.height ?? (dollH * 1.3)
+
+        // Bán kính tối đa được khống chế ở mức 34% chiều rộng và 22% chiều cao khung
+        // để toàn bộ vầng sáng, tia nắng và bụi sao luôn nằm 100% trong vùng đệm an toàn.
+        let safeRadius = max(20.0, min(sceneW * 0.34, sceneH * 0.22, 38.0))
+
         // MARK: - 1. Vầng hào quang bung tỏa (Aura / Lens Flare Halo)
-        let halo = SKShapeNode(circleOfRadius: 36.0)
-        halo.fillColor = UIColor(red: 1.0, green: 0.88, blue: 0.35, alpha: 0.45)
-        halo.strokeColor = UIColor(red: 1.0, green: 0.95, blue: 0.65, alpha: 0.60)
-        halo.lineWidth = 2.0
+        let haloRadius = safeRadius * 0.50
+        let halo = SKShapeNode(circleOfRadius: haloRadius)
+        halo.fillColor = UIColor(red: 1.0, green: 0.88, blue: 0.35, alpha: 0.40)
+        halo.strokeColor = UIColor(red: 1.0, green: 0.95, blue: 0.65, alpha: 0.55)
+        halo.lineWidth = 1.5
         halo.setScale(0.3)
         halo.zPosition = 1
         sunRig.addChild(halo)
 
         let haloExpand = SKAction.group([
-            SKAction.scale(to: 2.4, duration: 1.1),
+            SKAction.scale(to: 1.65, duration: 0.95),
             SKAction.sequence([
-                SKAction.fadeAlpha(to: 0.65, duration: 0.2),
-                SKAction.fadeOut(withDuration: 0.9)
+                SKAction.fadeAlpha(to: 0.60, duration: 0.20),
+                SKAction.fadeOut(withDuration: 0.75)
             ])
         ])
         halo.run(haloExpand)
@@ -62,12 +84,12 @@ public final class SunRadianceEffect: StickerTapEffect {
         sunRig.addChild(raysNode)
 
         let rayCount = 12
-        let innerRadius: CGFloat = 24.0
+        let innerRadius = safeRadius * 0.36
         for i in 0..<rayCount {
             let angle = (CGFloat(i) / CGFloat(rayCount)) * .pi * 2.0
             let isLong = (i % 2 == 0)
-            let rayLength: CGFloat = isLong ? 26.0 : 16.0
-            let rayThickness: CGFloat = isLong ? 3.0 : 2.2
+            let rayLength = isLong ? (safeRadius * 0.28) : (safeRadius * 0.16)
+            let rayThickness: CGFloat = isLong ? 2.4 : 1.8
 
             let rayPath = CGMutablePath()
             let startX = cos(angle) * innerRadius
@@ -86,15 +108,14 @@ public final class SunRadianceEffect: StickerTapEffect {
             raysNode.addChild(ray)
         }
 
-        // Tia nắng nảy ra và xoay tròn nhẹ
         let raysPop = SKAction.sequence([
-            SKAction.scale(to: 1.25, duration: 0.18),
+            SKAction.scale(to: 1.15, duration: 0.18),
             SKAction.scale(to: 1.0, duration: 0.14)
         ])
-        let raysRotate = SKAction.rotate(byAngle: .pi / 3.0, duration: 1.2)
+        let raysRotate = SKAction.rotate(byAngle: .pi / 3.0, duration: 1.1)
         raysRotate.timingMode = .easeOut
         let raysFade = SKAction.sequence([
-            SKAction.wait(forDuration: 0.7),
+            SKAction.wait(forDuration: 0.65),
             SKAction.fadeOut(withDuration: 0.45)
         ])
         raysNode.run(SKAction.group([raysPop, raysRotate, raysFade]))
@@ -105,95 +126,101 @@ public final class SunRadianceEffect: StickerTapEffect {
         sunCore.setScale(0.1)
         sunRig.addChild(sunCore)
 
+        let coreRadius = safeRadius * 0.32
+
         // Bầu tròn mặt trời vàng cam ấm áp
-        let sunCircle = SKShapeNode(circleOfRadius: 21.0)
-        sunCircle.fillColor = UIColor(red: 1.0, green: 0.78, blue: 0.15, alpha: 1.0) // Vàng óng nắng
-        sunCircle.strokeColor = UIColor(red: 1.0, green: 0.60, blue: 0.05, alpha: 1.0) // Viền cam tươi
-        sunCircle.lineWidth = 1.8
+        let sunCircle = SKShapeNode(circleOfRadius: coreRadius)
+        sunCircle.fillColor = UIColor(red: 1.0, green: 0.78, blue: 0.15, alpha: 1.0)
+        sunCircle.strokeColor = UIColor(red: 1.0, green: 0.60, blue: 0.05, alpha: 1.0)
+        sunCircle.lineWidth = 1.6
         sunCore.addChild(sunCircle)
 
         // Điểm sáng phản chiếu nhẹ góc trên (Highlight)
-        let sunHighlight = SKShapeNode(ellipseOf: CGSize(width: 8.0, height: 4.5))
+        let sunHighlight = SKShapeNode(ellipseOf: CGSize(width: coreRadius * 0.42, height: coreRadius * 0.24))
         sunHighlight.fillColor = UIColor(white: 1.0, alpha: 0.55)
         sunHighlight.strokeColor = .clear
-        sunHighlight.position = CGPoint(x: -6.0, y: 8.0)
+        sunHighlight.position = CGPoint(x: -coreRadius * 0.30, y: coreRadius * 0.40)
         sunHighlight.zRotation = 0.4
         sunCore.addChild(sunHighlight)
 
         // Mắt cười híp tít (Joyful curved eyes)
         let eyeColor = UIColor(red: 0.35, green: 0.18, blue: 0.08, alpha: 1.0)
-        for eyeOffset in [-6.5, 6.5] {
+        let eyeOffset = coreRadius * 0.32
+        let eyeRadius = coreRadius * 0.18
+        for offset in [-eyeOffset, eyeOffset] {
             let eyePath = CGMutablePath()
-            eyePath.addArc(center: CGPoint(x: eyeOffset, y: 3.5), radius: 3.5, startAngle: 0.2, endAngle: .pi - 0.2, clockwise: false)
+            eyePath.addArc(center: CGPoint(x: offset, y: coreRadius * 0.18), radius: eyeRadius, startAngle: 0.2, endAngle: .pi - 0.2, clockwise: false)
             let eye = SKShapeNode(path: eyePath)
             eye.strokeColor = eyeColor
-            eye.lineWidth = 1.8
+            eye.lineWidth = 1.6
             eye.lineCap = .round
             sunCore.addChild(eye)
         }
 
         // Nụ cười tươi rạng rỡ (Open warm smile)
         let mouthPath = CGMutablePath()
-        mouthPath.addArc(center: CGPoint(x: 0, y: -2.0), radius: 6.0, startAngle: .pi + 0.3, endAngle: -.pi * 2.0 - 0.3, clockwise: false)
+        mouthPath.addArc(center: CGPoint(x: 0, y: -coreRadius * 0.10), radius: coreRadius * 0.30, startAngle: .pi + 0.3, endAngle: -.pi * 2.0 - 0.3, clockwise: false)
         let mouth = SKShapeNode(path: mouthPath)
         mouth.strokeColor = eyeColor
-        mouth.fillColor = UIColor(red: 0.88, green: 0.25, blue: 0.25, alpha: 0.85) // Lưỡi/miệng hồng
-        mouth.lineWidth = 1.5
+        mouth.fillColor = UIColor(red: 0.88, green: 0.25, blue: 0.25, alpha: 0.85)
+        mouth.lineWidth = 1.4
         sunCore.addChild(mouth)
 
         // Hai má hồng xinh xắn (Blush cheeks)
-        for blushOffset in [-11.0, 11.0] {
-            let blush = SKShapeNode(circleOfRadius: 3.2)
+        let blushOffset = coreRadius * 0.55
+        let blushRadius = coreRadius * 0.16
+        for offset in [-blushOffset, blushOffset] {
+            let blush = SKShapeNode(circleOfRadius: blushRadius)
             blush.fillColor = UIColor(red: 1.0, green: 0.45, blue: 0.55, alpha: 0.65)
             blush.strokeColor = .clear
-            blush.position = CGPoint(x: blushOffset, y: -0.5)
+            blush.position = CGPoint(x: offset, y: -coreRadius * 0.04)
             sunCore.addChild(blush)
         }
 
-        // Animation mặt trời nảy lò xo & biến mất êm dịu
+        // Animation mặt trời nảy lò xo & mờ dần
         let sunScaleIn = SKAction.sequence([
-            SKAction.scale(to: 1.28, duration: 0.20),
-            SKAction.scale(to: 1.0, duration: 0.15),
-            SKAction.wait(forDuration: 0.50),
+            SKAction.scale(to: 1.20, duration: 0.18),
+            SKAction.scale(to: 1.0, duration: 0.14),
+            SKAction.wait(forDuration: 0.45),
             SKAction.group([
-                SKAction.scale(to: 1.25, duration: 0.40),
-                SKAction.fadeOut(withDuration: 0.40)
+                SKAction.scale(to: 1.18, duration: 0.35),
+                SKAction.fadeOut(withDuration: 0.35)
             ])
         ])
         sunCore.run(sunScaleIn)
 
         // MARK: - 4. Bụi hạt nắng lấp lánh (Solar Sparkle Glints)
-        let sparkleCount = 14
+        let sparkleCount = 12
         for _ in 0..<sparkleCount {
-            let sparkle = createSparkleStar()
+            let sparkle = createSparkleStar(maxRadius: safeRadius * 0.14)
             sparkle.zPosition = 4
             sunRig.addChild(sparkle)
 
             let randomAngle = CGFloat.random(in: 0...(.pi * 2.0))
-            let randomDistance = CGFloat.random(in: 35.0...85.0)
+            let randomDistance = CGFloat.random(in: (safeRadius * 0.35)...(safeRadius * 0.78))
             let targetX = cos(randomAngle) * randomDistance
-            let targetY = sin(randomAngle) * randomDistance + CGFloat.random(in: 10.0...35.0) // Bay nhẹ lên trên
+            let targetY = sin(randomAngle) * randomDistance + CGFloat.random(in: 5.0...18.0)
 
-            let burstDuration = Double.random(in: 0.65...1.05)
+            let burstDuration = Double.random(in: 0.60...0.95)
             let moveAction = SKAction.move(to: CGPoint(x: targetX, y: targetY), duration: burstDuration)
             moveAction.timingMode = .easeOut
 
-            let spinAction = SKAction.rotate(byAngle: CGFloat.random(in: -2.5...2.5), duration: burstDuration)
+            let spinAction = SKAction.rotate(byAngle: CGFloat.random(in: -2.0...2.0), duration: burstDuration)
             let fadeAction = SKAction.sequence([
                 SKAction.wait(forDuration: burstDuration * 0.4),
                 SKAction.fadeOut(withDuration: burstDuration * 0.6)
             ])
             let scaleAction = SKAction.sequence([
-                SKAction.scale(to: CGFloat.random(in: 1.1...1.5), duration: burstDuration * 0.3),
+                SKAction.scale(to: CGFloat.random(in: 1.0...1.3), duration: burstDuration * 0.3),
                 SKAction.scale(to: 0.2, duration: burstDuration * 0.7)
             ])
 
             sparkle.run(SKAction.group([moveAction, spinAction, fadeAction, scaleAction]))
         }
 
-        // Tự động giải phóng node sau khi hiệu ứng hoàn tất
+        // Tự động giải phóng node sau khi hiệu ứng kết thúc
         let cleanUp = SKAction.sequence([
-            SKAction.wait(forDuration: 1.35),
+            SKAction.wait(forDuration: 1.20),
             SKAction.removeFromParent()
         ])
         sunRig.run(cleanUp)
@@ -201,9 +228,9 @@ public final class SunRadianceEffect: StickerTapEffect {
 
     // MARK: - Helper tạo ngôi sao 4 cánh lấp lánh
 
-    private func createSparkleStar() -> SKShapeNode {
+    private func createSparkleStar(maxRadius: CGFloat) -> SKShapeNode {
         let path = CGMutablePath()
-        let rOuter: CGFloat = CGFloat.random(in: 4.5...7.5)
+        let rOuter: CGFloat = CGFloat.random(in: (maxRadius * 0.7)...maxRadius)
         let rInner: CGFloat = rOuter * 0.26
 
         for i in 0..<8 {
@@ -224,7 +251,7 @@ public final class SunRadianceEffect: StickerTapEffect {
                                 : UIColor(white: 1.0, alpha: 0.95)
         star.strokeColor = isGold ? UIColor(red: 1.0, green: 0.75, blue: 0.20, alpha: 0.9)
                                   : UIColor(red: 1.0, green: 0.92, blue: 0.60, alpha: 0.8)
-        star.lineWidth = 0.8
+        star.lineWidth = 0.7
         star.setScale(0.1)
         return star
     }
