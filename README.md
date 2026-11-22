@@ -353,10 +353,16 @@ Các trường mở khóa nhận danh sách ID phân tách bằng dấu phẩy; 
 Chi tiết kiến trúc và hiệu ứng sticker: [STICKER_EFFECTS_README.md](terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Stickers/StickerEffects/STICKER_EFFECTS_README.md).
 
 ### Ví dụ cấu hình trong `effects_data.json`:
+
+File [effects_data.json](terrariumidle_ios/Apps/Data/Items/effects_data.json) chứa **mảng các đối tượng overlay** phủ lên ban công. Renderer hiện hỗ trợ lá/cánh hoa rơi (`fallingLeaves`) và đom đóm (`fireflies`). Đây là hiệu ứng toàn màn hình, cho phép chạm xuyên qua đến cây và các nút bên dưới.
+
+#### 1. Lá hoặc cánh hoa rơi
+
 ```json
 {
     "id": "overlay2",
     "name": "Lá rơi mùa thu",
+    "description": "Lớp phủ lá thu rực rỡ đung đưa trong gió",
     "image": "overlay2",
     "kind": "fallingLeaves",
     "wind": "breezeRight",
@@ -367,9 +373,113 @@ Chi tiết kiến trúc và hiệu ứng sticker: [STICKER_EFFECTS_README.md](te
         "leaf_autumn_2",
         "leaf_autumn_3"
     ],
-    "type": "overlay"
+    "priceStore": 0,
+    "priceOxygen": 0,
+    "currencyUnit": "",
+    "type": "overlay",
+    "effect": "Lá rơi mùa thu",
+    "itemTypeAttribute": "none",
+    "levelUnlock": 0
 }
 ```
+
+#### 2. Đom đóm
+
+```json
+{
+    "id": "overlay4",
+    "name": "Đom đóm",
+    "description": "Đom đóm phát sáng bay lượn trong đêm",
+    "image": "overlay4",
+    "kind": "fireflies",
+    "sksFile": "Fireflies.sks",
+    "particleCount": 26,
+    "images": [],
+    "priceStore": 0,
+    "priceOxygen": 0,
+    "currencyUnit": "",
+    "type": "overlay",
+    "effect": "Đom đóm",
+    "itemTypeAttribute": "none",
+    "levelUnlock": 0
+}
+```
+
+#### 3. Chi tiết các trường
+
+“Bắt buộc” trong bảng là yêu cầu của `ItemData.init(from:)`. Các trường tùy chọn có thể bỏ qua; vẫn nên ghi rõ cấu hình để dễ chỉnh sửa.
+
+| Trường | Kiểu JSON | Bắt buộc | Ý nghĩa, giá trị và mặc định |
+| --- | --- | --- | --- |
+| `id` | Chuỗi | Có | ID duy nhất, ví dụ `"overlay2"`. Dùng ID này khi chọn overlay hoặc khai báo phần thưởng mở khóa trong dữ liệu cây/chậu/sticker. |
+| `name` | Chuỗi | Có | Tên hiển thị trong danh sách hiệu ứng. |
+| `description` | Chuỗi | Có | Mô tả hiệu ứng. Có thể để `""` nhưng không được thiếu trường. |
+| `image` | Chuỗi | Có | **Một tên asset ảnh đại diện**, ví dụ `"overlay2"`; không phải danh sách ảnh hạt. Hệ thống cũng cho phép tra overlay bằng tên này qua `getEffect(byIdOrImage:)`; nên tránh trùng với ID hoặc ảnh của overlay khác. |
+| `kind` | Chuỗi | Không | Dùng `"fallingLeaves"` hoặc `"fireflies"`. Nếu thiếu: ID truyền vào là `"overlay4"` thì dùng đom đóm, còn lại dùng lá rơi. Renderer chỉ kiểm tra chính xác `"fireflies"`; giá trị khác cũng đi vào nhánh lá rơi, không tự tạo loại hiệu ứng mới. |
+| `images` | Mảng chuỗi | Không | Tên asset lá/cánh hoa cho `fallingLeaves`, **1–6 ảnh** nếu dùng ảnh riêng. Bỏ qua hoặc `[]` để sinh texture bằng code. Hiện không được truyền vào renderer `fireflies`. |
+| `wind` | Chuỗi | Không | Hướng/lực gió cho lá rơi; xem bảng bên dưới. Mặc định `"gentleRight"`. |
+| `density` | Chuỗi | Không | Mật độ lá rơi: `"low"`, `"medium"`, `"high"`. Mặc định `"medium"`. Không phải số ảnh trong `images`. |
+| `speed` | Chuỗi | Không | Tốc độ lá rơi: `"slow"`, `"normal"`, `"fast"`. Mặc định `"normal"`. |
+| `particleCount` | Số nguyên | Không | Số đom đóm cho `fireflies`; mặc định **26 khi đi qua `OverlayEffectView`**. Không điều khiển lá rơi. Nên dùng số dương; code hiện chưa chặn miền giá trị hay đặt trần, nên không coi số lớn tùy ý là an toàn về hiệu năng. |
+| `sksFile` | Chuỗi | Không | Tên file `.sks` được model đọc, nhưng **`OverlayEffectView` hiện không dùng trường này để nạp scene**. Đổi tên file ở đây không thay đổi hiệu ứng; hai renderer hiện tạo scene bằng code. |
+| `priceStore` | Số nguyên | Có | Giá cửa hàng; dữ liệu overlay hiện đều là `0`. Nên dùng giá không âm. |
+| `priceOxygen` | Số nguyên | Có | Giá bằng Oxy; dữ liệu overlay hiện đều là `0`. Nên dùng giá không âm. |
+| `currencyUnit` | Chuỗi | Có | Đơn vị tiền tệ trong model dùng chung, ví dụ `"oxygen"`, `"gemstone"`; overlay hiện dùng `""`. |
+| `type` | Chuỗi | Có | Đặt `"overlay"` để thống nhất loại vật phẩm. Renderer chọn hoạt ảnh theo `kind`. |
+| `effect` | Chuỗi | Không | Mặc định `""`. Trong danh mục overlay hiện dùng làm mô tả hiển thị dự phòng, ví dụ `"Lá rơi mùa thu"`; không quyết định hoạt ảnh. Trong dữ liệu cây/chậu/sticker, cùng trường này lại chứa ID overlay mở khóa, ví dụ `"overlay1,overlay2"`. |
+| `effectDescription` | Chuỗi | Không | Mô tả hiệu ứng cho UI dùng chung; được ưu tiên hơn `effect` trong `displayEffect`. |
+| `itemTypeAttribute` | Chuỗi | Không | Mặc định `"none"`; giữ giá trị này cho overlay. Renderer overlay hiện không dùng cờ `front`/`hanging` để bố trí hạt. |
+| `levelUnlock` | Số nguyên | Có | Cấp mở khóa trong model dùng chung; dữ liệu overlay hiện là `0`. Không điều khiển số lượng hay tốc độ hạt. |
+
+Các trường dùng chung như `sound`, `music`, `effectLandscape`, `effectSfx`, `widthFill`, `skyGradient`, `elements` không cấu hình chuyển động của hai renderer overlay hiện tại.
+
+#### 4. `image` / `images`: số lượng, asset và fallback
+
+- **`image`: đúng 1 tên asset**, không dùng mảng, đường dẫn file hoặc URL.
+- `EffectsSheetView` tìm thumbnail theo tên `image`, rồi thử thêm/bỏ tiền tố `i_`. Ví dụ `"image": "overlay2"` có thể hiển thị asset `i_overlay2`; nên dùng tên asset thực tế để cấu hình rõ ràng.
+- **`images`: tối đa 6 tên asset được xét** khi không truyền ảnh từ Swift. Nếu khai báo 7 ảnh trở lên, phần sau giới hạn bị bỏ qua; JSON không báo lỗi chỉ vì mảng dài hơn 6.
+- Mỗi phần tử là tên imageset trong `Assets.xcassets`, không phải tên file PNG bên trong. Ví dụ `"leaf_autumn_1"` trỏ tới `leaf_autumn_1.imageset`. Các ảnh lá/cánh hoa hiện nằm dưới `Assets.xcassets/Overlays/`. Nếu tên imageset có hậu tố như `@2.083x`, phải giữ đúng hậu tố trong tên tham chiếu.
+- Nên dùng PNG nền trong suốt, cắt gọn quanh lá/cánh hoa. Code hiện **không kiểm tra hay quy định mức tối đa về pixel hoặc dung lượng KB/MB**; giới hạn 6 là số texture, không phải kích thước ảnh. Chọn ảnh vừa đủ nét trên thiết bị để tránh tốn bộ nhớ.
+- Khi `images` bị thiếu hoặc là `[]`, `OverlayEffectView` tạo 6 texture theo chủ đề ID (`overlay1`, `overlay2`, `overlay3`, `overlay5`, `overlay6`); ID khác dùng lá procedural chung.
+- Khi `images` không rỗng, app thử nạp các tên asset trong phần được xét. Asset thiếu bị bỏ qua. Nếu còn ít nhất một ảnh hợp lệ thì chỉ dùng các ảnh hợp lệ, **không tự bù đủ 6**; nếu không nạp được ảnh nào thì scene tạo 6 lá procedural chung. Asset hợp lệ sau phần giới hạn không được tìm tiếp để bù ảnh lỗi.
+- Lá chọn texture ngẫu nhiên mỗi lần sinh; `images` là tập hình biến thể, không phải các khung hình animation chạy tuần tự. Thêm ảnh không làm tăng mật độ hạt.
+- Nếu caller Swift truyền thêm dữ liệu, tổng vẫn tối đa 6 texture theo thứ tự: `customImages` → tên asset từ `images` → `customTextures` ở `FallingLeavesScene`. Ảnh từ Swift chiếm chỗ trước nên số ảnh JSON được xét có thể ít hơn 6.
+- Với `fireflies`, `images` trong JSON hiện không có tác dụng. Đom đóm tự sinh 3 texture phát sáng; muốn thay ảnh phải truyền `customImages` từ Swift (tối đa 6 ảnh).
+
+#### 5. Giá trị gió, mật độ và tốc độ
+
+| `wind` | Chuyển động |
+| --- | --- |
+| `none` | Không có độ trôi ngang nền do gió. |
+| `gentleLeft` / `gentleRight` | Gió nhẹ sang trái / phải. |
+| `breezeLeft` / `breezeRight` | Gió mạnh hơn sang trái / phải. |
+| `variable` | Gió thay đổi hướng theo thời gian. |
+
+| `density` | Số lá rải sẵn khi bắt đầu | Khoảng cách sinh lá cơ sở |
+| --- | --- | --- |
+| `low` | 8 | 0.55 giây |
+| `medium` | 16 | 0.28 giây |
+| `high` | 26 | 0.15 giây |
+
+Khoảng cách sinh lá có dao động ngẫu nhiên (`withRange = interval × 0.4`); số lá đang hiện còn phụ thuộc thời gian rơi.
+
+| `speed` | Khoảng thời gian rơi cơ sở mỗi lá |
+| --- | --- |
+| `slow` | 6.5–9.5 giây |
+| `normal` | 4.5–7.0 giây |
+| `fast` | 2.8–4.5 giây |
+
+`wind`, `density`, `speed` được chuyển về chữ thường khi đọc; giá trị thiếu hoặc không nhận diện sẽ dùng mặc định ở bảng trường. Nên ghi đúng các tên chuẩn và không thêm khoảng trắng. Các trường này không áp dụng cho `fireflies`.
+
+#### 6. Thêm hoặc chỉnh overlay
+
+1. Thêm bản ghi vào mảng JSON, giữ đủ các trường bắt buộc và ID duy nhất. JSON không hỗ trợ comment hoặc dấu phẩy thừa.
+2. Thêm ảnh đại diện và các imageset lá/cánh hoa vào asset catalog; điền đúng tên vào `image` và `images`. Muốn dùng ảnh riêng thì cung cấp 1–6 ảnh, muốn dùng hình tự sinh thì đặt `images: []`.
+3. Chọn `kind` và các trường tương ứng. Loại hiệu ứng mới ngoài hai loại hiện có cần bổ sung renderer Swift; chỉ thêm tên `kind` vào JSON là chưa đủ.
+4. Nếu muốn cây/chậu/sticker mở khóa overlay này, điền ID vào `effect` của vật phẩm tương ứng và mô tả vào `effectDescription`.
+5. Chạy lại app để `ItemDataManager` đọc dữ liệu bundle, chọn overlay trong UI và kiểm tra ảnh/hướng gió/mật độ trên thiết bị hoặc Simulator. Thiếu trường bắt buộc hay sai kiểu của trường bắt buộc có thể làm **toàn bộ danh mục `effects_data` tải thành mảng rỗng** do loader decode cả mảng một lần.
+
+Nguồn đối chiếu: [ItemData.swift](terrariumidle_ios/Apps/Data/Models/ItemData.swift), [OverlayEffectView.swift](terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Effects/Common/OverlayEffectView.swift), [FallingLeavesScene.swift](terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Effects/Leaves/FallingLeavesScene.swift), [FirefliesScene.swift](terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Effects/Fireflies/FirefliesScene.swift).
 
 ### Ví dụ cấu hình trong `landscapes_data.json`:
 
