@@ -22,12 +22,19 @@ public final class ElasticPulseMotionEffect: PlantMotionEffect {
     }
 
     public func apply(context: PlantMotionContext) {
+        context.stopIdleActions()
+
         let mult = max(0.1, durationMultiplier)
         let baseScale = context.baseScale
         let root = context.plantRootNode
         root.removeAction(forKey: "plantPulseTap")
         root.zRotation = 0.0
         root.setScale(baseScale)
+
+        let rootDuration = (0.08 + 0.10 + 0.08) * mult // 0.26 * mult
+        let maxLeafDelay = Double(max(0, context.leafNodes.count - 1)) * 0.015 * mult
+        let leafDuration = maxLeafDelay + (0.06 + 0.08) * mult // 0.14 * mult
+        let totalDuration = max(rootDuration, leafDuration)
 
         let p1 = SKAction.scale(to: baseScale * pulseScale, duration: 0.08 * mult)
         p1.timingMode = .easeOut
@@ -36,11 +43,18 @@ public final class ElasticPulseMotionEffect: PlantMotionEffect {
         let p3 = SKAction.scale(to: baseScale, duration: 0.08 * mult)
         p3.timingMode = .easeOut
 
-        let completionAction = SKAction.run {
-            context.onComplete?()
+        var rootActions: [SKAction] = [p1, p2, p3]
+        if totalDuration > rootDuration {
+            rootActions.append(SKAction.wait(forDuration: totalDuration - rootDuration))
         }
 
-        root.run(SKAction.sequence([p1, p2, p3, completionAction]), withKey: "plantPulseTap")
+        let completionAction = SKAction.run {
+            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
+            context.onComplete?()
+        }
+        rootActions.append(completionAction)
+
+        root.run(SKAction.sequence(rootActions), withKey: "plantPulseTap")
 
         // Rung nhẹ các lá xung quanh
         for (idx, leaf) in context.leafNodes.enumerated() {

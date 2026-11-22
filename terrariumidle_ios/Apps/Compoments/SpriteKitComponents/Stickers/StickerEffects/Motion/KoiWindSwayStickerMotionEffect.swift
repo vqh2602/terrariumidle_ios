@@ -97,9 +97,8 @@ public final class KoiWindSwayStickerMotionEffect: StickerMotionEffect {
     }
 
     public func apply(context: StickerMotionContext) {
+        stopIdle(context: context)
         let rig = context.targetNode
-        rig.removeAction(forKey: "koi_rig_wind_cycle")
-        rig.removeAction(forKey: "koi_rig_tap_swing")
 
         // Dao động con lắc biên độ lớn tắt dần
         let swing1 = SKAction.rotate(toAngle: 0.155, duration: 0.35)

@@ -29,6 +29,8 @@ public final class WidePendulumMotionEffect: PotMotionEffect {
     public func apply(context: PotMotionContext) {
         let target = context.targetNode
         target.removeAction(forKey: "potMotionTap")
+        target.removeAction(forKey: "idleSway")
+        target.removeAction(forKey: "idlePendulum")
 
         let mult = max(0.1, durationMultiplier)
 

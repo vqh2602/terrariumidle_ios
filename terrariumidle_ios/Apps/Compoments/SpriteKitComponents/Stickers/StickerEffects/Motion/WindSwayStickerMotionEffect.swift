@@ -56,10 +56,11 @@ public final class WindSwayStickerMotionEffect: StickerMotionEffect {
             decor.removeAction(forKey: "ribbon_idle_flutter")
             let phaseDelay = Double(index) * 0.35
             let angle: CGFloat = (index % 2 == 0) ? 0.055 : -0.050
+            let rest = decor.restZRotation
 
-            let flutterOut = SKAction.rotate(byAngle: angle, duration: 1.4 + phaseDelay * 0.5)
+            let flutterOut = SKAction.rotate(toAngle: rest + angle, duration: 1.4 + phaseDelay * 0.5)
             flutterOut.timingMode = .easeInEaseOut
-            let flutterBack = SKAction.rotate(byAngle: -angle, duration: 1.4 + phaseDelay * 0.5)
+            let flutterBack = SKAction.rotate(toAngle: rest - angle, duration: 1.4 + phaseDelay * 0.5)
             flutterBack.timingMode = .easeInEaseOut
 
             let ribbonLoop = SKAction.sequence([flutterOut, flutterBack])

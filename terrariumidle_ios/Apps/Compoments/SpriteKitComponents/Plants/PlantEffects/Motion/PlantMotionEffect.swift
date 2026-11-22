@@ -64,6 +64,51 @@ public struct PlantMotionContext {
         self.containerSize = containerSize
         self.onComplete = onComplete
     }
+
+    // MARK: - Quản lý Action Nhàn Rỗi (Idle Actions Management)
+
+    /// Các key action nhàn rỗi chạy trên thân cây (plantRootNode)
+    public static let plantRootIdleActionKeys = [
+        "trunkSway", "plantSway", "trunkBob", "rootIdleWind", "idleSway"
+    ]
+
+    /// Các key action nhàn rỗi chạy trên phiến lá (leafNodes)
+    public static let leafIdleActionKeys = [
+        "vineWind", "heartleafWind", "vineSway", "leafBend", "leafWind", "leafSway", "butterflySway"
+    ]
+
+    /// Các key action nhàn rỗi chạy trên hạt giống (seedNode)
+    public static let seedIdleActionKeys = [
+        "seedBreath", "seedBreathing", "seedWiggle", "seedGlowPulse"
+    ]
+
+    /// Các key action nhàn rỗi chạy trên mầm cây con (sproutNode)
+    public static let sproutIdleActionKeys = [
+        "sproutSway", "sproutBob", "sproutGlowPulse"
+    ]
+
+    /// Tạm dừng/gỡ bỏ toàn bộ action chuyển động nhàn rỗi (idle) trên thân, lá, hạt và mầm
+    /// để triệt tiêu hoàn toàn xung đột chuyển động (conflict zRotation/scale) gây hiện tượng giật rung cây khi tap.
+    public func stopIdleActions() {
+        for key in Self.plantRootIdleActionKeys {
+            plantRootNode.removeAction(forKey: key)
+        }
+        for leaf in leafNodes {
+            for key in Self.leafIdleActionKeys {
+                leaf.removeAction(forKey: key)
+            }
+        }
+        if let seed = seedNode {
+            for key in Self.seedIdleActionKeys {
+                seed.removeAction(forKey: key)
+            }
+        }
+        if let sprout = sproutNode {
+            for key in Self.sproutIdleActionKeys {
+                sprout.removeAction(forKey: key)
+            }
+        }
+    }
 }
 
 // MARK: - Plant Motion Effect Protocol

@@ -439,6 +439,29 @@ public final class Plant14Node: SKNode {
         }
     }
 
+    // MARK: - Khôi phục chuyển động nhàn rỗi (Idle Animation) sau tương tác Tap
+
+    public func resumeIdleAnimation() {
+        switch growthState {
+        case .seed:
+            startSeedAnimation()
+        case .sprout:
+            startSproutAnimation()
+        case .mature:
+            addTrunkSwayAnimation()
+            for (idx, leaf) in leafNodes.enumerated() {
+                let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+                let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
+                let isLeft = meta?.isLeft ?? (leaf.position.x < 0)
+                let bendAngle = meta?.bendAngle ?? 0.060
+                let duration = meta?.duration ?? 3.2
+                let phaseDelay = Double(idx) * 0.18
+                let isTrunk = (assetNum == 1)
+                startHeartleafAnimation(leaf: leaf, isLeft: isLeft, bendAngle: bendAngle, duration: duration, phaseDelay: phaseDelay, isTrunk: isTrunk)
+            }
+        }
+    }
+
     // MARK: - Phản hồi tương tác Tap (Bounce & Bọt oxy)
 
     public func playTapAnimation() {
@@ -453,7 +476,10 @@ public final class Plant14Node: SKNode {
             level: growthState.rawLevel,
             initialSeedPosition: initialSeedPosition,
             initialSproutPosition: initialSproutPosition,
-            containerSize: containerSize
+            containerSize: containerSize,
+            onComplete: { [weak self] in
+                self?.resumeIdleAnimation()
+            }
         )
 
         // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã đăng ký (Bọt khí Oxy, phấn hoa...)

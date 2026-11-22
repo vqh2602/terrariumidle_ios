@@ -236,7 +236,12 @@ public final class Pot19Node: SKNode, PotInteractiveNode {
             shadowNode: nil,
             initialPosition: .zero,
             isHanging: isHanging,
-            containerSize: containerSize
+            containerSize: containerSize,
+            onComplete: { [weak self] in
+                if self?.isHanging == true {
+                    self?.addIdlePendulumSway()
+                }
+            }
         )
 
         // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã đăng ký

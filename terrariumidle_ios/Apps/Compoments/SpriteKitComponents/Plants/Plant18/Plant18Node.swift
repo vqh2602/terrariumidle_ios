@@ -394,6 +394,27 @@ public final class Plant18Node: SKNode {
         return nil
     }
 
+    // MARK: - Khôi phục chuyển động nhàn rỗi (Idle Animation) sau tương tác Tap
+
+    public func resumeIdleAnimation() {
+        switch growthState {
+        case .seed:
+            startSeedAnimation()
+        case .sprout:
+            startSproutAnimation()
+        case .mature:
+            addTrunkBobAnimation()
+            for (idx, leaf) in leafNodes.enumerated() {
+                let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+                let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
+                let bendAngle = meta?.bendAngle ?? 0.050
+                let duration = meta?.duration ?? 3.6
+                let delay = Double(idx) * 0.18
+                startLeafSwayAnimation(leaf: leaf, bendAngle: bendAngle, duration: duration, phaseDelay: delay)
+            }
+        }
+    }
+
     // MARK: - Tap Animation & Interactions
 
     public func playTapAnimation() {
@@ -408,7 +429,10 @@ public final class Plant18Node: SKNode {
             level: growthState.rawLevel,
             initialSeedPosition: initialSeedPosition,
             initialSproutPosition: initialSproutPosition,
-            containerSize: containerSize
+            containerSize: containerSize,
+            onComplete: { [weak self] in
+                self?.resumeIdleAnimation()
+            }
         )
 
         // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã đăng ký (Bọt khí Oxy, phấn hoa...)

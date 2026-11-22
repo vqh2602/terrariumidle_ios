@@ -19,9 +19,13 @@ public final class SubtleFlutterStickerMotionEffect: StickerMotionEffect {
         let node = context.targetNode
         node.removeAction(forKey: "sticker_idle_action")
 
-        let jiggle1 = SKAction.rotate(byAngle: 0.025, duration: 0.8)
-        let jiggle2 = SKAction.rotate(byAngle: -0.050, duration: 1.2)
-        let jiggle3 = SKAction.rotate(byAngle: 0.025, duration: 0.8)
+        let rest = node.restZRotation
+        let jiggle1 = SKAction.rotate(toAngle: rest + 0.025, duration: 0.8)
+        jiggle1.timingMode = .easeInEaseOut
+        let jiggle2 = SKAction.rotate(toAngle: rest - 0.025, duration: 1.2)
+        jiggle2.timingMode = .easeInEaseOut
+        let jiggle3 = SKAction.rotate(toAngle: rest, duration: 0.8)
+        jiggle3.timingMode = .easeInEaseOut
         let loop = SKAction.sequence([jiggle1, jiggle2, jiggle3])
         node.run(SKAction.repeatForever(loop), withKey: "sticker_idle_action")
     }
@@ -32,6 +36,7 @@ public final class SubtleFlutterStickerMotionEffect: StickerMotionEffect {
 
     public func apply(context: StickerMotionContext) {
         let node = context.targetNode
+        node.removeAction(forKey: "sticker_idle_action")
         node.removeAction(forKey: "sticker_tap_action")
 
         let j1 = SKAction.rotate(toAngle: 0.08, duration: 0.08)

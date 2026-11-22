@@ -24,6 +24,10 @@ public final class CascadingVineMotionEffect: PlantMotionEffect {
     public func apply(context: PlantMotionContext) {
         let mult = max(0.1, durationMultiplier)
 
+        // 1. Tạm dừng/gỡ bỏ toàn bộ action chuyển động nhàn rỗi (idle) trên thân và các phiến lá
+        // để triệt tiêu hoàn toàn xung đột zRotation/scale gây co giật cây khi bấm tap
+        context.stopIdleActions()
+
         // Nếu là hạt hoặc mầm: fallback sang nảy nhẹ
         if context.level <= 2 {
             let standard = StandardPlantBounceMotionEffect(bounceIntensity: 0.8, durationMultiplier: mult)
@@ -36,7 +40,14 @@ public final class CascadingVineMotionEffect: PlantMotionEffect {
         root.zRotation = 0.0
         root.setScale(context.baseScale)
 
-        // Gốc cành chỉ đung đưa nhẹ quanh miệng chậu
+        // Tính toán tổng thời gian diễn hoạt của toàn bộ cây (thân + các phiến lá cascading)
+        let rootMotionDuration = (0.20 + 0.26 + 0.22) * mult // 0.68 * mult
+        let maxLeafDelay = Double(max(0, context.leafNodes.count - 1)) * 0.035 * mult
+        let leafMotionDuration = (0.20 + 0.28 + 0.22 + 0.18) * mult // 0.88 * mult
+        let totalLeafDuration = maxLeafDelay + leafMotionDuration
+        let totalDuration = max(rootMotionDuration, totalLeafDuration)
+
+        // Gốc cành chỉ đung đưa nhẹ quanh miệng chậu rồi nghỉ tại 0.0
         let rootSway1 = SKAction.rotate(toAngle: waveAngle * 0.35, duration: 0.20 * mult)
         rootSway1.timingMode = .easeOut
         let rootSway2 = SKAction.rotate(toAngle: -waveAngle * 0.25, duration: 0.26 * mult)
@@ -44,11 +55,19 @@ public final class CascadingVineMotionEffect: PlantMotionEffect {
         let rootSwayRest = SKAction.rotate(toAngle: 0.0, duration: 0.22 * mult)
         rootSwayRest.timingMode = .easeOut
 
-        let completionAction = SKAction.run {
-            context.onComplete?()
+        var rootActions: [SKAction] = [rootSway1, rootSway2, rootSwayRest]
+        if totalDuration > rootMotionDuration {
+            rootActions.append(SKAction.wait(forDuration: totalDuration - rootMotionDuration))
         }
 
-        root.run(SKAction.sequence([rootSway1, rootSway2, rootSwayRest, completionAction]), withKey: "vineTapRoot")
+        let completionAction = SKAction.run {
+            // Khi toàn bộ thân và lá đã trở về trạng thái nghỉ tuyệt đối -> Khôi phục nhịp gió nhàn rỗi
+            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
+            context.onComplete?()
+        }
+        rootActions.append(completionAction)
+
+        root.run(SKAction.sequence(rootActions), withKey: "vineTapRoot")
 
         // Chuỗi dây leo / phiến lá đung đưa lan truyền từ trên xuống dưới
         for (idx, leaf) in context.leafNodes.enumerated() {

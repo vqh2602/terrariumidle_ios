@@ -44,7 +44,10 @@ public final class WindSwayMotionEffect: PlantMotionEffect {
     // MARK: - Level 1: Hạt Giống Đón Gió
 
     private func applySeedWindMotion(context: PlantMotionContext) {
+        context.stopIdleActions()
+
         guard let node = context.seedNode else {
+            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
             context.onComplete?()
             return
         }
@@ -69,6 +72,7 @@ public final class WindSwayMotionEffect: PlantMotionEffect {
         ])
 
         let completionAction = SKAction.run {
+            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
             context.onComplete?()
         }
 
@@ -89,7 +93,10 @@ public final class WindSwayMotionEffect: PlantMotionEffect {
     // MARK: - Level 2: Lá Mầm Chao Nghiêng
 
     private func applySproutWindMotion(context: PlantMotionContext) {
+        context.stopIdleActions()
+
         guard let node = context.sproutNode else {
+            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
             context.onComplete?()
             return
         }
@@ -111,6 +118,7 @@ public final class WindSwayMotionEffect: PlantMotionEffect {
         rest.timingMode = .easeOut
 
         let completionAction = SKAction.run {
+            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
             context.onComplete?()
         }
 
@@ -128,12 +136,20 @@ public final class WindSwayMotionEffect: PlantMotionEffect {
     // MARK: - Level 3+: Cây Trưởng Thành Uốn Lượn Theo Chiều Gió
 
     private func applyMatureWindMotion(context: PlantMotionContext) {
+        context.stopIdleActions()
+
         let mult = max(0.1, durationMultiplier)
         let root = context.plantRootNode
 
         root.removeAction(forKey: "matureTapWind")
         root.zRotation = 0.0
         root.setScale(context.baseScale)
+
+        let rootMotionDuration = (0.22 + 0.28 + 0.22 + 0.20) * mult // 0.92 * mult
+        let maxLeafDelay = Double(max(0, context.leafNodes.count - 1)) * 0.025 * mult
+        let leafMotionDuration = (0.18 + 0.26 + 0.20) * mult // 0.64 * mult
+        let totalLeafDuration = maxLeafDelay + leafMotionDuration
+        let totalDuration = max(rootMotionDuration, totalLeafDuration)
 
         // 1. Thân cây và toàn bộ tán chao nghiêng đón gió
         let windTilt = SKAction.rotate(toAngle: swayAngle, duration: 0.22 * mult)
@@ -151,12 +167,19 @@ public final class WindSwayMotionEffect: PlantMotionEffect {
         let flexNormal = SKAction.scaleY(to: context.baseScale, duration: 0.20 * mult)
         let flexAction = SKAction.sequence([flexDown, flexUp, flexNormal])
 
-        let completionAction = SKAction.run {
-            context.onComplete?()
+        var swayActions: [SKAction] = [windTilt, windRebound, windSwayBack, windSettle]
+        if totalDuration > rootMotionDuration {
+            swayActions.append(SKAction.wait(forDuration: totalDuration - rootMotionDuration))
         }
 
+        let completionAction = SKAction.run {
+            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
+            context.onComplete?()
+        }
+        swayActions.append(completionAction)
+
         let mainAction = SKAction.group([
-            SKAction.sequence([windTilt, windRebound, windSwayBack, windSettle, completionAction]),
+            SKAction.sequence(swayActions),
             flexAction
         ])
 

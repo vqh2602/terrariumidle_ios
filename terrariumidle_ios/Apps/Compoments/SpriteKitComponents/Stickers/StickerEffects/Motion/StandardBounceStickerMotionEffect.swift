@@ -17,6 +17,8 @@ public final class StandardBounceStickerMotionEffect: StickerMotionEffect {
 
     public func apply(context: StickerMotionContext) {
         let node = context.targetNode
+        node.removeAction(forKey: "sticker_idle_action")
+        node.removeAction(forKey: "sticker_idle_drift")
         node.removeAction(forKey: "sticker_tap_action")
 
         // 1. Squash nén xuống

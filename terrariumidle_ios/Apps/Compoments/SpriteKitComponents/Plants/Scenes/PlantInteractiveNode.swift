@@ -14,6 +14,8 @@ public protocol PlantInteractiveNode: AnyObject {
     var motionEffect: PlantMotionEffect { get set }
     var tapEffects: [PlantTapEffect] { get set }
     func playTapAnimation()
+    /// Khôi phục chuyển động nhàn rỗi (idle sway / wind) sau khi hoàn tất hiệu ứng tap
+    func resumeIdleAnimation()
 }
 
 extension PlantInteractiveNode {
@@ -25,6 +27,7 @@ extension PlantInteractiveNode {
         get { [] }
         set { }
     }
+    public func resumeIdleAnimation() {}
 }
 
 extension PlantInteractiveNode where Self: SKNode {

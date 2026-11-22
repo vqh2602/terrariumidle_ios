@@ -368,6 +368,20 @@ public final class Plant19Node: SKNode {
         }
     }
 
+    // MARK: - Khôi phục chuyển động nhàn rỗi (Idle Animation) sau tương tác Tap
+
+    public func resumeIdleAnimation() {
+        for (idx, leaf) in leafNodes.enumerated() {
+            let assetId = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+            let meta = Self.leavesMetadata.first(where: { $0.assetId == assetId })
+            if meta?.shouldSway ?? true {
+                let bend = meta?.bendAngle ?? 0.035
+                let dur = meta?.duration ?? 3.5
+                startButterflyLeafSway(leaf: leaf, bendAngle: bend, duration: dur, phaseDelay: Double(idx) * 0.22)
+            }
+        }
+    }
+
     // MARK: - Phản hồi tương tác Tap (Wind Sway & Amethyst Bubbles)
 
     public func playTapAnimation() {
@@ -382,7 +396,10 @@ public final class Plant19Node: SKNode {
             level: growthState.rawLevel,
             initialSeedPosition: initialSeedPosition,
             initialSproutPosition: initialSproutPosition,
-            containerSize: containerSize
+            containerSize: containerSize,
+            onComplete: { [weak self] in
+                self?.resumeIdleAnimation()
+            }
         )
 
         // 2. Kích hoạt toàn bộ danh sách hiệu ứng tap đã đăng ký (Bọt khí Oxy thạch anh tím)

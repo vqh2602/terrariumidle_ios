@@ -35,7 +35,10 @@ public final class StandardPlantBounceMotionEffect: PlantMotionEffect {
     // MARK: - Level 1: Hạt Giống
 
     private func applySeedMotion(context: PlantMotionContext) {
+        context.stopIdleActions()
+
         guard let node = context.seedNode else {
+            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
             context.onComplete?()
             return
         }
@@ -65,6 +68,7 @@ public final class StandardPlantBounceMotionEffect: PlantMotionEffect {
         settle.timingMode = .easeInEaseOut
 
         let completionAction = SKAction.run {
+            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
             context.onComplete?()
         }
 
@@ -83,7 +87,10 @@ public final class StandardPlantBounceMotionEffect: PlantMotionEffect {
     // MARK: - Level 2: Cây Con / Lá Mầm
 
     private func applySproutMotion(context: PlantMotionContext) {
+        context.stopIdleActions()
+
         guard let node = context.sproutNode else {
+            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
             context.onComplete?()
             return
         }
@@ -110,6 +117,7 @@ public final class StandardPlantBounceMotionEffect: PlantMotionEffect {
         let shakeSeq = SKAction.sequence([shakeL, shakeR, shakeBack])
 
         let completionAction = SKAction.run {
+            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
             context.onComplete?()
         }
 
@@ -133,6 +141,8 @@ public final class StandardPlantBounceMotionEffect: PlantMotionEffect {
     // MARK: - Level 3+: Cây Trưởng Thành
 
     private func applyMatureMotion(context: PlantMotionContext) {
+        context.stopIdleActions()
+
         let mult = max(0.1, durationMultiplier)
         let baseScale = context.baseScale
         let root = context.plantRootNode
@@ -140,6 +150,12 @@ public final class StandardPlantBounceMotionEffect: PlantMotionEffect {
         root.removeAction(forKey: "matureTapBounce")
         root.setScale(baseScale)
         root.zRotation = 0.0
+
+        let rootMotionDuration = (0.08 + 0.12 + 0.10 + 0.10) * mult // 0.40 * mult
+        let maxLeafDelay = Double(max(0, context.leafNodes.count - 1)) * 0.02 * mult
+        let leafMotionDuration = (0.08 + 0.12) * mult // 0.20 * mult
+        let totalLeafDuration = maxLeafDelay + leafMotionDuration
+        let totalDuration = max(rootMotionDuration, totalLeafDuration)
 
         // 1. Squash & Stretch cả cây đàn hồi lò xo
         let squashScaleX = baseScale * (1.0 + 0.15 * bounceIntensity)
@@ -157,11 +173,18 @@ public final class StandardPlantBounceMotionEffect: PlantMotionEffect {
         let settle = SKAction.scale(to: baseScale, duration: 0.10 * mult)
         settle.timingMode = .easeInEaseOut
 
-        let completionAction = SKAction.run {
-            context.onComplete?()
+        var rootActions: [SKAction] = [squash, stretch, bounce, settle]
+        if totalDuration > rootMotionDuration {
+            rootActions.append(SKAction.wait(forDuration: totalDuration - rootMotionDuration))
         }
 
-        root.run(SKAction.sequence([squash, stretch, bounce, settle, completionAction]), withKey: "matureTapBounce")
+        let completionAction = SKAction.run {
+            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
+            context.onComplete?()
+        }
+        rootActions.append(completionAction)
+
+        root.run(SKAction.sequence(rootActions), withKey: "matureTapBounce")
 
         // 2. Gợn sóng xao động lan tỏa qua các phiến lá
         for (idx, leaf) in context.leafNodes.enumerated() {
