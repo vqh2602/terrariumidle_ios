@@ -250,6 +250,13 @@ public final class FallingLeavesScene: SKScene {
         run(SKAction.repeatForever(gustSequence), withKey: "windGust")
     }
 
+    // MARK: - Phong cách chuyển động khí động học của từng lá rơi
+    private enum LeafMotionStyle {
+        case fastDrop      // Lá rơi nhanh dốc, trọng lượng riêng lớn (~22%)
+        case flutter       // Lá đung đưa nhịp nhàng tiêu chuẩn (~48%)
+        case gentleGlider  // Lá bồng bềnh lơ lửng, rơi rất chậm, lượn cánh rộng (~30%)
+    }
+
     // MARK: - Spawn Single Leaf
 
     private func spawnLeaf(atY startY: CGFloat? = nil, atX startX: CGFloat? = nil) {
@@ -259,64 +266,140 @@ public final class FallingLeavesScene: SKScene {
         let texture = leafTextures.randomElement()!
         let leaf = SKSpriteNode(texture: texture)
 
+        // 1. Phân loại phong cách khí động học cho chiếc lá:
+        // Đảm bảo trên màn hình luôn có sự đan xen giữa lá rơi nhanh vút qua, lá rơi nhịp nhàng, và lá bồng bềnh rơi rất chậm.
+        let roll = Double.random(in: 0...1)
+        let motionStyle: LeafMotionStyle
+        if roll < 0.22 {
+            motionStyle = .fastDrop
+        } else if roll < 0.70 {
+            motionStyle = .flutter
+        } else {
+            motionStyle = .gentleGlider
+        }
+
         // Kích thước và độ sâu (Parallax)
-        let baseScale = CGFloat.random(in: 0.35...0.78)
+        let baseScale: CGFloat
+        switch motionStyle {
+        case .fastDrop:
+            // Lá rơi nhanh thường có kích thước trung bình hoặc lớn (nặng hơn)
+            baseScale = CGFloat.random(in: 0.45...0.80)
+        case .flutter:
+            baseScale = CGFloat.random(in: 0.35...0.76)
+        case .gentleGlider:
+            baseScale = CGFloat.random(in: 0.30...0.72)
+        }
         leaf.xScale = baseScale
         leaf.yScale = baseScale
 
-        // Lá ở xa (nhỏ hơn) thì hơi mờ hơn một chút
-        let alpha = CGFloat.random(in: 0.70...1.0)
+        // Lá ở xa (kích thước nhỏ hơn) có độ mờ và zPosition thấp hơn
+        let alpha: CGFloat
+        let zPos: CGFloat
+        if baseScale < 0.45 {
+            alpha = CGFloat.random(in: 0.65...0.82)
+            zPos = CGFloat.random(in: 1...4)
+        } else {
+            alpha = CGFloat.random(in: 0.85...1.0)
+            zPos = CGFloat.random(in: 5...10)
+        }
         leaf.alpha = alpha
+        leaf.zPosition = zPos
 
         // Vị trí bắt đầu
         let spawnY = startY ?? (size.height + 40)
         let spawnX = startX ?? CGFloat.random(in: -40...(size.width + 40))
         leaf.position = CGPoint(x: spawnX, y: spawnY)
         leaf.zRotation = CGFloat.random(in: -CGFloat.pi...CGFloat.pi)
-        leaf.zPosition = CGFloat.random(in: 1...10)
 
         addChild(leaf)
 
-        // Tính khoảng cách rơi và thời lượng
+        // Tính khoảng cách rơi và thời lượng theo phong cách của từng chiếc lá
         let targetY: CGFloat = -50
         let totalDistance = spawnY - targetY
         let fullScreenDistance = size.height + 90
         let distanceRatio = totalDistance / fullScreenDistance
 
         let baseDuration = Double.random(in: speedLevel.durationRange)
-        let leafDuration = max(1.0, baseDuration * Double(distanceRatio))
+        let durationMultiplier: Double
+        let swayWidth: CGFloat
+        let swayHalfPeriod: Double
+        let maxTilt: CGFloat
+        let flipDuration: Double
+        let windFactor: CGFloat
+
+        switch motionStyle {
+        case .fastDrop:
+            // Rơi nhanh dứt khoát: thời gian 50% - 68% chuẩn (chỉ mất ~2.4s - 4.5s rơi hết màn hình)
+            durationMultiplier = Double.random(in: 0.50...0.68)
+            swayWidth = CGFloat.random(in: 10...22) // Lắc hẹp, rơi dốc thẳng
+            swayHalfPeriod = Double.random(in: 0.65...1.0) // Nhịp lắc nhanh
+            maxTilt = CGFloat.random(in: 0.15...0.35) // Nghiêng ít, hướng dốc xuống
+            flipDuration = Double.random(in: 0.8...1.5)
+            windFactor = CGFloat.random(in: 0.65...0.85) // Ít bị gió tạt
+
+        case .flutter:
+            // Rơi tự nhiên tiêu chuẩn: thời gian 90% - 120% chuẩn (~4.5s - 8.0s)
+            durationMultiplier = Double.random(in: 0.90...1.20)
+            swayWidth = CGFloat.random(in: 30...55)
+            swayHalfPeriod = Double.random(in: 1.2...1.8)
+            maxTilt = CGFloat.random(in: 0.30...0.60)
+            flipDuration = Double.random(in: 1.4...2.4)
+            windFactor = CGFloat.random(in: 0.90...1.15)
+
+        case .gentleGlider:
+            // Rơi bồng bềnh siêu chậm: thời gian gấp 1.65 - 2.40 lần chuẩn (~8.5s - 15.0s)
+            durationMultiplier = Double.random(in: 1.65...2.40)
+            swayWidth = CGFloat.random(in: 58...92) // Lượn cánh rộng qua lại
+            swayHalfPeriod = Double.random(in: 2.0...3.0) // Lượn chậm rãi bồng bềnh
+            maxTilt = CGFloat.random(in: 0.50...0.85) // Chao nghiêng rõ theo mép lượn
+            flipDuration = Double.random(in: 2.2...3.8) // Lật nhẹ nhàng trong gió
+            windFactor = CGFloat.random(in: 1.25...1.55) // Dạt mạnh hơn theo gió
+        }
+
+        let fullFallDuration = baseDuration * durationMultiplier
+        let leafDuration = max(1.0, fullFallDuration * Double(distanceRatio))
 
         // MARK: - 1. Hành động rơi xuống kết hợp dạt theo gió
-        let windDrift = currentWindOffset * CGFloat(distanceRatio) + CGFloat.random(in: -20...30)
+        let windDrift = currentWindOffset * windFactor * CGFloat(distanceRatio) + CGFloat.random(in: -20...30)
         let fallAction = SKAction.moveBy(x: windDrift, y: -totalDistance, duration: leafDuration)
-        fallAction.timingMode = .linear
+        switch motionStyle {
+        case .fastDrop:
+            // Lá rơi nhanh hơi có gia tốc rơi tự do nhẹ
+            fallAction.timingMode = .easeIn
+        case .flutter, .gentleGlider:
+            fallAction.timingMode = .linear
+        }
 
-        // MARK: - 2. Hành động đung đưa qua lại (Swaying)
-        let swayWidth = CGFloat.random(in: 25...55)
-        let swayHalfPeriod = Double.random(in: 1.0...1.8)
-
+        // MARK: - 2. Hành động đung đưa qua lại (Swaying) & Chống đồng bộ
         let swayRight = SKAction.moveBy(x: swayWidth, y: 0, duration: swayHalfPeriod)
         swayRight.timingMode = .easeInEaseOut
 
         let swayLeft = SKAction.moveBy(x: -swayWidth, y: 0, duration: swayHalfPeriod)
         swayLeft.timingMode = .easeInEaseOut
 
-        let swaySequence = SKAction.sequence([swayRight, swayLeft])
-        let swayLoop = SKAction.repeatForever(swaySequence)
+        // 50% số lá bắt đầu lượn sang Phải, 50% bắt đầu sang Trái để không bị dao động cùng nhịp
+        let startRight = Bool.random()
+        let swaySequence = SKAction.sequence(startRight ? [swayRight, swayLeft] : [swayLeft, swayRight])
+        let initialPhaseDelay = Double.random(in: 0.0...swayHalfPeriod)
+        let swayLoop = SKAction.sequence([
+            SKAction.wait(forDuration: initialPhaseDelay),
+            SKAction.repeatForever(swaySequence)
+        ])
 
         // MARK: - 3. Hành động lượn góc theo nhịp đung đưa (Tilt)
-        let maxTilt = CGFloat.random(in: 0.25...0.65)
-        let tiltRight = SKAction.rotate(byAngle: maxTilt, duration: swayHalfPeriod)
-        tiltRight.timingMode = .easeInEaseOut
-        let tiltLeft = SKAction.rotate(byAngle: -maxTilt * 2, duration: swayHalfPeriod * 2)
-        tiltLeft.timingMode = .easeInEaseOut
-        let tiltBack = SKAction.rotate(byAngle: maxTilt, duration: swayHalfPeriod)
+        let tiltDirection: CGFloat = startRight ? 1.0 : -1.0
+        let tiltFirst = SKAction.rotate(byAngle: maxTilt * tiltDirection, duration: swayHalfPeriod)
+        tiltFirst.timingMode = .easeInEaseOut
+        let tiltSecond = SKAction.rotate(byAngle: -maxTilt * 2 * tiltDirection, duration: swayHalfPeriod * 2)
+        tiltSecond.timingMode = .easeInEaseOut
+        let tiltBack = SKAction.rotate(byAngle: maxTilt * tiltDirection, duration: swayHalfPeriod)
         tiltBack.timingMode = .easeInEaseOut
-        let tiltLoop = SKAction.repeatForever(SKAction.sequence([tiltRight, tiltLeft, tiltBack]))
+        let tiltLoop = SKAction.sequence([
+            SKAction.wait(forDuration: initialPhaseDelay),
+            SKAction.repeatForever(SKAction.sequence([tiltFirst, tiltSecond, tiltBack]))
+        ])
 
         // MARK: - 4. Hiệu ứng lật 3D trong không gian (Tumbling Flip)
-        // Lật xScale từ dương sang âm mô phỏng mặt trước/mặt sau của chiếc lá khi lượn trong gió
-        let flipDuration = Double.random(in: 1.2...2.4)
         let flipToBack = SKAction.scaleX(to: -baseScale * 0.9, duration: flipDuration / 2)
         flipToBack.timingMode = .easeInEaseOut
         let flipToFront = SKAction.scaleX(to: baseScale, duration: flipDuration / 2)
