@@ -68,6 +68,31 @@ public struct PlantMotionContext {
 
 // MARK: - Plant Motion Effect Protocol
 
+extension SKNode {
+    private static let restZRotationKey = "restZRotation"
+
+    /// Góc xoay nghỉ ban đầu của Node (chống trôi góc và chống hiện tượng lật xoay 180 độ khi tap liên tục dồn dập)
+    public var restZRotation: CGFloat {
+        get {
+            if let val = userData?[Self.restZRotationKey] as? CGFloat {
+                return val
+            }
+            let initial = zRotation
+            if userData == nil {
+                userData = NSMutableDictionary()
+            }
+            userData?[Self.restZRotationKey] = initial
+            return initial
+        }
+        set {
+            if userData == nil {
+                userData = NSMutableDictionary()
+            }
+            userData?[Self.restZRotationKey] = newValue
+        }
+    }
+}
+
 /// Giao diện chuẩn cho mọi hiệu ứng chuyển động rung lắc / nảy cành lá khi chạm vào cây
 public protocol PlantMotionEffect: AnyObject {
     /// Tên định danh của hiệu ứng chuyển động

@@ -436,6 +436,7 @@ public final class Plant1Node: SKNode {
                 leaf.isHidden = false
                 leaf.isPaused = false
                 leaf.speed = 1.0
+                leaf.restZRotation = leaf.zRotation
                 leafNodes.append(leaf)
 
                 // Tìm metadata bổ trợ góc uốn/thời gian nếu có, hoặc suy ra từ vị trí trực quan
@@ -472,6 +473,7 @@ public final class Plant1Node: SKNode {
             leaf.speed = 1.0
 
             plantRootNode.addChild(leaf)
+            leaf.restZRotation = leaf.zRotation
             leafNodes.append(leaf)
 
             let phaseDelay = Double(idx) * 0.12
@@ -500,12 +502,13 @@ public final class Plant1Node: SKNode {
         leaf.isPaused = false
         leaf.speed = 1.0
 
+        let rest = leaf.restZRotation
         let angleDelta = isLeft ? -bendAngle : bendAngle
 
-        let bendForward = SKAction.rotate(byAngle: angleDelta, duration: duration * 0.5)
+        let bendForward = SKAction.rotate(toAngle: rest + angleDelta, duration: duration * 0.5)
         bendForward.timingMode = .easeInEaseOut
 
-        let bendBackward = SKAction.rotate(byAngle: -angleDelta, duration: duration * 0.5)
+        let bendBackward = SKAction.rotate(toAngle: rest, duration: duration * 0.5)
         bendBackward.timingMode = .easeInEaseOut
 
         let flexIn = SKAction.scaleX(to: 0.96, y: 1.03, duration: duration * 0.5)

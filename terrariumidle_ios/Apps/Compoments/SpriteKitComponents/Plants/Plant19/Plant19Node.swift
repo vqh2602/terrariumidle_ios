@@ -285,6 +285,7 @@ public final class Plant19Node: SKNode {
                 leaf.isHidden = false
                 leaf.isPaused = false
                 leaf.speed = 1.0
+                leaf.restZRotation = leaf.zRotation
                 leafNodes.append(leaf)
 
                 let assetId = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
@@ -321,6 +322,7 @@ public final class Plant19Node: SKNode {
             leaf.zPosition = leafData.zPos
 
             fallbackGroup.addChild(leaf)
+            leaf.restZRotation = leaf.zRotation
             leafNodes.append(leaf)
 
             if leafData.shouldSway {
@@ -333,13 +335,15 @@ public final class Plant19Node: SKNode {
 
     private func startButterflyLeafSway(leaf: SKSpriteNode, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: TimeInterval) {
         leaf.removeAction(forKey: "butterflySway")
+        let rest = leaf.restZRotation
+        leaf.zRotation = rest
 
         // 1. Uốn lượn chao nghiêng mềm mại quanh điểm neo cuống
-        let rotateRight = SKAction.rotate(byAngle: bendAngle, duration: duration * 0.5)
+        let rotateRight = SKAction.rotate(toAngle: rest + bendAngle, duration: duration * 0.5)
         rotateRight.timingMode = .easeInEaseOut
-        let rotateLeft = SKAction.rotate(byAngle: -bendAngle * 2.0, duration: duration)
+        let rotateLeft = SKAction.rotate(toAngle: rest - bendAngle, duration: duration)
         rotateLeft.timingMode = .easeInEaseOut
-        let rotateBack = SKAction.rotate(byAngle: bendAngle, duration: duration * 0.5)
+        let rotateBack = SKAction.rotate(toAngle: rest, duration: duration * 0.5)
         rotateBack.timingMode = .easeInEaseOut
 
         // 2. Co giãn nhịp thở cánh bướm (Nyctinasty flutter): khẽ nâng cánh nhẹ nhàng

@@ -303,6 +303,7 @@ public final class Plant13Node: SKNode {
                 leaf.isHidden = false
                 leaf.isPaused = false
                 leaf.speed = 1.0
+                leaf.restZRotation = leaf.zRotation
                 leafNodes.append(leaf)
 
                 let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
@@ -342,6 +343,7 @@ public final class Plant13Node: SKNode {
             leaf.speed = 1.0
 
             fallbackGroup.addChild(leaf)
+            leaf.restZRotation = leaf.zRotation
             leafNodes.append(leaf)
 
             let phaseDelay = Double(idx) * 0.18
@@ -395,9 +397,9 @@ public final class Plant13Node: SKNode {
         sprout.isPaused = false
         sprout.speed = 1.0
 
-        let swayLeft = SKAction.rotate(byAngle: 0.045, duration: 2.2)
+        let swayLeft = SKAction.rotate(toAngle: -0.045, duration: 2.2)
         swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(byAngle: -0.045, duration: 2.2)
+        let swayRight = SKAction.rotate(toAngle: 0.045, duration: 2.2)
         swayRight.timingMode = .easeInEaseOut
         let sway = SKAction.sequence([swayLeft, swayRight])
         sprout.run(SKAction.repeatForever(sway), withKey: "sproutSway")
@@ -414,7 +416,8 @@ public final class Plant13Node: SKNode {
         leaf.xScale = 1.0
         leaf.yScale = 1.0
 
-        let restAngle = leaf.zRotation
+        let restAngle = leaf.restZRotation
+        leaf.zRotation = restAngle
         // Thân cọc/trụ (isTrunk) chỉ đung đưa rất nhẹ, các phiến lá và dây leo đung đưa rõ nét theo chiều gió
         let swayAngle: CGFloat = isTrunk ? 0.008 : max(0.045, bendAngle)
 

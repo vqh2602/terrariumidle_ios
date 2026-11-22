@@ -318,6 +318,7 @@ public final class Plant16Node: SKNode {
                 leaf.isHidden = false
                 leaf.isPaused = false
                 leaf.speed = 1.0
+                leaf.restZRotation = leaf.zRotation
                 leafNodes.append(leaf)
 
                 let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
@@ -356,6 +357,7 @@ public final class Plant16Node: SKNode {
             leaf.speed = 1.0
 
             fallbackGroup.addChild(leaf)
+            leaf.restZRotation = leaf.zRotation
             leafNodes.append(leaf)
 
             let phaseDelay = Double(idx) * 0.15
@@ -510,23 +512,20 @@ public final class Plant16Node: SKNode {
 
     private func startLeafSwayAnimation(leaf: SKSpriteNode, isLeft: Bool, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: TimeInterval) {
         leaf.removeAction(forKey: "leafSway")
-        // Reset về 0 để tránh tích lũy góc từ lần trước
-        leaf.zRotation = 0
+        let rest = leaf.restZRotation
+        leaf.zRotation = rest
 
         // Hướng đong: lá bên trái đong sang trái trước, lá bên phải đong sang phải trước
         let dir: CGFloat = isLeft ? -1.0 : 1.0
 
-        // Đung đưa bằng rotate(byAngle:) — góc TƯƠNG ĐỐI quanh cuống, không phụ thuộc world space
-        let swingOut  = SKAction.rotate(byAngle:  dir * bendAngle,         duration: duration * 0.50)
-        swingOut.timingMode  = .easeInEaseOut
-        let swingBack = SKAction.rotate(byAngle: -dir * bendAngle * 1.80,  duration: duration * 0.50)
+        let swingOut = SKAction.rotate(toAngle: rest + dir * bendAngle, duration: duration * 0.50)
+        swingOut.timingMode = .easeInEaseOut
+        let swingBack = SKAction.rotate(toAngle: rest - dir * bendAngle * 0.80, duration: duration * 0.50)
         swingBack.timingMode = .easeInEaseOut
-        let swingReturn = SKAction.rotate(byAngle: dir * bendAngle * 0.80, duration: duration * 0.40)
+        let swingReturn = SKAction.rotate(toAngle: rest, duration: duration * 0.40)
         swingReturn.timingMode = .easeInEaseOut
-        let recenter  = SKAction.rotate(byAngle: -dir * bendAngle * 0.00,  duration: duration * 0.10)
-        recenter.timingMode  = .easeInEaseOut
 
-        let swingCycle = SKAction.sequence([swingOut, swingBack, swingReturn, recenter])
+        let swingCycle = SKAction.sequence([swingOut, swingBack, swingReturn])
 
         // Nhấp nhô nhẹ theo chiều dài cành (scale Y) — cành dây nhện mềm mại
         let elongate = SKAction.scaleY(to: 1.018, duration: duration * 0.50)
@@ -562,14 +561,11 @@ public final class Plant16Node: SKNode {
         node.removeAction(forKey: "sproutSway")
         node.zRotation = 0
 
-        // Cây con đung đưa nhẹ quanh cuống (byAngle — tương đối, không tích lũy)
-        let swayLeft  = SKAction.rotate(byAngle: -0.04, duration: 2.2)
-        swayLeft.timingMode  = .easeInEaseOut
-        let swayRight = SKAction.rotate(byAngle:  0.08, duration: 2.2)
+        let swayLeft = SKAction.rotate(toAngle: -0.04, duration: 2.2)
+        swayLeft.timingMode = .easeInEaseOut
+        let swayRight = SKAction.rotate(toAngle: 0.04, duration: 2.2)
         swayRight.timingMode = .easeInEaseOut
-        let swayBack  = SKAction.rotate(byAngle: -0.04, duration: 2.2)
-        swayBack.timingMode  = .easeInEaseOut
 
-        node.run(SKAction.repeatForever(SKAction.sequence([swayLeft, swayRight, swayBack])), withKey: "sproutSway")
+        node.run(SKAction.repeatForever(SKAction.sequence([swayLeft, swayRight])), withKey: "sproutSway")
     }
 }

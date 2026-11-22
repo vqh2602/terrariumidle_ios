@@ -25,8 +25,9 @@ public final class ElasticPulseMotionEffect: PlantMotionEffect {
         let mult = max(0.1, durationMultiplier)
         let baseScale = context.baseScale
         let root = context.plantRootNode
-
         root.removeAction(forKey: "plantPulseTap")
+        root.zRotation = 0.0
+        root.setScale(baseScale)
 
         let p1 = SKAction.scale(to: baseScale * pulseScale, duration: 0.08 * mult)
         p1.timingMode = .easeOut
@@ -44,6 +45,10 @@ public final class ElasticPulseMotionEffect: PlantMotionEffect {
         // Rung nhẹ các lá xung quanh
         for (idx, leaf) in context.leafNodes.enumerated() {
             leaf.removeAction(forKey: "leafPulseJiggle")
+            let restAngle = leaf.restZRotation
+            leaf.zRotation = restAngle
+            leaf.setScale(1.0)
+
             let delay = SKAction.wait(forDuration: Double(idx) * 0.015 * mult)
             let jiggle = SKAction.sequence([
                 delay,

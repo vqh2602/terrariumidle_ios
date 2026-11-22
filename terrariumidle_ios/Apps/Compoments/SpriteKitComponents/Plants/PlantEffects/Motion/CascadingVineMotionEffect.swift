@@ -33,6 +33,8 @@ public final class CascadingVineMotionEffect: PlantMotionEffect {
 
         let root = context.plantRootNode
         root.removeAction(forKey: "vineTapRoot")
+        root.zRotation = 0.0
+        root.setScale(context.baseScale)
 
         // Gốc cành chỉ đung đưa nhẹ quanh miệng chậu
         let rootSway1 = SKAction.rotate(toAngle: waveAngle * 0.35, duration: 0.20 * mult)
@@ -51,19 +53,24 @@ public final class CascadingVineMotionEffect: PlantMotionEffect {
         // Chuỗi dây leo / phiến lá đung đưa lan truyền từ trên xuống dưới
         for (idx, leaf) in context.leafNodes.enumerated() {
             leaf.removeAction(forKey: "vineLeafWave")
+            let restAngle = leaf.restZRotation
+            leaf.zRotation = restAngle // Triệt tiêu tức thì góc xoay trôi dạt do ngắt action trước
 
             let delay = SKAction.wait(forDuration: Double(idx) * 0.035 * mult)
             let dir: CGFloat = (idx % 2 == 0) ? 1.0 : -0.8
-            let s1 = SKAction.rotate(byAngle: waveAngle * dir, duration: 0.20 * mult)
+            let s1 = SKAction.rotate(toAngle: restAngle + waveAngle * dir, duration: 0.20 * mult)
             s1.timingMode = .easeOut
-            let s2 = SKAction.rotate(byAngle: -waveAngle * dir * 1.3, duration: 0.28 * mult)
+            let s2 = SKAction.rotate(toAngle: restAngle - waveAngle * dir * 0.5, duration: 0.28 * mult)
             s2.timingMode = .easeInEaseOut
-            let s3 = SKAction.rotate(byAngle: waveAngle * dir * 0.5, duration: 0.22 * mult)
+            let s3 = SKAction.rotate(toAngle: restAngle + waveAngle * dir * 0.2, duration: 0.22 * mult)
             s3.timingMode = .easeInEaseOut
-            let sRest = SKAction.rotate(toAngle: 0.0, duration: 0.18 * mult)
+            let sRest = SKAction.rotate(toAngle: restAngle, duration: 0.18 * mult)
             sRest.timingMode = .easeOut
+            let resetEnd = SKAction.run { [weak leaf] in
+                leaf?.zRotation = restAngle
+            }
 
-            leaf.run(SKAction.sequence([delay, s1, s2, s3, sRest]), withKey: "vineLeafWave")
+            leaf.run(SKAction.sequence([delay, s1, s2, s3, sRest, resetEnd]), withKey: "vineLeafWave")
         }
     }
 }

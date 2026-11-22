@@ -303,6 +303,7 @@ public final class Plant8Node: SKNode {
                 leaf.isHidden = false
                 leaf.isPaused = false
                 leaf.speed = 1.0
+                leaf.restZRotation = leaf.zRotation
                 leafNodes.append(leaf)
 
                 let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
@@ -341,6 +342,7 @@ public final class Plant8Node: SKNode {
             leaf.speed = 1.0
 
             fallbackGroup.addChild(leaf)
+            leaf.restZRotation = leaf.zRotation
             leafNodes.append(leaf)
 
             let phaseDelay = Double(idx) * 0.12
@@ -355,11 +357,11 @@ public final class Plant8Node: SKNode {
         plantRootNode.isPaused = false
         plantRootNode.speed = 1.0
 
-        let swayLeft = SKAction.rotate(byAngle: 0.012, duration: 4.2)
-        swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(byAngle: -0.012, duration: 4.2)
-        swayRight.timingMode = .easeInEaseOut
-        let trunkSeq = SKAction.sequence([swayLeft, swayRight])
+        let trunkSwayLeft = SKAction.rotate(toAngle: -0.012, duration: 4.2)
+        trunkSwayLeft.timingMode = .easeInEaseOut
+        let trunkSwayRight = SKAction.rotate(toAngle: 0.012, duration: 4.2)
+        trunkSwayRight.timingMode = .easeInEaseOut
+        let trunkSeq = SKAction.sequence([trunkSwayLeft, trunkSwayRight])
         plantRootNode.run(SKAction.repeatForever(trunkSeq), withKey: "trunkSway")
     }
 
@@ -393,9 +395,9 @@ public final class Plant8Node: SKNode {
         sprout.isPaused = false
         sprout.speed = 1.0
 
-        let swayLeft = SKAction.rotate(byAngle: 0.045, duration: 2.2)
+        let swayLeft = SKAction.rotate(toAngle: -0.045, duration: 2.2)
         swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(byAngle: -0.045, duration: 2.2)
+        let swayRight = SKAction.rotate(toAngle: 0.045, duration: 2.2)
         swayRight.timingMode = .easeInEaseOut
         let sway = SKAction.sequence([swayLeft, swayRight])
         sprout.run(SKAction.repeatForever(sway), withKey: "sproutSway")
@@ -408,10 +410,11 @@ public final class Plant8Node: SKNode {
         leaf.isPaused = false
         leaf.speed = 1.0
 
+        let rest = leaf.restZRotation
         let primaryAngle = isLeft ? bendAngle : -bendAngle
-        let rotOut = SKAction.rotate(byAngle: primaryAngle, duration: duration)
+        let rotOut = SKAction.rotate(toAngle: rest + primaryAngle, duration: duration)
         rotOut.timingMode = .easeInEaseOut
-        let rotIn = SKAction.rotate(byAngle: -primaryAngle, duration: duration)
+        let rotIn = SKAction.rotate(toAngle: rest, duration: duration)
         rotIn.timingMode = .easeInEaseOut
 
         let stretchOut = SKAction.scaleY(to: 1.025, duration: duration)

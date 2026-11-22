@@ -314,6 +314,7 @@ public final class Plant18Node: SKNode {
                 leaf.isHidden = false
                 leaf.isPaused = false
                 leaf.speed = 1.0
+                leaf.restZRotation = leaf.zRotation
                 leafNodes.append(leaf)
 
                 let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
@@ -350,6 +351,7 @@ public final class Plant18Node: SKNode {
             leaf.speed = 1.0
 
             fallbackGroup.addChild(leaf)
+            leaf.restZRotation = leaf.zRotation
             leafNodes.append(leaf)
 
             if data.shouldSway {
@@ -507,11 +509,13 @@ public final class Plant18Node: SKNode {
 
     private func startLeafSwayAnimation(leaf: SKSpriteNode, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: TimeInterval) {
         leaf.removeAction(forKey: "leafSway")
+        let rest = leaf.restZRotation
+        leaf.zRotation = rest
 
         // Chuỗi ngọc đung đưa con lắc gió uyển chuyển quanh cuống rủ (anchorY = 1.0)
-        let swingLeft = SKAction.rotate(toAngle: -bendAngle, duration: duration * 0.50)
+        let swingLeft = SKAction.rotate(toAngle: rest - bendAngle, duration: duration * 0.50)
         swingLeft.timingMode = .easeInEaseOut
-        let swingRight = SKAction.rotate(toAngle: bendAngle, duration: duration * 0.50)
+        let swingRight = SKAction.rotate(toAngle: rest + bendAngle, duration: duration * 0.50)
         swingRight.timingMode = .easeInEaseOut
         let swingCycle = SKAction.sequence([swingLeft, swingRight])
 

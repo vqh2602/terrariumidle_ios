@@ -52,6 +52,8 @@ public final class WindSwayMotionEffect: PlantMotionEffect {
         let mult = max(0.1, durationMultiplier)
         node.removeAction(forKey: "seedTapWind")
         node.position = context.initialSeedPosition
+        node.setScale(1.0)
+        node.zRotation = 0.0
 
         // Hạt lắc lư chao nghiêng nhẹ nhàng như đón làn gió thoảng
         let swayR = SKAction.rotate(toAngle: swayAngle * 1.5, duration: 0.12 * mult)
@@ -95,7 +97,8 @@ public final class WindSwayMotionEffect: PlantMotionEffect {
         let mult = max(0.1, durationMultiplier)
         node.removeAction(forKey: "sproutTapWind")
         node.position = context.initialSproutPosition
-        node.zRotation = 0
+        node.setScale(1.0)
+        node.zRotation = 0.0
 
         // Mầm non đón gió uốn lượn 3 nhịp mềm mại
         let sway1 = SKAction.rotate(toAngle: swayAngle * 2.2, duration: 0.15 * mult)
@@ -129,6 +132,8 @@ public final class WindSwayMotionEffect: PlantMotionEffect {
         let root = context.plantRootNode
 
         root.removeAction(forKey: "matureTapWind")
+        root.zRotation = 0.0
+        root.setScale(context.baseScale)
 
         // 1. Thân cây và toàn bộ tán chao nghiêng đón gió
         let windTilt = SKAction.rotate(toAngle: swayAngle, duration: 0.22 * mult)
@@ -160,20 +165,25 @@ public final class WindSwayMotionEffect: PlantMotionEffect {
         // 2. Từng phiến lá uốn cong mềm mại đón gió theo chuỗi sóng
         for (idx, leaf) in context.leafNodes.enumerated() {
             leaf.removeAction(forKey: "leafWindSway")
+            let restAngle = leaf.restZRotation
+            leaf.zRotation = restAngle // Triệt tiêu tức thì góc xoay trôi dạt do ngắt action trước
 
             let isLeft = leaf.position.x < 0
             // Lá đón gió (bên trái) bị bẻ cong nhiều hơn, lá khuất gió uốn theo chiều gió
             let impulse = (isLeft ? 1.0 : -0.75) * leafBendAngle * CGFloat.random(in: 0.85...1.15)
 
             let delay = SKAction.wait(forDuration: Double(idx) * 0.025 * mult)
-            let bendOut = SKAction.rotate(byAngle: impulse, duration: 0.18 * mult)
+            let bendOut = SKAction.rotate(toAngle: restAngle + impulse, duration: 0.18 * mult)
             bendOut.timingMode = .easeOut
-            let bendBack = SKAction.rotate(byAngle: -impulse * 1.25, duration: 0.26 * mult)
+            let bendBack = SKAction.rotate(toAngle: restAngle - impulse * 0.35, duration: 0.26 * mult)
             bendBack.timingMode = .easeInEaseOut
-            let settle = SKAction.rotate(toAngle: 0.0, duration: 0.20 * mult)
+            let settle = SKAction.rotate(toAngle: restAngle, duration: 0.20 * mult)
             settle.timingMode = .easeOut
+            let resetEnd = SKAction.run { [weak leaf] in
+                leaf?.zRotation = restAngle
+            }
 
-            leaf.run(SKAction.sequence([delay, bendOut, bendBack, settle]), withKey: "leafWindSway")
+            leaf.run(SKAction.sequence([delay, bendOut, bendBack, settle, resetEnd]), withKey: "leafWindSway")
         }
     }
 }

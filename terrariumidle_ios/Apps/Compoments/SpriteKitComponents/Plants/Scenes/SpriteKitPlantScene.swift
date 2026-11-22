@@ -19,6 +19,7 @@ public final class SpriteKitPlantScene: SKScene {
     private var isHanging: Bool = false
 
     private var baseScale: CGFloat = 1.0
+    private var lastTapTime: TimeInterval = 0
 
     private var hasActivePlantNode: Bool {
         plantNode != nil || customPlantInteractive != nil
@@ -163,6 +164,10 @@ public final class SpriteKitPlantScene: SKScene {
     // MARK: - Animation: Phản hồi khi người dùng chạm vào cây (Tap Bounce)
 
     public func playTapAnimation() {
+        let now = CACurrentMediaTime()
+        guard now - lastTapTime > 0.08 else { return } // Debounce 80ms chống tap đúp dồn dập
+        lastTapTime = now
+
         if let custom = customPlantInteractive {
             custom.playTapAnimation()
             return

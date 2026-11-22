@@ -302,6 +302,7 @@ public final class Plant15Node: SKNode {
                 leaf.isHidden = false
                 leaf.isPaused = false
                 leaf.speed = 1.0
+                leaf.restZRotation = leaf.zRotation
                 leafNodes.append(leaf)
 
                 let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
@@ -341,6 +342,7 @@ public final class Plant15Node: SKNode {
             leaf.speed = 1.0
 
             fallbackGroup.addChild(leaf)
+            leaf.restZRotation = leaf.zRotation
             leafNodes.append(leaf)
 
             let phaseDelay = Double(idx) * 0.20

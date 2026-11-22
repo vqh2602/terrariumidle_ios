@@ -43,6 +43,8 @@ public final class StandardPlantBounceMotionEffect: PlantMotionEffect {
         let mult = max(0.1, durationMultiplier)
         node.removeAction(forKey: "seedTapHop")
         node.position = context.initialSeedPosition
+        node.setScale(1.0)
+        node.zRotation = 0.0
 
         let squash = SKAction.scaleX(to: 1.28, y: 0.72, duration: 0.08 * mult)
         squash.timingMode = .easeIn
@@ -89,7 +91,8 @@ public final class StandardPlantBounceMotionEffect: PlantMotionEffect {
         let mult = max(0.1, durationMultiplier)
         node.removeAction(forKey: "sproutTapBounce")
         node.position = context.initialSproutPosition
-        node.zRotation = 0
+        node.setScale(1.0)
+        node.zRotation = 0.0
 
         // 1. Nén nhún đàn hồi lò xo
         let squash = SKAction.scaleX(to: 1.26, y: 0.74, duration: 0.08 * mult)
@@ -135,6 +138,8 @@ public final class StandardPlantBounceMotionEffect: PlantMotionEffect {
         let root = context.plantRootNode
 
         root.removeAction(forKey: "matureTapBounce")
+        root.setScale(baseScale)
+        root.zRotation = 0.0
 
         // 1. Squash & Stretch cả cây đàn hồi lò xo
         let squashScaleX = baseScale * (1.0 + 0.15 * bounceIntensity)
@@ -161,16 +166,22 @@ public final class StandardPlantBounceMotionEffect: PlantMotionEffect {
         // 2. Gợn sóng xao động lan tỏa qua các phiến lá
         for (idx, leaf) in context.leafNodes.enumerated() {
             leaf.removeAction(forKey: "leafTapJiggle")
+            let restAngle = leaf.restZRotation
+            leaf.zRotation = restAngle // Triệt tiêu tức thì góc xoay trôi dạt do ngắt action trước
+
             let isLeft = leaf.position.x < 0
             let impulseAngle: CGFloat = (isLeft ? -1.0 : 1.0) * CGFloat.random(in: 0.08...0.12) * bounceIntensity
 
             let delay = SKAction.wait(forDuration: Double(idx) * 0.02 * mult)
-            let jiggleOut = SKAction.rotate(byAngle: impulseAngle, duration: 0.08 * mult)
+            let jiggleOut = SKAction.rotate(toAngle: restAngle + impulseAngle, duration: 0.08 * mult)
             jiggleOut.timingMode = .easeOut
-            let jiggleBack = SKAction.rotate(byAngle: -impulseAngle, duration: 0.12 * mult)
+            let jiggleBack = SKAction.rotate(toAngle: restAngle, duration: 0.12 * mult)
             jiggleBack.timingMode = .easeInEaseOut
+            let resetEnd = SKAction.run { [weak leaf] in
+                leaf?.zRotation = restAngle
+            }
 
-            leaf.run(SKAction.sequence([delay, jiggleOut, jiggleBack]), withKey: "leafTapJiggle")
+            leaf.run(SKAction.sequence([delay, jiggleOut, jiggleBack, resetEnd]), withKey: "leafTapJiggle")
         }
     }
 }

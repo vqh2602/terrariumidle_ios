@@ -419,6 +419,7 @@ public final class Plant6Node: SKNode {
                 leaf.isHidden = false
                 leaf.isPaused = false
                 leaf.speed = 1.0
+                leaf.restZRotation = leaf.zRotation
                 leafNodes.append(leaf)
 
                 let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
@@ -452,6 +453,7 @@ public final class Plant6Node: SKNode {
             leaf.speed = 1.0
 
             plantRootNode.addChild(leaf)
+            leaf.restZRotation = leaf.zRotation
             leafNodes.append(leaf)
 
             let phaseDelay = Double(idx) * 0.14
@@ -480,11 +482,12 @@ public final class Plant6Node: SKNode {
         leaf.isPaused = false
         leaf.speed = 1.0
 
+        let rest = leaf.restZRotation
         let angleDelta = isLeft ? -bendAngle : bendAngle
 
-        let bendForward = SKAction.rotate(byAngle: angleDelta, duration: duration * 0.5)
+        let bendForward = SKAction.rotate(toAngle: rest + angleDelta, duration: duration * 0.5)
         bendForward.timingMode = .easeInEaseOut
-        let bendBack = SKAction.rotate(byAngle: -angleDelta, duration: duration * 0.5)
+        let bendBack = SKAction.rotate(toAngle: rest, duration: duration * 0.5)
         bendBack.timingMode = .easeInEaseOut
 
         let swayCycle = SKAction.sequence([bendForward, bendBack])

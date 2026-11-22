@@ -304,6 +304,7 @@ public final class Plant9Node: SKNode {
                 leaf.isHidden = false
                 leaf.isPaused = false
                 leaf.speed = 1.0
+                leaf.restZRotation = leaf.zRotation
                 leafNodes.append(leaf)
 
                 // leaf_2 là thân cọc & các nhánh cuống: không lắc riêng lẻ để tránh tách rời cuống khỏi lá
@@ -347,6 +348,7 @@ public final class Plant9Node: SKNode {
             leaf.speed = 1.0
 
             fallbackGroup.addChild(leaf)
+            leaf.restZRotation = leaf.zRotation
             leafNodes.append(leaf)
 
             if data.assetId == 2 {
@@ -366,11 +368,11 @@ public final class Plant9Node: SKNode {
         plantRootNode.speed = 1.0
 
         // Đung đưa nhẹ nhàng cả bụi cây (thân và tất cả các lá cùng nghiêng đồng bộ theo gió)
-        let swayLeft = SKAction.rotate(byAngle: 0.008, duration: 4.2)
-        swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(byAngle: -0.008, duration: 4.2)
-        swayRight.timingMode = .easeInEaseOut
-        let trunkSeq = SKAction.sequence([swayLeft, swayRight])
+        let trunkSwayLeft = SKAction.rotate(toAngle: -0.008, duration: 4.2)
+        trunkSwayLeft.timingMode = .easeInEaseOut
+        let trunkSwayRight = SKAction.rotate(toAngle: 0.008, duration: 4.2)
+        trunkSwayRight.timingMode = .easeInEaseOut
+        let trunkSeq = SKAction.sequence([trunkSwayLeft, trunkSwayRight])
         plantRootNode.run(SKAction.repeatForever(trunkSeq), withKey: "trunkSway")
     }
 
@@ -404,9 +406,9 @@ public final class Plant9Node: SKNode {
         sprout.isPaused = false
         sprout.speed = 1.0
 
-        let swayLeft = SKAction.rotate(byAngle: 0.045, duration: 2.2)
+        let swayLeft = SKAction.rotate(toAngle: -0.045, duration: 2.2)
         swayLeft.timingMode = .easeInEaseOut
-        let swayRight = SKAction.rotate(byAngle: -0.045, duration: 2.2)
+        let swayRight = SKAction.rotate(toAngle: 0.045, duration: 2.2)
         swayRight.timingMode = .easeInEaseOut
         let sway = SKAction.sequence([swayLeft, swayRight])
         sprout.run(SKAction.repeatForever(sway), withKey: "sproutSway")
@@ -419,11 +421,12 @@ public final class Plant9Node: SKNode {
         leaf.isPaused = false
         leaf.speed = 1.0
 
+        let rest = leaf.restZRotation
         let angleDelta = isLeft ? -bendAngle : bendAngle
 
-        let rotOut = SKAction.rotate(byAngle: angleDelta, duration: duration * 0.5)
+        let rotOut = SKAction.rotate(toAngle: rest + angleDelta, duration: duration * 0.5)
         rotOut.timingMode = .easeInEaseOut
-        let rotIn = SKAction.rotate(byAngle: -angleDelta, duration: duration * 0.5)
+        let rotIn = SKAction.rotate(toAngle: rest, duration: duration * 0.5)
         rotIn.timingMode = .easeInEaseOut
 
         // Nhịp thở nhún nhảy đặc trưng của lá tròn đồng tiền (Pilea coin leaf bounce)
