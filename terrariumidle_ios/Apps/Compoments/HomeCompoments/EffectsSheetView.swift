@@ -25,6 +25,20 @@ struct EffectsSheetView: View {
         MusicUnlockHelper.getUnlockedMusicIds(from: fireStore.gradenModel)
     }
 
+    private func isItemSelected(_ selectedId: String?, matches item: ItemData) -> Bool {
+        guard let selectedId = selectedId, !selectedId.isEmpty else { return false }
+        if selectedId == item.image || selectedId == item.id {
+            return true
+        }
+        if selectedId.hasPrefix("i_") && String(selectedId.dropFirst(2)) == item.image {
+            return true
+        }
+        if item.image.hasPrefix("i_") && selectedId == String(item.image.dropFirst(2)) {
+            return true
+        }
+        return false
+    }
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -41,10 +55,7 @@ struct EffectsSheetView: View {
                         VStack(spacing: 12) {
                             ForEach(landscapes) { item in
                                 let isLocked = !unlockedIds.contains(item.id)
-                                let isSelected = selectedLandscapeId == item.image ||
-                                                 selectedLandscapeId == item.id ||
-                                                 (!selectedLandscapeId.isEmpty && selectedLandscapeId.hasPrefix("i_") && String(selectedLandscapeId.dropFirst(2)) == item.image) ||
-                                                 (!selectedLandscapeId.isEmpty && item.image.hasPrefix("i_") && selectedLandscapeId == String(item.image.dropFirst(2)))
+                                let isSelected = isItemSelected(selectedLandscapeId, matches: item)
                                 EffectCardView(
                                     item: item,
                                     isSelected: isSelected,
@@ -66,10 +77,7 @@ struct EffectsSheetView: View {
                         VStack(spacing: 12) {
                             ForEach(effects) { item in
                                 let isLocked = !unlockedIds.contains(item.id)
-                                let isSelected = selectedEffectId == item.image ||
-                                                 selectedEffectId == item.id ||
-                                                 (!selectedEffectId.isEmpty && selectedEffectId.hasPrefix("i_") && String(selectedEffectId.dropFirst(2)) == item.image) ||
-                                                 (!selectedEffectId.isEmpty && item.image.hasPrefix("i_") && selectedEffectId == String(item.image.dropFirst(2)))
+                                let isSelected = isItemSelected(selectedEffectId, matches: item)
                                 EffectCardView(
                                     item: item,
                                     isSelected: isSelected,

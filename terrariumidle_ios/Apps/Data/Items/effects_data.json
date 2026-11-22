@@ -9,9 +9,12 @@
         "density": "medium",
         "speed": "normal",
         "images": [
-            "leaf_emerald_1",
-            "leaf_emerald_2",
-            "leaf_emerald_3"
+            "overlay1-1@2.083x",
+            "overlay1-2@2.083x",
+            "overlay1-3@2.083x",
+            "overlay1-4@2.083x",
+            "overlay1-5@2.083x",
+            "overlay1-6@2.083x"
         ],
         "priceStore": 0,
         "priceOxygen": 0,
