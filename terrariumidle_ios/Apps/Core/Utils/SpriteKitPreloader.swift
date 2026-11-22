@@ -22,7 +22,7 @@ final class SpriteKitPreloader {
     /// Tên các .sks file cần warm-up (sẽ được SKScene(fileNamed:) cache lại)
     private static let sksSceneNames: [String] = (1...19).map { "Plant\($0)Scene" }
         + (1...19).map { "Pot\($0)Scene" }
-        + ["Landscape1Scene"]
+        + ["Landscape1Scene", "Landscape2Scene", "Landscape3Scene"]
 
     /// Tên các texture/image từ Assets.xcassets cần preload vào GPU memory
     /// nonisolated để có thể dùng từ nonisolated context (preloadTextures)

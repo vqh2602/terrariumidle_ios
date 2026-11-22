@@ -19,7 +19,12 @@ public final class LandscapeFactory {
             return Landscape1Node(containerSize: containerSize)
         case "landscape2", "land2", "sunset", "sky_sunset", "i_sky_sunset", "landscape2-1@4.167x":
             return Landscape2Node(containerSize: containerSize)
+        case "landscape3", "land3", "rain", "sky_rain", "i_sky_rain", "landscape3-1@4.167x":
+            return Landscape3Node(containerSize: containerSize)
         default:
+            if cleanId.contains("3") || cleanId.contains("rain") {
+                return Landscape3Node(containerSize: containerSize)
+            }
             if cleanId.contains("2") || cleanId.contains("sunset") {
                 return Landscape2Node(containerSize: containerSize)
             }
