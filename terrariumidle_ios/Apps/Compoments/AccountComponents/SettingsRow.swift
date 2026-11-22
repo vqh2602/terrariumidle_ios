@@ -1,11 +1,33 @@
-//
-//  SettingsRow.swift
-//  terrariumidle_ios
-//
-//  Created by AI on 11/2/26.
-//
-
 import SwiftUI
+
+/// Warm, outlined surfaces shared by the account screen.
+enum AccountStyle {
+    static let ink = Color(hex: "57432E")
+    static let muted = Color(hex: "88765C")
+    static let green = Color(hex: "567747")
+    static let cream = Color(hex: "FFFAEA")
+    static let border = Color(hex: "DDCBA6")
+    static let danger = Color(hex: "B45549")
+}
+
+struct AccountPanel: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(AccountStyle.cream)
+            .clipShape(RoundedRectangle(cornerRadius: 24))
+            .overlay {
+                RoundedRectangle(cornerRadius: 24)
+                    .strokeBorder(AccountStyle.border, lineWidth: 1.5)
+                    .padding(4)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 24)
+                    .strokeBorder(.white.opacity(0.8), lineWidth: 1.5)
+            }
+            .compositingGroup()
+            .shadow(color: AccountStyle.border.opacity(0.65), radius: 0, y: 4)
+    }
+}
 
 struct SettingsRow: View {
     let title: String
@@ -35,70 +57,63 @@ struct SettingsRow: View {
     }
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                // Icon (optional)
-                if let icon = icon {
-                    Image(systemName: icon)
-                        .font(.system(size: 18))
-                        .foregroundColor(isDestructive ? .red : .gray)
-                        .frame(width: 24)
-                }
-
-                // Title
-                Text(title)
-                    .font(.system(size: 16))
-                    .foregroundColor(isDestructive ? .red : .primary)
-
-                Spacer()
-
-                // Trailing content
-                switch trailingContent {
-                case .chevron:
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray)
-
-                case let .toggle(binding):
-                    Toggle("", isOn: binding)
-                        .labelsHidden()
-
-                case .none:
-                    EmptyView()
-                }
+        // A toggle owns its interaction; nesting it inside a Button can toggle twice.
+        switch trailingContent {
+        case let .toggle(binding):
+            Toggle(isOn: binding) {
+                rowLabel
             }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
-            .background(.regularMaterial)
+            .tint(AccountStyle.green)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
+        default:
+            Button(action: action) {
+                HStack(spacing: 12) {
+                    rowLabel
+                    Spacer(minLength: 4)
+                    if case .chevron = trailingContent {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(AccountStyle.muted)
+                            .frame(width: 26, height: 26)
+                            .background(AccountStyle.border.opacity(0.28), in: Circle())
+                    }
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 14)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(PlainButtonStyle())
-//        .background(.regularMaterial)
+    }
+
+    private var rowLabel: some View {
+        HStack(spacing: 12) {
+            if let icon {
+                Image(systemName: icon)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(isDestructive ? AccountStyle.danger : AccountStyle.green)
+                    .frame(width: 36, height: 36)
+                    .background(
+                        isDestructive ? AccountStyle.danger.opacity(0.09) : AccountStyle.green.opacity(0.10),
+                        in: RoundedRectangle(cornerRadius: 12)
+                    )
+            }
+            Text(title)
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(isDestructive ? AccountStyle.danger : AccountStyle.ink)
+                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.leading)
+        }
+        .frame(minHeight: 36)
     }
 }
 
 #Preview {
-    VStack(spacing: 1) {
-        SettingsRow(
-            title: "Đồng bộ dữ liệu",
-            icon: "arrow.triangle.2.circlepath",
-            trailingContent: .chevron
-        ) {
-            print("Sync tapped")
-        }
-
-        SettingsRow(
-            title: "Chế độ hiệu suất cao",
-            trailingContent: .toggle(.constant(true))
-        )
-
-        SettingsRow(
-            title: "Xóa tài khoản",
-            icon: "trash",
-            isDestructive: true,
-            trailingContent: .none
-        ) {
-            print("Delete tapped")
-        }
+    VStack(spacing: 0) {
+        SettingsRow(title: "Đồng bộ dữ liệu", icon: "arrow.triangle.2.circlepath")
+        SettingsRow(title: "Hiệu suất cao", icon: "bolt.fill", trailingContent: .toggle(.constant(true)))
     }
-    .background(Color.gray.opacity(0.2))
+    .modifier(AccountPanel())
+    .padding()
 }

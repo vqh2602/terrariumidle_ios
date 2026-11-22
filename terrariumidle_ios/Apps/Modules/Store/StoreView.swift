@@ -1,10 +1,3 @@
-//
-//  StoreView.swift
-//  terrariumidle_ios
-//
-//  Created by AI on 9/2/26.
-//
-
 import FirebaseAuth
 import SwiftUI
 
@@ -18,64 +11,66 @@ struct StoreView: View {
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                // MARK: - Top Bar: User Stats
-
-                userStatsBar
-                    .padding(.horizontal)
-                    .padding(.top, geometry.safeAreaInsets.top + 10)
-                    .padding(.bottom, 10)
-
-                Divider()
-
-                // MARK: - Tab Selector
-
-                tabSelector
-                    .padding(.vertical, 12)
-
-                Divider()
-
-                // MARK: - Search Bar
-
-                searchBar
-                    .padding(.horizontal)
-                    .padding(.vertical, 12)
-
-                // MARK: - Items List
-
-                if viewModel.isLoading {
-                    Spacer()
-                    ProgressView()
-                        .scaleEffect(1.5)
-                    Spacer()
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 12) {
-                            ForEach(viewModel.filteredItems) { item in
-                                StoreItemCard(
-                                    item: item,
-                                    isOwned: viewModel.isOwned(item: item),
-                                    canAfford: viewModel.canAfford(item: item),
-                                    meetsLevelRequirement: viewModel.meetsLevelRequirement(item: item),
-                                    onPurchase: { item in
-                                        Task {
-                                            await viewModel.purchaseItem(item)
-                                        }
-                                    }
-                                )
-                            }
+        VStack(spacing: 0) {
+            header
+            userStatsBar
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
+            tabSelector
+                .padding(.bottom, 16)
+            searchBar
+                .padding(.horizontal, 20)
+                .padding(.bottom, 16)
+            if viewModel.isLoading {
+                Spacer()
+                ProgressView("Đang chăm chút gian hàng…")
+                    .tint(AccountStyle.green)
+                    .foregroundStyle(AccountStyle.muted)
+                Spacer()
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        HStack {
+                            Label(viewModel.selectedTab.rawValue, systemImage: tabIcon(viewModel.selectedTab))
+                                .font(.system(.headline, design: .rounded, weight: .bold))
+                                .foregroundStyle(AccountStyle.ink)
+                            Spacer()
+                            Text("\(viewModel.filteredItems.count) vật phẩm")
+                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .foregroundStyle(AccountStyle.muted)
                         }
-                        .padding(.horizontal)
-                        .padding(.top, 8)
-                        .padding(.bottom, 40)
+                        .padding(.horizontal, 4)
+                        if viewModel.filteredItems.isEmpty {
+                            emptyState
+                        }
+                        ForEach(viewModel.filteredItems) { item in
+                            StoreItemCard(
+                                item: item,
+                                isOwned: viewModel.isOwned(item: item),
+                                canAfford: viewModel.canAfford(item: item),
+                                meetsLevelRequirement: viewModel.meetsLevelRequirement(item: item),
+                                onPurchase: { item in
+                                    Task { await viewModel.purchaseItem(item) }
+                                }
+                            )
+                        }
                     }
+                    .frame(maxWidth: 600)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 4)
+                    .padding(.bottom, 32)
                 }
+                .scrollIndicators(.hidden)
+                .scrollDismissesKeyboard(.interactively)
             }
-            .background(Color(UIColor.systemGroupedBackground))
-            .navigationBarHidden(true)
-            .ignoresSafeArea(.all, edges: .top)
         }
+        .background {
+            LinearGradient(colors: [Color(hex: "E9EED9"), Color(hex: "F7EEDB")],
+                           startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+        }
+        .navigationBarHidden(true)
         .task {
             // Load user data
             guard let userId = AuthService.shared.currentUser?.uid else { return }
@@ -95,146 +90,183 @@ struct StoreView: View {
         }
     }
 
-    // MARK: - User Stats Bar
+    private var header: some View {
+        ZStack {
+            VStack(spacing: 3) {
+                Text("Cửa hàng")
+                    .font(.system(.title2, design: .rounded, weight: .heavy))
+                    .foregroundStyle(AccountStyle.ink)
+                Text("THÊM XANH CHO GÓC VƯỜN")
+                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                    .tracking(1.5)
+                    .foregroundStyle(AccountStyle.green)
+            }
+            HStack {
+                Button { router.pop() } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(AccountStyle.ink)
+                        .frame(width: 44, height: 44)
+                        .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 16))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 16)
+                                .strokeBorder(AccountStyle.border, lineWidth: 1.5)
+                        }
+                        .compositingGroup()
+                        .shadow(color: AccountStyle.border, radius: 0, y: 3)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Quay lại")
+                Spacer()
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+    }
 
     private var userStatsBar: some View {
-        HStack(spacing: 16) {
-            // Back button
-            Button(action: {
-                router.pop()
-            }) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.primary)
-            }
-
-            Spacer()
-
-            if let gardenModel = fireStore.gradenModel {
-                // Oxygen
-                statBadge(
-                    icon: "oxygen",
-                    iconColor: .green,
-                    value: formatNumber(gardenModel.money.oxygen)
-                )
-
-                // Gemstone
-                statBadge(
-                    icon: "gemstone",
-                    iconColor: .blue,
-                    value: formatNumber(gardenModel.money.gemstone)
-                )
-
-                // Ticket
-                statBadge(
-                    icon: "ticket",
-                    iconColor: .orange,
-                    value: formatNumber(gardenModel.money.ticket)
-                )
-
-                // shovel
-                statBadge(
-                    icon: "shovel",
-                    iconColor: .yellow,
-                    value: "\(formatNumber(gardenModel.item.shovel))"
-                )
-                statBadge(
-                    icon: "fertilizer",
-                    iconColor: .yellow,
-                    value: "\(formatNumber(gardenModel.item.fertilizer))"
-                )
-            }
+        // The wallet has its own row below the navigation bar. Equal-width cells
+        // and single-line values keep all five resources inside narrow screens.
+        HStack(spacing: 6) {
+            StoreResourceBadge(icon: "oxygen", title: "Oxy", value: fireStore.gradenModel?.money.oxygen ?? 0)
+            StoreResourceBadge(icon: "gemstone", title: "Đá quý", value: fireStore.gradenModel?.money.gemstone ?? 0)
+            StoreResourceBadge(icon: "ticket", title: "Vé", value: fireStore.gradenModel?.money.ticket ?? 0)
+            StoreResourceBadge(icon: "shovel", title: "Xẻng", value: fireStore.gradenModel?.item.shovel ?? 0)
+            StoreResourceBadge(icon: "fertilizer", title: "Phân bón", value: fireStore.gradenModel?.item.fertilizer ?? 0)
         }
     }
-
-    private func statBadge(icon: String, iconColor: Color, value: String) -> some View {
-        VStack(spacing: 4) {
-            Image(icon)
-                .resizable()
-                .frame(width: 20, height: 20)
-                .foregroundColor(iconColor)
-            Text(value)
-                .textStyle(.caption1).fontWeight(.bold)
-                .foregroundColor(.primary)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.gray.opacity(0.1))
-        )
-    }
-
-    // MARK: - Tab Selector
 
     private var tabSelector: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 ForEach(StoreTab.allCases, id: \.self) { tab in
-                    TabButton(
-                        title: tab.rawValue,
-                        isSelected: viewModel.selectedTab == tab,
-                        action: {
-                            viewModel.loadItems(for: tab)
-                        }
-                    )
+                    Button { viewModel.loadItems(for: tab) } label: {
+                        Label(tab.rawValue, systemImage: tabIcon(tab))
+                            .font(.system(.subheadline, design: .rounded, weight: .bold))
+                            .foregroundStyle(viewModel.selectedTab == tab ? AccountStyle.cream : AccountStyle.green)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 12)
+                            .background(viewModel.selectedTab == tab ? AccountStyle.green : AccountStyle.cream,
+                                        in: Capsule())
+                            .overlay { Capsule().strokeBorder(AccountStyle.green.opacity(0.25), lineWidth: 1) }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(viewModel.selectedTab == tab ? [.isSelected] : [])
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 20)
         }
     }
-
-    // MARK: - Search Bar
 
     private var searchBar: some View {
-        HStack {
+        HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(.gray)
-            TextField("Tìm kiếm", text: $viewModel.searchText)
-                .foregroundColor(.primary)
+                .foregroundStyle(AccountStyle.green)
+            TextField("Tìm vật phẩm cho khu vườn…", text: $viewModel.searchText)
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(AccountStyle.ink)
+                .submitLabel(.search)
+            if !viewModel.searchText.isEmpty {
+                Button { viewModel.searchText = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(AccountStyle.muted)
+                        .frame(minWidth: 32, minHeight: 32)
+                }
+                .accessibilityLabel("Xóa tìm kiếm")
+            }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-        )
+        .padding(.horizontal, 16)
+        .frame(minHeight: 50)
+        .background(AccountStyle.cream.opacity(0.8), in: RoundedRectangle(cornerRadius: 18))
+        .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(AccountStyle.border, lineWidth: 1.5) }
     }
 
-    // MARK: - Helper Methods
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: viewModel.searchText.isEmpty ? "basket" : "magnifyingglass")
+                .font(.system(size: 36, weight: .light))
+                .foregroundStyle(AccountStyle.green)
+            Text(viewModel.searchText.isEmpty ? "Gian hàng đang trống" : "Chưa tìm thấy vật phẩm")
+                .font(.system(.headline, design: .rounded, weight: .bold))
+                .foregroundStyle(AccountStyle.ink)
+            Text(viewModel.searchText.isEmpty ? "Bạn thử ghé qua danh mục khác nhé!" : "Thử tìm bằng một tên khác nhé!")
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(AccountStyle.muted)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 40)
+        .modifier(AccountPanel())
+    }
 
-    private func formatNumber(_ number: Int) -> String {
-        if number >= 1_000_000 {
-            return String(format: "%.1fm", Double(number) / 1_000_000)
-        } else if number >= 1000 {
-            return String(format: "%.1fk", Double(number) / 1000)
-        } else {
-            return "\(number)"
+    private func tabIcon(_ tab: StoreTab) -> String {
+        switch tab {
+        case .plants: return "leaf.fill"
+        case .pots: return "archivebox.fill"
+        case .decorations: return "sparkles"
+        case .gemstones: return "diamond.fill"
+        case .tools: return "wrench.and.screwdriver.fill"
         }
     }
 }
 
-// MARK: - Tab Button Component
-
-struct TabButton: View {
+struct StoreResourceBadge: View {
+    let icon: String
     let title: String
-    let isSelected: Bool
-    let action: () -> Void
+    let value: Int
 
     var body: some View {
-        Button(action: action) {
+        VStack(spacing: 5) {
+            Image(icon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 25, height: 25)
+            Text(compactValue)
+                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
+                .foregroundStyle(AccountStyle.ink)
+                .frame(maxWidth: .infinity)
             Text(title)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(isSelected ? .white : .gray)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(isSelected ? Color.green : Color.gray.opacity(0.2))
-                )
+                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .foregroundStyle(AccountStyle.muted)
         }
+        .padding(.horizontal, 3)
+        .padding(.vertical, 10)
+        .frame(minWidth: 0, maxWidth: .infinity)
+        .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 16))
+        .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(AccountStyle.border, lineWidth: 1) }
+        .compositingGroup()
+        .shadow(color: AccountStyle.border.opacity(0.6), radius: 0, y: 3)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(title): \(value.formatted())")
+    }
+
+    private var compactValue: String {
+        let magnitude = Double(value)
+        for (threshold, suffix) in [(1_000_000_000.0, "b"), (1_000_000.0, "m"), (1_000.0, "k")] {
+            if magnitude >= threshold {
+                return String(format: "%.1f%@", magnitude / threshold, suffix)
+            }
+        }
+        return "\(value)"
     }
 }
 
-// #Preview {
-//    StoreView()
-// }
+#Preview("Ví tài nguyên · 320pt") {
+    HStack(spacing: 6) {
+        StoreResourceBadge(icon: "oxygen", title: "Oxy", value: 272_100_000)
+        StoreResourceBadge(icon: "gemstone", title: "Đá quý", value: 799_900_000)
+        StoreResourceBadge(icon: "ticket", title: "Vé", value: 6_585_800_000)
+        StoreResourceBadge(icon: "shovel", title: "Xẻng", value: 32)
+        StoreResourceBadge(icon: "fertilizer", title: "Phân bón", value: 11_800)
+    }
+    .padding(.horizontal, 20)
+    .frame(width: 320)
+    .padding(.vertical)
+    .background(Color(hex: "E9EED9"))
+}

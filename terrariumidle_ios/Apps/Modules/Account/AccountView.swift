@@ -1,10 +1,3 @@
-//
-//  AccountView.swift
-//  terrariumidle_ios
-//
-//  Created by AI on 11/2/26.
-//
-
 import SwiftUI
 
 struct AccountView: View {
@@ -13,51 +6,56 @@ struct AccountView: View {
     @StateObject private var fireStore: FireStoreService = .shared
 
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                // MARK: - Header
-
-                header
-                    .padding(.horizontal, 16)
-                    .padding(.top, geometry.safeAreaInsets.top + 10)
-                    .padding(.bottom, 16)
-                    .background(.background)
-
-                // MARK: - Content ScrollView
-
-                ScrollView {
-                    VStack(spacing: 16) {
-                        // Profile Card
-                        if let user = fireStore.gradenModel?.user {
-                            ProfileCard(
-                                userName: user.userName,
-                                userEmail: user.userEmail,
-                                userID: user.userID,
-                                userLevel: user.userLevel,
-                                userLikes: user.userTotalLike,
-                                userAvatar: user.userAvatar
-                            )
-                            .padding(.horizontal, 16)
-                        }
-
-                        // Settings Section
-                        settingsSection
-
-                        // Services Section
-                        servicesSection
-
-                        // Social Media Icons
-                        socialMediaIcons
-                            .padding(.vertical, 24)
+        VStack(spacing: 0) {
+            header
+            ScrollView {
+                VStack(spacing: 26) {
+                    if let user = fireStore.gradenModel?.user {
+                        ProfileCard(
+                            userName: user.userName,
+                            userEmail: user.userEmail,
+                            userID: user.userID,
+                            userLevel: user.userLevel,
+                            userLikes: user.userTotalLike,
+                            userAvatar: user.userAvatar
+                        )
                     }
-                    .padding(.top, 16)
-                    .padding(.bottom, 40)
+                    settingsSection
+                    servicesSection
+                    accountSection
+                    HStack(spacing: 8) {
+                        Image(systemName: "leaf.fill")
+                        Text("Một góc vườn nhỏ, một chút bình yên")
+                    }
+                    .font(.system(.caption, design: .rounded, weight: .medium))
+                    .foregroundStyle(AccountStyle.muted)
+                    .multilineTextAlignment(.center)
+                    .padding(.vertical, 8)
                 }
+                .frame(maxWidth: 540)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 32)
             }
-            .background(Color(UIColor.systemGroupedBackground))
-            .navigationBarHidden(true)
-            .ignoresSafeArea(.all, edges: .top)
+            .scrollIndicators(.hidden)
         }
+        .background {
+            LinearGradient(colors: [Color(hex: "E9EED9"), Color(hex: "F7EEDB")],
+                           startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+                .overlay(alignment: .topTrailing) {
+                    Image("leaf_emerald_1")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 140, height: 140)
+                        .rotationEffect(.degrees(-30))
+                        .opacity(0.10)
+                        .offset(x: 45, y: 40)
+                        .accessibilityHidden(true)
+                }
+        }
+        .navigationBarHidden(true)
         .alert("Đăng xuất", isPresented: $viewModel.showSignOutConfirmation) {
             Button("Hủy", role: .cancel) {}
             Button("Đăng xuất", role: .destructive) {
@@ -77,208 +75,111 @@ struct AccountView: View {
         }
     }
 
-    // MARK: - Header
-
     private var header: some View {
-        HStack(spacing: 16) {
-            // Back button
-            Button(action: {
-                router.pop()
-            }) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.primary)
+        ZStack {
+            VStack(spacing: 3) {
+                Text("Tài khoản")
+                    .font(.system(.title2, design: .rounded, weight: .heavy))
+                    .foregroundStyle(AccountStyle.ink)
+                Text("GÓC NHỎ CỦA BẠN")
+                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                    .tracking(2)
+                    .foregroundStyle(AccountStyle.green)
             }
-
-            // Title
-            Text("Tài khoản")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(.primary)
-
-            Spacer()
-
-//            // Gemstone badge
-//            if let gemstone = fireStore.gradenModel?.money.gemstone {
-//                HStack(spacing: 6) {
-//                    Image("gemstone")
-//                        .resizable()
-//                        .frame(width: 20, height: 20)
-//                    Text("\(gemstone)")
-//                        .font(.system(size: 16, weight: .semibold))
-//                        .foregroundColor(.primary)
-//                }
-//                .padding(.horizontal, 12)
-//                .padding(.vertical, 8)
-//                .background(
-//                    RoundedRectangle(cornerRadius: 20)
-//                        .fill(Color.yellow.opacity(0.2))
-//                )
-//            }
+            HStack {
+                Button { router.pop() } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(AccountStyle.ink)
+                        .frame(width: 44, height: 44)
+                        .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 16))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 16)
+                                .strokeBorder(AccountStyle.border, lineWidth: 1.5)
+                        }
+                        .shadow(color: AccountStyle.border, radius: 0, y: 3)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Quay lại")
+                Spacer()
+            }
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
     }
-
-    // MARK: - Settings Section
 
     private var settingsSection: some View {
-        VStack(spacing: 0) {
-            // Section Header
-            HStack {
-                Text("Thiết lập")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.gray)
-                Spacer()
+        section(title: "Thiết lập khu vườn", icon: "slider.horizontal.3") {
+            SettingsRow(title: "Đồng bộ dữ liệu", icon: "arrow.triangle.2.circlepath") {
+                viewModel.syncData()
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-
-            // Settings Items
-            VStack(spacing: 1) {
-                SettingsRow(
-                    title: "Đồng bộ dữ liệu",
-                    trailingContent: .chevron
-                ) {
-                    viewModel.syncData()
-                }
-
-                Divider().padding(.leading, 16)
-
-                SettingsRow(
-                    title: "Chế độ hiệu suất cao (Bật)",
-                    trailingContent: .toggle($viewModel.highPerformanceMode)
-                ) {
-                    viewModel.toggleHighPerformance()
-                }
-
-                Divider().padding(.leading, 16)
-
-                SettingsRow(
-                    title: "Chế độ kịch mỡ phòng cảnh (Bật)",
-                    trailingContent: .toggle($viewModel.roomSceneMode)
-                ) {
-                    viewModel.toggleRoomScene()
-                }
-            }
-            .background(.regularMaterial)
-            .cornerRadius(12)
-            .padding(.horizontal, 16)
+            rowDivider
+            SettingsRow(
+                title: "Hiệu suất cao", icon: "bolt.fill",
+                trailingContent: .toggle(Binding(
+                    get: { viewModel.highPerformanceMode },
+                    set: { value in
+                        if value != viewModel.highPerformanceMode { viewModel.toggleHighPerformance() }
+                    }
+                ))
+            )
+            rowDivider
+            SettingsRow(
+                title: "Chế độ phòng cảnh", icon: "house.fill",
+                trailingContent: .toggle(Binding(
+                    get: { viewModel.roomSceneMode },
+                    set: { value in
+                        if value != viewModel.roomSceneMode { viewModel.toggleRoomScene() }
+                    }
+                ))
+            )
         }
     }
-
-    // MARK: - Services Section
 
     private var servicesSection: some View {
-        VStack(spacing: 0) {
-            // Section Header
-            HStack {
-                Text("Dịch vụ")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.gray)
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-
-            // Service Items
-            VStack(spacing: 1) {
-                SettingsRow(
-                    title: "Đánh giá ứng dụng",
-                    trailingContent: .chevron
-                ) {
-                    viewModel.openRateApp()
-                }
-
-                Divider().padding(.leading, 16)
-
-                SettingsRow(
-                    title: "Wiki",
-                    trailingContent: .chevron
-                ) {
-                    viewModel.openWiki()
-                }
-
-                Divider().padding(.leading, 16)
-
-                SettingsRow(
-                    title: "Liên hệ hỗ trợ",
-                    trailingContent: .chevron
-                ) {
-                    viewModel.contactSupport()
-                }
-
-                Divider().padding(.leading, 16)
-
-                SettingsRow(
-                    title: "Chính sách bảo mật",
-                    trailingContent: .chevron
-                ) {
-                    viewModel.openPrivacyPolicy()
-                }
-
-                Divider().padding(.leading, 16)
-
-                SettingsRow(
-                    title: "Điều khoản sử dụng",
-                    trailingContent: .chevron
-                ) {
-                    viewModel.openTermsOfUse()
-                }
-
-                Divider().padding(.leading, 16)
-
-                SettingsRow(
-                    title: "Xóa tài khoản",
-                    isDestructive: true,
-                    trailingContent: .chevron
-                ) {
-                    viewModel.requestDeleteAccount()
-                } .background(.regularMaterial)
-
-                Divider().padding(.leading, 16)
-
-                SettingsRow(
-                    title: "Đăng xuất",
-                    isDestructive: true,
-                    trailingContent: .chevron
-                ) {
-                    viewModel.requestSignOut()
-                } .background(.regularMaterial)
-            }
-            .background(.regularMaterial)
-            .cornerRadius(12)
-            .padding(.horizontal, 16)
+        section(title: "Đồng hành cùng bạn", icon: "sparkles") {
+            SettingsRow(title: "Đánh giá ứng dụng", icon: "star.fill") { viewModel.openRateApp() }
+            rowDivider
+            SettingsRow(title: "Cẩm nang khu vườn · Wiki", icon: "book.closed.fill") { viewModel.openWiki() }
+            rowDivider
+            SettingsRow(title: "Liên hệ hỗ trợ", icon: "bubble.left.and.bubble.right.fill") { viewModel.contactSupport() }
+            rowDivider
+            SettingsRow(title: "Chính sách bảo mật", icon: "checkmark.shield.fill") { viewModel.openPrivacyPolicy() }
+            rowDivider
+            SettingsRow(title: "Điều khoản sử dụng", icon: "doc.text.fill") { viewModel.openTermsOfUse() }
         }
     }
 
-    // MARK: - Social Media Icons
-
-    private var socialMediaIcons: some View {
-        HStack(spacing: 32) {
-            // Facebook
-            Button(action: {
-                // TODO: Add Facebook link
-            }) {
-                Image(systemName: "f.square.fill")
-                    .font(.system(size: 36))
-                    .foregroundColor(Color(red: 0.23, green: 0.35, blue: 0.6))
+    private var accountSection: some View {
+        section(title: "Quản lý tài khoản", icon: "person.crop.circle") {
+            SettingsRow(title: "Đăng xuất", icon: "rectangle.portrait.and.arrow.right") {
+                viewModel.requestSignOut()
             }
-
-            // Instagram
-            Button(action: {
-                // TODO: Add Instagram link
-            }) {
-                Image(systemName: "camera.circle.fill")
-                    .font(.system(size: 36))
-                    .foregroundColor(Color(red: 0.9, green: 0.3, blue: 0.5))
+            rowDivider
+            SettingsRow(title: "Xóa tài khoản", icon: "trash", isDestructive: true) {
+                viewModel.requestDeleteAccount()
             }
+        }
+    }
 
-            // Discord
-            Button(action: {
-                // TODO: Add Discord link
-            }) {
-                Image(systemName: "bubble.left.and.bubble.right.fill")
-                    .font(.system(size: 36))
-                    .foregroundColor(Color(red: 0.45, green: 0.53, blue: 0.93))
-            }
+    private var rowDivider: some View {
+        Rectangle()
+            .fill(AccountStyle.border.opacity(0.55))
+            .frame(height: 1)
+            .padding(.leading, 66)
+            .padding(.trailing, 18)
+    }
+
+    private func section<Content: View>(title: String, icon: String,
+                                        @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(title, systemImage: icon)
+                .font(.system(.subheadline, design: .rounded, weight: .bold))
+                .foregroundStyle(AccountStyle.green)
+                .padding(.leading, 8)
+            VStack(spacing: 0, content: content)
+                .padding(.vertical, 5)
+                .modifier(AccountPanel())
         }
     }
 }

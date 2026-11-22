@@ -1,10 +1,3 @@
-//
-//  StoreItemCard.swift
-//  terrariumidle_ios
-//
-//  Created by AI on 9/2/26.
-//
-
 import SwiftUI
 
 struct StoreItemCard: View {
@@ -15,125 +8,120 @@ struct StoreItemCard: View {
     let onPurchase: (ItemData) -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Item Image
-            CachedAsyncImage(named: item.image) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } placeholder: {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.gray.opacity(0.12))
-                    Image(systemName: item.type == "plant" ? "leaf" : (item.type == "pot" ? "shippingbox" : "photo"))
-                        .font(.system(size: 18))
-                        .foregroundColor(.gray.opacity(0.6))
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top, spacing: 14) {
+                itemArtwork
+                VStack(alignment: .leading, spacing: 7) {
+                    Text(item.name)
+                        .font(.system(.headline, design: .rounded, weight: .bold))
+                        .foregroundStyle(AccountStyle.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(item.description)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(AccountStyle.muted)
+                        .lineLimit(3)
+                    if !meetsLevelRequirement {
+                        Label("Mở khóa cấp \(item.levelUnlock)", systemImage: "lock.fill")
+                            .font(.system(.caption2, design: .rounded, weight: .bold))
+                            .foregroundStyle(AccountStyle.danger)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(width: 60, height: 60)
-            .cornerRadius(8)
-
-            // Item Info
-            VStack(alignment: .leading, spacing: 4) {
-                Text(item.name)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
-
-                Text(item.description)
-                    .font(.system(size: 13))
-                    .foregroundColor(.gray)
-                    .lineLimit(2)
-
-                if item.displayEffect != "N.A" && !item.displayEffect.isEmpty {
-                    Text("Hiệu ứng: \(item.displayEffect)")
-                        .font(.system(size: 12))
-                        .foregroundColor(.blue)
-                }
-
-                // Level requirement
-                if !meetsLevelRequirement {
-                    Text("Cấp độ mở khóa: \(item.levelUnlock)")
-                        .font(.system(size: 12))
-                        .foregroundColor(.orange)
-                }
+            if item.displayEffect != "N.A" && !item.displayEffect.isEmpty {
+                Label(item.displayEffect, systemImage: "sparkles")
+                    .font(.system(.caption, design: .rounded, weight: .medium))
+                    .foregroundStyle(AccountStyle.green)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(AccountStyle.green.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
             }
-
-            Spacer()
-
-            // Purchase Button
             purchaseButton
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
-        )
+        .padding(20)
+        .modifier(AccountPanel())
+    }
+
+    private var itemArtwork: some View {
+        CachedAsyncImage(named: item.image) { image in
+            image.resizable().scaledToFit()
+        } placeholder: {
+            Image(systemName: item.type == "plant" ? "leaf.fill" : "shippingbox.fill")
+                .font(.system(size: 28))
+                .foregroundStyle(AccountStyle.green.opacity(0.45))
+        }
+        .padding(10)
+        .frame(width: 88, height: 100)
+        .background {
+            LinearGradient(colors: [Color(hex: "E6EBCF"), Color(hex: "F5EDD4")],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(AccountStyle.border.opacity(0.65), lineWidth: 1) }
+        .accessibilityHidden(true)
     }
 
     @ViewBuilder
     private var purchaseButton: some View {
         if isOwned {
-            // Already owned
-            Text("Đã sở hữu")
-                .textStyle(.bodyMedium)
-                .foregroundColor(.gray)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.gray.opacity(0.2))
-                )
+            statusLabel("Đã sở hữu", icon: "checkmark.seal.fill")
         } else if !meetsLevelRequirement {
-            // Level requirement not met
-            Image(systemName: "lock.fill")
-                .font(.system(size: 20))
-                .foregroundColor(.gray)
+            statusLabel("Mở khóa ở cấp \(item.levelUnlock)", icon: "lock.fill")
         } else {
-            // Can purchase
-            Button(action: {
-                onPurchase(item)
-            }) {
-                HStack(spacing: 4) {
-                    currencyIcon(for: item.currencyUnit)
-                        .font(.system(size: 14))
-
-                    Text("\(item.priceStore)")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.primary)
+            Button { onPurchase(item) } label: {
+                HStack(spacing: 8) {
+                    Text(canAfford ? "Mua vật phẩm" : "Chưa đủ tài nguyên")
+                        .font(.system(.subheadline, design: .rounded, weight: .bold))
+                    Spacer(minLength: 8)
+                    currencyIcon
+                    Text(item.priceStore.formatted())
+                        .font(.system(.subheadline, design: .rounded, weight: .heavy))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(canAfford ? Color.green.opacity(0.2) : Color.gray.opacity(0.2))
-                )
+                .foregroundStyle(canAfford ? AccountStyle.cream : AccountStyle.muted)
+                .padding(.horizontal, 14)
+                .frame(minHeight: 46)
+                .background(canAfford ? AccountStyle.green : AccountStyle.border.opacity(0.35),
+                            in: RoundedRectangle(cornerRadius: 14))
+                .compositingGroup()
+                .shadow(color: canAfford ? Color(hex: "3F5B34") : .clear, radius: 0, y: 3)
             }
+            .buttonStyle(.plain)
             .disabled(!canAfford)
+            .accessibilityLabel("Mua \(item.name), \(item.priceStore) \(currencyName)")
         }
     }
 
-    private func currencyIcon(for currency: String) -> some View {
-        Group {
-            switch currency {
-            case "oxygen":
-                Image("oxygen")
-                    .resizable()
-                    .frame(width: 20, height: 20)
-                    .foregroundColor(.green)
-            case "gemstone":
-                Image( "gemstone")
-                    .resizable()
-                    .frame(width: 20, height: 20)
-                    .foregroundColor(.blue)
-            case "ticket":
-                Image( "ticket")
-                    .resizable()
-                    .frame(width: 20, height: 20)
-                    .foregroundColor(.orange)
-            default:
-                Image(systemName: "questionmark.circle.fill")
-                    .foregroundColor(.gray)
-            }
+    private func statusLabel(_ title: String, icon: String) -> some View {
+        Label(title, systemImage: icon)
+            .font(.system(.subheadline, design: .rounded, weight: .bold))
+            .foregroundStyle(AccountStyle.muted)
+            .frame(maxWidth: .infinity, minHeight: 46)
+            .background(AccountStyle.border.opacity(0.25), in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    private var currencyName: String {
+        switch item.currencyUnit {
+        case "oxygen": return "oxy"
+        case "gemstone": return "đá quý"
+        case "ticket": return "vé"
+        default: return item.currencyUnit
+        }
+    }
+
+    @ViewBuilder
+    private var currencyIcon: some View {
+        switch item.currencyUnit {
+        case "oxygen", "gemstone", "ticket":
+            Image(item.currencyUnit)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 22, height: 22)
+        default:
+            Image(systemName: "questionmark.circle.fill")
         }
     }
 }

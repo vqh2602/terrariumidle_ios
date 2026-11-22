@@ -48,6 +48,10 @@ struct SpeedDial: View {
                         print("harvest")
                         close()
                     }
+                    DialItem(title: "Tài khoản", systemImage: "person.crop.circle.fill", color: Color.teal) {
+                        router.push(.accountView)
+                        close()
+                    }
                     DialItem(title: "Bố cục", systemImage: "environments.fill", color: Color.blue) {
                         isEditing.toggle()
                         close()

@@ -1,28 +1,37 @@
-//
-//  EffectsSheetView.swift
-//  terrariumidle_ios
-//
-//  Created by AI on 11/2/26.
-//
-
 import SwiftUI
 
 struct EffectsSheetView: View {
     @ObservedObject private var fireStore = FireStoreService.shared
     @Environment(\.dismiss) private var dismiss
-
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Binding var backgroundRive: String
     @Binding var overlayRive: String?
 
     private let landscapes = ItemDataManager.shared.getAllLandscapes()
     private let effects = ItemDataManager.shared.getAllEffects()
+    @State private var category: Category = .landscapes
+    @State private var searchText = ""
+    @State private var unlockedOnly = true
 
-    @State private var selectedLandscapeId: String? = nil
-    @State private var selectedEffectId: String? = nil
-    
+    private enum Category: String, CaseIterable {
+        case landscapes = "Phong cảnh"
+        case effects = "Hiệu ứng"
+    }
 
     private var unlockedIds: Set<String> {
         MusicUnlockHelper.getUnlockedMusicIds(from: fireStore.gradenModel)
+    }
+
+    private var categoryItems: [ItemData] {
+        category == .landscapes ? landscapes : effects
+    }
+
+    private var visibleItems: [ItemData] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return categoryItems.filter { item in
+            (!unlockedOnly || unlockedIds.contains(item.id)) &&
+            (query.isEmpty || item.name.localizedStandardContains(query) || item.description.localizedStandardContains(query))
+        }
     }
 
     private func isItemSelected(_ selectedId: String?, matches item: ItemData) -> Bool {
@@ -40,100 +49,127 @@ struct EffectsSheetView: View {
     }
 
     var body: some View {
-        NavigationView {
-            ZStack {
-                // Dark background
-                Color(red: 0.10, green: 0.12, blue: 0.18)
-                    .ignoresSafeArea()
-
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 20) {
-                        // MARK: - Section 1: Landscapes (single select)
-
-                        SectionHeader(icon: "🌄", title: "Phong cảnh")
-
-                        VStack(spacing: 12) {
-                            ForEach(landscapes) { item in
-                                let isLocked = !unlockedIds.contains(item.id)
-                                let isSelected = isItemSelected(selectedLandscapeId, matches: item)
-                                EffectCardView(
-                                    item: item,
-                                    isSelected: isSelected,
-                                    isLocked: isLocked,
-                                    onTap: {
-                                        guard !isLocked else { return }
-                                        selectedLandscapeId = item.image
-                                        backgroundRive = item.image
-                                        print("Selected landscape: \(item.id)")
-                                    }
-                                )
-                            }
-                        }
-
-                        // MARK: - Section 2: Effects (single select)
-
-                        SectionHeader(icon: "✨", title: "Hiệu ứng")
-
-                        VStack(spacing: 12) {
-                            ForEach(effects) { item in
-                                let isLocked = !unlockedIds.contains(item.id)
-                                let isSelected = isItemSelected(selectedEffectId, matches: item)
-                                EffectCardView(
-                                    item: item,
-                                    isSelected: isSelected,
-                                    isLocked: isLocked,
-                                    onTap: {
-                                        guard !isLocked else { return }
-                                        selectedEffectId = item.image
-                                        overlayRive = item.image
-                                        print("Selected effect: \(item.id)")
-                                    }
-                                )
+        NavigationStack {
+            VStack(spacing: 14) {
+                controls
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 280 : 130), spacing: 12)], spacing: 12) {
+                        ForEach(visibleItems) { item in
+                            let locked = !unlockedIds.contains(item.id)
+                            EffectCardView(
+                                item: item,
+                                isSelected: isItemSelected(category == .landscapes ? backgroundRive : overlayRive, matches: item),
+                                isLocked: locked
+                            ) {
+                                guard !locked else { return }
+                                if category == .landscapes {
+                                    backgroundRive = item.image
+                                } else {
+                                    overlayRive = item.image
+                                }
                             }
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 12)
-                    .padding(.bottom, 20)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 2)
+                    .padding(.bottom, 24)
+                    if visibleItems.isEmpty {
+                        emptyState
+                    }
                 }
+                .scrollIndicators(.hidden)
+                .scrollDismissesKeyboard(.interactively)
+                // Each category/filter starts at the top of its own result set.
+                .id("\(category.rawValue)-\(unlockedOnly)-\(searchText)")
+            }
+            .background {
+                LinearGradient(colors: [Color(hex: "E9EED9"), Color(hex: "F7EEDB")],
+                               startPoint: .top, endPoint: .bottom).ignoresSafeArea()
             }
             .navigationTitle("Phong cảnh & Hiệu ứng")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Đóng") { dismiss() }
-                        .foregroundColor(.white)
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Xong") { dismiss() }
+                        .fontWeight(.bold)
+                        .tint(AccountStyle.green)
                 }
             }
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(Color(red: 0.10, green: 0.12, blue: 0.18), for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbarBackground(AccountStyle.cream, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-        }.task({
-            selectedLandscapeId = backgroundRive
-             selectedEffectId = overlayRive
-        })
-    }
-}
-
-// MARK: - Section Header
-
-private struct SectionHeader: View {
-    let icon: String
-    let title: String
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Text(icon)
-                .font(.title2)
-            Text(title)
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(.white)
         }
-        .padding(.top, 4)
+    }
+
+    private var controls: some View {
+        VStack(spacing: 12) {
+            Picker("Danh mục", selection: $category) {
+                ForEach(Category.allCases, id: \.self) { category in
+                    Text(category.rawValue).tag(category)
+                }
+            }
+            .pickerStyle(.segmented)
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(AccountStyle.green)
+                TextField("Tìm tên hoặc mô tả…", text: $searchText)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(AccountStyle.ink)
+                    .submitLabel(.search)
+                if !searchText.isEmpty {
+                    Button { searchText = "" } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(AccountStyle.muted)
+                            .frame(minWidth: 32, minHeight: 32)
+                    }
+                    .accessibilityLabel("Xóa tìm kiếm")
+                }
+            }
+            .padding(.horizontal, 12)
+            .frame(minHeight: 46)
+            .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 14))
+            .overlay { RoundedRectangle(cornerRadius: 14).strokeBorder(AccountStyle.border, lineWidth: 1) }
+            HStack(spacing: 12) {
+                Toggle("Đã mở khóa", isOn: $unlockedOnly)
+                    .toggleStyle(.button)
+                    .tint(AccountStyle.green)
+                    .font(.system(.caption, design: .rounded, weight: .bold))
+                Spacer(minLength: 0)
+                Text("\(visibleItems.count) lựa chọn")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(AccountStyle.muted)
+                if category == .effects {
+                    Button { overlayRive = nil } label: {
+                        Label("Tắt", systemImage: "nosign")
+                            .font(.system(.caption, design: .rounded, weight: .bold))
+                    }
+                    .tint(AccountStyle.green)
+                    .disabled(overlayRive == nil)
+                    .accessibilityLabel("Tắt hiệu ứng đang dùng")
+                }
+            }
+            .frame(minHeight: 36)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "leaf")
+                .font(.system(size: 32))
+                .foregroundStyle(AccountStyle.green)
+            Text("Chưa có lựa chọn phù hợp")
+                .font(.system(.headline, design: .rounded))
+                .foregroundStyle(AccountStyle.ink)
+            Text(unlockedOnly ? "Thử tắt bộ lọc Đã mở khóa hoặc đổi từ khóa tìm kiếm." : "Thử tìm bằng một tên hoặc mô tả khác nhé.")
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(AccountStyle.muted)
+        }
+        .multilineTextAlignment(.center)
+        .padding(24)
     }
 }
-
-// MARK: - Effect Card (Rectangular, 1 per row)
 
 private struct EffectCardView: View {
     let item: ItemData
@@ -141,7 +177,6 @@ private struct EffectCardView: View {
     let isLocked: Bool
     let onTap: () -> Void
 
-    /// Tên asset thumbnail: Tự động phát hiện asset thật, hỗ trợ cả trường hợp có hoặc chưa có tiền tố "i_"
     private var thumbnailImageName: String {
         // 1. Thử trực tiếp tên item.image (ví dụ "i_sky_sun_day", "i_overlay1")
         if UIImage(named: item.image) != nil {
@@ -164,69 +199,55 @@ private struct EffectCardView: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 12) {
-                // Thumbnail image
-                ZStack {
-                    Image(thumbnailImageName)
-                        .resizable()
-                        .aspectRatio(16 / 9, contentMode: .fill)
-                        .frame(width: 120, height: 68)
-                        .clipped()
-                        .cornerRadius(10)
-
-                    // Lock overlay
-                    if isLocked {
-                        ZStack {
-                            Color.black.opacity(0.6)
-
+            VStack(alignment: .leading, spacing: 0) {
+                Color.clear
+                    .aspectRatio(16.0 / 10.0, contentMode: .fit)
+                    .overlay {
+                        Image(thumbnailImageName)
+                            .resizable()
+                            .scaledToFill()
+                    }
+                    .clipped()
+                    .overlay {
+                        if isLocked {
+                            Color.black.opacity(0.28)
                             Image(systemName: "lock.fill")
-                                .font(.system(size: 20))
-                                .foregroundColor(.white.opacity(0.8))
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundStyle(.white)
                         }
-                        .frame(width: 120, height: 68)
-                        .cornerRadius(10)
                     }
-                }
-
-                // Item info
-                VStack(alignment: .leading, spacing: 4) {
+                    .overlay(alignment: .topTrailing) {
+                        if isSelected && !isLocked {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundStyle(AccountStyle.green, AccountStyle.cream)
+                                .padding(8)
+                        }
+                    }
+                VStack(alignment: .leading, spacing: 5) {
                     Text(item.name)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
-                        .lineLimit(1)
-
-                    if !item.description.isEmpty {
-                        Text(item.description)
-                            .font(.system(size: 13))
-                            .foregroundColor(.white.opacity(0.7))
-                            .lineLimit(2)
-                    }
+                        .font(.system(.subheadline, design: .rounded, weight: .bold))
+                        .foregroundStyle(AccountStyle.ink)
+                        .lineLimit(2)
+                        .frame(minHeight: 40, alignment: .topLeading)
+                    Text(isLocked ? "Chưa mở khóa" : (isSelected ? "Đang dùng" : "Chạm để chọn"))
+                        .font(.system(.caption2, design: .rounded, weight: .semibold))
+                        .foregroundStyle(isSelected && !isLocked ? AccountStyle.green : AccountStyle.muted)
                 }
-
-                Spacer()
-
-                // Selection indicator
-                if isSelected && !isLocked {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(.green)
-                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(isSelected && !isLocked ? Color.green.opacity(0.15) : Color.white.opacity(0.05))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(
-                        isSelected && !isLocked ? Color.green : Color.clear,
-                        lineWidth: 2
-                    )
-            )
-            .opacity(isLocked ? 0.5 : 1.0)
+            .background(AccountStyle.cream)
+            .clipShape(RoundedRectangle(cornerRadius: 18))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .strokeBorder(isSelected && !isLocked ? AccountStyle.green : AccountStyle.border,
+                                  lineWidth: isSelected && !isLocked ? 2.5 : 1)
+            }
         }
         .buttonStyle(.plain)
         .disabled(isLocked)
+        .accessibilityLabel("\(item.name). \(item.description). \(isLocked ? "Chưa mở khóa" : (isSelected ? "Đang dùng" : "Chạm để chọn"))")
+        .accessibilityAddTraits(isSelected && !isLocked ? [.isSelected] : [])
     }
 }

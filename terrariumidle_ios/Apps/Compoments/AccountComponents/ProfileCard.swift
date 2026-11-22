@@ -1,10 +1,3 @@
-//
-//  ProfileCard.swift
-//  terrariumidle_ios
-//
-//  Created by AI on 11/2/26.
-//
-
 import SwiftUI
 
 struct ProfileCard: View {
@@ -17,97 +10,104 @@ struct ProfileCard: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            // Avatar
-            if let avatarURL = userAvatar, !avatarURL.isEmpty, let url = URL(string: avatarURL) {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                } placeholder: {
-                    defaultAvatar
-                }
-                .frame(width: 80, height: 80)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            } else {
-                defaultAvatar
+            HStack(spacing: 7) {
+                Image(systemName: "leaf.fill")
+                Text("NGƯỜI LÀM VƯỜN")
+                    .tracking(2)
             }
+            .font(.system(size: 10, weight: .heavy, design: .rounded))
+            .foregroundStyle(AccountStyle.green)
 
-            // User Info
-            VStack(spacing: 8) {
+            avatar
+                .frame(width: 88, height: 88)
+                .clipShape(RoundedRectangle(cornerRadius: 26))
+                .padding(5)
+                .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 31))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 31)
+                        .strokeBorder(AccountStyle.border, lineWidth: 2)
+                }
+                .shadow(color: AccountStyle.border.opacity(0.6), radius: 0, y: 4)
+
+            VStack(spacing: 6) {
                 Text(userName)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.primary)
-
-                HStack(spacing: 4) {
-                    Image(systemName: "envelope")
-                        .font(.system(size: 12))
-                        .foregroundColor(.gray)
-                    Text(userEmail ?? "N.A")
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray)
+                    .font(.system(.title2, design: .rounded, weight: .heavy))
+                    .foregroundStyle(AccountStyle.ink)
+                    .multilineTextAlignment(.center)
+                if let userEmail, !userEmail.isEmpty {
+                    Text(userEmail)
+                        .font(.system(.footnote, design: .rounded))
+                        .foregroundStyle(AccountStyle.muted)
+                        .multilineTextAlignment(.center)
+                        .textSelection(.enabled)
                 }
-
-                HStack(spacing: 4) {
-                    Image(systemName: "person.text.rectangle")
-                        .font(.system(size: 12))
-                        .foregroundColor(.gray)
-                    Text(userID)
-                        .font(.system(size: 12))
-                        .foregroundColor(.gray)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                }
+                Text("ID: \(userID)")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(AccountStyle.muted)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .textSelection(.enabled)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(AccountStyle.border.opacity(0.20), in: Capsule())
             }
 
-            // Stats
-            HStack(spacing: 24) {
-                // Level
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(.green)
-                    Text("Level: \(userLevel)")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.primary)
-                }
-
-                // Likes
-                HStack(spacing: 6) {
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(.red)
-                    Text("Like: \(userLikes)")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.primary)
-                }
+            HStack(spacing: 12) {
+                stat(icon: "star.fill", title: "Cấp độ", value: userLevel, tint: AccountStyle.green)
+                stat(icon: "heart.fill", title: "Lượt thích", value: userLikes, tint: Color(hex: "C4776B"))
             }
         }
-        .padding(.vertical, 24)
-        .padding(.horizontal, 16)
+        .padding(24)
         .frame(maxWidth: .infinity)
-        .background(.regularMaterial)
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .modifier(AccountPanel())
+    }
+
+    @ViewBuilder
+    private var avatar: some View {
+        if let userAvatar, let url = URL(string: userAvatar), !userAvatar.isEmpty {
+            AsyncImage(url: url) { phase in
+                if let image = phase.image {
+                    image.resizable().scaledToFill()
+                } else {
+                    defaultAvatar
+                }
+            }
+        } else {
+            defaultAvatar
+        }
     }
 
     private var defaultAvatar: some View {
-        Image(systemName: "person.crop.circle.fill")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 80, height: 80)
-            .foregroundColor(.gray.opacity(0.3))
+        ZStack {
+            Color(hex: "E5EBCF")
+            Image(systemName: "leaf.fill")
+                .font(.system(size: 38))
+                .foregroundStyle(AccountStyle.green)
+        }
+    }
+
+    private func stat(icon: String, title: String, value: Int, tint: Color) -> some View {
+        HStack(spacing: 9) {
+            Image(systemName: icon)
+                .font(.system(size: 21, weight: .bold))
+                .foregroundStyle(tint)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(value.formatted())
+                    .font(.system(.title3, design: .rounded, weight: .heavy))
+                    .foregroundStyle(AccountStyle.ink)
+                Text(title)
+                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                    .foregroundStyle(AccountStyle.muted)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(tint.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
     }
 }
 
 #Preview {
-    ProfileCard(
-        userName: "Terrarium",
-        userEmail: "N.A",
-        userID: "pb03Q3R93naRsjjAuyTGzOBPH19",
-        userLevel: 129,
-        userLikes: 5008,
-        userAvatar: nil
-    )
-    .padding()
-    .background(Color.gray.opacity(0.1))
+    ProfileCard(userName: "huy quang", userEmail: "huykojo@gmail.com",
+                userID: "0tW4PU3U2aMyGEPh8LYFSm0kSp33", userLevel: 52, userLikes: 59, userAvatar: nil)
+        .padding()
 }
