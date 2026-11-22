@@ -45,18 +45,8 @@
         "id": "landscape4",
         "name": "Ban công trời sao",
         "description": "Bầu trời đêm huyền ảo với trăng khuyết và ngàn vì sao",
-        "image": "i_sky_moon_night",
-        "sksFile": "BackgroundScene.sks",
-        "skyGradient": [
-            "#0F1429",
-            "#1F2647",
-            "#2E3861"
-        ],
-        "elements": [
-            "moon_crescent",
-            "stars",
-            "clouds_night"
-        ],
+        "image": "landscape4-BG@4.167x",
+        "sksFile": "Landscape4Scene.sks",
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
