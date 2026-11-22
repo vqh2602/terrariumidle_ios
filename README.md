@@ -236,8 +236,13 @@ flowchart LR
 4. **Pots (Chậu tương tác)**:
    - Chậu đổ bóng mềm, nảy lò xo khi nhấn (`spring compression`). Phản hồi đồng bộ cùng cây khi người chơi tap vào màn hình.
    - Hỗ trợ tham số `widthFill: 0.0 ... 1.0` giúp tinh chỉnh độ rộng chậu linh hoạt mà không làm biến dạng tỷ lệ tự nhiên.
+   - Cơ chế ngắt chuyển động đung đưa nhàn rỗi (`idleSway` / `idlePendulum`) khi tap và khôi phục mượt mà khi tap kết thúc.
 
-5. **TerrariumSlot (Kiến trúc Slot Hợp nhất Cây & Chậu)**:
+5. **Stickers & Decorations (Nhãn dán trang trí sinh thái)**:
+   - Hệ thống nhãn dán tương tác sinh thái (Cá chép Koi lượn, Bướm vỗ cánh, Búp bê thời tiết Teru Teru Bozu, Thẻ cầu phúc Ema, v.v.).
+   - Hoạt ảnh nhàn rỗi đung đưa trong gió quanh `restZRotation` tuyệt đối, kết hợp cơ chế ngắt sạch idle animation trước khi kích hoạt phản hồi tap đàn hồi để triệt tiêu hiện tượng co giật và xoay lật góc.
+
+6. **TerrariumSlot (Kiến trúc Slot Hợp nhất Cây & Chậu)**:
    - Gộp 2 `SKView` riêng rẽ (Cây + Chậu) trên màn hình chính thành 1 `TerrariumSlotView` / `TerrariumSlotScene` duy nhất, tiết kiệm 50% tài nguyên render Metal.
    - Phân tầng chiều sâu linh hoạt:
      - `z = 1`: Bóng đổ đáy chậu.
