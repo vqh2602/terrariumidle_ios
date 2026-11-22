@@ -31,6 +31,12 @@ public enum StickerTapEffectType: String, CaseIterable {
     case sunRadiance = "sunRadiance"
     /// Bung tỏa chùm ngôi sao 4 cánh lấp lánh (Sparkle Star Burst)
     case sparkleBurst = "sparkleBurst"
+    /// Mưa đồng xu vàng may mắn Koban & sao kim lung linh (Mặc định: Sticker2 - Mèo thần tài)
+    case luckyCoinsBurst = "luckyCoinsBurst"
+    /// Đèn cá tam sắc: Chùm sao lấp lánh Xanh dương - Đỏ - Vàng theo màu 3 chú cá (Mặc định: Sticker3 - Đèn cá)
+    case koiTricolorSparkle = "koiTricolorSparkle"
+    /// Đèn nến thắp sáng: Bùng sáng vầng hào quang ấm áp & tàn lửa nến bay bổng (Mặc định: Sticker4 - Đèn thắp sáng)
+    case candleFlameBurst = "candleFlameBurst"
     /// Cầu vồng rực rỡ sau mưa (Rainbow Glow)
     case rainbowGlow = "rainbowGlow"
     /// Vòng hào quang vàng kim linh thiêng (Golden Aura)
@@ -43,6 +49,12 @@ public enum StickerTapEffectType: String, CaseIterable {
             return SunRadianceEffect()
         case .sparkleBurst:
             return SparkleBurstStickerEffect()
+        case .luckyCoinsBurst:
+            return LuckyCoinsBurstEffect()
+        case .koiTricolorSparkle:
+            return KoiTricolorSparkleEffect()
+        case .candleFlameBurst:
+            return CandleFlameBurstEffect()
         case .rainbowGlow:
             return RainbowGlowEffect()
         case .goldenAura:
@@ -63,12 +75,18 @@ public struct StickerTapEffectFactory {
             return SunRadianceEffect()
         case "sparkleburst", "sparkle", "stars", "glitter":
             return SparkleBurstStickerEffect()
+        case "luckycoinsburst", "luckycoins", "coins", "fortune", "koban":
+            return LuckyCoinsBurstEffect()
+        case "koitricolorsparkle", "koisparkle", "tricolor", "koifishsparkle":
+            return KoiTricolorSparkleEffect()
+        case "candleflameburst", "candleflame", "candle", "lanternflame":
+            return CandleFlameBurstEffect()
         case "rainbowglow", "rainbow", "arc":
             return RainbowGlowEffect()
         case "goldenaura", "aura", "halo", "gold":
             return GoldenAuraEffect()
         default:
-            return SunRadianceEffect()
+            return SparkleBurstStickerEffect()
         }
     }
 

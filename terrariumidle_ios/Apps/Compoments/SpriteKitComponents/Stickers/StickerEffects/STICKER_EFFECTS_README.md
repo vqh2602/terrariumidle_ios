@@ -245,9 +245,9 @@ Nhằm giải quyết triệt để lỗi hiệu ứng mặt trời và sao bị
 | ID | Tên Sticker | Asset Preview | Loại (`itemTypeAttribute`) | Âm Thanh SFX | Mô Tả Hiệu Ứng |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **`sticker1`** | Sunshine doll | `sticker1-1@4.167x` | `"hanging,front"` (Treo phân lớp) | `sfx4` (Tiếng gió) | Mặt trời tỏa sáng & đung đưa theo gió |
-| **`sticker2`** | Tượng người lùn hoa hướng dương | `https://i.imgur.com/FVRkr9L.png` | `"none"` (Để bàn) | `sfx1` (Tiếng chim) | Nén nảy lò xo & chùm sao lấp lánh |
-| **`sticker3`** | Tượng người lùn cà rốt | `https://i.imgur.com/qycI2xZ.png` | `"none"` (Để bàn) | `sfx2` (Tiếng ếch) | Nén nảy lò xo & chùm sao lấp lánh |
-| **`sticker4`** | Tượng người lùn hoa cúc | `https://i.imgur.com/JRiiJn8.png` | `"none"` (Để bàn) | `sfx3` (Tiếng mưa) | Nén nảy lò xo & chùm sao lấp lánh |
+| **`sticker2`** | Mèo thần tài | `sticker2@4.167x` | `"none"` (Để bàn) | `sfx1` (Tiếng chuông vàng) | Vẫy tay gọi tài lộc & Mưa đồng xu vàng Koban |
+| **`sticker3`** | Đèn cá chép | `sticker3-1@4.167x` | `"hanging,front"` (Treo phân lớp) | `sfx4` (Tiếng gió) | Đung đưa theo gió lúc mạnh lúc nhẹ & Lấp lánh tam sắc Xanh - Đỏ - Vàng |
+| **`sticker4`** | Đèn thắp sáng | `sticker4@4.167x` | `"hanging,front"` (Treo phân lớp) | `sfx3` (Tiếng lửa nến) | Ngọn nến bập bùng & Bừng sáng ánh lửa ấm áp |
 
 ---
 

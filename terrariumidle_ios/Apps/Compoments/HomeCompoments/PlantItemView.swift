@@ -38,7 +38,13 @@ struct PlantItemView: View {
     }
 
     private var isHanging: Bool {
-        plantData?.isHanging ?? false
+        if isSticker {
+            let stickerId = plantData?.idPot ?? plantData?.idPlant ?? ""
+            if let item = ItemDataManager.shared.getItem(byId: stickerId) {
+                return item.itemTypeAttribute.isHanging
+            }
+        }
+        return plantData?.isHanging ?? false
     }
 
     /// Chiều cao cố định chuẩn cho một tầng kệ, giúp tất cả các ô trên kệ đồng nhất
@@ -94,63 +100,35 @@ struct PlantItemView: View {
                     EmptyView()
                 }
             } else if isSticker {
-                // STICKER LAYOUT
+                // STICKER LAYOUT - FULL KHUNG CHUẨN NHƯ CÂY VÀ CHẬU (width: itemWidth, height: slotHeight)
+                // - Sử dụng trọn vẹn toàn bộ ô kệ (slotHeight), loại bỏ hoàn toàn việc cắt xén hiệu ứng và vùng căn chỉnh
+                // - Sticker treo bám sát đỉnh kệ (alignment: .top), sticker để bàn neo đáy kệ (alignment: .bottom)
+                // - Hiệu ứng thị giác (mặt trời, tia nắng, sao, hào quang, tiền vàng, tàn lửa) tỏa sáng tự do toàn khung ô
                 let stickerId = plantData?.idPot ?? plantData?.idPlant ?? "sticker1"
-                if isHanging {
-                    // Sticker treo - hiển thị nhỏ gọn, thanh thoát với SpriteKitStickerView (hoặc fallback SpriteKitPotView)
-                    let stickerH = min(slotHeight * 0.58, itemWidth * 1.15)
-                    ZStack(alignment: .top) {
-                        if StickerAvailability.isAvailable(stickerId: stickerId) {
-                            SpriteKitStickerView(
-                                stickerId: stickerId,
-                                isHanging: true,
-                                width: itemWidth * 0.90,
-                                height: stickerH,
-                                onTap: {
-                                    handleDetailTap()
-                                }
-                            )
-                            .frame(maxWidth: .infinity)
-                        } else {
-                            SpriteKitPotView(
-                                potId: stickerId,
-                                isHanging: true,
-                                width: itemWidth * 0.90,
-                                height: stickerH,
-                                onTap: {
-                                    handleDetailTap()
-                                }
-                            )
-                            .frame(maxWidth: .infinity)
+                if StickerAvailability.isAvailable(stickerId: stickerId) {
+                    SpriteKitStickerView(
+                        stickerId: stickerId,
+                        isHanging: isHanging,
+                        width: itemWidth,
+                        height: slotHeight,
+                        onTap: {
+                            handleDetailTap()
                         }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    )
+                    .id("\(stickerId)-\(isHanging)-\(itemWidth)-\(slotHeight)")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isHanging ? .top : .bottom)
                 } else {
-                    // Sticker không treo - chiều cao 135
-                    VStack(spacing: 0) {
-                        if StickerAvailability.isAvailable(stickerId: stickerId) {
-                            SpriteKitStickerView(
-                                stickerId: stickerId,
-                                isHanging: false,
-                                width: itemWidth,
-                                height: 135,
-                                onTap: {
-                                    handleDetailTap()
-                                }
-                            )
-                        } else {
-                            SpriteKitPotView(
-                                potId: stickerId,
-                                isHanging: false,
-                                width: itemWidth,
-                                height: 135,
-                                onTap: {
-                                    handleDetailTap()
-                                }
-                            )
+                    SpriteKitPotView(
+                        potId: stickerId,
+                        isHanging: isHanging,
+                        width: itemWidth,
+                        height: slotHeight,
+                        onTap: {
+                            handleDetailTap()
                         }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    )
+                    .id("\(stickerId)-\(isHanging)-\(itemWidth)-\(slotHeight)")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isHanging ? .top : .bottom)
                 }
             } else {
                 // UNIFIED PLANT & POT LAYOUT (TerrariumSlotView)

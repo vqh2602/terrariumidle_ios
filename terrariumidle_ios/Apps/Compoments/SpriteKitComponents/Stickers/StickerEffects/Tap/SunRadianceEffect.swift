@@ -54,9 +54,8 @@ public final class SunRadianceEffect: StickerTapEffect {
         let sceneW = targetNode.scene?.size.width ?? (dollW * 1.5)
         let sceneH = targetNode.scene?.size.height ?? (dollH * 1.3)
 
-        // Bán kính tối đa được khống chế ở mức 34% chiều rộng và 22% chiều cao khung
-        // để toàn bộ vầng sáng, tia nắng và bụi sao luôn nằm 100% trong vùng đệm an toàn.
-        let safeRadius = max(20.0, min(sceneW * 0.34, sceneH * 0.22, 38.0))
+        // Bán kính tối đa linh hoạt theo không gian khung ô
+        let safeRadius = max(24.0, min(sceneW * 0.36, sceneH * 0.22, 52.0))
 
         // MARK: - 1. Vầng hào quang bung tỏa (Aura / Lens Flare Halo)
         let haloRadius = safeRadius * 0.50

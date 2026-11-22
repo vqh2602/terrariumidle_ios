@@ -46,16 +46,17 @@ public final class SpriteKitStickerScene: SKScene {
 
     public func configure(stickerId: String, isHanging: Bool = true, slotSize: CGSize = .zero) {
         let cleanId = stickerId.lowercased().trimmingCharacters(in: .whitespaces)
+        let resolved = ItemDataManager.shared.getItem(byId: cleanId)?.itemTypeAttribute.isHanging ?? isHanging
         let changed = self.stickerId != cleanId ||
-                      self.isHanging != isHanging ||
+                      self.isHanging != resolved ||
                       abs(self.slotSize.width - slotSize.width) > 1 ||
                       abs(self.slotSize.height - slotSize.height) > 1
 
         self.stickerId = cleanId
-        self.isHanging = isHanging
+        self.isHanging = resolved
         self.slotSize = slotSize
 
-        anchorPoint = CGPoint(x: 0.5, y: isHanging ? 1.0 : 0.0)
+        anchorPoint = CGPoint(x: 0.5, y: resolved ? 1.0 : 0.0)
 
         if (changed || customStickerInteractive == nil) && size.width > 0 && size.height > 0 {
             buildSticker()
@@ -107,6 +108,11 @@ public final class SpriteKitStickerScene: SKScene {
 
     public func playTapAnimation() {
         customStickerInteractive?.playTapAnimation()
+
+        // Phát âm thanh khi tap vào Sticker từ JSON ("sound": "tap", nếu không cấu hình thì mặc định "tap")
+        let soundName = ItemDataManager.shared.getSticker(byId: stickerId)?.clickSound ??
+                        ItemDataManager.shared.getItem(byId: stickerId)?.clickSound ?? "tap"
+        AudioPlayer.shared.playClickSound(named: soundName)
     }
 
     // MARK: - Touch Handling

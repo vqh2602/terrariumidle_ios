@@ -425,6 +425,11 @@ class ItemDataManager {
         return allPots.first { $0.id == id }
     }
 
+    func getSticker(byId id: String) -> ItemData? {
+        let cleanId = id.lowercased().trimmingCharacters(in: .whitespaces)
+        return allDecorations.first { $0.id.lowercased() == cleanId }
+    }
+
     // MARK: - Filter by Level
 
     func getPlants(forLevel level: Int) -> [ItemData] {

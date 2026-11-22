@@ -21,8 +21,8 @@
     },
     {
         "id": "sticker2",
-        "name": "Tượng người lùn hoa hướng dương",
-        "description": "Tượng người lùn hoa hướng dương",
+        "name": "Mèo thần tài",
+        "description": "Chú mèo thần tài Maneki-neko vẫy tay chào đón may mắn, gọi tài lộc và bình an về khu vườn.",
         "image": "sticker2@4.167x",
         "priceStore": 30000,
         "priceOxygen": 25000,
@@ -31,18 +31,18 @@
         "effect": "",
         "itemTypeAttribute": "none",
         "levelUnlock": 50,
-        "effectDescription": "",
+        "effectDescription": "Vẫy tay gọi tài lộc & Mưa đồng xu vàng Koban",
         "music": "",
         "musicDescription": "",
         "effectLandscape": "",
         "effectLandscapeDescription": "",
         "effectSfx": "sfx1",
-        "effectSfxDescription": "Tiếng chim"
+        "effectSfxDescription": "Tiếng chuông vàng"
     },
     {
         "id": "sticker3",
-        "name": "Tượng người lùn cà rốt",
-        "description": "Tượng người lùn cà rốt",
+        "name": "Đèn cá chép",
+        "description": "Đèn lồng cờ cá chép đu đưa theo gió lúc mạnh lúc nhẹ, mang lại may mắn và sức sống tràn trề.",
         "image": "sticker3-1@4.167x",
         "priceStore": 30000,
         "priceOxygen": 25000,
@@ -51,18 +51,18 @@
         "effect": "",
         "itemTypeAttribute": "front",
         "levelUnlock": 50,
-        "effectDescription": "",
+        "effectDescription": "Đung đưa theo gió & Lấp lánh tam sắc Xanh - Đỏ - Vàng",
         "music": "",
         "musicDescription": "",
         "effectLandscape": "",
         "effectLandscapeDescription": "",
-        "effectSfx": "sfx2",
-        "effectSfxDescription": "Tiếng ếch"
+        "effectSfx": "sfx4",
+        "effectSfxDescription": "Tiếng gió"
     },
     {
         "id": "sticker4",
-        "name": "Tượng người lùn hoa cúc",
-        "description": "Tượng người lùn hoa cúc",
+        "name": "Đèn thắp sáng",
+        "description": "Đèn lồng cổ kính thắp sáng ngọn nến ấm áp, khi chạm bùng lên ánh lửa lung linh rạng ngời.",
         "image": "sticker4@4.167x",
         "priceStore": 30000,
         "priceOxygen": 25000,
@@ -71,12 +71,12 @@
         "effect": "",
         "itemTypeAttribute": "none",
         "levelUnlock": 50,
-        "effectDescription": "",
+        "effectDescription": "Ngọn nến bập bùng & Bừng sáng ánh lửa ấm áp",
         "music": "",
         "musicDescription": "",
         "effectLandscape": "",
         "effectLandscapeDescription": "",
         "effectSfx": "sfx3",
-        "effectSfxDescription": "Tiếng mưa"
+        "effectSfxDescription": "Tiếng lửa nến"
     }
 ]

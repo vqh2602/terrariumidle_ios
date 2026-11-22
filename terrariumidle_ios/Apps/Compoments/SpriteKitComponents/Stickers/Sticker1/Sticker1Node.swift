@@ -24,6 +24,10 @@ public final class Sticker1Node: SKNode, StickerInteractiveNode {
 
     // MARK: - Properties
 
+    /// Tỉ lệ kích thước hiển thị so với ô kệ (0.3 ... 1.0, mặc định lấy từ Sticker1View.defaultFitRatio)
+    public static var defaultFitRatio: CGFloat { Sticker1View.defaultFitRatio }
+    public var fitRatio: CGFloat = Sticker1View.defaultFitRatio
+
     private var containerSize: CGSize = .zero
     public var isHanging: Bool = true
 
@@ -102,11 +106,8 @@ public final class Sticker1Node: SKNode, StickerInteractiveNode {
         let baseCanvasH: CGFloat = 375.0
         let aspect: CGFloat = baseCanvasH / baseCanvasW
 
-        // Búp bê cầu nắng là vật phẩm trang trí nhỏ gọn treo trên kệ,
-        // chiếm khoảng 65% chiều cao khung treo để tạo kích thước nhỏ nhắn, thanh thoát,
-        // không che khuất hay lấn át các cây trồng và chậu xung quanh.
-        let fitRatio: CGFloat = isHanging ? 0.65 : 0.75
-        let targetH = containerSize.height * fitRatio
+        let activeRatio = fitRatio
+        let targetH = containerSize.height * activeRatio
         let naturalW = targetH / aspect
         let targetW = min(naturalW, containerSize.width * 0.85)
 

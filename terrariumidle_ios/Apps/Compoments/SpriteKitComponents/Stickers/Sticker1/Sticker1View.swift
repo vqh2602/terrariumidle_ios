@@ -11,6 +11,11 @@ import SwiftUI
 /// - Búp bê treo dây tự động đung đưa nhàn rỗi theo làn gió tự nhiên
 /// - Khi click: Mặt trời vàng rực rỡ tỏa sáng kèm các tia nắng xoay tròn ấm áp và bụi sao lấp lánh
 public struct Sticker1View: View {
+    /// Tỉ lệ kích thước hiển thị mặc định so với chiều cao ô kệ (fitRatio: 0.3 ... 1.0)
+    /// - Muốn sticker to hơn: tăng số này lên (ví dụ 0.65 -> 0.75)
+    /// - Muốn sticker nhỏ lại: giảm số này xuống (ví dụ 0.65 -> 0.55)
+    public static var defaultFitRatio: CGFloat = 0.65
+
     public var isHanging: Bool = true
     public var width: CGFloat
     public var height: CGFloat

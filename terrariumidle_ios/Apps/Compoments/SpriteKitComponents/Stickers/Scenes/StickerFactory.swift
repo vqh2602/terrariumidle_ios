@@ -21,6 +21,12 @@ public enum StickerFactory {
         switch cleanId {
         case "sticker1":
             return Sticker1Node(containerSize: containerSize, isHanging: isHanging)
+        case "sticker2":
+            return Sticker2Node(containerSize: containerSize, isHanging: isHanging)
+        case "sticker3":
+            return Sticker3Node(containerSize: containerSize, isHanging: isHanging)
+        case "sticker4":
+            return Sticker4Node(containerSize: containerSize, isHanging: isHanging)
         default:
             return Sticker1Node(containerSize: containerSize, isHanging: isHanging)
         }

@@ -18,7 +18,7 @@ public struct StickerMotionContext {
     public let ropeNode: SKSpriteNode?
     /// Sprite hiển thị thân sticker
     public let bodyNode: SKSpriteNode?
-    /// Ruy băng / chi tiết trang trí phía trước (nếu có)
+    /// Ruy băng / cánh tay / chi tiết trang trí phía trước (nếu có)
     public let frontDecorations: [SKNode]
     /// Tọa độ gốc ban đầu của targetNode (để reset chống trôi tọa độ)
     public let initialPosition: CGPoint
@@ -81,6 +81,12 @@ extension StickerMotionEffect {
 public enum StickerMotionEffectType: String, CaseIterable {
     /// Sticker treo: Tự đung đưa bồng bềnh theo gió mềm mại (Mặc định: Sticker1 - Sunshine doll)
     case windSway = "windSway"
+    /// Sticker mèo thần tài: Tay vẫy liên tục quanh khớp vai + thân nảy đàn hồi (Mặc định: Sticker2 - Maneki-neko)
+    case luckyCat = "luckyCat"
+    /// Sticker đèn cá chép: Đung đưa trong gió lúc mạnh lúc nhẹ uốn lượn (Mặc định: Sticker3 - Koi windsock)
+    case koiWindSway = "koiWindSway"
+    /// Sticker đèn lồng thắp sáng: Đung đưa đầm chắc + nến bập bùng (Mặc định: Sticker4 - Candle lantern)
+    case candleLantern = "candleLantern"
     /// Sticker treo con lắc đàn hồi: Đu đưa nhịp nhanh kết hợp nhún nảy trục Y
     case elasticSwing = "elasticSwing"
     /// Sticker để bàn / dán tường: Nén nảy Squash & Stretch lò xo đàn hồi tiêu chuẩn
@@ -93,6 +99,12 @@ public enum StickerMotionEffectType: String, CaseIterable {
         switch self {
         case .windSway:
             return WindSwayStickerMotionEffect()
+        case .luckyCat:
+            return LuckyCatMotionEffect()
+        case .koiWindSway:
+            return KoiWindSwayStickerMotionEffect()
+        case .candleLantern:
+            return CandleLanternMotionEffect()
         case .elasticSwing:
             return ElasticSwingStickerMotionEffect()
         case .standardBounce:
@@ -105,26 +117,32 @@ public enum StickerMotionEffectType: String, CaseIterable {
 
 // MARK: - Sticker Motion Effect Factory
 
-/// Nhà máy khởi tạo hiệu ứng động từ Type, Name hoặc cấu hình JSON
+/// Nhà máy khởi tạo hiệu ứng chuyển động động từ Type, Name hoặc cấu hình JSON
 public struct StickerMotionEffectFactory {
-    /// Khởi tạo hiệu ứng chuyển động từ tên định danh (chuỗi text case-insensitive)
+    /// Khởi tạo hiệu ứng từ tên định danh (chuỗi text case-insensitive)
     public static func create(named name: String) -> StickerMotionEffect {
         let cleanName = name.trimmingCharacters(in: .whitespaces).lowercased()
         switch cleanName {
-        case "windsway", "wind", "sway", "breeze":
+        case "windsway", "wind", "sway", "doll":
             return WindSwayStickerMotionEffect()
-        case "elasticswing", "elastic", "pendulum":
+        case "luckycat", "cat", "manekineko", "wavingarm":
+            return LuckyCatMotionEffect()
+        case "koiwindsway", "koi", "koifish", "fishwind":
+            return KoiWindSwayStickerMotionEffect()
+        case "candlelantern", "candle", "lantern", "flame":
+            return CandleLanternMotionEffect()
+        case "elasticswing", "swing", "pendulum":
             return ElasticSwingStickerMotionEffect()
-        case "standardbounce", "bounce", "squash":
+        case "standardbounce", "bounce", "spring":
             return StandardBounceStickerMotionEffect()
-        case "subtleflutter", "flutter", "wobble":
+        case "subtleflutter", "flutter", "jiggle":
             return SubtleFlutterStickerMotionEffect()
         default:
             return WindSwayStickerMotionEffect()
         }
     }
 
-    /// Khởi tạo hiệu ứng chuyển động từ enum type
+    /// Khởi tạo hiệu ứng từ enum type
     public static func create(type: StickerMotionEffectType) -> StickerMotionEffect {
         return type.createEffect()
     }
