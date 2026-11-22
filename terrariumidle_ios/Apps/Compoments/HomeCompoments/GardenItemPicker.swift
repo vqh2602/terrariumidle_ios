@@ -1,0 +1,128 @@
+import SwiftUI
+
+/// Shared inventory styling for plants, pots, and decorations.
+struct GardenItemPicker: View {
+    let items: [ItemData]
+    let placeholder: String
+    @Binding var selection: String?
+    let onSelect: (String) -> Void
+    @State private var query = ""
+
+    private var results: [ItemData] {
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        return items.filter { text.isEmpty || $0.name.localizedStandardContains(text) || $0.description.localizedStandardContains(text) }
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass").foregroundStyle(AccountStyle.green)
+                TextField(placeholder, text: $query)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(AccountStyle.ink)
+                    .submitLabel(.search)
+                if !query.isEmpty {
+                    Button { query = "" } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(AccountStyle.muted)
+                    }
+                    .accessibilityLabel("Xóa tìm kiếm")
+                }
+            }
+            .padding(.horizontal, 12)
+            .frame(minHeight: 42)
+            .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 12))
+            .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(AccountStyle.border, lineWidth: 1) }
+            .padding(.horizontal, 12)
+
+            ScrollView {
+                LazyVStack(spacing: 8) {
+                    if results.isEmpty {
+                        VStack(spacing: 8) {
+                            Image(systemName: "basket").font(.title2).foregroundStyle(AccountStyle.green)
+                            Text(query.isEmpty ? "Kho đồ đang trống" : "Chưa tìm thấy vật phẩm")
+                                .font(.system(.subheadline, design: .rounded, weight: .bold))
+                                .foregroundStyle(AccountStyle.ink)
+                            Text(query.isEmpty ? "Ghé cửa hàng để thêm đồ cho khu vườn nhé." : "Thử một tên hoặc mô tả khác nhé.")
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(AccountStyle.muted)
+                        }
+                        .multilineTextAlignment(.center)
+                        .padding(24)
+                        .frame(maxWidth: .infinity)
+                    }
+                    ForEach(results) { item in
+                        GardenInventoryRow(item: item, isSelected: selection == item.id) {
+                            selection = item.id
+                            onSelect(item.id)
+                        }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 2)
+                .padding(.bottom, 16)
+            }
+            .scrollIndicators(.hidden)
+            .scrollDismissesKeyboard(.interactively)
+        }
+    }
+}
+
+struct GardenInventoryRow: View {
+    let item: ItemData
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: 10) {
+                CachedAsyncImage(named: item.image) { image in
+                    image.resizable().scaledToFit()
+                } placeholder: {
+                    Image(systemName: item.type == "plant" ? "leaf.fill" : "shippingbox.fill")
+                        .foregroundStyle(AccountStyle.green.opacity(0.5))
+                }
+                .padding(5)
+                .frame(width: 56, height: 64)
+                .background(AccountStyle.green.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(item.name)
+                        .font(.system(.subheadline, design: .rounded, weight: .bold))
+                        .foregroundStyle(AccountStyle.ink)
+                    Text(item.description)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(AccountStyle.muted)
+                        .lineLimit(2)
+                    if !item.displayEffect.isEmpty && item.displayEffect != "N.A" {
+                        Label(item.displayEffect, systemImage: "sparkles")
+                            .font(.system(.caption2, design: .rounded, weight: .medium))
+                            .foregroundStyle(AccountStyle.green)
+                            .lineLimit(2)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(spacing: 8) {
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 20))
+                        .foregroundStyle(isSelected ? AccountStyle.green : AccountStyle.border)
+                    HStack(spacing: 3) {
+                        Image("oxygen").resizable().scaledToFit().frame(width: 14, height: 14)
+                        Text(item.priceOxygen.formatted())
+                            .font(.system(.caption2, design: .rounded, weight: .bold))
+                            .foregroundStyle(AccountStyle.ink)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
+                }
+            }
+            .padding(10)
+            .background(isSelected ? Color(hex: "F1F4DF") : AccountStyle.cream, in: RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(isSelected ? AccountStyle.green : AccountStyle.border, lineWidth: isSelected ? 2 : 1)
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 16))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+    }
+}

@@ -39,7 +39,7 @@ struct SelectItemSheet: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // MARK: - Selection Preview
 
@@ -101,28 +101,14 @@ struct SelectItemSheet: View {
 
                 // MARK: - Tab Selector
 
-                HStack(spacing: 12) {
-                    ForEach(SelectionTab.allCases, id: \.self) { tab in
-                        Button(action: {
-                            selectedTab = tab
-                        }) {
-                            Text(tab.rawValue)
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(selectedTab == tab ? .white : .gray)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(selectedTab == tab ? Color.green : Color.gray.opacity(0.2))
-                                )
-                        }
-                    }
+                Picker("Loại vật phẩm", selection: $selectedTab) {
+                    Text("Chậu").tag(SelectionTab.pot)
+                    Text("Cây").tag(SelectionTab.plant)
+                    Text("Trang trí").tag(SelectionTab.decoration)
                 }
-                .padding(.horizontal)
-                .padding(.top, 16)
-
-                Divider()
-                    .padding(.vertical, 12)
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
 
                 // MARK: - Content
 
@@ -166,13 +152,22 @@ struct SelectItemSheet: View {
                         .padding()
                 }
             }
+            .background {
+                LinearGradient(colors: [Color(hex: "E9EED9"), Color(hex: "F7EEDB")],
+                               startPoint: .top, endPoint: .bottom).ignoresSafeArea()
+            }
+            .tint(AccountStyle.green)
+            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbarBackground(AccountStyle.cream, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .navigationTitle("Chọn vật phẩm")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Đóng") {
-                        isPresented.toggle()
+                        isPresented = false
                     }
+                    .fontWeight(.bold)
                 }
             }
             .onChange(of: selectedTab) { oldTab, newTab in
@@ -214,17 +209,18 @@ struct SelectItemSheet: View {
                     Text("\(totalCost)")
                         .fontWeight(.bold)
                     Spacer()
-                    Text("Xây dựng")
+                    Text(selectionMode == .plantCombo ? "Trồng cây" : "Đặt trang trí")
                         .fontWeight(.semibold)
                 } else {
                     Text("Không đủ oxygen")
                         .fontWeight(.semibold)
                 }
             }
-            .foregroundColor(.white)
+            .foregroundColor(AccountStyle.cream)
+            .font(.system(.subheadline, design: .rounded, weight: .bold))
             .frame(maxWidth: .infinity)
             .padding()
-            .background(hasEnoughOxygen ? Color.green : Color.red)
+            .background(hasEnoughOxygen ? AccountStyle.green : AccountStyle.danger)
             .cornerRadius(12)
         }
     }

@@ -50,10 +50,10 @@ struct EffectsSheetView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 14) {
+            VStack(spacing: 8) {
                 controls
                 ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 280 : 130), spacing: 12)], spacing: 12) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 280 : 88), spacing: 8)], spacing: 8) {
                         ForEach(visibleItems) { item in
                             let locked = !unlockedIds.contains(item.id)
                             EffectCardView(
@@ -70,7 +70,7 @@ struct EffectsSheetView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 12)
                     .padding(.top, 2)
                     .padding(.bottom, 24)
                     if visibleItems.isEmpty {
@@ -102,56 +102,51 @@ struct EffectsSheetView: View {
     }
 
     private var controls: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             Picker("Danh mục", selection: $category) {
                 ForEach(Category.allCases, id: \.self) { category in
                     Text(category.rawValue).tag(category)
                 }
             }
             .pickerStyle(.segmented)
-            HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(AccountStyle.green)
-                TextField("Tìm tên hoặc mô tả…", text: $searchText)
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(AccountStyle.ink)
-                    .submitLabel(.search)
-                if !searchText.isEmpty {
-                    Button { searchText = "" } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(AccountStyle.muted)
-                            .frame(minWidth: 32, minHeight: 32)
+            HStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(AccountStyle.green)
+                    TextField("Tìm cảnh, hiệu ứng…", text: $searchText)
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(AccountStyle.ink)
+                        .submitLabel(.search)
+                    if !searchText.isEmpty {
+                        Button { searchText = "" } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(AccountStyle.muted)
+                        }
+                        .accessibilityLabel("Xóa tìm kiếm")
                     }
-                    .accessibilityLabel("Xóa tìm kiếm")
                 }
-            }
-            .padding(.horizontal, 12)
-            .frame(minHeight: 46)
-            .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 14))
-            .overlay { RoundedRectangle(cornerRadius: 14).strokeBorder(AccountStyle.border, lineWidth: 1) }
-            HStack(spacing: 12) {
-                Toggle("Đã mở khóa", isOn: $unlockedOnly)
-                    .toggleStyle(.button)
-                    .tint(AccountStyle.green)
-                    .font(.system(.caption, design: .rounded, weight: .bold))
-                Spacer(minLength: 0)
-                Text("\(visibleItems.count) lựa chọn")
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(AccountStyle.muted)
-                if category == .effects {
-                    Button { overlayRive = nil } label: {
-                        Label("Tắt", systemImage: "nosign")
-                            .font(.system(.caption, design: .rounded, weight: .bold))
+                .padding(.horizontal, 12)
+                .frame(minHeight: 40)
+                .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 12))
+                .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(AccountStyle.border, lineWidth: 1) }
+                Menu {
+                    Toggle("Chỉ hiện mục đã mở khóa", isOn: $unlockedOnly)
+                    if category == .effects {
+                        Button("Tắt hiệu ứng", systemImage: "nosign") { overlayRive = nil }
+                            .disabled(overlayRive == nil)
                     }
-                    .tint(AccountStyle.green)
-                    .disabled(overlayRive == nil)
-                    .accessibilityLabel("Tắt hiệu ứng đang dùng")
+                    Text("\(visibleItems.count) / \(categoryItems.count) lựa chọn")
+                } label: {
+                    Image(systemName: unlockedOnly ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                        .font(.system(size: 23))
+                        .foregroundStyle(AccountStyle.green)
+                        .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel("Bộ lọc, \(unlockedOnly ? "chỉ hiện đã mở khóa" : "hiện tất cả")")
             }
-            .frame(minHeight: 36)
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 10)
+        .padding(.horizontal, 12)
+        .padding(.top, 6)
     }
 
     private var emptyState: some View {
@@ -201,7 +196,7 @@ private struct EffectCardView: View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 0) {
                 Color.clear
-                    .aspectRatio(16.0 / 10.0, contentMode: .fit)
+                    .aspectRatio(2.0, contentMode: .fit)
                     .overlay {
                         Image(thumbnailImageName)
                             .resizable()
@@ -219,28 +214,22 @@ private struct EffectCardView: View {
                     .overlay(alignment: .topTrailing) {
                         if isSelected && !isLocked {
                             Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 24, weight: .bold))
+                                .font(.system(size: 18, weight: .bold))
                                 .foregroundStyle(AccountStyle.green, AccountStyle.cream)
-                                .padding(8)
+                                .padding(5)
                         }
                     }
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(item.name)
-                        .font(.system(.subheadline, design: .rounded, weight: .bold))
-                        .foregroundStyle(AccountStyle.ink)
-                        .lineLimit(2)
-                        .frame(minHeight: 40, alignment: .topLeading)
-                    Text(isLocked ? "Chưa mở khóa" : (isSelected ? "Đang dùng" : "Chạm để chọn"))
-                        .font(.system(.caption2, design: .rounded, weight: .semibold))
-                        .foregroundStyle(isSelected && !isLocked ? AccountStyle.green : AccountStyle.muted)
-                }
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text(item.name)
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .foregroundStyle(AccountStyle.ink)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, minHeight: 30, alignment: .topLeading)
+                    .padding(7)
             }
             .background(AccountStyle.cream)
-            .clipShape(RoundedRectangle(cornerRadius: 18))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay {
-                RoundedRectangle(cornerRadius: 18)
+                RoundedRectangle(cornerRadius: 12)
                     .strokeBorder(isSelected && !isLocked ? AccountStyle.green : AccountStyle.border,
                                   lineWidth: isSelected && !isLocked ? 2.5 : 1)
             }

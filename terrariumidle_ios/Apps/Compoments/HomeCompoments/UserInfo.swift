@@ -12,11 +12,13 @@ struct UserInfoCompoment: View {
     private var progress: Double { min(max(Double(userExp) / Double(maxExp), 0), 1) }
 
     var body: some View {
-        Group {
+        ZStack(alignment: .topLeading) {
             if isExpanded {
                 expandedBar
+                    .transition(reduceMotion ? .opacity : .scale(scale: 0.82, anchor: .topLeading).combined(with: .opacity))
             } else {
                 levelButton
+                    .transition(reduceMotion ? .opacity : .scale(scale: 0.9, anchor: .topLeading).combined(with: .opacity))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -48,7 +50,7 @@ struct UserInfoCompoment: View {
     }
 
     private func toggleExpanded() {
-        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.15) : .spring(response: 0.38, dampingFraction: 0.86)) {
             isExpanded.toggle()
         }
     }

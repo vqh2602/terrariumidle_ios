@@ -28,18 +28,18 @@ struct SelectedItemPreview: View {
                         .foregroundColor(.gray.opacity(0.6))
                 }
             }
-            .frame(width: 40, height: 40)
+            .frame(width: 32, height: 32)
             .cornerRadius(6)
 
             // Item Info
             VStack(alignment: .leading, spacing: 2) {
                 Text(type)
                     .font(.caption)
-                    .foregroundColor(.gray)
+                    .foregroundColor(AccountStyle.muted)
                 Text(item.name)
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(.primary)
+                    .foregroundColor(AccountStyle.ink)
             }
 
             Spacer()
@@ -52,24 +52,27 @@ struct SelectedItemPreview: View {
                 Text("\(item.priceOxygen)")
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundColor(.green)
+                    .foregroundColor(AccountStyle.green)
             }
 
             // Remove Button
             Button(action: onRemove) {
                 Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.gray)
-                    .font(.system(size: 20))
+                    .foregroundColor(AccountStyle.muted)
+                    .font(.system(size: 18))
+                    .frame(width: 44, height: 44)
             }
+            .accessibilityLabel("Bỏ chọn \(item.name)")
         }
-        .padding(12)
+        .fontDesign(.rounded)
+        .padding(8)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.green.opacity(0.1))
+                .fill(AccountStyle.cream)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                .stroke(AccountStyle.border, lineWidth: 1)
         )
     }
 }

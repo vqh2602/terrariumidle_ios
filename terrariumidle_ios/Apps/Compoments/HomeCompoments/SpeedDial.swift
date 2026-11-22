@@ -2,6 +2,8 @@ import SwiftUI
 
 struct SpeedDial: View {
     @State private var isOpen = false
+    @State private var isIdle = false
+    @Environment(\.scenePhase) private var scenePhase
     @State private var showMusicSheet = false
     @State private var showEffectsSheet = false
     @Binding var isEditing: Bool
@@ -41,6 +43,15 @@ struct SpeedDial: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
         }
+        .task(id: idleTimerKey) {
+            isIdle = false
+            guard !isOpen, !showMusicSheet, !showEffectsSheet, scenePhase == .active else { return }
+            do {
+                try await Task.sleep(for: .seconds(4))
+                try Task.checkCancellation()
+                withAnimation(.easeInOut(duration: 0.6)) { isIdle = true }
+            } catch { /* View disappearance or interaction cancels the idle delay. */ }
+        }
         .sheet(isPresented: $showMusicSheet) {
             MusicSheetView()
         }
@@ -49,8 +60,13 @@ struct SpeedDial: View {
         }
     }
 
+    private var idleTimerKey: String {
+        "\(isOpen)-\(showMusicSheet)-\(showEffectsSheet)-\(scenePhase)"
+    }
+
     private var launcher: some View {
         Button {
+            isIdle = false
             withAnimation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.85)) {
                 isOpen.toggle()
             }
@@ -68,8 +84,12 @@ struct SpeedDial: View {
                 .compositingGroup()
                 .shadow(color: Color(hex: "354D2C").opacity(0.75), radius: 0, y: 4)
                 .shadow(color: .black.opacity(0.12), radius: 6, y: 5)
+                // Fade the artwork, keeping the Button's hit region fully active.
+                .opacity(isIdle && !isOpen ? 0.35 : 1)
+                .contentShape(Circle())
         }
         .buttonStyle(.plain)
+        .allowsHitTesting(true)
         .accessibilityLabel(isOpen ? "Đóng menu khu vườn" : "Mở menu khu vườn")
     }
 
