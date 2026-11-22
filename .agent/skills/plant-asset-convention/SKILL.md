@@ -14,7 +14,7 @@ Khi cấu hình asset trong `Assets.xcassets/Plants/<plant_folder>/` (Ví dụ `
 | Asset ID | Tên Asset (`plantX_...`) | Vai trò & Mục đích | Cơ chế hoạt động & Quy tắc sử dụng |
 | :--- | :--- | :--- | :--- |
 | **`Asset-1` / Avatar** | `plantX_Asset-1` (hoặc `aloe-vera@4.167x`) | **Ảnh đại diện tĩnh (Avatar / Reference)** | **KHÔNG** đưa vào làm hiệu ứng chuyển động trong Scene SpriteKit. Chỉ dùng làm ảnh đại diện (avatar/thumbnail/store preview) hoặc làm ảnh tham chiếu (reference canvas) để đối chiếu tọa độ pixel, anchor point, scale khi dựng hoạt ảnh. |
-| **`Asset-2` -> `Asset-99`** | `plantX_Asset-2`... | **Thành phần hoạt ảnh động (Animated Parts)** | Các bộ phận cấu tạo nên cây trưởng thành (Level 3+): các phiến lá, cuống, cành cây, bông hoa. Mỗi phần tử được render riêng biệt qua SpriteKit `SKSpriteNode` với điểm neo (`anchorPoint`) tại cuống/gốc và chạy hiệu ứng uốn lượn, lay động mềm mại trong gió (`SKAction.rotateBy`, `scaleY`). Khi ghép toàn bộ các asset này lại sẽ tạo thành một cây hoàn chỉnh mà không cần `Asset-1`. |
+| **`Asset-2` -> `Asset-99`** | `plantX_Asset-2`... | **Thành phần hoạt ảnh động (Animated Parts)** | Các bộ phận cấu tạo nên cây trưởng thành (Level 3+): các phiến lá, cuống, cành cây, bông hoa. Mỗi phần tử được render riêng biệt qua SpriteKit `SKSpriteNode` với điểm neo (`anchorPoint`) tại cuống/gốc và chạy hiệu ứng uốn lượn, lay động mềm mại trong gió (`SKAction.rotate(toAngle:)`, `scaleY`). Khi ghép toàn bộ các asset này lại sẽ tạo thành một cây hoàn chỉnh mà không cần `Asset-1`. |
 | **`Asset-100`** | `plant1_Asset-100` | **Gieo hạt (Seed Stage - Level 1)** | Hiển thị trạng thái hạt giống trong đất hoặc mầm vừa nhú. Ánh xạ tái sử dụng từ Plant 1. Kèm hiệu ứng thở nhẹ / nảy mầm khi người chơi chạm vào (`tapSquashStretch`). |
 | **`Asset-200`** | `plant1_Asset-200` | **Cây con (Sprout Stage - Level 2)** | Hiển thị trạng thái cây con 2 mầm lá non. Ánh xạ tái sử dụng từ Plant 1. Kèm hiệu ứng lắc lư đung đưa (`swayAction`) và nhún nhẹ (`bobAction`). |
 
@@ -65,6 +65,38 @@ flowchart LR
      - Trưởng thành (Lv.3+): 8 - 12 bọt dồi dào (radius 3.5 - 7.5 pt).
    - **Vị trí sinh bọt**: Phân bổ từ các vị trí phiến lá ngẫu nhiên (`randomLeaf.parent?.convert(randomLeaf.position, to: self)`) hoặc trải đều tự nhiên khắp khung cây ($-44\% \dots +44\%$ chiều rộng, $18\% \dots 90\%$ chiều cao) với quãng đường bay $60 \dots 115\text{pt}$ và độ giãn nở `scaleUp: 1.30`.
    - **Thân cọc/trụ leo**: Nếu cây có cọc gỗ hoặc thân chính riêng (`assetId: 2`), không được lắc độc lập làm rời cuống lá khỏi cành; thân chính chỉ đung đưa rất nhẹ ($0.003 \dots 0.008\text{rad}$).
+
+4. **Quy chuẩn Chống Trôi Góc & Xoay Lật 180 Độ (Anti-Rotation Drift Convention - BẮT BUỘC TUÂN THỦ)**:
+   - **CẤM TUYỆT ĐỐI DÙNG `SKAction.rotate(byAngle:)`**: Trong cả hiệu ứng chạm (`PlantMotionEffect`) và hiệu ứng gió lay nghỉ (`addIdleSwayAnimation`) của cành, lá, thân hay gốc cây.
+     * *Nguyên nhân*: `rotate(byAngle:)` tính xoay tương đối. Khi chạm liên tục (spam tap), chuỗi animation cũ bị ngắt giữa chừng qua `removeAction` trước khi kịp quay về, chuỗi mới cộng dồn góc xoay. Tích luỹ qua nhiều lần chạm khiến góc xoay lệch dần tới $180^\circ$ ($\pi\text{ rad}$), làm lá hoặc cây bị úp ngược xuống chậu.
+   - **BẮT BUỘC DÙNG `SKAction.rotate(toAngle:)` TÍNH THEO GÓC NGHỈ TUYỆT ĐỐI**:
+     * Mọi chuyển động xoay phải tính dao động quanh góc nghỉ ban đầu: `SKAction.rotate(toAngle: restAngle ± delta, duration: ...)`.
+   - **Ghi nhớ và khởi tạo `leaf.restZRotation`**:
+     * Extension `SKNode.restZRotation` (trong `PlantMotionEffect.swift`) lưu trữ góc nghỉ ban đầu.
+     * Khi khởi tạo bất kỳ phiến lá nào (`leaf_X`) trong `buildMatureState` (cả nhánh `.sks` lẫn procedural fallback), **BẮT BUỘC** gán:
+       ```swift
+       leaf.restZRotation = leaf.zRotation
+       ```
+   - **Reset góc nghỉ ngay đầu chuỗi tap action**:
+     * Trong mọi `PlantMotionEffect`, ngay sau khi `leaf.removeAction(forKey:)` hoặc `root.removeAction(forKey:)`, **BẮT BUỘC** đưa góc xoay về vị trí nghỉ ngay lập tức:
+       ```swift
+       leaf.zRotation = leaf.restZRotation
+       root.zRotation = 0.0
+       ```
+   - **Chốt chặn phục hồi ở cuối sequence**:
+     * Chuỗi tap action luôn phải kết thúc bằng `SKAction.rotate(toAngle: restAngle)` kèm block chốt:
+       ```swift
+       SKAction.run { [weak leaf] in leaf?.zRotation = restAngle }
+       ```
+   - **Idle Sway Animation quanh `restZRotation`**:
+     * Trong `addIdleSwayAnimation()`, lá phải đu đưa quanh `restZRotation`:
+       ```swift
+       let rest = leaf.restZRotation
+       let swayRight = SKAction.rotate(toAngle: rest + swayAngle, duration: duration)
+       let swayLeft  = SKAction.rotate(toAngle: rest - swayAngle, duration: duration)
+       ```
+   - **Debounce chống spam tap ở tầng Scene/View**:
+     * Mọi Scene/View nhận touch tap (`SpriteKitPlantScene`, `TerrariumSlotView`) **BẮT BUỘC** có debounce tối thiểu 80ms (`CACurrentMediaTime() - lastTapTime < 0.08`) để ngăn bão sự kiện touch.
 
 ---
 

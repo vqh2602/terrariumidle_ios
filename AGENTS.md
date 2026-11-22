@@ -37,6 +37,38 @@ Mọi loài cây mới (`Plant2`, `Plant3`, `Plant4`, ...) **BẮT BUỘC** ph�
      - Kích thước bọt chuẩn theo `containerSize`: Hạt (radius $1.8 \dots 3.0$), Cây con ($2.2 \dots 3.8$), Trưởng thành ($3.5 \dots 7.5$, $8 \dots 12$ bọt).
      - Phân bổ vị trí sinh bọt: Chuyển đổi vị trí lá sang toạ độ cây (`randomLeaf.parent?.convert(randomLeaf.position, to: self)`) hoặc trải đều tự nhiên khắp khung cây ($-44\% \dots +44\%$ chiều rộng, $18\% \dots 90\%$ chiều cao) với quãng đường bay $60 \dots 115\text{pt}$ và độ giãn nở `scaleUp: 1.30`.
      - Thân cọc/trụ leo (`assetId: 2` ở cây leo hoặc cây có thân riêng) không lắc độc lập làm rời cuống lá khỏi cành, thân chính chỉ đung đưa rất nhẹ ($0.003 \dots 0.008\text{rad}$).
+     - **QUY CHUẨN CHỐNG TRÔI GÓC & XOAY LẬT 180 ĐỘ (Anti-Rotation Drift Convention - BẮT BUỘC TUÂN THỦ)**:
+       * **CẤM TUYỆT ĐỐI DÙNG `SKAction.rotate(byAngle:)`**: Trong cả hiệu ứng chạm (`PlantMotionEffect`) và hiệu ứng gió lay nghỉ (`addIdleSwayAnimation`) của cành, lá, thân hay gốc cây.
+         - *Nguyên nhân cốt lõi*: `rotate(byAngle:)` là biến đổi tương đối. Khi người dùng tap liên tục (spam tap), hành động cũ bị ngắt (`removeAction`) giữa chừng khi lá chưa kịp quay về vị trí nghỉ, hành động mới lại cộng dồn thêm góc xoay. Chỉ sau vài lần chạm, góc xoay tích luỹ đạt tới $\pm\pi$ ($180^\circ$), khiến phiến lá hoặc cả cây bị lộn ngược, úp ngược xuống chậu hoặc quay mòng mòng không thể tự phục hồi.
+       * **BẮT BUỘC DÙNG `SKAction.rotate(toAngle:)` TÍNH THEO GÓC NGHỈ TUYỆT ĐỐI**:
+         - Mọi chuyển động xoay phải dao động quanh góc nghỉ gốc ban đầu: `SKAction.rotate(toAngle: restAngle \pm delta, duration: ...)`.
+       * **GHI NHỚ VÀ KHỞI TẠO `leaf.restZRotation`**:
+         - `SKNode.restZRotation` được khai báo mở rộng trong `PlantMotionEffect.swift` (lưu trữ góc nghỉ gốc qua Objective-C runtime association).
+         - Khi khởi tạo bất kỳ phiến lá nào (`leaf_X`) trong `buildMatureState` (cả nhánh nạp từ `.sks` lẫn nhánh Fallback Procedural), **BẮT BUỘC** phải gán:
+           ```swift
+           leaf.restZRotation = leaf.zRotation
+           ```
+       * **RESET GÓC NGHỈ NGAY ĐẦU ACTION SEQUENCE**:
+         - Trong mọi `PlantMotionEffect`, ngay khi bắt đầu xử lý tap, sau khi gọi `leaf.removeAction(forKey: ...)` hoặc `root.removeAction(forKey: ...)`, **BẮT BUỘC** phải đưa góc xoay về tức thì:
+           ```swift
+           leaf.zRotation = leaf.restZRotation
+           root.zRotation = 0.0
+           ```
+       * **CHỐT CHẶN PHỤC HỒI Ở CUỐI SEQUENCE**:
+         - Chuỗi hành động tap luôn phải quay về `toAngle: restAngle` và chốt chặn an toàn ở cuối chuỗi bằng block:
+           ```swift
+           SKAction.run { [weak leaf] in leaf?.zRotation = restAngle }
+           ```
+       * **IDLE SWAY ANIMATION QUANH `restZRotation`**:
+         - Trong `addIdleSwayAnimation()`, lá phải đu đưa quanh `restZRotation`:
+           ```swift
+           let rest = leaf.restZRotation
+           let swayRight = SKAction.rotate(toAngle: rest + swayAngle, duration: duration)
+           let swayLeft  = SKAction.rotate(toAngle: rest - swayAngle, duration: duration)
+           ```
+           Tuyệt đối không dùng `rotate(byAngle:)` trong idle animation vì nó sẽ làm lệch tâm dao động vĩnh viễn khi bị ngắt bởi tap.
+       * **DEBOUNCE CHỐNG SPAM TAP Ở TẦNG SCENE/VIEW**:
+         - Mọi Scene/View nhận touch tap (như `SpriteKitPlantScene`, `TerrariumSlotView`) **BẮT BUỘC** có cơ chế debounce tối thiểu 80ms (`CACurrentMediaTime() - lastTapTime < 0.08`) để ngăn bão sự kiện touch từ người dùng.
      - **Quy chuẩn Quản lý Hiệu ứng Cây (Plant Tap & Motion Effects Convention)**: Tương tự như Chậu, mọi loài cây phân tách rõ ràng 2 hệ thống độc lập đặt trong 2 thư mục riêng biệt: **`PlantEffects/Motion/` (Hiệu ứng Chuyển động Vật lý `PlantMotionEffect`)** và **`PlantEffects/Tap/` (Hiệu ứng Thị giác Dạng Hạt `PlantTapEffect`)**.
        * Hiệu ứng chuyển động cành lá quản lý qua: `public var motionEffect: PlantMotionEffect = ...`. Hỗ trợ: `StandardPlantBounceMotionEffect` (bản gốc nén nảy lò xo), `WindSwayMotionEffect` (bản mới: gió lay đu đưa mềm mại uốn lượn tán lá), `CascadingVineMotionEffect` (bản mới: chuỗi dây leo rủ buông đung đưa hình sin), `ElasticPulseMotionEffect` (bản mới: nhún nảy đàn hồi tần số nhanh cho sen đá).
        * Hiệu ứng hạt thị giác quản lý qua: `public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: ...)]`. Cho phép gán nhiều hiệu ứng đồng thời (Bọt khí Oxy, Bụi phấn hoa `SparklePollenEffect`, Cánh hoa rơi `FloatingPetalsEffect`) và khởi tạo động qua `PlantTapEffectFactory`.

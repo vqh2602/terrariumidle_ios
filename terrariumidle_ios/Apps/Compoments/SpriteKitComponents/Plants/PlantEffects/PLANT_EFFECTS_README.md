@@ -76,6 +76,19 @@ public var motionEffect: PlantMotionEffect = WindSwayMotionEffect(swayAngle: 0.0
 public var motionEffect: PlantMotionEffect = CascadingVineMotionEffect(waveAngle: 0.11)
 ```
 
+### 1.4. Quy Chuẩn Chống Trôi Góc & Xoay Lật 180 Độ (Anti-Rotation Drift Convention)
+
+> [!CAUTION]
+> **TUYỆT ĐỐI CẤM SỬ DỤNG `SKAction.rotate(byAngle:)`** trong bất kỳ hiệu ứng chuyển động Tap hoặc Idle Sway nào của Cây!
+
+- **Nguyên nhân lỗi 180 độ**: `rotate(byAngle:)` là phép biến đổi tương đối. Khi người dùng tap liên tục (rapid tapping), `removeAction` ngắt ngang hành động trước khi lá kịp xoay về vị trí nghỉ. Mỗi lần tap mới lại cộng dồn thêm góc xoay, tích tụ dần đến $\pm\pi$ ($180^\circ$) khiến lá lộn ngược hoặc quay mòng mòng.
+- **Quy tắc bắt buộc**:
+  1. **Dùng `SKAction.rotate(toAngle:)`**: Mọi góc xoay đều tính theo góc nghỉ tuyệt đối: `restAngle ± delta`.
+  2. **Gán `leaf.restZRotation`**: Mỗi khi tạo lá trong `buildMatureState`, gán ngay `leaf.restZRotation = leaf.zRotation`.
+  3. **Reset ngay khi bắt đầu Tap**: Sau `removeAction`, luôn gọi `leaf.zRotation = leaf.restZRotation` và `root.zRotation = 0.0`.
+  4. **Chốt chặn an toàn cuối sequence**: Kết thúc sequence bằng `SKAction.rotate(toAngle: restAngle)` và `SKAction.run { [weak leaf] in leaf?.zRotation = restAngle }`.
+  5. **Idle Sway an toàn**: Dao động qua lại bằng `SKAction.rotate(toAngle: rest + swayAngle)` và `SKAction.rotate(toAngle: rest - swayAngle)`.
+
 ---
 
 ## 2. Hệ Thống Hiệu Ứng Bọt Khí Oxy & Dạng Hạt (`PlantTapEffect`)
@@ -111,7 +124,7 @@ public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
 
 ---
 
-## 3. Bảng Tra Cứu Cấu Hình Toàn Bộ 18 Loài Cây (Plant1 -> Plant18)
+## 3. Bảng Tra Cứu Cấu Hình Toàn Bộ 19 Loài Cây (Plant1 -> Plant19)
 
 | Loài Cây | Tên Khoa Học / Tiếng Việt | Hiệu Ứng Chuyển Động (`motionEffect`) | Hiệu Ứng Thị Giác (`tapEffects`) |
 | :--- | :--- | :--- | :--- |
@@ -133,6 +146,7 @@ public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
 | **Plant16** | Cỏ lan chi (*Chlorophytum comosum*) | `WindSwayMotionEffect()` | `[OxygenBubblesEffect(theme: .emerald)]` |
 | **Plant17** | Cúc tần Ấn Độ (*Vernonia elliptica*) | `CascadingVineMotionEffect()` | `[OxygenBubblesEffect(theme: .emerald)]` |
 | **Plant18** | Chuỗi ngọc (*Curio rowleyanus*) | `CascadingVineMotionEffect()` | `[OxygenBubblesEffect(theme: .emerald)]` |
+| **Plant19** | Chuối kiểng (*Musa acuminata*) | `WindSwayMotionEffect()` | `[OxygenBubblesEffect(theme: .emerald)]` |
 
 ---
 
@@ -140,7 +154,7 @@ public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
 
 ### 4.1. Thêm Hiệu Ứng Chuyển Động Mới (Motion Effect)
 1. Tạo file mới `[TenHieuUng]MotionEffect.swift` trong thư mục `PlantEffects/Motion/`.
-2. Cho class kế thừa protocol `PlantMotionEffect`:
+2. Cho class kế thừa protocol `PlantMotionEffect` (luôn dùng `rotate(toAngle:)` và `restZRotation`):
    ```swift
    public final class MyPlantMotionEffect: PlantMotionEffect {
        public var name: String { "MyPlantMotion" }
@@ -148,12 +162,22 @@ public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
        public func apply(context: PlantMotionContext) {
            let root = context.plantRootNode
            root.removeAction(forKey: "customPlantMotion")
-           let action = SKAction.sequence([
-               SKAction.rotate(byAngle: 0.05, duration: 0.15),
-               SKAction.rotate(byAngle: -0.05, duration: 0.15),
-               SKAction.run { context.onComplete?() }
-           ])
-           root.run(action, withKey: "customPlantMotion")
+           root.zRotation = 0.0
+
+           for (index, leaf) in context.leafNodes.enumerated() {
+               let leafKey = "customLeafMotion_\(index)"
+               leaf.removeAction(forKey: leafKey)
+               let restAngle = leaf.restZRotation
+               leaf.zRotation = restAngle
+
+               let swingRight = SKAction.rotate(toAngle: restAngle + 0.05, duration: 0.15)
+               let swingLeft = SKAction.rotate(toAngle: restAngle - 0.03, duration: 0.15)
+               let swingBack = SKAction.rotate(toAngle: restAngle, duration: 0.12)
+               let reset = SKAction.run { [weak leaf] in leaf?.zRotation = restAngle }
+
+               leaf.run(SKAction.sequence([swingRight, swingLeft, swingBack, reset]), withKey: leafKey)
+           }
+           context.onComplete?()
        }
    }
    ```
