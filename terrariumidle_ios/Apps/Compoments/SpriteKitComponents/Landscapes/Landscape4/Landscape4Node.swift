@@ -98,7 +98,6 @@ public final class Landscape4Node: SKNode, LandscapeInteractiveNode {
     // 4. moonGroup (z = 30)
     private var moonGroupNode: SKNode?
     private var moonNode: SKSpriteNode?
-    private var moonGlow: SKShapeNode?
 
     // Star Sprites for Animation
     private var starSprites: [SKSpriteNode] = []
@@ -144,7 +143,6 @@ public final class Landscape4Node: SKNode, LandscapeInteractiveNode {
         shootingStarsNode = nil
         moonGroupNode = nil
         moonNode = nil
-        moonGlow = nil
         starSprites.removeAll()
 
         guard containerSize.width > 0, containerSize.height > 0 else { return }
@@ -241,7 +239,8 @@ public final class Landscape4Node: SKNode, LandscapeInteractiveNode {
             // Quầng sáng dịu cho 3 sao tròn điểm nhấn
             if preset.isFocalRoundStar {
                 let halo = SKShapeNode(circleOfRadius: baseW * 0.65)
-                halo.fillColor = UIColor(red: 1.0, green: 0.98, blue: 0.88, alpha: 0.30)
+                halo.name = "starHalo"
+                halo.fillColor = UIColor(red: 1.0, green: 0.98, blue: 0.88, alpha: 0.25)
                 halo.strokeColor = .clear
                 halo.glowWidth = 6.5 * activeScale
                 halo.zPosition = -1.0
@@ -265,23 +264,12 @@ public final class Landscape4Node: SKNode, LandscapeInteractiveNode {
             landscapeRootNode.addChild(moonGroup)
             self.moonGroupNode = moonGroup
 
-            // Nạp moonNode con bên trong moonGroup
+            // Nạp moonNode con bên trong moonGroup (Texture đã chứa sẵn vầng sáng tự nhiên tinh tế)
             if let moonNode = moonGroup.childNode(withName: "moonNode") as? SKSpriteNode {
                 if let realMoonTex = loadTexture(name: "landscape4-moon@4.167x") {
                     moonNode.texture = realMoonTex
                 }
                 moonNode.zPosition = 30.0
-
-                // Vầng hào quang mặt trăng to ôm sát mặt trăng thiết kế
-                let moonRadius = max(moonNode.size.width, moonNode.size.height) * 0.55
-                let glow = SKShapeNode(circleOfRadius: moonRadius * 1.15)
-                glow.fillColor = UIColor(red: 1.0, green: 0.96, blue: 0.85, alpha: 0.22)
-                glow.strokeColor = .clear
-                glow.glowWidth = 35.0
-                glow.zPosition = 29.0
-                glow.position = moonNode.position
-                moonGroup.addChild(glow)
-                self.moonGlow = glow
                 self.moonNode = moonNode
             }
         } else {
@@ -345,7 +333,8 @@ public final class Landscape4Node: SKNode, LandscapeInteractiveNode {
 
             if preset.isFocalRoundStar {
                 let halo = SKShapeNode(circleOfRadius: baseW * 0.65)
-                halo.fillColor = UIColor(red: 1.0, green: 0.98, blue: 0.88, alpha: 0.30)
+                halo.name = "starHalo"
+                halo.fillColor = UIColor(red: 1.0, green: 0.98, blue: 0.88, alpha: 0.25)
                 halo.strokeColor = .clear
                 halo.glowWidth = 6.5 * activeScale
                 halo.zPosition = -1.0
@@ -384,16 +373,6 @@ public final class Landscape4Node: SKNode, LandscapeInteractiveNode {
             moon.zPosition = 30.0
             moonGroup.addChild(moon)
             self.moonNode = moon
-
-            // Vầng hào quang mặt trăng to ôm sát
-            let glow = SKShapeNode(circleOfRadius: 180.0)
-            glow.fillColor = UIColor(red: 1.0, green: 0.96, blue: 0.85, alpha: 0.22)
-            glow.strokeColor = .clear
-            glow.glowWidth = 38.0
-            glow.zPosition = 29.0
-            glow.position = moon.position
-            moonGroup.addChild(glow)
-            self.moonGlow = glow
         }
     }
 
@@ -433,9 +412,9 @@ public final class Landscape4Node: SKNode, LandscapeInteractiveNode {
         // 3. Chu kỳ Sao băng định kỳ
         startShootingStarsScheduler()
 
-        // 4. Hoạt ảnh Hào quang & Nhịp thở mặt trăng
-        if let glow = moonGlow {
-            startMoonGlowBreathing(glow: glow)
+        // 4. Hoạt ảnh Ánh trăng lung linh & Dao động trôi lững lờ
+        if let moon = moonNode {
+            startMoonBreathing(moon: moon)
         }
         if let moonGroup = moonGroupNode {
             startMoonFloatingBobbing(moonGroup: moonGroup)
@@ -467,15 +446,17 @@ public final class Landscape4Node: SKNode, LandscapeInteractiveNode {
     /// Hoạt ảnh Blink chuẩn bầu trời sao: Trạng thái nghỉ dịu -> Đột ngột chớp sáng rực rỡ -> Nghỉ giãn cách ngẫu nhiên -> Chớp tiếp
     private func startStarBlinkAnimation(star: SKSpriteNode, preset: StarPreset, index: Int) {
         star.removeAction(forKey: "starBlink")
+        star.removeAction(forKey: "starRotate")
 
+        // 1. Trạng thái nghỉ nền (Resting): sao sáng dịu, scale chuẩn 1.0
         let baseAlpha = preset.baseAlpha
-        let restAlpha = baseAlpha * 0.38
+        let restAlpha = baseAlpha * 0.28
         star.alpha = restAlpha
         star.setScale(1.0)
 
-        // 1. Nhịp chớp sáng bừng lên (Flash In)
-        let flashDur = preset.isFocalRoundStar ? 0.22 : 0.16
-        let flashScale: CGFloat = preset.isFocalRoundStar ? 1.48 : (preset.isLargeFourRayStar ? 1.38 : 1.28)
+        // 2. Nhịp chớp sáng bừng lên (Flash In): sáng rực rỡ lên alpha = 1.0 và phóng to
+        let flashDur = preset.isFocalRoundStar ? 0.18 : 0.14
+        let flashScale: CGFloat = preset.isFocalRoundStar ? 1.55 : (preset.isLargeFourRayStar ? 1.45 : 1.35)
 
         let flashIn = SKAction.group([
             SKAction.fadeAlpha(to: 1.0, duration: flashDur),
@@ -483,50 +464,73 @@ public final class Landscape4Node: SKNode, LandscapeInteractiveNode {
         ])
         flashIn.timingMode = .easeOut
 
-        // 2. Nhịp mờ lại về trạng thái nghỉ (Fade Down)
-        let fadeOutDur = flashDur * 1.6
+        // 3. Nhịp mờ lại về trạng thái nghỉ (Fade Out)
+        let fadeOutDur = flashDur * 1.5
         let flashOut = SKAction.group([
             SKAction.fadeAlpha(to: restAlpha, duration: fadeOutDur),
             SKAction.scale(to: 1.0, duration: fadeOutDur)
         ])
         flashOut.timingMode = .easeInEaseOut
 
-        // 3. Ghép thành một chuỗi nháy:
-        var blinkActions: [SKAction] = [flashIn, flashOut]
+        // Ghép chuỗi TUẦN TỰ (SKAction.sequence)
+        var sequenceItems: [SKAction] = [flashIn, flashOut]
 
-        // Thỉnh thoảng (hoặc với sao tròn điểm nhấn): có thêm nhịp chớp đúp (Double Twinkle)
+        // Thỉnh thoảng có thêm nhịp chớp đúp (Double Blink)
         if preset.isFocalRoundStar || (index % 3 == 0) {
-            let miniWait = SKAction.wait(forDuration: 0.08)
+            let miniWait = SKAction.wait(forDuration: 0.06)
             let miniFlashIn = SKAction.group([
-                SKAction.fadeAlpha(to: 0.90, duration: 0.12),
-                SKAction.scale(to: flashScale * 0.90, duration: 0.12)
+                SKAction.fadeAlpha(to: 0.95, duration: 0.10),
+                SKAction.scale(to: flashScale * 0.90, duration: 0.10)
             ])
+            miniFlashIn.timingMode = .easeOut
+
             let miniFlashOut = SKAction.group([
-                SKAction.fadeAlpha(to: restAlpha, duration: 0.18),
-                SKAction.scale(to: 1.0, duration: 0.18)
+                SKAction.fadeAlpha(to: restAlpha, duration: 0.16),
+                SKAction.scale(to: 1.0, duration: 0.16)
             ])
-            blinkActions.append(contentsOf: [miniWait, miniFlashIn, miniFlashOut])
+            miniFlashOut.timingMode = .easeInEaseOut
+
+            sequenceItems.append(contentsOf: [miniWait, miniFlashIn, miniFlashOut])
         }
 
-        // Với sao 4 cánh lớn: xoay nhẹ quanh tâm tạo lấp lánh tia sáng
-        if preset.isLargeFourRayStar {
-            let rotate = SKAction.rotate(byAngle: 0.30, duration: flashDur + fadeOutDur)
-            rotate.timingMode = .easeInEaseOut
-            blinkActions.insert(rotate, at: 0)
-        }
+        // 4. KHOẢNG NGHỈ GIÃN CÁCH NGẪU NHIÊN GIỮA CÁC LẦN CHỚP (Intermittent Pause):
+        // Dùng wait(forDuration:withRange:) để mỗi chu kỳ lặp lại đều có thời gian nghỉ ngẫu nhiên mới!
+        let pauseMean = (preset.minPause + preset.maxPause) * 0.5
+        let pauseRange = (preset.maxPause - preset.minPause) * 0.8
+        let pauseAction = SKAction.wait(forDuration: pauseMean, withRange: pauseRange)
+        sequenceItems.append(pauseAction)
 
-        let singleBlinkSequence = SKAction.group(blinkActions)
-
-        // 4. KHOẢNG NGHỈ GIÃN CÁCH (Intermittent Pause):
-        let pauseAction = SKAction.wait(forDuration: Double.random(in: preset.minPause...preset.maxPause))
-
-        // Chu kỳ hoàn chỉnh: Nghỉ giãn cách -> Blink -> Nghỉ tiếp (lặp vô hạn)
-        let blinkCycle = SKAction.sequence([pauseAction, singleBlinkSequence])
+        // CHUỖI TUẦN TỰ: Flash -> Fade -> (MiniFlash) -> Nghỉ giãn cách -> LẶP LẠI
+        let blinkCycle = SKAction.sequence(sequenceItems)
         let repeatBlink = SKAction.repeatForever(blinkCycle)
 
         // Độ trễ ban đầu so le giữa các vì sao để bầu trời rải rác chớp nháy khắp nơi
-        let initialStagger = SKAction.wait(forDuration: Double(index % 7) * 0.55 + Double.random(in: 0.1...0.8))
+        let initialStagger = SKAction.wait(forDuration: Double(index % 8) * 0.42 + Double.random(in: 0.1...1.2))
         star.run(SKAction.sequence([initialStagger, repeatBlink]), withKey: "starBlink")
+
+        // 5. Nếu là sao 4 cánh lớn: Xoay nhẹ nhàng độc lập (không tranh chấp với blink)
+        if preset.isLargeFourRayStar {
+            let rotRight = SKAction.rotate(byAngle: 0.28, duration: 2.8)
+            rotRight.timingMode = .easeInEaseOut
+            let rotLeft = SKAction.rotate(byAngle: -0.28, duration: 2.8)
+            rotLeft.timingMode = .easeInEaseOut
+            star.run(SKAction.repeatForever(SKAction.sequence([rotRight, rotLeft])), withKey: "starRotate")
+        }
+
+        // 6. Nếu là sao tròn điểm nhấn: Cho quầng sáng halo chớp sáng đồng bộ
+        if let halo = star.childNode(withName: "starHalo") as? SKShapeNode {
+            halo.removeAction(forKey: "haloBlink")
+            let haloIn = SKAction.group([
+                SKAction.fadeAlpha(to: 0.70, duration: flashDur),
+                SKAction.scale(to: 1.55, duration: flashDur)
+            ])
+            let haloOut = SKAction.group([
+                SKAction.fadeAlpha(to: 0.20, duration: fadeOutDur),
+                SKAction.scale(to: 1.0, duration: fadeOutDur)
+            ])
+            let haloSeq = SKAction.sequence([haloIn, haloOut, pauseAction])
+            halo.run(SKAction.sequence([initialStagger, SKAction.repeatForever(haloSeq)]), withKey: "haloBlink")
+        }
     }
 
     // MARK: - Shooting Stars (Sao Băng Bay Qua)
@@ -643,21 +647,22 @@ public final class Landscape4Node: SKNode, LandscapeInteractiveNode {
 
     // MARK: - Moon Breathing & Floating
 
-    private func startMoonGlowBreathing(glow: SKShapeNode) {
-        glow.removeAction(forKey: "moonGlowBreath")
-        let scaleUp = SKAction.scale(to: 1.08, duration: 3.8)
-        scaleUp.timingMode = .easeInEaseOut
-        let fadeUp = SKAction.fadeAlpha(to: 0.32, duration: 3.8)
-        fadeUp.timingMode = .easeInEaseOut
-        let groupUp = SKAction.group([scaleUp, fadeUp])
-
-        let scaleDown = SKAction.scale(to: 0.95, duration: 3.8)
+    private func startMoonBreathing(moon: SKSpriteNode) {
+        moon.removeAction(forKey: "moonBreathing")
+        // Ánh trăng tự nhiên từ texture mờ tỏ nhẹ nhàng (alpha 0.94 <-> 1.0, scale 0.988 <-> 1.012)
+        let scaleDown = SKAction.scale(to: 0.988, duration: 4.2)
         scaleDown.timingMode = .easeInEaseOut
-        let fadeDown = SKAction.fadeAlpha(to: 0.18, duration: 3.8)
+        let fadeDown = SKAction.fadeAlpha(to: 0.94, duration: 4.2)
         fadeDown.timingMode = .easeInEaseOut
         let groupDown = SKAction.group([scaleDown, fadeDown])
 
-        glow.run(SKAction.repeatForever(SKAction.sequence([groupUp, groupDown])), withKey: "moonGlowBreath")
+        let scaleUp = SKAction.scale(to: 1.012, duration: 4.2)
+        scaleUp.timingMode = .easeInEaseOut
+        let fadeUp = SKAction.fadeAlpha(to: 1.0, duration: 4.2)
+        fadeUp.timingMode = .easeInEaseOut
+        let groupUp = SKAction.group([scaleUp, fadeUp])
+
+        moon.run(SKAction.repeatForever(SKAction.sequence([groupDown, groupUp])), withKey: "moonBreathing")
     }
 
     private func startMoonFloatingBobbing(moonGroup: SKNode) {
@@ -718,17 +723,17 @@ public final class Landscape4Node: SKNode, LandscapeInteractiveNode {
     }
 
     private func playMoonPulseAnimation(at center: CGPoint) {
-        let shockwave = SKShapeNode(circleOfRadius: 80.0 * activeScale)
+        let shockwave = SKShapeNode(circleOfRadius: 60.0 * activeScale)
         shockwave.position = center
-        shockwave.strokeColor = UIColor(red: 1.0, green: 0.96, blue: 0.85, alpha: 0.85)
-        shockwave.fillColor = UIColor(red: 1.0, green: 0.92, blue: 0.75, alpha: 0.22)
-        shockwave.lineWidth = 3.5
+        shockwave.strokeColor = UIColor(red: 1.0, green: 0.98, blue: 0.90, alpha: 0.70)
+        shockwave.fillColor = .clear
+        shockwave.lineWidth = 1.8 * activeScale
         shockwave.zPosition = 35.0
         landscapeRootNode.addChild(shockwave)
 
-        let expand = SKAction.scale(to: 2.8, duration: 0.65)
+        let expand = SKAction.scale(to: 2.2, duration: 0.60)
         expand.timingMode = .easeOut
-        let fade = SKAction.fadeOut(withDuration: 0.65)
+        let fade = SKAction.fadeOut(withDuration: 0.60)
         let remove = SKAction.removeFromParent()
         shockwave.run(SKAction.sequence([SKAction.group([expand, fade]), remove]))
 

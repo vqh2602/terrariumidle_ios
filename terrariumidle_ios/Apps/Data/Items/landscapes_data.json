@@ -57,25 +57,15 @@
     },
     {
         "id": "landscape5",
-        "name": "Đêm muộn trời sao",
-        "description": "Đêm thanh vắng với trăng tròn sáng tỏ và sao băng xẹt qua",
-        "image": "i_sky_moon_star",
-        "sksFile": "BackgroundScene.sks",
-        "skyGradient": [
-            "#080A1A",
-            "#141A38",
-            "#242E52"
-        ],
-        "elements": [
-            "moon_full",
-            "stars_dense",
-            "shooting_stars"
-        ],
+        "name": "Ban công ô kính mưa",
+        "description": "Hơi nước ngưng tụ trên mặt kính, những giọt nước tí tách lăn dài",
+        "image": "landscape5-1@4.167x",
+        "sksFile": "Landscape5Scene.sks",
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
         "type": "landscape",
-        "effect": "Ban công trời sao",
+        "effect": "Ban công ô kính mưa",
         "itemTypeAttribute": "none",
         "levelUnlock": 0
     },
