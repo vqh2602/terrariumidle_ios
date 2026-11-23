@@ -19,15 +19,19 @@ public final class WindSwayMotionEffect: PlantMotionEffect {
     public var leafBendAngle: CGFloat
     /// Hệ số co giãn thời gian
     public var durationMultiplier: Double
+    /// Điều chỉnh biên độ từng lá theo tên node; mặc định giữ biên độ chung.
+    public var leafBendMultipliers: [String: CGFloat]
 
     public init(
         swayAngle: CGFloat = 0.048,
         leafBendAngle: CGFloat = 0.12,
-        durationMultiplier: Double = 1.0
+        durationMultiplier: Double = 1.0,
+        leafBendMultipliers: [String: CGFloat] = [:]
     ) {
         self.swayAngle = swayAngle
         self.leafBendAngle = leafBendAngle
         self.durationMultiplier = durationMultiplier
+        self.leafBendMultipliers = leafBendMultipliers
     }
 
     public func apply(context: PlantMotionContext) {
@@ -193,7 +197,8 @@ public final class WindSwayMotionEffect: PlantMotionEffect {
 
             let isLeft = leaf.position.x < 0
             // Lá đón gió (bên trái) bị bẻ cong nhiều hơn, lá khuất gió uốn theo chiều gió
-            let impulse = (isLeft ? 1.0 : -0.75) * leafBendAngle * CGFloat.random(in: 0.85...1.15)
+            let bendMultiplier = leafBendMultipliers[leaf.name ?? ""] ?? 1.0
+            let impulse = (isLeft ? 1.0 : -0.75) * leafBendAngle * bendMultiplier * CGFloat.random(in: 0.85...1.15)
 
             let delay = SKAction.wait(forDuration: Double(idx) * 0.025 * mult)
             let bendOut = SKAction.rotate(toAngle: restAngle + impulse, duration: 0.18 * mult)

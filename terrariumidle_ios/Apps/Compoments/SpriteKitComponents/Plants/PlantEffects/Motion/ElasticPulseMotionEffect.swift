@@ -15,10 +15,13 @@ public final class ElasticPulseMotionEffect: PlantMotionEffect {
 
     public var pulseScale: CGFloat
     public var durationMultiplier: Double
+    /// Tắt cho cây ghép nhiều đốt cần giữ cố định các khớp nối.
+    public var animatesLeaves: Bool
 
-    public init(pulseScale: CGFloat = 1.08, durationMultiplier: Double = 1.0) {
+    public init(pulseScale: CGFloat = 1.08, durationMultiplier: Double = 1.0, animatesLeaves: Bool = true) {
         self.pulseScale = pulseScale
         self.durationMultiplier = durationMultiplier
+        self.animatesLeaves = animatesLeaves
     }
 
     public func apply(context: PlantMotionContext) {
@@ -33,7 +36,7 @@ public final class ElasticPulseMotionEffect: PlantMotionEffect {
 
         let rootDuration = (0.08 + 0.10 + 0.08) * mult // 0.26 * mult
         let maxLeafDelay = Double(max(0, context.leafNodes.count - 1)) * 0.015 * mult
-        let leafDuration = maxLeafDelay + (0.06 + 0.08) * mult // 0.14 * mult
+        let leafDuration = animatesLeaves ? maxLeafDelay + (0.06 + 0.08) * mult : 0 // 0.14 * mult
         let totalDuration = max(rootDuration, leafDuration)
 
         let p1 = SKAction.scale(to: baseScale * pulseScale, duration: 0.08 * mult)
@@ -62,6 +65,8 @@ public final class ElasticPulseMotionEffect: PlantMotionEffect {
             let restAngle = leaf.restZRotation
             leaf.zRotation = restAngle
             leaf.setScale(1.0)
+
+            guard animatesLeaves else { continue }
 
             let delay = SKAction.wait(forDuration: Double(idx) * 0.015 * mult)
             let jiggle = SKAction.sequence([

@@ -26,6 +26,8 @@ struct PlantItemView: View {
     let onDrop: (Int, Int) -> Void
 
     @State private var showSheet = false
+    @State private var pendingStoreItemId: String?
+    @EnvironmentObject private var router: AppRouter
     @State private var floatingTexts: [(id: UUID, text: String, offset: CGFloat)] = []
     @State var fireStoreService: FireStoreService = .shared
 
@@ -164,14 +166,20 @@ struct PlantItemView: View {
                         })
                         return items
                     }())
-        .sheet(isPresented: $showSheet) {
+        .sheet(isPresented: $showSheet, onDismiss: {
+            if let itemId = pendingStoreItemId {
+                pendingStoreItemId = nil
+                router.push(.storeItem(itemId: itemId))
+            }
+        }) {
             SelectItemSheet(
                 isPresented: $showSheet,
                 cartPlants: cartPlants,
                 cartPots: cartPots,
                 cartStickers: cartStickers,
                 rowIndex: rowIndex,
-                columnIndex: columnIndex
+                columnIndex: columnIndex,
+                onOpenStore: { pendingStoreItemId = $0 }
             )
         }
 

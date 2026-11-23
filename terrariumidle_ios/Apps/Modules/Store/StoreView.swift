@@ -5,8 +5,10 @@ struct StoreView: View {
     @EnvironmentObject var router: AppRouter
     @StateObject private var viewModel: StoreViewModel
     @StateObject private var fireStore: FireStoreService = .shared
+    private let initialItemId: String?
 
-    init(auth: AuthService = AuthService.shared) {
+    init(auth: AuthService = AuthService.shared, initialItemId: String? = nil) {
+        self.initialItemId = initialItemId
         _viewModel = StateObject(wrappedValue: StoreViewModel(auth: auth))
     }
 
@@ -77,7 +79,15 @@ struct StoreView: View {
             _ = await fireStore.getDataById(userId: userId)
 
             // Load initial items
-            viewModel.loadItems(for: .plants)
+            if let initialItemId, let pot = ItemDataManager.shared.getPot(byId: initialItemId) {
+                viewModel.loadItems(for: .pots)
+                viewModel.searchText = pot.name
+            } else if let initialItemId, let plant = ItemDataManager.shared.getPlant(byId: initialItemId) {
+                viewModel.loadItems(for: .plants)
+                viewModel.searchText = plant.name
+            } else {
+                viewModel.loadItems(for: .plants)
+            }
         }
         .alert("Lỗi", isPresented: $viewModel.hasError) {
             Button("OK", role: .cancel) {

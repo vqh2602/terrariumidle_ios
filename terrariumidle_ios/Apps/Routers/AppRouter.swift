@@ -14,6 +14,7 @@ enum AppRoute: Hashable {
     case splashView
     case homeView
     case storeView
+    case storeItem(itemId: String)
     case accountView
     case eventView
     case discoveryView
@@ -67,6 +68,8 @@ struct AppRouterView: View {
                         HomeView()
                     case .storeView:
                         StoreView()
+                    case .storeItem(let itemId):
+                        StoreView(initialItemId: itemId)
                     case .accountView:
                         AccountView()
                     case .eventView:

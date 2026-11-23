@@ -57,17 +57,13 @@ public final class Plant20Node: SKNode {
         let height: CGFloat
         let anchorX: CGFloat
         let anchorY: CGFloat
-        let isLeft: Bool
         let zPos: CGFloat
-        let bendAngle: CGFloat
-        let duration: TimeInterval
-        let shouldSway: Bool
     }
 
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId: 3, imgX:    91.0, imgY:   160.3, width:  319.0, height:  236.0, anchorX: 0.75, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: -0.035, duration: 3.00, shouldSway: true),
-        LeafData(assetId: 4, imgX:   -16.6, imgY:    -8.0, width:  179.0, height:  215.0, anchorX: 0.37, anchorY: 0.00, isLeft: false, zPos: 12, bendAngle: -0.035, duration: 3.35, shouldSway: true),
-        LeafData(assetId: 5, imgX:  -137.2, imgY:   317.8, width:  300.0, height:  173.0, anchorX: 0.12, anchorY: 0.00, isLeft: true , zPos: 13, bendAngle:  0.035, duration: 3.70, shouldSway: true)
+        LeafData(assetId: 3, imgX:    91.0, imgY:   160.3, width:  319.0, height:  236.0, anchorX: 0.75, anchorY: 0.00, zPos: 11),
+        LeafData(assetId: 4, imgX:   -16.6, imgY:    -8.0, width:  179.0, height:  215.0, anchorX: 0.37, anchorY: 0.00, zPos: 12),
+        LeafData(assetId: 5, imgX:  -137.2, imgY:   317.8, width:  300.0, height:  173.0, anchorX: 0.12, anchorY: 0.00, zPos: 13)
     ]
 
     // MARK: - Properties
@@ -76,7 +72,7 @@ public final class Plant20Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
-    public var motionEffect: PlantMotionEffect = ElasticPulseMotionEffect(pulseScale: 1.05, durationMultiplier: 1.0)
+    public var motionEffect: PlantMotionEffect = ElasticPulseMotionEffect(pulseScale: 1.05, durationMultiplier: 1.0, animatesLeaves: false)
     public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
 
     private let plantRootNode = SKNode()
@@ -126,6 +122,7 @@ public final class Plant20Node: SKNode {
     public func build() {
         plantRootNode.removeAllChildren()
         plantRootNode.removeAllActions()
+        plantRootNode.zRotation = 0
         leafNodes.removeAll()
         seedNode = nil
         sproutNode = nil
@@ -274,7 +271,7 @@ public final class Plant20Node: SKNode {
                 return id1 < id2
             }
 
-            for (idx, leaf) in sortedLeaves.enumerated() {
+            for leaf in sortedLeaves {
                 leaf.isHidden = false
                 leaf.isPaused = false
                 leaf.speed = 1.0
@@ -282,18 +279,12 @@ public final class Plant20Node: SKNode {
                 leafNodes.append(leaf)
 
                 let assetId = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
-                let meta = Self.leavesMetadata.first(where: { $0.assetId == assetId })
 
                 if leaf.texture == nil {
                     leaf.texture = loadPlantTexture(assetId: assetId)
                 }
-
-                if meta?.shouldSway ?? true {
-                    let bend = meta?.bendAngle ?? 0.035
-                    let dur = meta?.duration ?? 3.2
-                    startLeafIdleAnimation(leaf: leaf, bendAngle: bend, duration: dur, phaseDelay: Double(idx) * 0.18)
-                }
             }
+            resumeIdleAnimation()
             return
         }
 
@@ -303,7 +294,7 @@ public final class Plant20Node: SKNode {
         fallbackGroup.position = CGPoint(x: 0, y: -10)
         plantRootNode.addChild(fallbackGroup)
 
-        for (idx, leafData) in Self.leavesMetadata.enumerated() {
+        for leafData in Self.leavesMetadata {
             guard let texture = loadPlantTexture(assetId: leafData.assetId) else { continue }
 
             let leaf = SKSpriteNode(texture: texture)
@@ -316,63 +307,26 @@ public final class Plant20Node: SKNode {
             fallbackGroup.addChild(leaf)
             leaf.restZRotation = leaf.zRotation
             leafNodes.append(leaf)
-
-            if leafData.shouldSway {
-                startLeafIdleAnimation(leaf: leaf, bendAngle: leafData.bendAngle, duration: leafData.duration, phaseDelay: Double(idx) * 0.18)
-            }
         }
+        resumeIdleAnimation()
     }
 
     // MARK: - Hoạt ảnh nhàn rỗi (Idle Animation)
 
-    private func startLeafIdleAnimation(leaf: SKSpriteNode, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: TimeInterval) {
-        leaf.removeAction(forKey: "plantIdleAction")
-        let rest = leaf.restZRotation
-        leaf.zRotation = rest
-
-        let rotateRight = SKAction.rotate(toAngle: rest + bendAngle, duration: duration * 0.5)
-        rotateRight.timingMode = .easeInEaseOut
-        let rotateLeft = SKAction.rotate(toAngle: rest - bendAngle, duration: duration)
-        rotateLeft.timingMode = .easeInEaseOut
-        let rotateBack = SKAction.rotate(toAngle: rest, duration: duration * 0.5)
-        rotateBack.timingMode = .easeInEaseOut
-
-        let swaySeq = SKAction.sequence([rotateRight, rotateLeft, rotateBack])
-
-        let fullAction: SKAction
-        if "breathe" == "breathe" {
-            let breatheUp = SKAction.scaleY(to: 1.025, duration: duration * 0.5)
-            breatheUp.timingMode = .easeInEaseOut
-            let breatheDown = SKAction.scaleY(to: 0.985, duration: duration * 0.5)
-            breatheDown.timingMode = .easeInEaseOut
-            let breatheCycle = SKAction.sequence([breatheUp, breatheDown])
-            fullAction = SKAction.group([swaySeq, breatheCycle])
-        } else {
-            fullAction = swaySeq
-        }
-
-        if phaseDelay > 0 {
-            leaf.run(SKAction.sequence([
-                SKAction.wait(forDuration: phaseDelay),
-                SKAction.repeatForever(fullAction)
-            ]), withKey: "plantIdleAction")
-        } else {
-            leaf.run(SKAction.repeatForever(fullAction), withKey: "plantIdleAction")
-        }
-    }
-
-    // MARK: - Khôi phục chuyển động nhàn rỗi sau Tap
-
     public func resumeIdleAnimation() {
-        for (idx, leaf) in leafNodes.enumerated() {
-            let assetId = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
-            let meta = Self.leavesMetadata.first(where: { $0.assetId == assetId })
-            if meta?.shouldSway ?? true {
-                let bend = meta?.bendAngle ?? 0.035
-                let dur = meta?.duration ?? 3.2
-                startLeafIdleAnimation(leaf: leaf, bendAngle: bend, duration: dur, phaseDelay: Double(idx) * 0.18)
-            }
+        guard case .mature = growthState else { return }
+
+        // Các đốt ghép nối phải chuyển động cùng một khối để không hở khớp.
+        // plantSway được PlantMotionContext.stopIdleActions() dừng trước mỗi tap.
+        plantRootNode.removeAction(forKey: "plantSway")
+        plantRootNode.zRotation = 0
+        let swayRight = SKAction.rotate(toAngle: 0.006, duration: 1.6)
+        let swayLeft = SKAction.rotate(toAngle: -0.006, duration: 3.2)
+        let settle = SKAction.rotate(toAngle: 0, duration: 1.6)
+        for action in [swayRight, swayLeft, settle] {
+            action.timingMode = .easeInEaseOut
         }
+        plantRootNode.run(.repeatForever(.sequence([swayRight, swayLeft, settle])), withKey: "plantSway")
     }
 
     // MARK: - Phản hồi tương tác Tap
@@ -388,10 +342,7 @@ public final class Plant20Node: SKNode {
             level: growthState.rawLevel,
             initialSeedPosition: initialSeedPosition,
             initialSproutPosition: initialSproutPosition,
-            containerSize: containerSize,
-            onComplete: { [weak self] in
-                self?.resumeIdleAnimation()
-            }
+            containerSize: containerSize
         )
 
         let lvl = growthState.rawLevel

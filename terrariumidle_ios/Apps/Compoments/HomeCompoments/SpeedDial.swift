@@ -113,8 +113,8 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
     case store = "Cửa hàng"
     case events = "Sự kiện"
     case discovery = "Khám phá"
-    case account = "Tài khoản"
     case layout = "Bố cục"
+    case account = "Tài khoản"
 
     var id: Self { self }
     var icon: String {
@@ -143,6 +143,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
 struct GardenMenuPanel: View {
     let onSelect: (GardenMenuDestination) -> Void
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var canScrollDown = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -167,8 +168,27 @@ struct GardenMenuPanel: View {
                     }
                 }
             }
-            .scrollIndicators(.hidden)
+            .scrollIndicators(.visible)
             .scrollBounceBehavior(.basedOnSize)
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                let bottom = geometry.contentSize.height + geometry.contentInsets.bottom
+                let visibleBottom = geometry.contentOffset.y + geometry.containerSize.height
+                return bottom - visibleBottom > 1
+            } action: { _, hasMore in
+                canScrollDown = hasMore
+            }
+
+            HStack(spacing: 6) {
+                Text("Vuốt lên để xem thêm")
+                Image(systemName: "chevron.down")
+                    .accessibilityHidden(true)
+            }
+            .font(.system(.caption, design: .rounded, weight: .semibold))
+            .foregroundStyle(AccountStyle.green)
+            .frame(maxWidth: .infinity)
+            // Keep the footer's space stable so hiding it cannot change the scroll range.
+            .opacity(canScrollDown ? 1 : 0)
+            .accessibilityHidden(!canScrollDown)
         }
         .padding(18)
         .modifier(AccountPanel())
@@ -207,6 +227,14 @@ struct GardenMenuPanel: View {
 #Preview("Menu · 320pt") {
     GardenMenuPanel(onSelect: { _ in })
         .padding(16)
-        .frame(width: 320)
+        .frame(width: 320, height: 422)
+        .background(Color(hex: "E9EED9"))
+}
+
+#Preview("Menu · Chữ lớn") {
+    GardenMenuPanel(onSelect: { _ in })
+        .padding(16)
+        .frame(width: 320, height: 422)
+        .environment(\.dynamicTypeSize, .accessibility1)
         .background(Color(hex: "E9EED9"))
 }

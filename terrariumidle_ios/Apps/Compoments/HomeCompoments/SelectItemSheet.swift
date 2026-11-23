@@ -26,6 +26,7 @@ struct SelectItemSheet: View {
     let cartStickers: [String]
     let rowIndex: Int
     let columnIndex: Int
+    var onOpenStore: (String) -> Void = { _ in }
 
     @State private var selectedTab: SelectionTab = .plant
     @State private var selectedPlantId: String? = nil
@@ -110,7 +111,11 @@ struct SelectItemSheet: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
 
-                if selectedTab == .plant, let pot = recommendedPot, selectedPotId != pot.id {
+                if let item = unownedRecommendation {
+                    unownedItemRecommendation(item)
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 8)
+                } else if selectedTab == .plant, let pot = recommendedPot, selectedPotId != pot.id {
                     GardenInventoryRow(item: pot, isSelected: false, onSelect: {
                         selectedPotId = pot.id
                         selectedTab = .pot
@@ -245,11 +250,58 @@ struct SelectItemSheet: View {
 
     // MARK: - Helper Methods
 
+    private var unownedRecommendation: ItemData? {
+        guard selectedTab != .decoration else { return nil }
+        let pot = recommendedPot.flatMap { cartPots.contains($0.id) ? nil : $0 }
+        let plant = recommendedPlant.flatMap { cartPlants.contains($0.id) ? nil : $0 }
+        return selectedTab == .pot ? (plant ?? pot) : (pot ?? plant)
+    }
+
+    private func unownedItemRecommendation(_ item: ItemData) -> some View {
+        let isPlant = item.type == "plant"
+        return VStack(alignment: .leading, spacing: 8) {
+            Label(isPlant ? "Cây phù hợp nhất với chậu đã chọn" : "Chậu phù hợp nhất với cây đã chọn", systemImage: "sparkles")
+                .font(.system(.caption, design: .rounded, weight: .bold))
+                .foregroundStyle(AccountStyle.green)
+            HStack(spacing: 10) {
+                CachedAsyncImage(named: item.image) { image in
+                    image.resizable().scaledToFit()
+                } placeholder: {
+                    Image(systemName: isPlant ? "leaf.fill" : "shippingbox.fill").foregroundStyle(AccountStyle.green)
+                }
+                .frame(width: 48, height: 48)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(item.name)
+                        .font(.system(.subheadline, design: .rounded, weight: .bold))
+                        .foregroundStyle(AccountStyle.ink)
+                    Text(isPlant ? "Bạn chưa sở hữu cây này." : "Bạn chưa sở hữu chậu này.")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(AccountStyle.muted)
+                }
+            }
+            Button {
+                onOpenStore(item.id)
+                isPresented = false
+            } label: {
+                Label("Vào cửa hàng để mua", systemImage: "basket.fill")
+                    .font(.system(.subheadline, design: .rounded, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .foregroundStyle(AccountStyle.cream)
+                    .background(AccountStyle.green, in: RoundedRectangle(cornerRadius: 10))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 16))
+        .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(AccountStyle.border, lineWidth: 1) }
+    }
+
     private var recommendedPot: ItemData? {
         guard let plantId = selectedPlantId,
               let plant = ItemDataManager.shared.getPlant(byId: plantId),
               let potId = matchingItemId(plantId, from: "plant", to: "pot"),
-              cartPots.contains(potId),
               let pot = ItemDataManager.shared.getPot(byId: potId),
               plant.itemTypeAttribute.isHanging == pot.itemTypeAttribute.isHanging
         else { return nil }
@@ -260,7 +312,6 @@ struct SelectItemSheet: View {
         guard let potId = selectedPotId,
               let pot = ItemDataManager.shared.getPot(byId: potId),
               let plantId = matchingItemId(potId, from: "pot", to: "plant"),
-              cartPlants.contains(plantId),
               let plant = ItemDataManager.shared.getPlant(byId: plantId),
               plant.itemTypeAttribute.isHanging == pot.itemTypeAttribute.isHanging
         else { return nil }
