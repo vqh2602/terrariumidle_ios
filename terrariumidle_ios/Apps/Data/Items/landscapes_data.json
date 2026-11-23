@@ -97,15 +97,16 @@
         "name": "Thần Sơn Huyễn Cảnh",
         "description": "神山幻境 - Divine Mountain Illusory Realm",
         "image": "i_landscape7",
-        "sksFile": "BackgroundScene.sks",
+        "sksFile": "Landscape7Scene.sks",
         "skyGradient": [
-            "#0F1429",
-            "#1F2647",
-            "#2E3861"
+            "#389FB2",
+            "#7DC3B3",
+            "#FADA91"
         ],
         "elements": [
-            "moon_crescent",
-            "stars"
+            "sun",
+            "waves",
+            "clouds"
         ],
         "priceStore": 0,
         "priceOxygen": 0,

@@ -34,9 +34,10 @@
         "density": "medium",
         "speed": "normal",
         "images": [
-            "leaf_autumn_1",
-            "leaf_autumn_2",
-            "leaf_autumn_3"
+            "overlay2-1@2.083x",
+            "overlay2-2@2.083x",
+            "overlay2-3@2.083x",
+            "overlay2-4@2.083x"
         ],
         "priceStore": 0,
         "priceOxygen": 0,
@@ -56,8 +57,11 @@
         "density": "medium",
         "speed": "slow",
         "images": [
-            "petal_lavender_1",
-            "petal_lavender_2"
+            "overlay3-1@2.083x",
+            "overlay3-2@2.083x",
+            "overlay3-3@2.083x",
+            "overlay3-4@2.083x",
+            "overlay3-5@2.083x"
         ],
         "priceStore": 0,
         "priceOxygen": 0,
@@ -94,8 +98,12 @@
         "density": "medium",
         "speed": "slow",
         "images": [
-            "petal_sakura_1",
-            "petal_sakura_2"
+            "overlay5-1@2.083x",
+            "overlay5-2@2.083x",
+            "overlay5-3@2.083x",
+            "overlay5-4@2.083x",
+            "overlay5-6@2.083x",
+            "overlay5-7@2.083x"
         ],
         "priceStore": 0,
         "priceOxygen": 0,
@@ -115,9 +123,10 @@
         "density": "medium",
         "speed": "normal",
         "images": [
-            "leaf_maple_1",
-            "leaf_maple_2",
-            "leaf_maple_3"
+            "overlay6-1@2.083x",
+            "overlay6-2@2.083x",
+            "overlay6-3@2.083x",
+            "overlay6-4@2.083x"
         ],
         "priceStore": 0,
         "priceOxygen": 0,

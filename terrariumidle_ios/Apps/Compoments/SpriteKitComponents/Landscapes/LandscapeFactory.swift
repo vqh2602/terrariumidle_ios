@@ -25,7 +25,12 @@ public final class LandscapeFactory {
             return Landscape4Node(containerSize: containerSize)
         case "landscape5", "land5", "storm", "night_storm", "dark_rain", "glass", "rain_glass", "water_drop", "window", "landscape5-bg-1@4.167x", "landscape5-1@4.167x", "landscape5-1":
             return Landscape5Node(containerSize: containerSize)
+        case "landscape7", "land7", "i_landscape7", "than_son_huyen_canh", "thần sơn huyễn cảnh", "mountain_realm", "divine_mountain", "sea_mountain", "landscape7-1@4.167x", "landscape7-1":
+            return Landscape7Node(containerSize: containerSize)
         default:
+            if cleanId.contains("7") || cleanId.contains("than_son") || cleanId.contains("mountain") {
+                return Landscape7Node(containerSize: containerSize)
+            }
             if cleanId.contains("5") || cleanId.contains("storm") || cleanId.contains("glass") {
                 return Landscape5Node(containerSize: containerSize)
             }

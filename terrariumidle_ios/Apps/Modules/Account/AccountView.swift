@@ -31,6 +31,7 @@ struct AccountView: View {
                     .foregroundStyle(AccountStyle.muted)
                     .multilineTextAlignment(.center)
                     .padding(.vertical, 8)
+                    graphicsCredits
                 }
                 .frame(maxWidth: 540)
                 .frame(maxWidth: .infinity)
@@ -160,6 +161,19 @@ struct AccountView: View {
                 viewModel.requestDeleteAccount()
             }
         }
+    }
+
+    private var graphicsCredits: some View {
+        VStack(spacing: 6) {
+            Text("Nguồn tài nguyên đồ họa")
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+            Text("Hình ảnh của rattanachomphoo trên Magnific")
+                .font(.system(.caption2, design: .rounded))
+        }
+        .foregroundStyle(AccountStyle.muted)
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private var rowDivider: some View {
