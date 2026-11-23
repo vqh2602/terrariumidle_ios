@@ -143,6 +143,18 @@ Ma trận Z-Index trong chậu:
 | **Pot16** | Treo | `WidePendulumMotionEffect()` | `[SparkleBurstEffect()]` |
 | **Pot17** | Treo | `WidePendulumMotionEffect()` | `[StoneDustEffect()]` |
 | **Pot18** | Treo/Bàn | `SpringPendulumMotionEffect()` | `[EarthenParticlesEffect()]` |
+| **Pot19** | Treo | `ElasticPendulumMotionEffect()` | `[QuartzBurstEffect()]` |
+| **Pot20** | Để bàn | `StandardBounceMotionEffect()` | `[WoodPollenEffect()]` |
+| **Pot21** | Để bàn | `FirmBounceMotionEffect()` | `[StoneDustEffect()]` |
+| **Pot22** | Để bàn | `StandardBounceMotionEffect()` | `[ClayGlintEffect()]` |
+| **Pot23** | Để bàn | `StandardBounceMotionEffect()` | `[EarthenParticlesEffect()]` |
+| **Pot24** | Để bàn | `StandardBounceMotionEffect()` | `[ClayGlintEffect()]` |
+| **Pot25** | Để bàn | `StandardBounceMotionEffect()` | `[GoldGlintEffect()]` |
+| **Pot26** | Để bàn | `FirmBounceMotionEffect()` | `[QuartzBurstEffect()]` |
+| **Pot27** | Để bàn | `FirmBounceMotionEffect()` | `[SparkleBurstEffect()]` |
+| **Pot28** | Để bàn | `FirmBounceMotionEffect()` | `[EmeraldJadeEffect()]` |
+| **Pot29** | Để bàn | `StandardBounceMotionEffect()` | `[CoralBubbleEffect()]` |
+| **Pot30** | Để bàn | `FirmBounceMotionEffect()` | `[BambooMistEffect()]` |
 
 ---
 

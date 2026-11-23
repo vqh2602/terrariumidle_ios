@@ -41,6 +41,14 @@ public enum PotTapEffectType: String, CaseIterable {
     case quartzBurst = "quartzBurst"
     /// Chậu 7: Bụi đất sét mộc mạc (Earthen Dust)
     case earthenDust = "earthenDust"
+    /// Chậu 20: Bụi phấn gỗ thơm ấm áp (Wood Pollen & Amber Glow)
+    case woodPollen = "woodPollen"
+    /// Chậu 28: Tinh thể ngọc bích băng tuyết (Emerald & Ice Jade Luminescence)
+    case emeraldJade = "emeraldJade"
+    /// Chậu 29: Bọt ngọc san hô phập phồng (Coral Luminescent Pearls)
+    case coralBubble = "coralBubble"
+    /// Chậu 30: Sương mai thiền tịnh (Zen Bamboo Mist & Dew)
+    case bambooMist = "bambooMist"
 
     /// Khởi tạo instance hiệu ứng tương ứng
     public func createEffect() -> PotTapEffect {
@@ -59,6 +67,14 @@ public enum PotTapEffectType: String, CaseIterable {
             return QuartzBurstEffect()
         case .earthenDust:
             return EarthenParticlesEffect()
+        case .woodPollen:
+            return WoodPollenEffect()
+        case .emeraldJade:
+            return EmeraldJadeEffect()
+        case .coralBubble:
+            return CoralBubbleEffect()
+        case .bambooMist:
+            return BambooMistEffect()
         }
     }
 }
@@ -91,6 +107,14 @@ public struct PotTapEffectFactory {
             return QuartzBurstEffect()
         } else if clean.contains("đất sét") || clean.contains("đất") || clean.contains("earthen") {
             return EarthenParticlesEffect()
+        } else if clean.contains("gỗ") || clean.contains("pollen") || clean.contains("amber") {
+            return WoodPollenEffect()
+        } else if clean.contains("ngọc bích") || clean.contains("ngọc") || clean.contains("jade") || clean.contains("emerald") {
+            return EmeraldJadeEffect()
+        } else if clean.contains("san hô") || clean.contains("coral") {
+            return CoralBubbleEffect()
+        } else if clean.contains("tre") || clean.contains("sương") || clean.contains("bamboo") || clean.contains("mist") {
+            return BambooMistEffect()
         }
 
         return nil

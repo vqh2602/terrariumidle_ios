@@ -59,6 +59,28 @@ public enum PotFactory {
             return Pot18Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
         case "pot19":
             return Pot19Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
+        case "pot20":
+            return Pot20Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
+        case "pot21":
+            return Pot21Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
+        case "pot22":
+            return Pot22Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
+        case "pot23":
+            return Pot23Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
+        case "pot24":
+            return Pot24Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
+        case "pot25":
+            return Pot25Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
+        case "pot26":
+            return Pot26Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
+        case "pot27":
+            return Pot27Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
+        case "pot28":
+            return Pot28Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
+        case "pot29":
+            return Pot29Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
+        case "pot30":
+            return Pot30Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
         default:
             return Pot1Node(containerSize: containerSize, isHanging: isHanging, widthFill: effectiveFill)
         }

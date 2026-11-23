@@ -205,8 +205,8 @@ private struct VisitorSlotView: View {
 
     private func supported(_ slot: VisitorGarden.Slot) -> Bool {
         let plantSupported = slot.plantID.isEmpty || PlantAvailability.isAvailable(plantId: slot.plantID)
-        // PotFactory hiện tại hỗ trợ pot1...pot19. Tránh việc tự động fallback về pot1 đối với các ID legacy chưa rõ.
-        let potSupported = slot.potID.isEmpty || (slot.potID.hasPrefix("pot") && (1...19).contains(Int(slot.potID.dropFirst(3)) ?? 0))
+        // PotFactory hiện tại hỗ trợ pot1...pot30. Tránh việc tự động fallback về pot1 đối với các ID legacy chưa rõ.
+        let potSupported = slot.potID.isEmpty || (slot.potID.hasPrefix("pot") && (1...30).contains(Int(slot.potID.dropFirst(3)) ?? 0))
         return plantSupported && potSupported
     }
 
