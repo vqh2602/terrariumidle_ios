@@ -288,8 +288,8 @@
         "effectDescription": "",
         "music": "",
         "musicDescription": "",
-        "effectLandscape": "",
-        "effectLandscapeDescription": "",
+        "effectLandscape": "overlay6",
+        "effectLandscapeDescription": "ovlay 6 nè",
         "effectSfx": "",
         "effectSfxDescription": ""
     },

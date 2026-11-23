@@ -8,30 +8,9 @@
 import SpriteKit
 import UIKit
 
-/// Node Phong cảnh chuyên biệt cho Landscape 7: "Thần Sơn Huyễn Cảnh" (landscape7 / 神山幻境)
-/// - Mô hình Kiến trúc Lai SpriteKit: Nạp trực quan từ `Landscape7Scene.sks` (có Fallback Procedural độc lập)
-/// - Bóc tách chính xác 26 lớp thành phần từ file vector thiết kế gốc `landscape7.svg`:
-///   1. `bgGroup` (z = 0..3):
-///      - `bgNode` (z = 0): Nền canvas màu cát ấm nguyên bản (`landscape7-1@4.167x`)
-///      - `skyNode` (z = 1): Bầu trời chuyển sắc từ xanh mòng két sang xanh ngọc và vàng hoàng hôn (`landscape7-12@4.167x`)
-///      - `seaNode` (z = 2): Thân biển xanh ngọc bích sâu thẳm (`landscape7-2@4.167x`)
-///      - `seaGlowNode` (z = 3): Vầng quang năng ánh vàng rọi trên mặt biển (`landscape7-3@4.167x`)
-///   2. `sunGroup` (z = 10..12):
-///      - `sunCore` (z = 10): Thái dương hoàng kim giữa khe Thần Sơn (`landscape7-25@4.167x`)
-///      - `sunAura` (z = 10.5): Quầng sáng hào quang tiên khí bao bọc mặt trời
-///      - `sunReflection` (z = 11): Vệt nắng lung linh phản chiếu trên mặt nước (`landscape7-26@4.167x`)
-///   3. `mountainsGroup` (z = 15..22):
-///      - Thần Sơn xa trái & phải kèm mây hoàng kim đỉnh núi (`landscape7-14`, `15`, `16`, `17`)
-///      - Thần Sơn trung cảnh trái & phải kèm mây vàng lụa tiên (`landscape7-18`, `19`, `20`, `21`, `22`)
-///   4. `cloudsGroup` (z = 25):
-///      - Màn sương mây chân núi lững lờ trôi dạt đối xứng nhẹ nhàng (`landscape7-23`, `24`)
-///   5. `wavesGroup` (z = 30..47):
-///      - Gợn sóng lấp lánh mặt biển giữa cảnh (`landscape7-13@4.167x`)
-///      - Tầng sóng xa (Wave Tier 1): thân sóng, gờ sóng & bọt sóng trắng cuộn trào ukiyo-e (`landscape7-4`, `10`, `11`)
-///      - Tầng sóng giữa (Wave Tier 2): thân sóng & bọt sóng mờ (`landscape7-5`, `6`)
-///      - Tầng sóng gần (Wave Tier 3): thân sóng bờ, lớp sóng đáy & bọt sóng trắng xóa (`landscape7-7`, `8`, `9`)
-///   6. `sparklesGroup` (z = 50):
-///      - Hạt tiên khí linh quang lơ lửng bồng lai
+/// Phong cảnh biển Landscape7, ghép từ 26 lớp của `landscape7.svg`.
+/// Giữ tỉ lệ gốc 750 x 500 và aspect-fill toàn viewport: chân trời, mặt biển
+/// và bờ cát luôn liền mạch. Scene Editor và fallback dùng cùng một bố cục.
 public final class Landscape7Node: SKNode, LandscapeInteractiveNode {
 
     // MARK: - Constants & Design Coordinates
@@ -55,7 +34,6 @@ public final class Landscape7Node: SKNode, LandscapeInteractiveNode {
     // 2. Mặt trời & Phản chiếu
     private var sunGroupNode: SKNode?
     private var sunCore: SKSpriteNode?
-    private var sunAura: SKShapeNode?
     private var sunReflection: SKSpriteNode?
 
     // 3. Dãy Thần Sơn
@@ -141,7 +119,6 @@ public final class Landscape7Node: SKNode, LandscapeInteractiveNode {
         seaGlowNode = nil
         sunGroupNode = nil
         sunCore = nil
-        sunAura = nil
         sunReflection = nil
         mountainsGroupNode = nil
         mountainLeftFar = nil
@@ -176,18 +153,18 @@ public final class Landscape7Node: SKNode, LandscapeInteractiveNode {
 
         let scaleX = containerSize.width / baseDesignWidth
         let scaleY = containerSize.height / baseDesignHeight
-        activeScale = max(scaleX, scaleY)
+        activeScale = min(scaleX, scaleY)
 
         // 1. ƯU TIÊN KIẾN TRÚC LAI: Nạp node từ Landscape7Scene.sks
         if let scene = loadSceneTemplate() {
-            buildFromSceneTemplate(scene: scene)
+            buildArtwork(scene: scene)
             setupSparklesAndRippleGroups()
             startAnimations()
             return
         }
 
         // 2. FALLBACK PROCEDURAL CODE NẾU CHƯA NẠP ĐƯỢC SCENE
-        buildProceduralFallback()
+        buildArtwork(scene: nil)
         setupSparklesAndRippleGroups()
         startAnimations()
     }
@@ -204,361 +181,152 @@ public final class Landscape7Node: SKNode, LandscapeInteractiveNode {
         return nil
     }
 
-    // MARK: - Build from Scene Template
+    // MARK: - Shared Scene / Procedural Artwork Layout
 
-    private func buildFromSceneTemplate(scene: SKScene) {
-        // --- 1. bgNode (z = 0) ---
-        if let bg = scene.childNode(withName: "bgNode") as? SKSpriteNode {
-            bg.removeFromParent()
-            bg.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-            bg.position = CGPoint(x: containerSize.width / 2.0, y: containerSize.height / 2.0)
-            let fillW = max(containerSize.width, baseDesignWidth * activeScale) * 1.05
-            let fillH = max(containerSize.height, baseDesignHeight * activeScale) * 1.05
-            bg.size = CGSize(width: fillW, height: fillH)
-            bg.zPosition = 0.0
-            if let tex = loadTexture(name: "landscape7-1@4.167x") { bg.texture = tex }
-            landscapeRootNode.addChild(bg)
-            self.bgNode = bg
-        }
-
-        // --- 2. skyNode (z = 1) ---
-        if let sky = scene.childNode(withName: "skyNode") as? SKSpriteNode {
-            sky.removeFromParent()
-            let normX = (sky.position.x / baseDesignWidth + 0.5) * containerSize.width
-            let normY = (sky.position.y / baseDesignHeight + 0.5) * containerSize.height
-            sky.position = CGPoint(x: normX, y: normY)
-            let w = max(containerSize.width, baseDesignWidth * activeScale) * 1.05
-            let h = max(containerSize.height * 0.65, 600.0 * activeScale)
-            sky.size = CGSize(width: w, height: h)
-            sky.zPosition = 1.0
-            if let tex = loadTexture(name: "landscape7-12@4.167x") { sky.texture = tex }
-            landscapeRootNode.addChild(sky)
-            self.skyNode = sky
-        }
-
-        // --- 3. seaNode & seaGlowNode (z = 2..3) ---
-        if let sea = scene.childNode(withName: "seaNode") as? SKSpriteNode {
-            sea.removeFromParent()
-            let normX = (sea.position.x / baseDesignWidth + 0.5) * containerSize.width
-            let normY = (sea.position.y / baseDesignHeight + 0.5) * containerSize.height
-            sea.position = CGPoint(x: normX, y: normY)
-            let w = max(containerSize.width, baseDesignWidth * activeScale) * 1.05
-            let h = max(containerSize.height * 0.70, 800.0 * activeScale)
-            sea.size = CGSize(width: w, height: h)
-            sea.zPosition = 2.0
-            if let tex = loadTexture(name: "landscape7-2@4.167x") { sea.texture = tex }
-            landscapeRootNode.addChild(sea)
-            self.seaNode = sea
-        }
-
-        if let seaGlow = scene.childNode(withName: "seaGlowNode") as? SKSpriteNode {
-            seaGlow.removeFromParent()
-            let normX = (seaGlow.position.x / baseDesignWidth + 0.5) * containerSize.width
-            let normY = (seaGlow.position.y / baseDesignHeight + 0.5) * containerSize.height
-            seaGlow.position = CGPoint(x: normX, y: normY)
-            seaGlow.size = CGSize(width: max(containerSize.width, 750.0 * activeScale), height: 450.57 * activeScale)
-            seaGlow.zPosition = 3.0
-            seaGlow.alpha = 0.60
-            if let tex = loadTexture(name: "landscape7-3@4.167x") { seaGlow.texture = tex }
-            landscapeRootNode.addChild(seaGlow)
-            self.seaGlowNode = seaGlow
-        }
-
-        // --- 4. sunGroup (z = 10..12) ---
-        let sunGroup = SKNode()
-        sunGroup.name = "sunGroup"
-        sunGroup.zPosition = 10.0
-        landscapeRootNode.addChild(sunGroup)
-        self.sunGroupNode = sunGroup
-
-        let templateSunGroup = scene.childNode(withName: "sunGroup")
-
-        // Sun Core
-        if let templateCore = (templateSunGroup?.childNode(withName: "sunCore") ?? scene.childNode(withName: "sunCore")) as? SKSpriteNode {
-            let core = SKSpriteNode()
-            core.name = "sunCore"
-            let normX = (templateCore.position.x / baseDesignWidth + 0.5) * containerSize.width
-            let normY = (templateCore.position.y / baseDesignHeight + 0.5) * containerSize.height
-            core.position = CGPoint(x: normX, y: normY)
-            core.size = CGSize(width: 199.18 * activeScale, height: 100.97 * activeScale)
-            core.zPosition = 10.0
-            if let tex = loadTexture(name: "landscape7-25@4.167x") { core.texture = tex }
-            sunGroup.addChild(core)
-            self.sunCore = core
-            restPositions["sunCore"] = core.position
-
-            // Quầng sáng hào quang ấm áp bao quanh mặt trời
-            let aura = SKShapeNode(ellipseOf: CGSize(width: 240.0 * activeScale, height: 140.0 * activeScale))
-            aura.fillColor = UIColor(red: 1.0, green: 0.95, blue: 0.55, alpha: 0.25)
-            aura.strokeColor = .clear
-            aura.glowWidth = 25.0 * activeScale
-            aura.position = core.position
-            aura.zPosition = 9.5
-            sunGroup.addChild(aura)
-            self.sunAura = aura
-        }
-
-        // Sun Reflection
-        if let templateRef = (templateSunGroup?.childNode(withName: "sunReflection") ?? scene.childNode(withName: "sunReflection")) as? SKSpriteNode {
-            let ref = SKSpriteNode()
-            ref.name = "sunReflection"
-            let normX = (templateRef.position.x / baseDesignWidth + 0.5) * containerSize.width
-            let normY = (templateRef.position.y / baseDesignHeight + 0.5) * containerSize.height
-            ref.position = CGPoint(x: normX, y: normY)
-            ref.size = CGSize(width: 156.33 * activeScale, height: 48.54 * activeScale)
-            ref.zPosition = 11.0
-            ref.alpha = 0.50
-            if let tex = loadTexture(name: "landscape7-26@4.167x") { ref.texture = tex }
-            sunGroup.addChild(ref)
-            self.sunReflection = ref
-            restPositions["sunReflection"] = ref.position
-        }
-
-        // --- 5. mountainsGroup (z = 15..22) ---
-        let mountainsGroup = SKNode()
-        mountainsGroup.name = "mountainsGroup"
-        mountainsGroup.zPosition = 15.0
-        landscapeRootNode.addChild(mountainsGroup)
-        self.mountainsGroupNode = mountainsGroup
-
-        let templateMountains = scene.childNode(withName: "mountainsGroup")
-
-        self.mountainLeftFar = setupSprite(from: templateMountains, or: scene, name: "mountainLeftFar", texName: "landscape7-14@4.167x", origSize: CGSize(width: 310.15, height: 85.35), defaultPos: CGPoint(x: -210.92, y: 61.16), z: 15.0, alpha: 0.5, inGroup: mountainsGroup)
-        self.mountainLeftFarMist = setupSprite(from: templateMountains, or: scene, name: "mountainLeftFarMist", texName: "landscape7-15@4.167x", origSize: CGSize(width: 237.32, height: 76.04), defaultPos: CGPoint(x: -174.51, y: 56.51), z: 16.0, alpha: 1.0, inGroup: mountainsGroup)
-
-        self.mountainRightFar = setupSprite(from: templateMountains, or: scene, name: "mountainRightFar", texName: "landscape7-16@4.167x", origSize: CGSize(width: 306.39, height: 93.44), defaultPos: CGPoint(x: 233.03, y: 64.95), z: 15.0, alpha: 0.5, inGroup: mountainsGroup)
-        self.mountainRightFarMist = setupSprite(from: templateMountains, or: scene, name: "mountainRightFarMist", texName: "landscape7-17@4.167x", origSize: CGSize(width: 303.08, height: 93.18), defaultPos: CGPoint(x: 231.37, y: 65.08), z: 16.0, alpha: 1.0, inGroup: mountainsGroup)
-
-        self.mountainLeftMid = setupSprite(from: templateMountains, or: scene, name: "mountainLeftMid", texName: "landscape7-20@4.167x", origSize: CGSize(width: 342.10, height: 37.84), defaultPos: CGPoint(x: -228.78, y: 37.25), z: 20.0, alpha: 0.3, inGroup: mountainsGroup)
-        self.mountainLeftMidMist = setupSprite(from: templateMountains, or: scene, name: "mountainLeftMidMist", texName: "landscape7-21@4.167x", origSize: CGSize(width: 274.22, height: 35.54), defaultPos: CGPoint(x: -232.58, y: 38.39), z: 21.0, alpha: 0.6, inGroup: mountainsGroup)
-        self.mountainLeftAccent = setupSprite(from: templateMountains, or: scene, name: "mountainLeftAccent", texName: "landscape7-22@4.167x", origSize: CGSize(width: 42.27, height: 14.98), defaultPos: CGPoint(x: -97.09, y: 38.68), z: 22.0, alpha: 0.6, inGroup: mountainsGroup)
-
-        self.mountainRightMid = setupSprite(from: templateMountains, or: scene, name: "mountainRightMid", texName: "landscape7-18@4.167x", origSize: CGSize(width: 296.45, height: 37.68), defaultPos: CGPoint(x: 239.56, y: 37.33), z: 20.0, alpha: 0.3, inGroup: mountainsGroup)
-        self.mountainRightMidMist = setupSprite(from: templateMountains, or: scene, name: "mountainRightMidMist", texName: "landscape7-19@4.167x", origSize: CGSize(width: 242.15, height: 37.68), defaultPos: CGPoint(x: 212.41, y: 37.33), z: 21.0, alpha: 0.6, inGroup: mountainsGroup)
-
-        // --- 6. cloudsGroup (z = 25) ---
-        let cloudsGroup = SKNode()
-        cloudsGroup.name = "cloudsGroup"
-        cloudsGroup.zPosition = 25.0
-        landscapeRootNode.addChild(cloudsGroup)
-        self.cloudsGroupNode = cloudsGroup
-
-        let templateClouds = scene.childNode(withName: "cloudsGroup")
-        self.mistLeft = setupSprite(from: templateClouds, or: scene, name: "mistLeft", texName: "landscape7-24@4.167x", origSize: CGSize(width: 293.10, height: 35.49), defaultPos: CGPoint(x: -195.95, y: 0.74), z: 25.0, alpha: 0.8, inGroup: cloudsGroup)
-        self.mistRight = setupSprite(from: templateClouds, or: scene, name: "mistRight", texName: "landscape7-23@4.167x", origSize: CGSize(width: 283.95, height: 31.24), defaultPos: CGPoint(x: 233.03, y: 2.87), z: 25.0, alpha: 0.8, inGroup: cloudsGroup)
-
-        // --- 7. wavesGroup (z = 30..47) ---
-        let wavesGroup = SKNode()
-        wavesGroup.name = "wavesGroup"
-        wavesGroup.zPosition = 30.0
-        landscapeRootNode.addChild(wavesGroup)
-        self.wavesGroupNode = wavesGroup
-
-        let templateWaves = scene.childNode(withName: "wavesGroup")
-
-        // Gợn sóng biển giữa
-        self.seaRipples = setupSprite(from: templateWaves, or: scene, name: "seaRipples", texName: "landscape7-13@4.167x", origSize: CGSize(width: 759.36, height: 144.52), defaultPos: CGPoint(x: -0.01, y: -111.67), z: 30.0, alpha: 0.95, inGroup: wavesGroup)
-
-        // Wave Tier 1
-        let w1Group = SKNode()
-        w1Group.name = "waveTier1"
-        w1Group.zPosition = 35.0
-        wavesGroup.addChild(w1Group)
-        self.waveTier1Node = w1Group
-        let templateW1 = templateWaves?.childNode(withName: "waveTier1")
-        self.wave1Body = setupSprite(from: templateW1, or: scene, name: "wave1Body", texName: "landscape7-4@4.167x", origSize: CGSize(width: 750.0, height: 108.12), defaultPos: CGPoint(x: 0, y: -195.94), z: 35.0, alpha: 1.0, inGroup: w1Group)
-        self.wave1Ridge = setupSprite(from: templateW1, or: scene, name: "wave1Ridge", texName: "landscape7-10@4.167x", origSize: CGSize(width: 750.0, height: 61.69), defaultPos: CGPoint(x: 0, y: -172.72), z: 36.0, alpha: 1.0, inGroup: w1Group)
-        self.wave1Foam = setupSprite(from: templateW1, or: scene, name: "wave1Foam", texName: "landscape7-11@4.167x", origSize: CGSize(width: 750.0, height: 66.93), defaultPos: CGPoint(x: 0, y: -167.10), z: 37.0, alpha: 1.0, inGroup: w1Group)
-
-        // Wave Tier 2
-        let w2Group = SKNode()
-        w2Group.name = "waveTier2"
-        w2Group.zPosition = 40.0
-        wavesGroup.addChild(w2Group)
-        self.waveTier2Node = w2Group
-        let templateW2 = templateWaves?.childNode(withName: "waveTier2")
-        self.wave2Body = setupSprite(from: templateW2, or: scene, name: "wave2Body", texName: "landscape7-5@4.167x", origSize: CGSize(width: 750.0, height: 83.45), defaultPos: CGPoint(x: 0, y: -208.27), z: 40.0, alpha: 1.0, inGroup: w2Group)
-        self.wave2Foam = setupSprite(from: templateW2, or: scene, name: "wave2Foam", texName: "landscape7-6@4.167x", origSize: CGSize(width: 750.0, height: 59.68), defaultPos: CGPoint(x: 0, y: -195.39), z: 41.0, alpha: 0.1, inGroup: w2Group)
-
-        // Wave Tier 3
-        let w3Group = SKNode()
-        w3Group.name = "waveTier3"
-        w3Group.zPosition = 45.0
-        wavesGroup.addChild(w3Group)
-        self.waveTier3Node = w3Group
-        let templateW3 = templateWaves?.childNode(withName: "waveTier3")
-        self.wave3Body = setupSprite(from: templateW3, or: scene, name: "wave3Body", texName: "landscape7-7@4.167x", origSize: CGSize(width: 750.0, height: 58.68), defaultPos: CGPoint(x: 0, y: -222.81), z: 45.0, alpha: 1.0, inGroup: w3Group)
-        self.wave3Sub = setupSprite(from: templateW3, or: scene, name: "wave3Sub", texName: "landscape7-8@4.167x", origSize: CGSize(width: 750.0, height: 58.68), defaultPos: CGPoint(x: 0, y: -222.81), z: 46.0, alpha: 1.0, inGroup: w3Group)
-        self.wave3Foam = setupSprite(from: templateW3, or: scene, name: "wave3Foam", texName: "landscape7-9@4.167x", origSize: CGSize(width: 750.0, height: 60.44), defaultPos: CGPoint(x: 0, y: -221.93), z: 47.0, alpha: 0.3, inGroup: w3Group)
+    private struct ArtworkLayer {
+        let name: String
+        let assetId: Int
+        let svgRect: CGRect
     }
 
-    // MARK: - Procedural Fallback
+    // SVG artwork occupies x = 24.827...774.827, y = 0...500.
+    // Uniformly enlarge to the 750 x 1334 editor canvas, cropping the sides.
+    // At runtime, aspect-fill the source composition without stretching its layers.
+    private static let artworkLayers: [ArtworkLayer] = [
+        ArtworkLayer(name: "bgNode", assetId: 1, svgRect: CGRect(x: 24.827, y: 0.0, width: 750.0, height: 500.0)),
+        ArtworkLayer(name: "seaNode", assetId: 2, svgRect: CGRect(x: 24.827, y: 0.0, width: 750.0, height: 443.663822)),
+        ArtworkLayer(name: "seaGlowNode", assetId: 3, svgRect: CGRect(x: 24.827, y: 0.0, width: 750.0, height: 443.663822)),
+        ArtworkLayer(name: "wave1Body", assetId: 4, svgRect: CGRect(x: 24.827, y: 396.83536, width: 750.0, height: 103.16464)),
+        ArtworkLayer(name: "wave2Body", assetId: 5, svgRect: CGRect(x: 24.827, y: 421.500348, width: 750.0, height: 78.499652)),
+        ArtworkLayer(name: "wave2Foam", assetId: 6, svgRect: CGRect(x: 24.827, y: 420.500348, width: 750.0, height: 47.827547)),
+        ArtworkLayer(name: "wave3Body", assetId: 7, svgRect: CGRect(x: 24.827, y: 448.417531, width: 750.0, height: 51.582469)),
+        ArtworkLayer(name: "wave3Sub", assetId: 8, svgRect: CGRect(x: 24.827, y: 448.417531, width: 750.0, height: 51.582469)),
+        ArtworkLayer(name: "wave3Foam", assetId: 9, svgRect: CGRect(x: 24.827, y: 446.66336, width: 750.0, height: 48.582462)),
+        ArtworkLayer(name: "wave1Ridge", assetId: 10, svgRect: CGRect(x: 24.827, y: 396.83536, width: 750.0, height: 49.828462)),
+        ArtworkLayer(name: "wave1Foam", assetId: 11, svgRect: CGRect(x: 24.827, y: 384.155516, width: 750.0, height: 59.508306)),
+        ArtworkLayer(name: "skyNode", assetId: 12, svgRect: CGRect(x: 24.827, y: 0.0, width: 750.0, height: 231.515)),
+        ArtworkLayer(name: "seaRipples", assetId: 13, svgRect: CGRect(x: 20.138, y: 291.643039, width: 759.355, height: 140.687232)),
+        ArtworkLayer(name: "mountainLeftFar", assetId: 14, svgRect: CGRect(x: 33.827, y: 146.167, width: 310.151, height: 85.348)),
+        ArtworkLayer(name: "mountainLeftFarMist", assetId: 15, svgRect: CGRect(x: 106.66, y: 155.473, width: 237.318, height: 76.042)),
+        ArtworkLayer(name: "mountainRightFar", assetId: 16, svgRect: CGRect(x: 479.66, y: 138.333, width: 306.386, height: 93.297111)),
+        ArtworkLayer(name: "mountainRightFarMist", assetId: 17, svgRect: CGRect(x: 479.66, y: 138.333, width: 303.076, height: 93.182)),
+        ArtworkLayer(name: "mountainRightMid", assetId: 18, svgRect: CGRect(x: 491.16, y: 193.833, width: 296.453, height: 37.682)),
+        ArtworkLayer(name: "mountainRightMidMist", assetId: 19, svgRect: CGRect(x: 491.16, y: 193.833, width: 242.151, height: 37.682)),
+        ArtworkLayer(name: "mountainLeftMid", assetId: 20, svgRect: CGRect(x: 0.0, y: 193.833, width: 342.095, height: 37.797222)),
+        ArtworkLayer(name: "mountainLeftMidMist", assetId: 21, svgRect: CGRect(x: 30.135, y: 193.833, width: 274.218, height: 35.544)),
+        ArtworkLayer(name: "mountainLeftAccent", assetId: 22, svgRect: CGRect(x: 281.6, y: 203.833, width: 42.271, height: 14.983)),
+        ArtworkLayer(name: "mistRight", assetId: 23, svgRect: CGRect(x: 491.070185, y: 231.515, width: 283.756815, height: 31.235)),
+        ArtworkLayer(name: "mistLeft", assetId: 24, svgRect: CGRect(x: 57.327, y: 231.515, width: 293.101, height: 35.485)),
+        ArtworkLayer(name: "sunCore", assetId: 25, svgRect: CGRect(x: 319.587, y: 130.549, width: 199.181, height: 100.966)),
+        ArtworkLayer(name: "sunReflection", assetId: 26, svgRect: CGRect(x: 343.91999, y: 231.63, width: 155.373849, height: 48.258024)),
+    ]
 
-    private func buildProceduralFallback() {
-        // 1. Base & Background
-        let fillW = max(containerSize.width, baseDesignWidth * activeScale) * 1.05
-        let fillH = max(containerSize.height, baseDesignHeight * activeScale) * 1.05
-
-        let bg = SKSpriteNode(color: UIColor(red: 232/255, green: 217/255, blue: 179/255, alpha: 1.0), size: CGSize(width: fillW, height: fillH))
-        bg.position = CGPoint(x: containerSize.width / 2.0, y: containerSize.height / 2.0)
-        bg.zPosition = 0.0
-        if let tex = loadTexture(name: "landscape7-1@4.167x") { bg.texture = tex }
-        landscapeRootNode.addChild(bg)
-        self.bgNode = bg
-
-        let sky = SKSpriteNode(color: UIColor(red: 56/255, green: 159/255, blue: 178/255, alpha: 1.0), size: CGSize(width: fillW, height: containerSize.height * 0.65))
-        sky.position = CGPoint(x: containerSize.width / 2.0, y: (350.0 / baseDesignHeight + 0.5) * containerSize.height)
-        sky.zPosition = 1.0
-        if let tex = loadTexture(name: "landscape7-12@4.167x") { sky.texture = tex }
-        landscapeRootNode.addChild(sky)
-        self.skyNode = sky
-
-        let sea = SKSpriteNode(color: UIColor(red: 77/255, green: 181/255, blue: 184/255, alpha: 1.0), size: CGSize(width: fillW, height: containerSize.height * 0.70))
-        sea.position = CGPoint(x: containerSize.width / 2.0, y: (-267.0 / baseDesignHeight + 0.5) * containerSize.height)
-        sea.zPosition = 2.0
-        if let tex = loadTexture(name: "landscape7-2@4.167x") { sea.texture = tex }
-        landscapeRootNode.addChild(sea)
-        self.seaNode = sea
-
-        let seaGlow = SKSpriteNode(color: .clear, size: CGSize(width: fillW, height: 450.57 * activeScale))
-        seaGlow.position = CGPoint(x: containerSize.width / 2.0, y: (24.72 / baseDesignHeight + 0.5) * containerSize.height)
-        seaGlow.zPosition = 3.0
-        seaGlow.alpha = 0.60
-        if let tex = loadTexture(name: "landscape7-3@4.167x") { seaGlow.texture = tex }
-        landscapeRootNode.addChild(seaGlow)
-        self.seaGlowNode = seaGlow
-
-        // 2. Sun & Reflection
-        let sunGroup = SKNode()
-        sunGroup.name = "sunGroup"
-        sunGroup.zPosition = 10.0
-        landscapeRootNode.addChild(sunGroup)
-        self.sunGroupNode = sunGroup
-
-        let core = SKSpriteNode(color: .clear, size: CGSize(width: 199.18 * activeScale, height: 100.97 * activeScale))
-        core.position = CGPoint(x: (19.35 / baseDesignWidth + 0.5) * containerSize.width, y: (68.97 / baseDesignHeight + 0.5) * containerSize.height)
-        core.zPosition = 10.0
-        if let tex = loadTexture(name: "landscape7-25@4.167x") { core.texture = tex }
-        sunGroup.addChild(core)
-        self.sunCore = core
-        restPositions["sunCore"] = core.position
-
-        let aura = SKShapeNode(ellipseOf: CGSize(width: 240.0 * activeScale, height: 140.0 * activeScale))
-        aura.fillColor = UIColor(red: 1.0, green: 0.95, blue: 0.55, alpha: 0.25)
-        aura.strokeColor = .clear
-        aura.glowWidth = 25.0 * activeScale
-        aura.position = core.position
-        aura.zPosition = 9.5
-        sunGroup.addChild(aura)
-        self.sunAura = aura
-
-        let ref = SKSpriteNode(color: .clear, size: CGSize(width: 156.33 * activeScale, height: 48.54 * activeScale))
-        ref.position = CGPoint(x: (21.76 / baseDesignWidth + 0.5) * containerSize.width, y: (-5.90 / baseDesignHeight + 0.5) * containerSize.height)
-        ref.zPosition = 11.0
-        ref.alpha = 0.50
-        if let tex = loadTexture(name: "landscape7-26@4.167x") { ref.texture = tex }
-        sunGroup.addChild(ref)
-        self.sunReflection = ref
-        restPositions["sunReflection"] = ref.position
-
-        // 3. Mountains
-        let mountainsGroup = SKNode()
-        mountainsGroup.name = "mountainsGroup"
-        mountainsGroup.zPosition = 15.0
-        landscapeRootNode.addChild(mountainsGroup)
-        self.mountainsGroupNode = mountainsGroup
-
-        self.mountainLeftFar = setupSprite(from: nil, or: nil, name: "mountainLeftFar", texName: "landscape7-14@4.167x", origSize: CGSize(width: 310.15, height: 85.35), defaultPos: CGPoint(x: -210.92, y: 61.16), z: 15.0, alpha: 0.5, inGroup: mountainsGroup)
-        self.mountainLeftFarMist = setupSprite(from: nil, or: nil, name: "mountainLeftFarMist", texName: "landscape7-15@4.167x", origSize: CGSize(width: 237.32, height: 76.04), defaultPos: CGPoint(x: -174.51, y: 56.51), z: 16.0, alpha: 1.0, inGroup: mountainsGroup)
-        self.mountainRightFar = setupSprite(from: nil, or: nil, name: "mountainRightFar", texName: "landscape7-16@4.167x", origSize: CGSize(width: 306.39, height: 93.44), defaultPos: CGPoint(x: 233.03, y: 64.95), z: 15.0, alpha: 0.5, inGroup: mountainsGroup)
-        self.mountainRightFarMist = setupSprite(from: nil, or: nil, name: "mountainRightFarMist", texName: "landscape7-17@4.167x", origSize: CGSize(width: 303.08, height: 93.18), defaultPos: CGPoint(x: 231.37, y: 65.08), z: 16.0, alpha: 1.0, inGroup: mountainsGroup)
-
-        self.mountainLeftMid = setupSprite(from: nil, or: nil, name: "mountainLeftMid", texName: "landscape7-20@4.167x", origSize: CGSize(width: 342.10, height: 37.84), defaultPos: CGPoint(x: -228.78, y: 37.25), z: 20.0, alpha: 0.3, inGroup: mountainsGroup)
-        self.mountainLeftMidMist = setupSprite(from: nil, or: nil, name: "mountainLeftMidMist", texName: "landscape7-21@4.167x", origSize: CGSize(width: 274.22, height: 35.54), defaultPos: CGPoint(x: -232.58, y: 38.39), z: 21.0, alpha: 0.6, inGroup: mountainsGroup)
-        self.mountainLeftAccent = setupSprite(from: nil, or: nil, name: "mountainLeftAccent", texName: "landscape7-22@4.167x", origSize: CGSize(width: 42.27, height: 14.98), defaultPos: CGPoint(x: -97.09, y: 38.68), z: 22.0, alpha: 0.6, inGroup: mountainsGroup)
-        self.mountainRightMid = setupSprite(from: nil, or: nil, name: "mountainRightMid", texName: "landscape7-18@4.167x", origSize: CGSize(width: 296.45, height: 37.68), defaultPos: CGPoint(x: 239.56, y: 37.33), z: 20.0, alpha: 0.3, inGroup: mountainsGroup)
-        self.mountainRightMidMist = setupSprite(from: nil, or: nil, name: "mountainRightMidMist", texName: "landscape7-19@4.167x", origSize: CGSize(width: 242.15, height: 37.68), defaultPos: CGPoint(x: 212.41, y: 37.33), z: 21.0, alpha: 0.6, inGroup: mountainsGroup)
-
-        // 4. Clouds & Mist
-        let cloudsGroup = SKNode()
-        cloudsGroup.name = "cloudsGroup"
-        cloudsGroup.zPosition = 25.0
-        landscapeRootNode.addChild(cloudsGroup)
-        self.cloudsGroupNode = cloudsGroup
-
-        self.mistLeft = setupSprite(from: nil, or: nil, name: "mistLeft", texName: "landscape7-24@4.167x", origSize: CGSize(width: 293.10, height: 35.49), defaultPos: CGPoint(x: -195.95, y: 0.74), z: 25.0, alpha: 0.8, inGroup: cloudsGroup)
-        self.mistRight = setupSprite(from: nil, or: nil, name: "mistRight", texName: "landscape7-23@4.167x", origSize: CGSize(width: 283.95, height: 31.24), defaultPos: CGPoint(x: 233.03, y: 2.87), z: 25.0, alpha: 0.8, inGroup: cloudsGroup)
-
-        // 5. Ocean Waves
-        let wavesGroup = SKNode()
-        wavesGroup.name = "wavesGroup"
-        wavesGroup.zPosition = 30.0
-        landscapeRootNode.addChild(wavesGroup)
-        self.wavesGroupNode = wavesGroup
-
-        self.seaRipples = setupSprite(from: nil, or: nil, name: "seaRipples", texName: "landscape7-13@4.167x", origSize: CGSize(width: 759.36, height: 144.52), defaultPos: CGPoint(x: -0.01, y: -111.67), z: 30.0, alpha: 0.95, inGroup: wavesGroup)
-
-        let w1Group = SKNode()
-        w1Group.name = "waveTier1"
-        w1Group.zPosition = 35.0
-        wavesGroup.addChild(w1Group)
-        self.waveTier1Node = w1Group
-        self.wave1Body = setupSprite(from: nil, or: nil, name: "wave1Body", texName: "landscape7-4@4.167x", origSize: CGSize(width: 750.0, height: 108.12), defaultPos: CGPoint(x: 0, y: -195.94), z: 35.0, alpha: 1.0, inGroup: w1Group)
-        self.wave1Ridge = setupSprite(from: nil, or: nil, name: "wave1Ridge", texName: "landscape7-10@4.167x", origSize: CGSize(width: 750.0, height: 61.69), defaultPos: CGPoint(x: 0, y: -172.72), z: 36.0, alpha: 1.0, inGroup: w1Group)
-        self.wave1Foam = setupSprite(from: nil, or: nil, name: "wave1Foam", texName: "landscape7-11@4.167x", origSize: CGSize(width: 750.0, height: 66.93), defaultPos: CGPoint(x: 0, y: -167.10), z: 37.0, alpha: 1.0, inGroup: w1Group)
-
-        let w2Group = SKNode()
-        w2Group.name = "waveTier2"
-        w2Group.zPosition = 40.0
-        wavesGroup.addChild(w2Group)
-        self.waveTier2Node = w2Group
-        self.wave2Body = setupSprite(from: nil, or: nil, name: "wave2Body", texName: "landscape7-5@4.167x", origSize: CGSize(width: 750.0, height: 83.45), defaultPos: CGPoint(x: 0, y: -208.27), z: 40.0, alpha: 1.0, inGroup: w2Group)
-        self.wave2Foam = setupSprite(from: nil, or: nil, name: "wave2Foam", texName: "landscape7-6@4.167x", origSize: CGSize(width: 750.0, height: 59.68), defaultPos: CGPoint(x: 0, y: -195.39), z: 41.0, alpha: 0.1, inGroup: w2Group)
-
-        let w3Group = SKNode()
-        w3Group.name = "waveTier3"
-        w3Group.zPosition = 45.0
-        wavesGroup.addChild(w3Group)
-        self.waveTier3Node = w3Group
-        self.wave3Body = setupSprite(from: nil, or: nil, name: "wave3Body", texName: "landscape7-7@4.167x", origSize: CGSize(width: 750.0, height: 58.68), defaultPos: CGPoint(x: 0, y: -222.81), z: 45.0, alpha: 1.0, inGroup: w3Group)
-        self.wave3Sub = setupSprite(from: nil, or: nil, name: "wave3Sub", texName: "landscape7-8@4.167x", origSize: CGSize(width: 750.0, height: 58.68), defaultPos: CGPoint(x: 0, y: -222.81), z: 46.0, alpha: 1.0, inGroup: w3Group)
-        self.wave3Foam = setupSprite(from: nil, or: nil, name: "wave3Foam", texName: "landscape7-9@4.167x", origSize: CGSize(width: 750.0, height: 60.44), defaultPos: CGPoint(x: 0, y: -221.93), z: 47.0, alpha: 0.3, inGroup: w3Group)
-    }
-
-    // MARK: - Helper Setup Sprite
-
-    private func setupSprite(
-        from group: SKNode?,
-        or fallbackScene: SKScene?,
-        name: String,
-        texName: String,
-        origSize: CGSize,
-        defaultPos: CGPoint,
-        z: CGFloat,
-        alpha: CGFloat,
-        inGroup parent: SKNode
-    ) -> SKSpriteNode {
-        let template = (group?.childNode(withName: name) ?? fallbackScene?.childNode(withName: name)) as? SKSpriteNode
-        let sprite = SKSpriteNode()
-        sprite.name = name
-
-        let rawX = template?.position.x ?? defaultPos.x
-        let rawY = template?.position.y ?? defaultPos.y
-        let normX = (rawX / baseDesignWidth + 0.5) * containerSize.width
-        let normY = (rawY / baseDesignHeight + 0.5) * containerSize.height
-
-        sprite.position = CGPoint(x: normX, y: normY)
-        sprite.size = CGSize(width: origSize.width * activeScale, height: origSize.height * activeScale)
-        sprite.zPosition = z
-        sprite.alpha = alpha
-
-        if let tex = loadTexture(name: texName) {
-            sprite.texture = tex
+    private func buildArtwork(scene: SKScene?) {
+        func makeGroup(_ name: String, parent: SKNode) -> SKNode {
+            let group = SKNode()
+            group.name = name
+            parent.addChild(group)
+            return group
         }
 
-        parent.addChild(sprite)
-        restPositions[name] = sprite.position
-        return sprite
+        let sun = makeGroup("sunGroup", parent: landscapeRootNode)
+        let mountains = makeGroup("mountainsGroup", parent: landscapeRootNode)
+        let clouds = makeGroup("cloudsGroup", parent: landscapeRootNode)
+        let waves = makeGroup("wavesGroup", parent: landscapeRootNode)
+        let tier1 = makeGroup("waveTier1", parent: waves)
+        let tier2 = makeGroup("waveTier2", parent: waves)
+        let tier3 = makeGroup("waveTier3", parent: waves)
+        sunGroupNode = sun
+        mountainsGroupNode = mountains
+        cloudsGroupNode = clouds
+        wavesGroupNode = waves
+        waveTier1Node = tier1
+        waveTier2Node = tier2
+        waveTier3Node = tier3
+
+        let artworkScale = max(containerSize.width / 750.0, containerSize.height / 500.0)
+        let editorScale = baseDesignHeight / 500.0
+        let renderScale = artworkScale / editorScale
+        var sprites: [String: SKSpriteNode] = [:]
+
+        for layer in Self.artworkLayers {
+            let sprite: SKSpriteNode
+            let position: CGPoint
+            let designSize: CGSize
+            if let scene = scene,
+               let template = scene.childNode(withName: "//\(layer.name)") as? SKSpriteNode {
+                // Use the editor's position, size and anchor, including parent offsets.
+                let scenePosition = template.parent?.convert(template.position, to: scene) ?? template.position
+                position = CGPoint(
+                    x: containerSize.width / 2.0 + (scenePosition.x + (scene.anchorPoint.x - 0.5) * scene.size.width) * renderScale,
+                    y: containerSize.height / 2.0 + (scenePosition.y + (scene.anchorPoint.y - 0.5) * scene.size.height) * renderScale
+                )
+                designSize = template.size
+                template.removeFromParent()
+                sprite = template
+            } else {
+                let rect = layer.svgRect
+                position = CGPoint(
+                    x: containerSize.width / 2.0 + (rect.midX - 399.827) * artworkScale,
+                    y: containerSize.height / 2.0 + (250.0 - rect.midY) * artworkScale
+                )
+                designSize = CGSize(width: rect.width * editorScale, height: rect.height * editorScale)
+                sprite = SKSpriteNode()
+                sprite.name = layer.name
+            }
+
+            sprite.position = position
+            sprite.size = CGSize(width: designSize.width * renderScale, height: designSize.height * renderScale)
+            // Alpha is already baked into the exported PNGs. Preserve SVG paint order
+            // across groups instead of adding group z offsets or opacity a second time.
+            sprite.zPosition = CGFloat(layer.assetId - 1)
+            sprite.alpha = 1.0
+            if sprite.texture == nil {
+                sprite.texture = loadTexture(name: "landscape7-\(layer.assetId)@4.167x")
+            }
+
+            let parent: SKNode
+            switch layer.name {
+            case "sunCore", "sunReflection": parent = sun
+            case let name where name.hasPrefix("mountain"): parent = mountains
+            case "mistLeft", "mistRight": parent = clouds
+            case "seaRipples": parent = waves
+            case let name where name.hasPrefix("wave1"): parent = tier1
+            case let name where name.hasPrefix("wave2"): parent = tier2
+            case let name where name.hasPrefix("wave3"): parent = tier3
+            default: parent = landscapeRootNode
+            }
+            parent.addChild(sprite)
+            sprites[layer.name] = sprite
+            restPositions[layer.name] = position
+        }
+
+        self.bgNode = sprites["bgNode"]
+        self.seaNode = sprites["seaNode"]
+        self.seaGlowNode = sprites["seaGlowNode"]
+        self.wave1Body = sprites["wave1Body"]
+        self.wave2Body = sprites["wave2Body"]
+        self.wave2Foam = sprites["wave2Foam"]
+        self.wave3Body = sprites["wave3Body"]
+        self.wave3Sub = sprites["wave3Sub"]
+        self.wave3Foam = sprites["wave3Foam"]
+        self.wave1Ridge = sprites["wave1Ridge"]
+        self.wave1Foam = sprites["wave1Foam"]
+        self.skyNode = sprites["skyNode"]
+        self.seaRipples = sprites["seaRipples"]
+        self.mountainLeftFar = sprites["mountainLeftFar"]
+        self.mountainLeftFarMist = sprites["mountainLeftFarMist"]
+        self.mountainRightFar = sprites["mountainRightFar"]
+        self.mountainRightFarMist = sprites["mountainRightFarMist"]
+        self.mountainRightMid = sprites["mountainRightMid"]
+        self.mountainRightMidMist = sprites["mountainRightMidMist"]
+        self.mountainLeftMid = sprites["mountainLeftMid"]
+        self.mountainLeftMidMist = sprites["mountainLeftMidMist"]
+        self.mountainLeftAccent = sprites["mountainLeftAccent"]
+        self.mistRight = sprites["mistRight"]
+        self.mistLeft = sprites["mistLeft"]
+        self.sunCore = sprites["sunCore"]
+        self.sunReflection = sprites["sunReflection"]
     }
 
     private func setupSparklesAndRippleGroups() {
@@ -668,9 +436,9 @@ public final class Landscape7Node: SKNode, LandscapeInteractiveNode {
 
             if let foam2 = wave2Foam {
                 foam2.removeAllActions()
-                let fadeBright = SKAction.fadeAlpha(to: 0.18, duration: 2.15)
+                let fadeBright = SKAction.fadeAlpha(to: 1.0, duration: 2.15)
                 fadeBright.timingMode = .easeInEaseOut
-                let fadeDim = SKAction.fadeAlpha(to: 0.08, duration: 2.15)
+                let fadeDim = SKAction.fadeAlpha(to: 0.85, duration: 2.15)
                 fadeDim.timingMode = .easeInEaseOut
                 foam2.run(SKAction.repeatForever(SKAction.sequence([fadeBright, fadeDim])), withKey: "foam2_fade")
             }
@@ -700,9 +468,9 @@ public final class Landscape7Node: SKNode, LandscapeInteractiveNode {
             // Bọt sóng bờ trắng xoá (wave3Foam): nhịp thở lung linh
             if let foam3 = wave3Foam {
                 foam3.removeAllActions()
-                let shimmerUp = SKAction.fadeAlpha(to: 0.42, duration: 1.8)
+                let shimmerUp = SKAction.fadeAlpha(to: 1.0, duration: 1.8)
                 shimmerUp.timingMode = .easeInEaseOut
-                let shimmerDown = SKAction.fadeAlpha(to: 0.24, duration: 1.8)
+                let shimmerDown = SKAction.fadeAlpha(to: 0.85, duration: 1.8)
                 shimmerDown.timingMode = .easeInEaseOut
                 foam3.run(SKAction.repeatForever(SKAction.sequence([shimmerUp, shimmerDown])), withKey: "foam3_shimmer")
             }
@@ -817,23 +585,6 @@ public final class Landscape7Node: SKNode, LandscapeInteractiveNode {
             sun.run(SKAction.repeatForever(SKAction.sequence([fadeMax, fadeMin])), withKey: "sun_alpha")
         }
 
-        // Vầng hào quang (sunAura)
-        if let aura = sunAura {
-            aura.removeAllActions()
-            aura.setScale(1.0)
-            let auraExpand = SKAction.scale(to: 1.12, duration: 2.8)
-            auraExpand.timingMode = .easeInEaseOut
-            let auraContract = SKAction.scale(to: 0.94, duration: 2.8)
-            auraContract.timingMode = .easeInEaseOut
-            aura.run(SKAction.repeatForever(SKAction.sequence([auraExpand, auraContract])), withKey: "aura_pulse")
-
-            let auraBright = SKAction.fadeAlpha(to: 0.35, duration: 2.8)
-            auraBright.timingMode = .easeInEaseOut
-            let auraDim = SKAction.fadeAlpha(to: 0.16, duration: 2.8)
-            auraDim.timingMode = .easeInEaseOut
-            aura.run(SKAction.repeatForever(SKAction.sequence([auraBright, auraDim])), withKey: "aura_alpha")
-        }
-
         // --- 2. Vệt nắng lung linh mặt biển (sunReflection - Layer 26) ---
         if let ref = sunReflection {
             ref.removeAllActions()
@@ -845,9 +596,9 @@ public final class Landscape7Node: SKNode, LandscapeInteractiveNode {
             narrowX.timingMode = .easeInEaseOut
             ref.run(SKAction.repeatForever(SKAction.sequence([stretchX, narrowX])), withKey: "reflection_stretch")
 
-            let refGlint = SKAction.fadeAlpha(to: 0.68, duration: 1.6)
+            let refGlint = SKAction.fadeAlpha(to: 1.0, duration: 1.6)
             refGlint.timingMode = .easeInEaseOut
-            let refDim = SKAction.fadeAlpha(to: 0.40, duration: 1.6)
+            let refDim = SKAction.fadeAlpha(to: 0.85, duration: 1.6)
             refDim.timingMode = .easeInEaseOut
             ref.run(SKAction.repeatForever(SKAction.sequence([refGlint, refDim])), withKey: "reflection_glint")
         }
@@ -960,12 +711,6 @@ public final class Landscape7Node: SKNode, LandscapeInteractiveNode {
             let flareDown = SKAction.scale(to: 1.0, duration: 0.5)
             flareDown.timingMode = .easeInEaseOut
             sun.run(SKAction.sequence([flareUp, flareDown]), withKey: "sun_tapFlare")
-        }
-
-        if let aura = sunAura {
-            let auraFlare = SKAction.fadeAlpha(to: 0.55, duration: 0.25)
-            let auraBack = SKAction.fadeAlpha(to: 0.25, duration: 0.6)
-            aura.run(SKAction.sequence([auraFlare, auraBack]), withKey: "aura_tapFlare")
         }
 
         // Các tầng sóng biển dâng nhẹ một nhịp phấn khích

@@ -10,13 +10,13 @@ import SwiftUI
 
 /// SwiftUI Component lớp phủ Đom đóm phát sáng bay lượn
 public struct FirefliesView: View {
-    public var count: Int = 24
+    public var count: Int = 26
     public var customImages: [UIImage] = []
     public var isPaused: Bool = false
 
     @State private var scene: FirefliesScene?
 
-    public init(count: Int = 24, customImages: [UIImage] = [], isPaused: Bool = false) {
+    public init(count: Int = 26, customImages: [UIImage] = [], isPaused: Bool = false) {
         self.count = count
         self.customImages = customImages
         self.isPaused = isPaused
@@ -45,5 +45,23 @@ public struct FirefliesView: View {
                     }
             }
         }
+    }
+}
+
+#Preview("Fireflies Night Preview") {
+    ZStack {
+        // Nền rừng đêm huyền ảo đối chiếu với ảnh tham chiếu
+        LinearGradient(
+            colors: [
+                Color(red: 0.08, green: 0.12, blue: 0.28),
+                Color(red: 0.20, green: 0.14, blue: 0.36),
+                Color(red: 0.10, green: 0.18, blue: 0.26)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .ignoresSafeArea()
+
+        FirefliesView(count: 26)
     }
 }

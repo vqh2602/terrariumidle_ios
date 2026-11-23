@@ -104,6 +104,10 @@ public final class FallingLeavesScene: SKScene {
     private var density: LeafDensity = .medium
     private var speedLevel: LeafSpeed = .normal
 
+    /// Cạnh dài tối đa khi hiển thị, tính bằng point thay vì kích thước ảnh gốc.
+    private let maximumLeafDimension: CGFloat = 32
+    private let maximumLeafScale: CGFloat = 0.80
+
     private var currentWindOffset: CGFloat = 0
     private var isConfigured = false
 
@@ -265,6 +269,13 @@ public final class FallingLeavesScene: SKScene {
         // Chọn ngẫu nhiên 1 trong các texture lá được truyền vào
         let texture = leafTextures.randomElement()!
         let leaf = SKSpriteNode(texture: texture)
+        // Giới hạn size nền để cả animation lật lá (thay đổi xScale) cũng
+        // không làm ảnh độ phân giải cao vượt quá kích thước hiển thị cho phép.
+        let textureSize = texture.size()
+        let longestDimension = max(textureSize.width, textureSize.height)
+        guard longestDimension > 0 else { return }
+        let sizeFactor = min(1, maximumLeafDimension / (longestDimension * maximumLeafScale))
+        leaf.size = CGSize(width: textureSize.width * sizeFactor, height: textureSize.height * sizeFactor)
 
         // 1. Phân loại phong cách khí động học cho chiếc lá:
         // Đảm bảo trên màn hình luôn có sự đan xen giữa lá rơi nhanh vút qua, lá rơi nhịp nhàng, và lá bồng bềnh rơi rất chậm.
@@ -283,7 +294,7 @@ public final class FallingLeavesScene: SKScene {
         switch motionStyle {
         case .fastDrop:
             // Lá rơi nhanh thường có kích thước trung bình hoặc lớn (nặng hơn)
-            baseScale = CGFloat.random(in: 0.45...0.80)
+            baseScale = CGFloat.random(in: 0.45...maximumLeafScale)
         case .flutter:
             baseScale = CGFloat.random(in: 0.35...0.76)
         case .gentleGlider:
