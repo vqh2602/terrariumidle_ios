@@ -27,13 +27,9 @@ struct SpeedDial: View {
 
                 VStack(alignment: .trailing, spacing: 14) {
                     if isOpen {
-                        ScrollView {
-                            GardenMenuPanel(onSelect: select)
-                                .padding(.bottom, 5)
-                        }
-                        .scrollIndicators(.hidden)
-                        .defaultScrollAnchor(.bottom, for: .alignment)
+                        GardenMenuPanel(onSelect: select)
                         .frame(height: min(max(geometry.size.height - 100, 0), 390))
+                        .padding(.bottom, 5)
                         .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                     }
                     launcher
@@ -102,6 +98,7 @@ struct SpeedDial: View {
         case .account: router.push(.accountView)
         case .layout: isEditing = true
         case .events: router.push(.eventView)
+        case .discovery: router.push(.discoveryView)
         }
     }
 
@@ -115,6 +112,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
     case music = "Âm nhạc"
     case store = "Cửa hàng"
     case events = "Sự kiện"
+    case discovery = "Khám phá"
     case account = "Tài khoản"
     case layout = "Bố cục"
 
@@ -125,6 +123,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
         case .music: return "music.note"
         case .store: return "basket.fill"
         case .events: return "gift.fill"
+        case .discovery: return "globe.asia.australia.fill"
         case .account: return "person.crop.circle.fill"
         case .layout: return "square.grid.3x3.fill"
         }
@@ -135,6 +134,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
         case .music: return Color(hex: "AC7862")
         case .store, .layout: return AccountStyle.green
         case .events: return Color(hex: "9A8A71")
+        case .discovery: return Color(hex: "648C86")
         case .account: return Color(hex: "648C86")
         }
     }
@@ -158,12 +158,17 @@ struct GardenMenuPanel: View {
                     .accessibilityHidden(true)
             }
             .padding(.horizontal, 4)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10),
-                                     count: dynamicTypeSize.isAccessibilitySize ? 1 : 2), spacing: 10) {
-                ForEach(GardenMenuDestination.allCases) { destination in
-                    tile(destination)
+            .fixedSize(horizontal: false, vertical: true)
+            ScrollView {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10),
+                                         count: dynamicTypeSize.isAccessibilitySize ? 1 : 2), spacing: 10) {
+                    ForEach(GardenMenuDestination.allCases) { destination in
+                        tile(destination)
+                    }
                 }
             }
+            .scrollIndicators(.hidden)
+            .scrollBounceBehavior(.basedOnSize)
         }
         .padding(18)
         .modifier(AccountPanel())

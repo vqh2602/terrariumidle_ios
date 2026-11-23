@@ -1,18 +1,18 @@
 # Event WebView
 
-`EventView` loads the remote `event_terrarium.json` feed. Cards use the device language, falling back to English, and show the feed in reverse order. Start/end dates are inclusive. Expired, upcoming, and version-incompatible events remain visible but cannot open.
+`EventView` tải feed dữ liệu từ xa `event_terrarium.json`. Các thẻ sự kiện ưu tiên hiển thị theo ngôn ngữ thiết bị, mặc định fallback về tiếng Anh và hiển thị feed theo thứ tự đảo ngược (mới nhất lên đầu). Ngày bắt đầu/kết thúc được tính bao gồm cả hai đầu ngày. Các sự kiện đã kết thúc, sắp diễn ra hoặc không tương thích phiên bản vẫn được hiển thị nhưng sẽ không thể mở.
 
-The three legacy links map to the existing hosted pages:
+Ba liên kết legacy được ánh xạ tới các trang web đang lưu trữ:
 
-| Feed link | Page | JavaScript handler |
+| Feed link | Trang web | JavaScript handler |
 | --- | --- | --- |
 | `clam-level-up` | `event_level_terrarium/index.html` | `event_get_bag_level` |
 | `clam-floor` | `events_floors/index.html` | `event_get_bag_floor` |
 | `clam-lavender-plant` | `lucky-wheel/index.html` | `clam-lavender-plant` |
 
-HTTPS links open in WKWebView without reward handlers. Links to another host open externally.
+Các liên kết HTTPS thông thường mở trong WKWebView không gắn handler nhận thưởng. Các liên kết dẫn đến host khác sẽ được mở bằng trình duyệt ngoài (Safari).
 
-The app exposes `window.TerrariumBridge`. The website must use this API:
+Ứng dụng cung cấp đối tượng `window.TerrariumBridge`. Trang web phải sử dụng API này:
 
 ```javascript
 await window.TerrariumBridge.callHandler('event_get_bag_level', 'true');
@@ -20,10 +20,10 @@ await window.TerrariumBridge.callHandler('event_get_bag_floor', 'true');
 await window.TerrariumBridge.callHandler('clam-lavender-plant', {code: 'ticket'});
 ```
 
-The app dispatches `TerrariumBridgeReady` when the bridge is installed. The previous `window.flutter_inappwebview` API is no longer exposed; hosted pages must migrate before reward callbacks work on iOS.
+Ứng dụng phát sự kiện `TerrariumBridgeReady` khi bridge được cài đặt sẵn sàng vào trang. API cũ `window.flutter_inappwebview` không còn được cung cấp; các trang web được lưu trữ cần chuyển sang API mới để các callback nhận thưởng hoạt động trên iOS.
 
-The bridge returns a Promise and accepts calls only from the matching main-frame HTTPS host, page path, and event handler. Native checks enforce dates, app version, logged-in user, level/floor requirements, existing ownership, and oxygen balance. Reward amounts and supported codes are defined in `EventReward`, matching the current wheel reward amounts. Arbitrary quantities from JavaScript are ignored. The wheel costs 100 oxygen per accepted reward callback.
+Bridge trả về một Promise và chỉ chấp nhận các cuộc gọi từ đúng host HTTPS của main-frame, đường dẫn trang và event handler tương ứng. Mã nguồn native thực hiện kiểm tra nghiêm ngặt về ngày diễn ra, phiên bản ứng dụng, trạng thái đăng nhập, điều kiện cấp độ/số tầng, quyền sở hữu hiện tại và số dư oxy. Số lượng phần thưởng và các mã hỗ trợ được định nghĩa trong `EventReward`, khớp với giá trị thưởng hiện tại của vòng quay may mắn. Mọi số lượng tuỳ ý gửi lên từ JavaScript đều bị bỏ qua. Vòng quay tiêu tốn 100 oxy cho mỗi callback nhận thưởng được chấp thuận.
 
-Firestore must confirm the write before the Promise resolves and local state is published. Failures reject the Promise and show a native status message. Successful claims update the page's query parameters and wheel oxygen value. Badge claims are deduplicated by ownership; concurrent claims and wheel callbacks within two seconds of a completed claim are rejected.
+Firestore phải xác nhận việc ghi dữ liệu thành công trước khi Promise được giải quyết (resolve) và cập nhật state cục bộ. Nếu thất bại, Promise sẽ bị từ chối (reject) và hiển thị thông báo trạng thái native. Nhận thưởng thành công sẽ cập nhật lại query parameters của trang và giá trị oxy của vòng quay. Việc nhận huy hiệu được chống trùng lặp dựa trên quyền sở hữu; các yêu cầu nhận thưởng đồng thời hoặc callback vòng quay trong vòng 2 giây kể từ lần nhận gần nhất sẽ bị từ chối.
 
-The existing web page selects wheel outcomes on the client. This bridge preserves that contract; it does not provide server-authoritative prize selection or cross-device claim transactions. Changes to the hosted prize catalog must also update the native reward policy.
+Trang web hiện tại tự chọn kết quả vòng quay ở phía client. Bridge này duy trì nguyên vẹn quy ước đó; bridge không cung cấp cơ chế chọn phần thưởng kiểm soát từ server (server-authoritative) hay giao dịch nhận thưởng liên thiết bị. Khi có thay đổi trong danh mục giải thưởng trên web, chính sách phần thưởng native cũng phải được cập nhật đồng thời.

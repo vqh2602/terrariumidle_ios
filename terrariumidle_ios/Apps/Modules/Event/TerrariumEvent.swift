@@ -27,8 +27,8 @@ struct TerrariumEvent: Decodable, Identifiable, Hashable {
         eventdata.first { $0.local == language } ?? eventdata.first { $0.local == "en" } ?? eventdata.first
     }
 
-    // The live feed includes unpadded dates and the year 20100. Compare calendar
-    // components instead of relying on a four-digit DateFormatter.
+    // Feed thực tế có thể chứa ngày không đệm số 0 và năm dạng 20100. So sánh trực tiếp
+    // các thành phần lịch thay vì phụ thuộc vào DateFormatter 4 chữ số.
     static func dayValue(_ value: String) -> Int? {
         let fields = value.split(separator: "-", omittingEmptySubsequences: false)
         let parts = fields.compactMap { Int($0) }

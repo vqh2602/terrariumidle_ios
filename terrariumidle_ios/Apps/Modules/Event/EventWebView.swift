@@ -49,7 +49,7 @@ struct EventWebView: UIViewRepresentable {
     @Binding var loadError: String?
     @Binding var notice: String?
 
-    // Expose the iOS web API with Promise responses from WKWebView.
+    // Cung cấp API web cho iOS với phản hồi dạng Promise từ WKWebView.
     static let bridgeScript = """
     window.TerrariumBridge = {
       callHandler: function(handler, ...args) {
@@ -106,7 +106,7 @@ struct EventWebView: UIViewRepresentable {
                 replyHandler(nil, "Lệnh sự kiện không hợp lệ")
                 return
             }
-            // Pages call the badge handlers with 'false' for ineligible users.
+            // Trang web gọi các handler huy hiệu với giá trị 'false' đối với người dùng không đủ điều kiện.
             if handler != "clam-lavender-plant", (argument as? String) == "false" {
                 replyHandler(NSNull(), nil)
                 return

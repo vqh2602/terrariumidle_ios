@@ -16,6 +16,7 @@ enum AppRoute: Hashable {
     case storeView
     case accountView
     case eventView
+    case discoveryView
 }
 
 @MainActor
@@ -70,6 +71,8 @@ struct AppRouterView: View {
                         AccountView()
                     case .eventView:
                         EventView()
+                    case .discoveryView:
+                        DiscoveryView()
                     }
                 }
         }

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Keep reward amounts native; never trust quantities supplied by JavaScript.
+/// Quản lý số lượng phần thưởng ở tầng native; tuyệt đối không tin tưởng số lượng do JavaScript truyền lên.
 enum EventReward {
     static func apply(handler: String, argument: Any, to garden: GardenModel) throws -> GardenModel {
         var updated = garden
