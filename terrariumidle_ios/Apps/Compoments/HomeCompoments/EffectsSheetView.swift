@@ -53,7 +53,7 @@ struct EffectsSheetView: View {
             VStack(spacing: 8) {
                 controls
                 ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 280 : 88), spacing: 8)], spacing: 8) {
+                    LazyVStack(spacing: 8) {
                         ForEach(visibleItems) { item in
                             let locked = !unlockedIds.contains(item.id)
                             EffectCardView(
@@ -194,45 +194,45 @@ private struct EffectCardView: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 12) {
                 Color.clear
-                    .aspectRatio(2.0, contentMode: .fit)
+                    .frame(width: 96, height: 58)
                     .overlay {
-                        Image(thumbnailImageName)
-                            .resizable()
-                            .scaledToFill()
+                        Image(thumbnailImageName).resizable().scaledToFill()
                     }
                     .clipped()
                     .overlay {
                         if isLocked {
-                            Color.black.opacity(0.28)
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 22, weight: .bold))
-                                .foregroundStyle(.white)
+                            Color.black.opacity(0.3)
+                            Image(systemName: "lock.fill").foregroundStyle(.white)
                         }
                     }
-                    .overlay(alignment: .topTrailing) {
-                        if isSelected && !isLocked {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundStyle(AccountStyle.green, AccountStyle.cream)
-                                .padding(5)
-                        }
-                    }
-                Text(item.name)
-                    .font(.system(.caption, design: .rounded, weight: .semibold))
-                    .foregroundStyle(AccountStyle.ink)
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity, minHeight: 30, alignment: .topLeading)
-                    .padding(7)
+                    .clipShape(RoundedRectangle(cornerRadius: 9))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(item.name)
+                        .font(.system(.subheadline, design: .rounded, weight: .bold))
+                        .foregroundStyle(AccountStyle.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(isLocked ? "Chưa mở khóa" : item.description)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(AccountStyle.muted)
+                        .lineLimit(2)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                if isSelected && !isLocked {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(AccountStyle.green)
+                }
             }
-            .background(AccountStyle.cream)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .padding(10)
+            .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 14))
             .overlay {
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 14)
                     .strokeBorder(isSelected && !isLocked ? AccountStyle.green : AccountStyle.border,
-                                  lineWidth: isSelected && !isLocked ? 2.5 : 1)
+                                  lineWidth: isSelected && !isLocked ? 2 : 1)
             }
+            .contentShape(RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
         .disabled(isLocked)

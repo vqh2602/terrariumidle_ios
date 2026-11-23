@@ -20,11 +20,14 @@ public struct SpriteKitBackgroundView: View {
     public var backgroundId: String = "sky_sun_day"
     public var isPaused: Bool = false
 
+    public var onReady: (() -> Void)?
+
     @State private var scene: SpriteKitBackgroundScene?
 
-    public init(backgroundId: String = "sky_sun_day", isPaused: Bool = false) {
+    public init(backgroundId: String = "sky_sun_day", isPaused: Bool = false, onReady: (() -> Void)? = nil) {
         self.backgroundId = backgroundId
         self.isPaused = isPaused
+        self.onReady = onReady
     }
 
     public var body: some View {
@@ -40,9 +43,11 @@ public struct SpriteKitBackgroundView: View {
                 .onAppear {
                     currentScene.isPaused = false
                     currentScene.configure(themeId: backgroundId)
+                    reportPreparedScene(currentScene)
                 }
                 .onChange(of: geometry.size) { newSize in
                     currentScene.size = newSize
+                    reportPreparedScene(currentScene)
                 }
                 .onChange(of: backgroundId) { newId in
                     currentScene.configure(themeId: newId)
@@ -52,6 +57,13 @@ public struct SpriteKitBackgroundView: View {
                 }
         }
         .ignoresSafeArea(.all)
+    }
+
+    private func reportPreparedScene(_ scene: SpriteKitBackgroundScene) {
+        guard scene.size.width > 0, scene.size.height > 0 else { return }
+        // configure builds the background synchronously. Do not wait for a
+        // render tick: SpriteKit may pause ticks while an opaque loader covers it.
+        DispatchQueue.main.async { onReady?() }
     }
 
     private func getOrCreateScene(size: CGSize) -> SpriteKitBackgroundScene {

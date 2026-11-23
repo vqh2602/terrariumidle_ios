@@ -9,6 +9,7 @@
 // @_spi(RiveExperimental) import RiveRuntime
 import SpriteKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 import Combine
 import FirebaseAuth
@@ -54,6 +55,16 @@ struct HomeView: View {
     @StateObject private var fireStoreService: FireStoreService = .shared
     @EnvironmentObject var router: AppRouter
 
+    @State private var dataReady = false
+    @State private var backgroundReady = false
+    @State private var loadFailed = false
+    @State private var reloadID = 0
+    @State private var shelfPosition = ScrollPosition(edge: .bottom)
+    @State private var shelfOffset: CGFloat = 0
+    @State private var shelfMaxOffset: CGFloat = 0
+    @State private var scrollDirection = 0
+    @State private var topSafeInset: CGFloat = 0
+    @State private var hudHeight: CGFloat = 56
     @State private var isEdit: Bool = false
     @State private var draggedPlant: DraggedPlantData? = nil
     @State var backgroundRive: String = "i_sky_sun_day"
@@ -87,6 +98,7 @@ struct HomeView: View {
         ZStack(alignment: .bottomTrailing) {
             // MARK: - Layout plant
 
+            if dataReady {
             GeometryReader { geometry in
                 let itemWidth = (geometry.size.width - 32) / 3.0
                 ZStack {
@@ -100,12 +112,14 @@ struct HomeView: View {
                             .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
                     } else {
                         // Tự động load background SpriteKit động từ JSON
-                        SpriteKitBackgroundView(backgroundId: backgroundRive)
+                        SpriteKitBackgroundView(backgroundId: backgroundRive, onReady: { backgroundReady = true })
                             .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
                     }
                     */
                     // 100% SpriteKit Background
-                    SpriteKitBackgroundView(backgroundId: backgroundRive)
+                    SpriteKitBackgroundView(backgroundId: backgroundRive, onReady: {
+                        backgroundReady = true
+                    })
                         .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
                         .ignoresSafeArea(.all)
 
@@ -120,6 +134,8 @@ struct HomeView: View {
                             LazyVStack(spacing: 0) {
                                 let userFloors: Int = (fireStoreService.gradenModel?.user.userFloor) ?? 1
 
+                                Color.clear.frame(height: topSafeInset + hudHeight + 20)
+
                                 // MARK: - Unlock Floor Button (Edit Mode Only)
 
                                 if isEdit && canUnlockFloor() {
@@ -129,13 +145,12 @@ struct HomeView: View {
                                         maxFloors: maxUnlockableFloors(),
                                         onUnlock: handleUnlockFloor
                                     )
-                                    .rotationEffect(.degrees(180))
                                     .padding(.vertical, 12)
                                 }
 
                                 // MARK: - Main Loop: Iterate through each floor/row
 
-                                ForEach(0 ... userFloors, id: \.self) { rowIndex in
+                                ForEach(Array((0 ... userFloors).reversed()), id: \.self) { rowIndex in
                                     VStack(spacing: 0) {
                                         HStack(spacing: 4) {
                                             // MARK: - Column Loop: 3 columns per row
@@ -182,11 +197,27 @@ struct HomeView: View {
                                                 height: 16
                                             )
                                     }
-                                    .rotationEffect(.degrees(180))
                                 }
                             }
                         }
-                        .rotationEffect(.degrees(180))
+                        .defaultScrollAnchor(.bottom)
+                        .scrollPosition($shelfPosition)
+                        .onScrollGeometryChange(for: ShelfScrollMetrics.self) { value in
+                            ShelfScrollMetrics(offset: value.contentOffset.y,
+                                               maximum: max(0, value.contentSize.height - value.containerSize.height + value.contentInsets.bottom))
+                        } action: { _, value in
+                            shelfOffset = value.offset
+                            shelfMaxOffset = value.maximum
+                        }
+                        .overlay {
+                            if isEdit && draggedPlant != nil {
+                                VStack(spacing: 0) {
+                                    dragScrollEdge(-1)
+                                    Spacer(minLength: 0)
+                                    dragScrollEdge(1)
+                                }
+                            }
+                        }
                         Image("r1").resizable()
                             .scaledToFill().frame(
                                 width: 16, // 30% chiều rộng màn hình
@@ -202,19 +233,6 @@ struct HomeView: View {
                 }.frame(alignment: .leading)
             }
 
-            .task {
-                guard let userId = authService.currentUser?.uid else {
-                    print("HomeView: chưa có userid")
-                    return
-                }
-                _ = await fireStoreService.getDataById(userId: userId)
-                fireStoreService.realtimeChangeDataGraden(userId: userId)
-                
-                // Auto-select random overlay if user has unlocked any
-                autoSelectOverlay()
-            }
-          
-
             .navigationBarHidden(true) // Ẩn thanh navigation
             .ignoresSafeArea(.container, edges: isEdit ? [.top, .leading, .trailing] : .all)
             .onChange(of: isEdit) {oldValue, newValue in
@@ -224,14 +242,63 @@ struct HomeView: View {
                 }
             }
 
-            if !isEdit {
+            }
+            if dataReady && backgroundReady && !isEdit {
                 SpeedDial(isEditing: $isEdit, backgroundRive: $backgroundRive, overlayRive: $overlayRive)
             }
         } // Full màn hình, bao gồm status bar
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top } action: { topSafeInset = $0 }
         .overlay(alignment: .topLeading) {
+            if dataReady && backgroundReady {
             UserInfoCompoment()
+                .allowsHitTesting(draggedPlant == nil)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { hudHeight = $0 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
+            }
+        }
+        .overlay {
+            if !dataReady || !backgroundReady {
+                ZStack {
+                    AccountStyle.cream.ignoresSafeArea()
+                    VStack(spacing: 14) {
+                        Image(systemName: "leaf.fill").font(.largeTitle).foregroundStyle(AccountStyle.green)
+                        if loadFailed {
+                            Text("Chưa tải được khu vườn").foregroundStyle(AccountStyle.ink)
+                            Button("Thử lại") { reloadID += 1 }.tint(AccountStyle.green)
+                        } else {
+                            ProgressView("Đang chuẩn bị khu vườn…").tint(AccountStyle.green)
+                        }
+                    }
+                    .font(.system(.subheadline, design: .rounded))
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: dataReady && backgroundReady)
+        .task(id: reloadID) { await loadGarden() }
+        .task(id: "load-\(reloadID)-\(dataReady)-\(backgroundReady)") {
+            guard !dataReady || !backgroundReady else { return }
+            do {
+                try await Task.sleep(for: .seconds(20))
+                try Task.checkCancellation()
+                loadFailed = true
+            } catch { /* Ready state, retry, or navigation cancels the timeout. */ }
+        }
+        .task(id: "\(scrollDirection)-\(draggedPlant != nil)-\(isEdit)") {
+            guard isEdit, draggedPlant != nil, scrollDirection != 0 else { return }
+            do {
+                while !Task.isCancelled {
+                    try await Task.sleep(for: .milliseconds(30))
+                    try Task.checkCancellation()
+                    let target = min(max(shelfOffset + CGFloat(scrollDirection) * 10, 0), shelfMaxOffset)
+                    shelfPosition.scrollTo(y: target)
+                }
+            } catch { }
+        }
+        .onChange(of: draggedPlant) { _, value in
+            if value == nil { scrollDirection = 0 }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if isEdit {
@@ -244,11 +311,62 @@ struct HomeView: View {
                 .padding(.bottom, 8)
             }
         }
+        .onDisappear { scrollDirection = 0; draggedPlant = nil }
         .onAppear {
             if !BackgroundAudioManager.shared.isPlaying {
                 BackgroundAudioManager.shared.startDefaultBGM()
             }
         }
+    }
+
+    private func loadGarden() async {
+        if fireStoreService.gradenModel == nil {
+            dataReady = false
+            backgroundReady = false
+        } else {
+            dataReady = true
+        }
+        loadFailed = false
+
+        guard let userId = authService.currentUser?.uid else {
+            if fireStoreService.gradenModel == nil {
+                loadFailed = true
+            }
+            return
+        }
+
+        let loaded = await fireStoreService.getDataById(userId: userId)
+        guard !Task.isCancelled else { return }
+        guard loaded != nil || fireStoreService.gradenModel?.user.userID == userId else {
+            if fireStoreService.gradenModel == nil {
+                loadFailed = true
+            }
+            return
+        }
+
+        autoSelectOverlay()
+        fireStoreService.realtimeChangeDataGraden(userId: userId)
+        dataReady = true
+
+        // Safety fallback: Đảm bảo không bị treo màn loading nếu SpriteKit view delay render
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1))
+            if !backgroundReady {
+                backgroundReady = true
+            }
+        }
+    }
+
+    private func dragScrollEdge(_ direction: Int) -> some View {
+        Color.clear
+            .frame(height: direction < 0 ? max(90, topSafeInset + hudHeight + 20) : 76)
+            .contentShape(Rectangle())
+            .onDrop(of: [.text], delegate: ShelfEdgeDropDelegate(
+                onEnter: { scrollDirection = direction },
+                onExit: { if scrollDirection == direction { scrollDirection = 0 } },
+                onEnd: { scrollDirection = 0; draggedPlant = nil }
+            ))
+            .accessibilityHidden(true)
     }
 
     // MARK: - Helper Function
@@ -404,3 +522,18 @@ struct HomeView: View {
 // #Preview {
 //    HomeView()
 // }
+
+private struct ShelfScrollMetrics: Equatable {
+    let offset: CGFloat
+    let maximum: CGFloat
+}
+
+private struct ShelfEdgeDropDelegate: DropDelegate {
+    let onEnter: () -> Void
+    let onExit: () -> Void
+    let onEnd: () -> Void
+    func dropEntered(info: DropInfo) { onEnter() }
+    func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
+    func dropExited(info: DropInfo) { onExit() }
+    func performDrop(info: DropInfo) -> Bool { onEnd(); return false }
+}
