@@ -235,7 +235,7 @@ def parse_plant(pid):
         sk_y = round(comp_h - iy - (1.0 - ay) * ph - 10.0, 1)
 
         is_left = (ix + pw / 2.0) < (comp_w / 2.0)
-        z_pos = 11 + i
+        z_pos = round(11.0 + i * 0.5, 1) if len(curr) > 15 else float(11 + i)
 
         # Calculate bend angle & duration
         bend = 0.035 if is_left else -0.035

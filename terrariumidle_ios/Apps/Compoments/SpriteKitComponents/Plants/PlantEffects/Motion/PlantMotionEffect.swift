@@ -193,6 +193,16 @@ public enum PlantMotionEffectType: String, CaseIterable {
     case cascadingVine = "cascadingVine"
     /// Bản mới: Nhún nảy đàn hồi tần số nhanh (Dành cho sen đá, xương rồng mọng nước)
     case elasticPulse = "elasticPulse"
+    /// Bản mới: Gió lay qua tán lá rộng (Thân giữ vững, các phiến lá to nghiêng cùng chiều rồi hồi dần)
+    case broadleafWind = "broadleafWind"
+    /// Bản mới: Gió quét qua cành lá dài/tán lá kép (Giữ gốc, hồi chậm theo quán tính nhịp nhàng)
+    case frondWind = "frondWind"
+    /// Bản mới: Cành hoa đón gió cùng chiều, hồi theo quán tính thanh thoát
+    case flowerSway = "flowerSway"
+    /// Bản mới: Thân tre/trúc lay nhẹ, lá rung riêng quanh cuống đàn hồi cao
+    case bambooWind = "bambooWind"
+    /// Bản mới: Cây có thân/cành gắn hoa/khối liền mạch, xoay nhịp nhàng giữ nguyên liên kết
+    case connectedPlantSway = "connectedPlantSway"
 
     /// Khởi tạo instance hiệu ứng tương ứng
     public func createEffect() -> PlantMotionEffect {
@@ -205,6 +215,16 @@ public enum PlantMotionEffectType: String, CaseIterable {
             return CascadingVineMotionEffect()
         case .elasticPulse:
             return ElasticPulseMotionEffect()
+        case .broadleafWind:
+            return BroadleafWindMotionEffect()
+        case .frondWind:
+            return FrondWindMotionEffect()
+        case .flowerSway:
+            return FlowerSwayMotionEffect()
+        case .bambooWind:
+            return BambooWindMotionEffect()
+        case .connectedPlantSway:
+            return ConnectedPlantSwayMotionEffect()
         }
     }
 }
@@ -222,7 +242,17 @@ public struct PlantMotionEffectFactory {
     public static func create(named nameOrId: String) -> PlantMotionEffect {
         let clean = nameOrId.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if clean.contains("wind") || clean.contains("sway") || clean.contains("gió") || clean.contains("đu đưa") {
+        if clean.contains("bamboo") || clean.contains("tre") || clean.contains("trúc") {
+            return BambooWindMotionEffect()
+        } else if clean.contains("flower") || clean.contains("hoa") {
+            return FlowerSwayMotionEffect()
+        } else if clean.contains("broadleaf") || clean.contains("lá rộng") {
+            return BroadleafWindMotionEffect()
+        } else if clean.contains("frond") || clean.contains("lá dài") || clean.contains("dương xỉ") {
+            return FrondWindMotionEffect()
+        } else if clean.contains("connected") || clean.contains("liên kết") {
+            return ConnectedPlantSwayMotionEffect()
+        } else if clean.contains("wind") || clean.contains("sway") || clean.contains("gió") || clean.contains("đu đưa") {
             return WindSwayMotionEffect()
         } else if clean.contains("vine") || clean.contains("cascade") || clean.contains("leo") || clean.contains("rủ") {
             return CascadingVineMotionEffect()

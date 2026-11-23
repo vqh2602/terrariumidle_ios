@@ -83,7 +83,7 @@ public final class Plant22Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
-    public var motionEffect: PlantMotionEffect = WindSwayMotionEffect(swayAngle: 0.035, leafBendAngle: 0.075, durationMultiplier: 0.95)
+    public var motionEffect: PlantMotionEffect = WindSwayMotionEffect(swayAngle: 0.065, leafBendAngle: 0.14, durationMultiplier: 1.15)
     public var tapEffects: [PlantTapEffect] = [SparklePollenEffect(), OxygenBubblesEffect(theme: .emerald)]
 
     private let plantRootNode = SKNode()
@@ -333,15 +333,16 @@ public final class Plant22Node: SKNode {
     // MARK: - Hoạt ảnh nhàn rỗi (Idle Animation)
 
     private func startLeafIdleAnimation(leaf: SKSpriteNode, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: TimeInterval) {
-        leaf.removeAction(forKey: "plantIdleAction")
+        leaf.removeAction(forKey: "leafWind")
         let rest = leaf.restZRotation
         leaf.zRotation = rest
+        let visibleBendAngle = bendAngle * 1.8
 
-        let rotateRight = SKAction.rotate(toAngle: rest + bendAngle, duration: duration * 0.5)
+        let rotateRight = SKAction.rotate(toAngle: rest + visibleBendAngle, duration: duration * 0.4)
         rotateRight.timingMode = .easeInEaseOut
-        let rotateLeft = SKAction.rotate(toAngle: rest - bendAngle, duration: duration)
+        let rotateLeft = SKAction.rotate(toAngle: rest - visibleBendAngle, duration: duration * 0.8)
         rotateLeft.timingMode = .easeInEaseOut
-        let rotateBack = SKAction.rotate(toAngle: rest, duration: duration * 0.5)
+        let rotateBack = SKAction.rotate(toAngle: rest, duration: duration * 0.4)
         rotateBack.timingMode = .easeInEaseOut
 
         let swaySeq = SKAction.sequence([rotateRight, rotateLeft, rotateBack])
@@ -362,9 +363,9 @@ public final class Plant22Node: SKNode {
             leaf.run(SKAction.sequence([
                 SKAction.wait(forDuration: phaseDelay),
                 SKAction.repeatForever(fullAction)
-            ]), withKey: "plantIdleAction")
+            ]), withKey: "leafWind")
         } else {
-            leaf.run(SKAction.repeatForever(fullAction), withKey: "plantIdleAction")
+            leaf.run(SKAction.repeatForever(fullAction), withKey: "leafWind")
         }
     }
 
@@ -395,10 +396,7 @@ public final class Plant22Node: SKNode {
             level: growthState.rawLevel,
             initialSeedPosition: initialSeedPosition,
             initialSproutPosition: initialSproutPosition,
-            containerSize: containerSize,
-            onComplete: { [weak self] in
-                self?.resumeIdleAnimation()
-            }
+            containerSize: containerSize
         )
 
         let lvl = growthState.rawLevel

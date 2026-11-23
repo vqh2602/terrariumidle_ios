@@ -1,7 +1,7 @@
 # Hệ Thống Hiệu Ứng Chạm Cây (Plant Tap & Motion Effects System)
 
 Khi người chơi chạm (tap/click) vào cây trong Terrarium Idle iOS, phản hồi tương tác được điều phối qua **hai hệ thống hiệu ứng độc lập và song song**, được phân tách thành 2 thư mục chuyên biệt:
-1. **`PlantEffects/Motion/` (Hiệu ứng Chuyển động Vật lý - `PlantMotionEffect`)**: Điều khiển nhún nảy cành lá, gió lay uốn lượn, hoặc dây leo rủ buông đung đưa theo các giai đoạn sinh trưởng (Hạt giống, Cây con, Trưởng thành).
+1. **`PlantEffects/Motion/` (Hiệu ứng Chuyển động Vật lý - `PlantMotionEffect`)**: Điều khiển nhún nảy cành lá, gió lay uốn lượn, thân tre đàn hồi, cành hoa đón gió, hoặc dây leo rủ buông đung đưa theo các giai đoạn sinh trưởng (Hạt giống, Cây con, Trưởng thành).
 2. **`PlantEffects/Tap/` (Hiệu ứng Thị giác Dạng Hạt - `PlantTapEffect`)**: Sinh các chùm bọt khí Oxy 3D căng bóng (`OxygenBubblesEffect`), bụi phấn hoa vàng lấp lánh (`SparklePollenEffect`), hoặc cánh hoa rụng (`FloatingPetalsEffect`) tại `zPosition = 200`.
 
 ```
@@ -11,7 +11,12 @@ PlantEffects/
 │   ├── StandardPlantBounceMotionEffect.swift # Bản gốc: Nén nảy Squash & Stretch + Gợn sóng qua phiến lá
 │   ├── WindSwayMotionEffect.swift       # Bản mới: Gió lay đu đưa mềm mại (Thân chao nghiêng, lá uốn lượn)
 │   ├── CascadingVineMotionEffect.swift  # Bản mới: Dây leo buông rủ đung đưa chuỗi sóng (Chậu treo)
-│   └── ElasticPulseMotionEffect.swift   # Bản mới: Nhún nảy đàn hồi tần số nhanh (Sen đá/xương rồng)
+│   ├── ElasticPulseMotionEffect.swift   # Bản mới: Nhún nảy đàn hồi tần số nhanh (Sen đá/xương rồng)
+│   ├── BroadleafWindMotionEffect.swift  # Bản mới: Gió lay tán lá bản rộng (Thân vững, lá to nghiêng đón gió)
+│   ├── FrondWindMotionEffect.swift      # Bản mới: Gió quét cành lá dài/tán kép (Giữ gốc, hồi chậm theo quán tính)
+│   ├── FlowerSwayMotionEffect.swift     # Bản mới: Cành hoa đón gió cùng chiều, hồi theo quán tính thanh thoát
+│   ├── BambooWindMotionEffect.swift     # Bản mới: Thân tre trúc lay nhẹ, lá rung riêng quanh cuống đàn hồi cao
+│   └── ConnectedPlantSwayMotionEffect.swift # Bản mới: Cây liền khối thân cành hoa đung đưa nhịp nhàng
 ├── Tap/                                 # Thư mục chuyên trách hiệu ứng hạt thị giác
 │   ├── PlantTapEffect.swift             # Protocol, Enum, Factory
 │   ├── OxygenBubblesEffect.swift        # Bọt khí Oxy 3D (Emerald, Deep Ocean, Golden Sun, Floral Pink)
@@ -24,7 +29,7 @@ PlantEffects/
 
 ## 1. Hệ Thống Hiệu Ứng Chuyển Động Cây (`PlantMotionEffect`)
 
-Mọi loài cây (`Plant1Node` $\rightarrow$ `Plant18Node`) đều quản lý hiệu ứng chuyển động qua thuộc tính:
+Mọi loài cây (`Plant1Node` $\rightarrow$ `Plant30Node`) đều quản lý hiệu ứng chuyển động qua thuộc tính:
 ```swift
 public var motionEffect: PlantMotionEffect = ...
 ```
@@ -34,9 +39,14 @@ public var motionEffect: PlantMotionEffect = ...
 | Tên Hiệu Ứng | Lớp Triển Khai (`Class`) | Định Danh Type | Phù Hợp Cho | Đặc Điểm Chuyển Động |
 | :--- | :--- | :--- | :--- | :--- |
 | **Nén nảy tiêu chuẩn (Bản gốc)** | `StandardPlantBounceMotionEffect` | `standardBounce` | Cây để bàn đứng thẳng (Mặc định: **Plant1, 3, 6, 9, 12**) | Squash & Stretch lò xo đàn hồi cả cây + Gợn sóng xao động lan truyền qua từng phiến lá + nảy mầm/hạt. |
-| **Gió lay đu đưa (Bản mới)** | `WindSwayMotionEffect` | `windSway` | Cây tán lá rộng, cau, dương xỉ (Mặc định: **Plant2, 4, 7, 8, 10, 16**) | Thân cây chao nghiêng đón gió (`rotate: 0.048 rad`), từng phiến lá uốn cong nhịp nhàng đón gió theo chuỗi sóng mượt mà. |
+| **Gió lay đu đưa (Bản mới)** | `WindSwayMotionEffect` | `windSway` | Cây tán lá rộng, cau, dương xỉ (Mặc định: **Plant2, 4, 7, 8, 10, 16, 19, 22, 24, 26**) | Thân cây chao nghiêng đón gió (`rotate: 0.048 rad`), từng phiến lá uốn cong nhịp nhàng đón gió theo chuỗi sóng mượt mà. |
 | **Dây leo rủ (Bản mới)** | `CascadingVineMotionEffect` | `cascadingVine` | Cây dây leo, chậu treo buông rủ (Mặc định: **Plant11, 13, 14, 15, 17, 18**) | Từng nhánh lá/chuỗi hạt buông thõng đung đưa hình sin nối đuôi nhau từ miệng chậu xuống ngọn. |
-| **Nhún nảy đàn hồi (Bản mới)** | `ElasticPulseMotionEffect` | `elasticPulse` | Sen đá, xương rồng, mọng nước (Mặc định: **Plant5**) | Nhịp co giãn nảy nhanh (Micro-pulse) chắc nịch, tạo cảm giác mọng nước đầy đặn. |
+| **Nhún nảy đàn hồi (Bản mới)** | `ElasticPulseMotionEffect` | `elasticPulse` | Sen đá, xương rồng, mọng nước (Mặc định: **Plant5, 20**) | Nhịp co giãn nảy nhanh (Micro-pulse) chắc nịch, tạo cảm giác mọng nước đầy đặn. |
+| **Gió lay tán rộng (Bản mới)** | `BroadleafWindMotionEffect` | `broadleafWind` | Cây lá to, sen nở, xương rồng cột lớn (Mặc định: **Plant21, 27**) | Thân chính giữ vững, các phiến lá/cột tán rộng nghiêng cùng chiều đón gió và hồi chậm dần. |
+| **Gió quét cành dài (Bản mới)** | `FrondWindMotionEffect` | `frondWind` | Cây cành lá nhọn, sen đá đinh, tán xẻ (Mặc định: **Plant23**) | Gió quét qua cành lá dài, giữ gốc và dao động tắt dần theo quán tính uyển chuyển. |
+| **Cành hoa đu đưa (Bản mới)** | `FlowerSwayMotionEffect` | `flowerSway` | Cây hoa vươn cao, cành hoa nhiều nhánh (Mặc định: **Plant28**) | Các cành hoa đón gió cùng chiều, hồi theo quán tính nhịp nhàng và giữ nguyên cuống liên kết. |
+| **Gió lay thân trúc (Bản mới)** | `BambooWindMotionEffect` | `bambooWind` | Trúc, tre cảnh, cành mảnh lá rung (Mặc định: **Plant30**) | Thân tre đung đưa rất nhẹ quanh gốc; các cụm lá gắn vào thân rung lắc riêng quanh cuống với tần số cao. |
+| **Chuyển động liên khối (Bản mới)** | `ConnectedPlantSwayMotionEffect` | `connectedPlantSway` | Cây có thân/cành ghép liền hoa/chồi khối (Mặc định: **Plant25, 29**) | Toàn bộ cây xoay nhẹ theo một khối thống nhất (`swayAngle: 0.026 rad`) để các điểm tiếp giáp luôn liền mạch, không rời cuống. |
 
 ### 1.2. Protocol `PlantMotionEffect` & `PlantMotionContext`
 
@@ -66,7 +76,6 @@ Ngữ cảnh `PlantMotionContext` đóng gói đầy đủ:
 
 ```swift
 // Ví dụ 1: Muốn Plant1 (Lưỡi hổ) chuyển từ nảy lò xo sang đu đưa theo gió:
-// Trong Plant1Node.swift:
 public var motionEffect: PlantMotionEffect = WindSwayMotionEffect()
 
 // Ví dụ 2: Tinh chỉnh độ nghiêng và độ uốn lá khi đón gió của Plant2 (Trầu bà):
@@ -74,6 +83,9 @@ public var motionEffect: PlantMotionEffect = WindSwayMotionEffect(swayAngle: 0.0
 
 // Ví dụ 3: Muốn Plant15 (Chuỗi tim) dùng hiệu ứng dây leo rủ buông:
 public var motionEffect: PlantMotionEffect = CascadingVineMotionEffect(waveAngle: 0.11)
+
+// Ví dụ 4: Sử dụng hiệu ứng cành hoa đu đưa cho Plant28:
+public var motionEffect: PlantMotionEffect = FlowerSwayMotionEffect()
 ```
 
 ### 1.4. Quy Chuẩn Chống Trôi Góc & Xoay Lật 180 Độ (Anti-Rotation Drift Convention)
@@ -118,15 +130,15 @@ public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
 | Theme | Mã Màu Fill | Phù Hợp Cho Loài Cây |
 | :--- | :--- | :--- |
 | **`emerald`** (Mặc định) | `rgba(89, 235, 166, 0.85)` | Đa số các loài cây xanh lá (`Plant1` Lưỡi hổ, `Plant2` Trầu bà, `Plant3` Begonia...) |
-| **`deepOcean`** | `rgba(64, 209, 242, 0.85)` | Cây mọng nước, cây dây leo buông rủ (`Plant15` Chuỗi tim, `Plant11`...) |
-| **`goldenSun`** | `rgba(255, 224, 97, 0.88)` | Cây có lá vàng, hoa hướng dương hoặc cây nhiệt đới ánh sáng |
-| **`floralPink`** | `rgba(255, 173, 209, 0.88)` | Cây nở hoa hồng, sen đá viền hồng, phong lan |
+| **`deepOcean`** | `rgba(64, 209, 242, 0.85)` | Cây mọng nước, cây dây leo buông rủ (`Plant15` Chuỗi tim, `Plant21`, `Plant28`, `Plant30`...) |
+| **`goldenSun`** | `rgba(255, 224, 97, 0.88)` | Cây có lá vàng, xương rồng sa mạc ánh sáng (`Plant27`, `Plant29`...) |
+| **`floralPink`** | `rgba(255, 173, 209, 0.88)` | Cây nở hoa hồng, sen đá viền hồng, phong lan, hoa đào (`Plant24`, `Plant25`...) |
 
 ---
 
-## 3. Bảng Tra Cứu Cấu Hình Toàn Bộ 19 Loài Cây (Plant1 -> Plant19)
+## 3. Bảng Tra Cứu Cấu Hình Toàn Bộ 30 Loài Cây (Plant1 -> Plant30)
 
-| Loài Cây | Tên Khoa Học / Tiếng Việt | Hiệu Ứng Chuyển Động (`motionEffect`) | Hiệu Ứng Thị Giác (`tapEffects`) |
+| Loài Cây | Tên Tiếng Việt / Tên Khoa Học | Hiệu Ứng Chuyển Động (`motionEffect`) | Hiệu Ứng Thị Giác (`tapEffects`) |
 | :--- | :--- | :--- | :--- |
 | **Plant1** | Lưỡi hổ (*Sansevieria trifasciata*) | `StandardPlantBounceMotionEffect()` | `[OxygenBubblesEffect(theme: .emerald)]` |
 | **Plant2** | Trầu bà lá xẻ (*Monstera deliciosa*) | `WindSwayMotionEffect()` | `[OxygenBubblesEffect(theme: .emerald)]` |
@@ -147,6 +159,17 @@ public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
 | **Plant17** | Cúc tần Ấn Độ (*Vernonia elliptica*) | `CascadingVineMotionEffect()` | `[OxygenBubblesEffect(theme: .emerald)]` |
 | **Plant18** | Chuỗi ngọc (*Curio rowleyanus*) | `CascadingVineMotionEffect()` | `[OxygenBubblesEffect(theme: .emerald)]` |
 | **Plant19** | Chuối kiểng (*Musa acuminata*) | `WindSwayMotionEffect()` | `[OxygenBubblesEffect(theme: .emerald)]` |
+| **Plant20** | Xương rồng nhím (*Echinocactus*) | `ElasticPulseMotionEffect()` | `[OxygenBubblesEffect(theme: .emerald)]` |
+| **Plant21** | Sen bạch liên (*Nelumbo nucifera*) | `BroadleafWindMotionEffect()` | `[FloatingPetalsEffect(), OxygenBubblesEffect(theme: .deepOcean)]` |
+| **Plant22** | Thất mạt hương (*Plectranthus tomentosa*) | `WindSwayMotionEffect()` | `[SparklePollenEffect(), OxygenBubblesEffect(theme: .emerald)]` |
+| **Plant23** | Sen đá đinh (*Sedum coryne*) | `FrondWindMotionEffect()` | `[OxygenBubblesEffect(theme: .emerald)]` |
+| **Plant24** | Hoa đào (*Prunus persica*) | `WindSwayMotionEffect()` | `[FloatingPetalsEffect(), OxygenBubblesEffect(theme: .floralPink)]` |
+| **Plant25** | Xương rồng thùng hồng (*Ferocactus*) | `ConnectedPlantSwayMotionEffect()` | `[OxygenBubblesEffect(theme: .floralPink)]` |
+| **Plant26** | Trúc tiểu cảnh (*Bambusoideae*) | `WindSwayMotionEffect()` | `[SparklePollenEffect(), OxygenBubblesEffect(theme: .emerald)]` |
+| **Plant27** | Xương rồng cột Andes (*Trichocereus*) | `BroadleafWindMotionEffect()` | `[OxygenBubblesEffect(theme: .goldenSun)]` |
+| **Plant28** | Xương rồng myrtle xanh (*Myrtillocactus*) | `FlowerSwayMotionEffect()` | `[OxygenBubblesEffect(theme: .deepOcean)]` |
+| **Plant29** | Xương rồng trụ xoắn (*Cereus forbesii*) | `ConnectedPlantSwayMotionEffect()` | `[OxygenBubblesEffect(theme: .goldenSun)]` |
+| **Plant30** | Hoa lan chuông trắng (*Convallaria*) | `BambooWindMotionEffect()` | `[SparklePollenEffect(), OxygenBubblesEffect(theme: .deepOcean)]` |
 
 ---
 

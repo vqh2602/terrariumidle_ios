@@ -72,7 +72,7 @@ public final class Plant20Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
-    public var motionEffect: PlantMotionEffect = ElasticPulseMotionEffect(pulseScale: 1.05, durationMultiplier: 1.0, animatesLeaves: false)
+    public var motionEffect: PlantMotionEffect = ElasticPulseMotionEffect(pulseScale: 1.13, durationMultiplier: 1.7, animatesLeaves: false)
     public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
 
     private let plantRootNode = SKNode()
@@ -320,9 +320,9 @@ public final class Plant20Node: SKNode {
         // plantSway được PlantMotionContext.stopIdleActions() dừng trước mỗi tap.
         plantRootNode.removeAction(forKey: "plantSway")
         plantRootNode.zRotation = 0
-        let swayRight = SKAction.rotate(toAngle: 0.006, duration: 1.6)
-        let swayLeft = SKAction.rotate(toAngle: -0.006, duration: 3.2)
-        let settle = SKAction.rotate(toAngle: 0, duration: 1.6)
+        let swayRight = SKAction.rotate(toAngle: 0.025, duration: 1.2)
+        let swayLeft = SKAction.rotate(toAngle: -0.025, duration: 2.4)
+        let settle = SKAction.rotate(toAngle: 0, duration: 1.2)
         for action in [swayRight, swayLeft, settle] {
             action.timingMode = .easeInEaseOut
         }

@@ -67,6 +67,28 @@ struct GardenModel {
         var plantLevel: Int // Made mutable for leveling
         var platLevelExp: Int // Made mutable for EXP progression
         var position: String // Made mutable for drag-and-drop
+        var wateringUntil: TimeInterval = 0
+    }
+}
+
+// MARK: - Watering
+
+extension GardenModel {
+    enum WateringResult {
+        case watered, insufficientDiamonds, alreadyWatering, invalidPlant
+    }
+
+    /// Charge once and store the deadline on the plant so leveling and moving preserve it.
+    mutating func waterPlant(at position: String, plantId: String, now: TimeInterval) -> WateringResult {
+        guard let index = plants.lastIndex(where: {
+            $0.position == position && $0.idPlant == plantId &&
+            $0.idPlant.hasPrefix("plant") && !$0.idPot.isEmpty
+        }) else { return .invalidPlant }
+        guard plants[index].wateringUntil <= now else { return .alreadyWatering }
+        guard money.gemstone >= 10 else { return .insufficientDiamonds }
+        money.gemstone -= 10
+        plants[index].wateringUntil = now + 60
+        return .watered
     }
 }
 
@@ -165,6 +187,7 @@ extension GardenModel.Plant {
         plantLevel = dict.int("plantLevel")
         platLevelExp = dict.int("platLevelExp")
         position = dict.string("position")
+        wateringUntil = (dict["wateringUntil"] as? NSNumber)?.doubleValue ?? 0
     }
 }
 
@@ -307,6 +330,7 @@ extension GardenModel.Plant {
             "plantLevel": plantLevel,
             "platLevelExp": platLevelExp,
             "position": position,
+            "wateringUntil": wateringUntil,
         ]
     }
 }

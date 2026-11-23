@@ -65,36 +65,36 @@ public final class Plant28Node: SKNode {
     }
 
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId: 2, imgX:     9.1, imgY:  1734.5, width:  220.0, height:  898.0, anchorX: 0.08, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 3, imgX:  -343.7, imgY:  1639.0, width:  220.0, height:  898.0, anchorX: 0.08, anchorY: 0.00, isLeft: true , zPos: 12, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 4, imgX:    93.7, imgY:  1325.5, width:  669.0, height: 1003.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 13, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 5, imgX:  -140.2, imgY:   475.8, width:  636.0, height: 1102.0, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 14, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 6, imgX:   230.1, imgY:   924.0, width:  636.0, height: 1102.0, anchorX: 0.42, anchorY: 0.00, isLeft: false, zPos: 15, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 7, imgX:   532.6, imgY:   656.3, width:  906.0, height:  865.0, anchorX: 0.22, anchorY: 0.00, isLeft: false, zPos: 16, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 8, imgX:    79.5, imgY:   388.4, width:  810.0, height: 1224.0, anchorX: 0.34, anchorY: 0.00, isLeft: false, zPos: 17, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 9, imgX:    72.0, imgY:  1430.0, width:  426.0, height: 1161.0, anchorX: 0.62, anchorY: 0.00, isLeft: false, zPos: 18, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 10, imgX:  -147.6, imgY:   871.6, width:  691.0, height: 1256.0, anchorX: 0.37, anchorY: 0.00, isLeft: true , zPos: 19, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 11, imgX:    47.6, imgY:  1029.2, width:  470.0, height: 1520.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 20, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 12, imgX:   -38.8, imgY:   511.6, width:  365.0, height: 1179.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 21, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 13, imgX:   533.1, imgY:   778.8, width:  636.0, height: 1102.0, anchorX: 0.42, anchorY: 0.00, isLeft: false, zPos: 22, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 14, imgX:   521.2, imgY:   777.1, width:  781.0, height:  369.0, anchorX: 0.08, anchorY: 0.00, isLeft: false, zPos: 23, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 15, imgX:   364.0, imgY:   781.2, width:  279.0, height:  901.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 24, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 16, imgX:  -511.9, imgY:   631.6, width:  712.0, height:  634.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 25, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 17, imgX:  -252.8, imgY:  1176.1, width:  669.0, height: 1003.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 26, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 18, imgX:  -754.1, imgY:  1119.1, width:  636.0, height: 1102.0, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 27, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 19, imgX:  -603.6, imgY:   583.5, width:  810.0, height: 1224.0, anchorX: 0.66, anchorY: 0.00, isLeft: true , zPos: 28, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 20, imgX:  -485.2, imgY:   706.7, width:  365.0, height: 1179.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 29, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 21, imgX:  -347.8, imgY:   633.5, width:  636.0, height: 1102.0, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 30, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 22, imgX:  -193.3, imgY:  1135.3, width:  426.0, height: 1161.0, anchorX: 0.38, anchorY: 0.00, isLeft: true , zPos: 31, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 23, imgX:  -180.0, imgY:   541.9, width:  502.0, height: 1321.0, anchorX: 0.37, anchorY: 0.00, isLeft: true , zPos: 32, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 24, imgX:  -170.2, imgY:   734.5, width:  470.0, height: 1520.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 33, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 25, imgX:  -579.0, imgY:   549.2, width:  826.0, height:  941.0, anchorX: 0.80, anchorY: 0.00, isLeft: true , zPos: 34, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 26, imgX:  -535.0, imgY:   200.3, width:  365.0, height: 1179.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 35, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 27, imgX:  -397.6, imgY:   127.1, width:  636.0, height: 1102.0, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 36, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 28, imgX:  -229.8, imgY:    35.5, width:  502.0, height: 1321.0, anchorX: 0.37, anchorY: 0.00, isLeft: true , zPos: 37, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 29, imgX:   283.0, imgY:   575.2, width:  964.0, height: 1070.0, anchorX: 0.21, anchorY: 0.00, isLeft: false, zPos: 38, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 30, imgX:  -220.0, imgY:   228.1, width:  470.0, height: 1520.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 39, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 31, imgX:    68.4, imgY:    -8.5, width:  470.0, height: 1520.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 40, bendAngle: 0.076, duration: 2.8, shouldSway: true)
+        LeafData(assetId: 2, imgX:     9.1, imgY:  1734.5, width:  220.0, height:  898.0, anchorX: 0.08, anchorY: 0.00, isLeft: false, zPos: 11.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 3, imgX:  -343.7, imgY:  1639.0, width:  220.0, height:  898.0, anchorX: 0.08, anchorY: 0.00, isLeft: true , zPos: 11.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 4, imgX:    93.7, imgY:  1325.5, width:  669.0, height: 1003.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 12.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 5, imgX:  -140.2, imgY:   475.8, width:  636.0, height: 1102.0, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 12.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 6, imgX:   230.1, imgY:   924.0, width:  636.0, height: 1102.0, anchorX: 0.42, anchorY: 0.00, isLeft: false, zPos: 13.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 7, imgX:   532.6, imgY:   656.3, width:  906.0, height:  865.0, anchorX: 0.22, anchorY: 0.00, isLeft: false, zPos: 13.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 8, imgX:    79.5, imgY:   388.4, width:  810.0, height: 1224.0, anchorX: 0.34, anchorY: 0.00, isLeft: false, zPos: 14.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 9, imgX:    72.0, imgY:  1430.0, width:  426.0, height: 1161.0, anchorX: 0.62, anchorY: 0.00, isLeft: false, zPos: 14.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 10, imgX:  -147.6, imgY:   871.6, width:  691.0, height: 1256.0, anchorX: 0.37, anchorY: 0.00, isLeft: true , zPos: 15.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 11, imgX:    47.6, imgY:  1029.2, width:  470.0, height: 1520.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 15.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 12, imgX:   -38.8, imgY:   511.6, width:  365.0, height: 1179.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 16.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 13, imgX:   533.1, imgY:   778.8, width:  636.0, height: 1102.0, anchorX: 0.42, anchorY: 0.00, isLeft: false, zPos: 16.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 14, imgX:   521.2, imgY:   777.1, width:  781.0, height:  369.0, anchorX: 0.08, anchorY: 0.00, isLeft: false, zPos: 17.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 15, imgX:   364.0, imgY:   781.2, width:  279.0, height:  901.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 17.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 16, imgX:  -511.9, imgY:   631.6, width:  712.0, height:  634.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 18.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 17, imgX:  -252.8, imgY:  1176.1, width:  669.0, height: 1003.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 18.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 18, imgX:  -754.1, imgY:  1119.1, width:  636.0, height: 1102.0, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 19.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 19, imgX:  -603.6, imgY:   583.5, width:  810.0, height: 1224.0, anchorX: 0.66, anchorY: 0.00, isLeft: true , zPos: 19.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 20, imgX:  -485.2, imgY:   706.7, width:  365.0, height: 1179.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 20.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 21, imgX:  -347.8, imgY:   633.5, width:  636.0, height: 1102.0, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 20.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 22, imgX:  -193.3, imgY:  1135.3, width:  426.0, height: 1161.0, anchorX: 0.38, anchorY: 0.00, isLeft: true , zPos: 21.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 23, imgX:  -180.0, imgY:   541.9, width:  502.0, height: 1321.0, anchorX: 0.37, anchorY: 0.00, isLeft: true , zPos: 21.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 24, imgX:  -170.2, imgY:   734.5, width:  470.0, height: 1520.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 22.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 25, imgX:  -579.0, imgY:   549.2, width:  826.0, height:  941.0, anchorX: 0.80, anchorY: 0.00, isLeft: true , zPos: 22.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 26, imgX:  -535.0, imgY:   200.3, width:  365.0, height: 1179.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 23.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 27, imgX:  -397.6, imgY:   127.1, width:  636.0, height: 1102.0, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 23.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 28, imgX:  -229.8, imgY:    35.5, width:  502.0, height: 1321.0, anchorX: 0.37, anchorY: 0.00, isLeft: true , zPos: 24.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 29, imgX:   283.0, imgY:   575.2, width:  964.0, height: 1070.0, anchorX: 0.21, anchorY: 0.00, isLeft: false, zPos: 24.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 30, imgX:  -220.0, imgY:   228.1, width:  470.0, height: 1520.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 25.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 31, imgX:    68.4, imgY:    -8.5, width:  470.0, height: 1520.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 25.5, bendAngle: 0.076, duration: 2.8, shouldSway: true)
     ]
 
     // MARK: - Properties
@@ -311,6 +311,10 @@ public final class Plant28Node: SKNode {
 
                 let assetId = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
                 let meta = Self.leavesMetadata.first(where: { $0.assetId == assetId })
+
+                if let meta = meta {
+                    leaf.zPosition = meta.zPos
+                }
 
                 if leaf.texture == nil {
                     leaf.texture = loadPlantTexture(assetId: assetId)

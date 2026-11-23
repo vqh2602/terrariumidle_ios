@@ -27,9 +27,12 @@ struct PlantItemView: View {
 
     @State private var showSheet = false
     @State private var pendingStoreItemId: String?
+    @State private var autoTapTrigger = 0
+    @State private var careAnimation: PlantCareAnimationRequest?
+    @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var router: AppRouter
     @State private var floatingTexts: [(id: UUID, text: String, offset: CGFloat)] = []
-    @State var fireStoreService: FireStoreService = .shared
+    @ObservedObject var fireStoreService: FireStoreService = .shared
 
     // Confirmation alerts
     @State private var showFertilizeAlert = false
@@ -64,9 +67,9 @@ struct PlantItemView: View {
         )
     }
 
-    private func handleDetailTap() {
-        guard !isEditing && plantData != nil && !hasEmptyIds && !isSticker else { return }
-        handlePlantTap()
+    private func handleDetailTap(isAutomatic: Bool = false) {
+        guard !isEditing && careAnimation == nil && plantData != nil && !hasEmptyIds && !isSticker else { return }
+        handlePlantTap(playsSound: !isAutomatic)
     }
 
     var body: some View {
@@ -147,25 +150,54 @@ struct PlantItemView: View {
                     height: slotHeight,
                     onTap: {
                         handleDetailTap()
-                    }
+                    },
+                    autoTapTrigger: autoTapTrigger,
+                    onAutoTap: { handleDetailTap(isAutomatic: true) },
+                    careAnimation: careAnimation,
+                    onCareAnimationCompleted: finishCareAnimation
                 )
                 .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)-\(isHanging)")
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isHanging ? .top : .bottom)
             }
         }
             .customContextMenu(menuItems: {
-                        if isEditing { return [] }
+                        if isEditing || careAnimation != nil || hasEmptyIds { return [] }
                         var items: [MenuItem] = []
                         if !isSticker {
-                            items.append(MenuItem(title: "Bón phân", icon: "leaf.fill") {
+                            if !hasEmptyIds {
+                                items.append(MenuItem(title: "Tưới cây", assetIcon: "water-can",
+                                                      subtitle: "10 diamond · Tự tap 60 giây") {
+                                    handleWaterPlant()
+                                })
+                            }
+                            items.append(MenuItem(title: "Bón phân", assetIcon: "fertilizer",
+                                                  subtitle: "10 phân bón · Tăng 1 cấp") {
                                 showFertilizeAlert = true
                             })
                         }
-                        items.append(MenuItem(title: "Loại bỏ", icon: "trash", role: .destructive) {
+                        items.append(MenuItem(title: "Loại bỏ", assetIcon: "shovel",
+                                              subtitle: "1 xẻng · Xúc cây khỏi kệ", role: .destructive) {
                             showRemoveAlert = true
                         })
                         return items
                     }())
+        .task(id: "\(plantData?.wateringUntil ?? 0)-\(scenePhase)-\(isEditing)") {
+            await runWateringAutoTap()
+        }
+        .overlay(alignment: .top) {
+            if let end = plantData?.wateringUntil, end > Date().timeIntervalSince1970 {
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    let seconds = max(0, Int(ceil(end - context.date.timeIntervalSince1970)))
+                    if seconds > 0 {
+                        Label("Tự tap · \(seconds)s", systemImage: "drop.fill")
+                            .font(.caption2.bold())
+                            .padding(6)
+                            .background(.regularMaterial, in: Capsule())
+                    }
+                }
+                .allowsHitTesting(false)
+            }
+        }
         .sheet(isPresented: $showSheet, onDismiss: {
             if let itemId = pendingStoreItemId {
                 pendingStoreItemId = nil
@@ -248,9 +280,12 @@ struct PlantItemView: View {
     // MARK: - Tap Mechanics Helper Functions
 
     /// Handle plant tap with probability-based oxygen drop
-    private func handlePlantTap() {
-        guard let plant = plantData,
-              var gardenModel = fireStoreService.gradenModel else { return }
+    private func handlePlantTap(playsSound: Bool = true) {
+        guard let displayedPlant = plantData,
+              var gardenModel = fireStoreService.gradenModel,
+              let plant = gardenModel.plants.last(where: {
+                  $0.position == "\(rowIndex),\(columnIndex)" && $0.idPlant == displayedPlant.idPlant
+              }) else { return }
 
         let level = plant.plantLevel
 
@@ -294,7 +329,9 @@ struct PlantItemView: View {
             // Check user level up
             let userMaxExp = ShareFunc.calculateUserMaxExp(level: updatedUser.userLevel)
             if updatedUser.userLevelEXP >= userMaxExp {
-                AudioPlayer.shared.playSFX(fileName: "level_up")
+                if playsSound {
+                    AudioPlayer.shared.playSFX(fileName: "level_up")
+                }
                 updatedUser.userLevel += 1
                 updatedUser.userLevelEXP -= userMaxExp
                 showFloatingText("⭐ Level \(updatedUser.userLevel)!")
@@ -331,9 +368,52 @@ struct PlantItemView: View {
 
     // MARK: - Plant Action Functions
 
+    private func handleWaterPlant(animate: Bool = true) {
+        guard careAnimation == nil, !isEditing, !isSticker, !hasEmptyIds,
+              let plant = plantData,
+              var garden = fireStoreService.gradenModel else { return }
+        switch garden.waterPlant(at: "\(rowIndex),\(columnIndex)", plantId: plant.idPlant,
+                                now: Date().timeIntervalSince1970) {
+        case .watered:
+            if animate {
+                careAnimation = PlantCareAnimationRequest(action: .water)
+            } else {
+                fireStoreService.saveGarden(gardenModel: garden, debounce: false)
+                showFloatingText("💧 Tự tap trong 60 giây!")
+            }
+        case .insufficientDiamonds:
+            showFloatingText("❌ Không đủ 10 diamond!")
+        case .alreadyWatering:
+            showFloatingText("💧 Cây đang được tưới!")
+        case .invalidPlant:
+            break
+        }
+    }
+
+    @MainActor
+    private func runWateringAutoTap() async {
+        guard let plant = plantData, !isSticker, !hasEmptyIds,
+              scenePhase == .active, !isEditing else { return }
+        let deadline = plant.wateringUntil
+        while !Task.isCancelled, Date().timeIntervalSince1970 < deadline {
+            // Read the latest model: never tap a replacement or use a stale level.
+            guard let current = fireStoreService.gradenModel?.plants.last(where: {
+                $0.position == "\(rowIndex),\(columnIndex)"
+            }), current.idPlant == plant.idPlant, current.wateringUntil == deadline else { return }
+            if scenePhase == .active && !isEditing {
+                autoTapTrigger += 1
+            }
+            do {
+                try await Task.sleep(for: .seconds(1))
+            } catch {
+                return
+            }
+        }
+    }
+
     /// Fertilize plant - costs 10 fertilizer, increases plant level by 1 (no limit)
-    private func handleFertilize() {
-        guard var gardenModel = fireStoreService.gradenModel else { return }
+    private func handleFertilize(animate: Bool = true) {
+        guard careAnimation == nil, var gardenModel = fireStoreService.gradenModel else { return }
 
         // Check if user has enough fertilizer
         if gardenModel.item.fertilizer < 10 {
@@ -349,6 +429,10 @@ struct PlantItemView: View {
         }) ?? updatedPlants.firstIndex(where: { $0.position == targetPos }) else { return }
 
         var updatedPlant = updatedPlants[plantIndex]
+        if animate {
+            careAnimation = PlantCareAnimationRequest(action: .fertilize)
+            return
+        }
 
         // Increase plant level by 1 (no cap when using fertilizer)
         updatedPlant.plantLevel += 1
@@ -373,7 +457,39 @@ struct PlantItemView: View {
 
     /// Remove plant - costs 1 shovel, removes the plant
     private func handleRemovePlant() {
-        guard var gardenModel = fireStoreService.gradenModel else { return }
+        guard careAnimation == nil, let plant = plantData,
+              let garden = fireStoreService.gradenModel,
+              garden.plants.contains(where: {
+                  $0.position == "\(rowIndex),\(columnIndex)" && $0.idPlant == plant.idPlant
+              }) else { return }
+        guard garden.item.shovel >= 1 else {
+            showFloatingText("❌ Không đủ xẻng!")
+            return
+        }
+        if isSticker {
+            commitRemovePlant()
+        } else {
+            careAnimation = PlantCareAnimationRequest(action: .remove)
+        }
+    }
+
+    private func finishCareAnimation(_ id: UUID) {
+        guard let request = careAnimation, request.id == id else { return }
+        careAnimation = nil
+        switch request.action {
+        case .water: handleWaterPlant(animate: false)
+        case .fertilize: handleFertilize(animate: false)
+        case .remove: commitRemovePlant()
+        }
+    }
+
+    private func commitRemovePlant() {
+        guard let plant = plantData,
+              var gardenModel = fireStoreService.gradenModel,
+              gardenModel.plants.contains(where: {
+                  $0.position == "\(rowIndex),\(columnIndex)" &&
+                  $0.idPlant == plant.idPlant && $0.harvestTime == plant.harvestTime
+              }) else { return }
 
         // Check if user has enough shovels
         if gardenModel.item.shovel < 1 {

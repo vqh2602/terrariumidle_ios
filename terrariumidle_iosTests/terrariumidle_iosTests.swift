@@ -6,10 +6,77 @@
 //
 
 import Testing
+import SpriteKit
 @testable import terrariumidle_ios
 
 @MainActor
 struct terrariumidle_iosTests {
+
+    @Test func wateringFeedbackOnlyEmitsOxygenAndPreservesIdleMotion() {
+        let plant = AutoTapFeedbackPlant()
+        let otherEffect = NonOxygenEffectSpy()
+        plant.tapEffects = [OxygenBubblesEffect(theme: .floralPink), otherEffect]
+        plant.position = CGPoint(x: 5, y: 12)
+        plant.zRotation = 0.12
+        plant.run(.repeatForever(.wait(forDuration: 1)), withKey: "idleSway")
+
+        plant.playOxygenBubbles(containerSize: CGSize(width: 120, height: 180), level: 3)
+
+        #expect((8...12).contains(plant.children.count))
+        #expect(plant.children.allSatisfy { $0 is SKShapeNode && $0.zPosition == 200 })
+        #expect(otherEffect.triggerCount == 0)
+        #expect(plant.tapCount == 0)
+        #expect(plant.action(forKey: "idleSway") != nil)
+        #expect(plant.position == CGPoint(x: 5, y: 12))
+        #expect(plant.zRotation == 0.12)
+    }
+
+    private func wateringGarden(diamonds: Int) throws -> GardenModel {
+        try GardenModel(dict: [
+            "money": ["gemstone": diamonds], "user": [:] as [String: Any],
+            "item": [:] as [String: Any], "cart": [:] as [String: Any],
+            "plants": [
+                ["idPlant": "plant1", "idPot": "pot1", "position": "0,0"],
+                ["idPlant": "plant2", "idPot": "pot2", "position": "0,1"]
+            ]
+        ])
+    }
+
+    @Test func wateringChargesTenDiamondsForOnlySelectedPlant() throws {
+        var garden = try wateringGarden(diamonds: 10)
+        #expect(garden.waterPlant(at: "0,1", plantId: "plant2", now: 100) == .watered)
+        #expect(garden.money.gemstone == 0)
+        #expect(garden.plants[0].wateringUntil == 0)
+        #expect(garden.plants[1].wateringUntil == 160)
+        let restored = try GardenModel(dict: garden.toDictionary())
+        #expect(restored.plants[1].wateringUntil == 160)
+    }
+
+    @Test func wateringRejectsInsufficientFundsAndInvalidTargets() throws {
+        var garden = try wateringGarden(diamonds: 9)
+        #expect(garden.waterPlant(at: "0,0", plantId: "plant1", now: 100) == .insufficientDiamonds)
+        #expect(garden.money.gemstone == 9)
+        #expect(garden.plants[0].wateringUntil == 0)
+        garden.money.gemstone = 20
+        #expect(garden.waterPlant(at: "0,0", plantId: "plant2", now: 100) == .invalidPlant)
+        garden.plants[0].idPlant = "sticker1"
+        #expect(garden.waterPlant(at: "0,0", plantId: "sticker1", now: 100) == .invalidPlant)
+        #expect(garden.money.gemstone == 20)
+    }
+
+    @Test func wateringCannotChargeAgainUntilSixtySecondsExpire() throws {
+        var garden = try wateringGarden(diamonds: 30)
+        #expect(garden.waterPlant(at: "0,0", plantId: "plant1", now: 100) == .watered)
+        #expect(garden.waterPlant(at: "0,0", plantId: "plant1", now: 159.99) == .alreadyWatering)
+        #expect(garden.money.gemstone == 20)
+        #expect(garden.plants[0].wateringUntil == 160)
+        garden.plants[0].plantLevel += 1
+        garden.plants[0].position = "1,2"
+        #expect(garden.plants[0].wateringUntil == 160)
+        #expect(garden.waterPlant(at: "1,2", plantId: "plant1", now: 160) == .watered)
+        #expect(garden.money.gemstone == 10)
+        #expect(garden.plants[0].wateringUntil == 220)
+    }
 
     @Test func testPlantPositionParsing() async throws {
         let pos1 = PlantPosition(from: "1,2")
@@ -101,5 +168,22 @@ struct terrariumidle_iosTests {
         let pot7 = ItemDataManager.shared.getPot(byId: "pot7")
         #expect(pot7 != nil)
         #expect(pot7?.image == "Pot7@4.167x")
+    }
+}
+
+private final class AutoTapFeedbackPlant: SKNode, PlantInteractiveNode {
+    var motionEffect: PlantMotionEffect = StandardPlantBounceMotionEffect()
+    var tapEffects: [PlantTapEffect] = []
+    var tapCount = 0
+
+    func playTapAnimation() { tapCount += 1 }
+}
+
+private final class NonOxygenEffectSpy: PlantTapEffect {
+    let name = "NonOxygenEffectSpy"
+    var triggerCount = 0
+
+    func trigger(on plantNode: SKNode, containerSize: CGSize, level: Int, leaves: [SKNode]) {
+        triggerCount += 1
     }
 }

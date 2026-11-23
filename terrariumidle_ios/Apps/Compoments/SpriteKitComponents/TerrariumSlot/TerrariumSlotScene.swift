@@ -27,8 +27,12 @@ public final class TerrariumSlotScene: SKScene {
     private var potNode: PotInteractiveNode?
     private var plantNode: PlantInteractiveNode?
     private var plantMountSocket: SKNode?
+    private var plantContainerSize: CGSize = .zero
+    private var lastCareAnimationID: UUID?
+    private var isPerformingCare = false
 
     public var onTap: (() -> Void)?
+    public var onAutoTap: (() -> Void)?
 
     // MARK: - Initializers
 
@@ -122,6 +126,7 @@ public final class TerrariumSlotScene: SKScene {
         potNode = nil
         plantNode = nil
         plantMountSocket = nil
+        plantContainerSize = .zero
         anchorPoint = CGPoint(x: 0.5, y: 0.0)
 
         // ==========================================
@@ -195,6 +200,7 @@ public final class TerrariumSlotScene: SKScene {
             }
 
             let plantContainerSize = CGSize(width: plantFitW, height: plantContainerH)
+            self.plantContainerSize = plantContainerSize
             if let plant = PlantFactory.createPlant(
                 id: plantId,
                 level: plantLevel,
@@ -237,10 +243,48 @@ public final class TerrariumSlotScene: SKScene {
 
     // MARK: - Touch Interaction
 
+    func playCareAnimation(_ request: PlantCareAnimationRequest, completion: @escaping () -> Void) {
+        guard lastCareAnimationID != request.id else { return }
+        lastCareAnimationID = request.id
+        isPerformingCare = true
+        let target: CGPoint
+        if let plant = plantNode?.asNode {
+            target = plant.convert(.zero, to: self)
+        } else if let pot = potNode {
+            target = pot.asNode.convert(pot.plantMountPoint, to: self)
+        } else {
+            target = CGPoint(x: 0, y: slotSize.height * 0.25)
+        }
+        let originalPosition = plantNode?.asNode.position ?? .zero
+        let originalRotation = plantNode?.asNode.zRotation ?? 0
+        let originalAlpha = plantNode?.asNode.alpha ?? 1
+        let animation = PlantCareAnimation(action: request.action, target: target,
+                                           width: slotSize.width, plant: plantNode?.asNode) { [weak self] in
+            self?.isPerformingCare = false
+            if request.action == .remove, let plant = self?.plantNode {
+                // Restore if the final resource/identity check rejects removal.
+                plant.asNode.position = originalPosition
+                plant.asNode.zRotation = originalRotation
+                plant.asNode.alpha = originalAlpha
+                plant.resumeIdleAnimation()
+            }
+            completion()
+        }
+        addChild(animation)
+    }
+
     private var lastTapTime: TimeInterval = 0
+
+    /// Automatic watering keeps rewards and oxygen, without sound or plant/pot motion.
+    public func handleAutoTap() {
+        guard !isPerformingCare, let plant = plantNode else { return }
+        plant.playOxygenBubbles(containerSize: plantContainerSize, level: plantLevel)
+        onAutoTap?()
+    }
 
     /// Kích hoạt hiệu ứng tap đồng thời cho cả Cây và Chậu (tránh xung đột vùng bấm và không bị miss tap)
     public func handleTap() {
+        guard !isPerformingCare else { return }
         let now = CACurrentMediaTime()
         guard now - lastTapTime > 0.08 else { return } // Debounce 80ms chống tap đúp
         lastTapTime = now

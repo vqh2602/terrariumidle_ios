@@ -2,35 +2,39 @@
 
 Khi người chơi chạm (tap/click) vào chậu cây trong Terrarium Idle iOS, phản hồi tương tác được điều phối qua **hai hệ thống hiệu ứng độc lập và song song**, được phân tách thành 2 thư mục chuyên biệt:
 1. **`PotEffects/Motion/` (Hiệu ứng Chuyển động Vật lý - `PotMotionEffect`)**: Điều khiển rung lắc, con lắc đu đưa (Pendulum Swing), hoặc nhún nảy đàn hồi (Squash & Stretch spring bounce) lên khung chậu / dây treo / bóng đổ.
-2. **`PotEffects/Tap/` (Hiệu ứng Thị giác Dạng Hạt - `PotTapEffect`)**: Sinh các chùm hạt lấp lánh (Sparkle, Gold Glint, Heart, Dust...) bùng nổ xung quanh thân chậu tại `zPosition = 150`.
+2. **`PotEffects/Tap/` (Hiệu ứng Thị giác Dạng Hạt - `PotTapEffect`)**: Sinh các chùm hạt lấp lánh (Sparkle, Gold Glint, Heart, Dust, Wood Pollen, Emerald Jade, Coral Bubble, Bamboo Mist...) bùng nổ xung quanh thân chậu tại `zPosition = 150`.
 
 ```
 PotEffects/
-├── Motion/                     # Thư mục chuyên trách hiệu ứng chuyển động vật lý
+├── Motion/                              # Thư mục chuyên trách hiệu ứng chuyển động vật lý
 │   ├── PotMotionEffect.swift            # Protocol, Context, Enum, Factory
 │   ├── PotBounceAnimator.swift          # Core Animator nén nảy Squash & Stretch
-│   ├── ElasticPendulumMotionEffect.swift # Mẫu chậu 15 (đu đưa nhanh + nảy scaleY)
+│   ├── ElasticPendulumMotionEffect.swift # Mẫu chậu 15, 19 (đu đưa nhanh + nảy scaleY)
 │   ├── WidePendulumMotionEffect.swift    # Mẫu chậu 16, 17 (đu đưa góc rộng 5 nhịp)
 │   ├── SpringPendulumMotionEffect.swift  # Mẫu chậu 18 (đu đưa lò xo + khôi phục idle)
-│   ├── StandardBounceMotionEffect.swift  # Mẫu chậu để bàn 1..14 (chuẩn & firm)
+│   ├── StandardBounceMotionEffect.swift  # Mẫu chậu để bàn 1..14, 20..30 (chuẩn & firm)
 │   └── SubtleWobbleMotionEffect.swift    # Rung lắc vi mô
-├── Tap/                        # Thư mục chuyên trách hiệu ứng hạt thị giác
+├── Tap/                                 # Thư mục chuyên trách hiệu ứng hạt thị giác
 │   ├── PotTapEffect.swift               # Protocol, Enum, Factory
-│   ├── SparkleBurstEffect.swift         # Đá lấp lánh (Pot1, 15, 16)
-│   ├── GoldGlintEffect.swift            # Vệt ánh vàng (Pot2)
-│   ├── StoneDustEffect.swift            # Bụi đá xám (Pot3, 17)
+│   ├── SparkleBurstEffect.swift         # Đá lấp lánh (Pot1, 15, 16, 27)
+│   ├── GoldGlintEffect.swift            # Vệt ánh vàng (Pot2, 25)
+│   ├── StoneDustEffect.swift            # Bụi đá xám (Pot3, 17, 21)
 │   ├── HeartBurstEffect.swift           # Trái tim bay (Pot4)
-│   ├── ClayGlintEffect.swift            # Ánh gốm nung (Pot5)
-│   ├── QuartzBurstEffect.swift          # Thạch anh lăng kính (Pot6)
-│   └── EarthenParticlesEffect.swift     # Bụi đất mộc (Pot7..14, 18)
-└── POT_EFFECTS_README.md       # Tài liệu kiến trúc & hướng dẫn
+│   ├── ClayGlintEffect.swift            # Ánh gốm nung (Pot5, 22, 24)
+│   ├── QuartzBurstEffect.swift          # Thạch anh lăng kính (Pot6, 19, 26)
+│   ├── EarthenParticlesEffect.swift     # Bụi đất mộc (Pot7..14, 18, 23)
+│   ├── WoodPollenEffect.swift           # Bụi phấn gỗ thơm ấm áp (Pot20)
+│   ├── EmeraldJadeEffect.swift          # Ánh ngọc bích băng tuyết (Pot28)
+│   ├── CoralBubbleEffect.swift          # Bọt ngọc san hô phập phồng (Pot29)
+│   └── BambooMistEffect.swift           # Sương mai thiền tịnh (Pot30)
+└── POT_EFFECTS_README.md                # Tài liệu kiến trúc & hướng dẫn
 ```
 
 ---
 
 ## 1. Hệ Thống Hiệu Ứng Chuyển Động Tap (`PotMotionEffect`)
 
-Mọi chậu cây (`Pot1Node` -> `Pot18Node`) đều có thuộc tính:
+Mọi chậu cây (`Pot1Node` -> `Pot30Node`) đều có thuộc tính:
 ```swift
 public var motionEffect: PotMotionEffect = ...
 ```
@@ -39,11 +43,11 @@ public var motionEffect: PotMotionEffect = ...
 
 | Tên Hiệu Ứng | Lớp Triển Khai (`Class`) | Định Danh Type | Phù Hợp Cho | Đặc Điểm Chuyển Động |
 | :--- | :--- | :--- | :--- | :--- |
-| **Con lắc đàn hồi** | `ElasticPendulumMotionEffect` | `elasticPendulum` | Chậu treo (Mặc định: **Pot15**) | Lắc con lắc nhanh quanh móc treo (`0.045 rad`) kết hợp nhún nảy nén trục Y (`scaleY: 0.96 -> 1.025 -> 1.0`). |
+| **Con lắc đàn hồi** | `ElasticPendulumMotionEffect` | `elasticPendulum` | Chậu treo (Mặc định: **Pot15, Pot19**) | Lắc con lắc nhanh quanh móc treo (`0.045 rad`) kết hợp nhún nảy nén trục Y (`scaleY: 0.96 -> 1.025 -> 1.0`). |
 | **Đu đưa góc rộng** | `WidePendulumMotionEffect` | `widePendulum` | Chậu treo (Mặc định: **Pot16, Pot17**) | Đu đưa con lắc biên độ rộng (`0.08 rad` ~ 4.6°), dao động 5 nhịp tắt dần mượt mà, thuần túy góc xoay, không méo hình. |
 | **Con lắc lò xo** | `SpringPendulumMotionEffect` | `springPendulum` | Chậu treo (Mặc định: **Pot18**) | Lắc 3 nhịp (`0.065 rad -> -0.050 rad -> 0.0`) rồi tự động khôi phục chuyển động đung đưa nhàn rỗi (`addIdlePendulumSway()`). |
-| **Nén nảy tiêu chuẩn** | `StandardBounceMotionEffect` | `standardBounce` | Chậu để bàn (Mặc định: **Pot1, 4, 6..14**) | Squash & Stretch lò xo đàn hồi (nén X: 1.10, Y: 0.90 -> bật X: 0.95, Y: 1.07 -> cân bằng) kèm co giãn bóng đổ đáy. |
-| **Nén nảy đầm chắc** | `FirmBounceMotionEffect` | `firmBounce` | Chậu để bàn (Mặc định: **Pot2, 3, 5**) | Biên độ nảy nhỏ hơn, đầm chắc cho chậu làm từ đá, kim loại hoặc gốm sứ dày nặng. |
+| **Nén nảy tiêu chuẩn** | `StandardBounceMotionEffect` | `standardBounce` | Chậu để bàn (Mặc định: **Pot1, 4, 6..14, 20, 22..25, 29**) | Squash & Stretch lò xo đàn hồi (nén X: 1.10, Y: 0.90 -> bật X: 0.95, Y: 1.07 -> cân bằng) kèm co giãn bóng đổ đáy. |
+| **Nén nảy đầm chắc** | `FirmBounceMotionEffect` | `firmBounce` | Chậu để bàn (Mặc định: **Pot2, 3, 5, 21, 26..28, 30**) | Biên độ nảy nhỏ hơn, đầm chắc cho chậu làm từ đá, kim loại, ngọc hoặc gốm sứ dày nặng. |
 | **Rung lắc vi mô** | `SubtleWobbleMotionEffect` | `subtleWobble` | Tùy chọn chậu nhỏ/kim loại | Rung lắc nhẹ trái/phải tần số nhanh (Micro-wobble/jiggle) trong 0.2s. |
 
 ### 1.2. Protocol `PotMotionEffect` & `PotMotionContext`
@@ -69,11 +73,9 @@ Nếu bạn muốn thay đổi kiểu rung của một chậu, chỉ cần sửa
 
 ```swift
 // Ví dụ 1: Muốn Pot16 đu đưa đàn hồi nảy nén giống Pot15:
-// Trong Pot16Node.swift:
 public var motionEffect: PotMotionEffect = ElasticPendulumMotionEffect()
 
 // Ví dụ 2: Muốn Pot15 đu đưa biên độ rộng 5 nhịp giống Pot16:
-// Trong Pot15Node.swift:
 public var motionEffect: PotMotionEffect = WidePendulumMotionEffect()
 
 // Ví dụ 3: Tinh chỉnh góc xoay hoặc thời gian cho Pot16:
@@ -100,6 +102,10 @@ public var tapEffects: [PotTapEffect] = [SparkleBurstEffect()]
 | **Ánh gốm nung** | `ClayGlintEffect` | `clayGlint` | Đốm sáng màu đất nung sữa ấm áp phản chiếu bề mặt men gốm. |
 | **Thạch anh lăng kính**| `QuartzBurstEffect` | `quartzBurst` | Tinh thể kim cương/lăng kính thạch anh tím & hồng xoay lấp lánh. |
 | **Bụi đất mộc** | `EarthenParticlesEffect` | `earthenDust` | Hạt đất sét nung mộc mạc tỏa nhẹ ra xung quanh thân chậu. |
+| **Bụi phấn gỗ thơm** | `WoodPollenEffect` | `woodPollen` | Chùm hạt phấn gỗ ấm áp màu hổ phách/mật ong (#E0A96D, #EEB76B, #F6D8AC), bay bổng quanh chậu gỗ. |
+| **Ánh ngọc bích băng** | `EmeraldJadeEffect` | `emeraldJade` | Chùm tinh thể ngọc lam ngọc bích phát sáng lung linh (#64DFDF, #48CAE4, #90E0EF), xoay 360° quanh khối ngọc. |
+| **Bọt ngọc san hô** | `CoralBubbleEffect` | `coralBubble` | Chùm bọt ngọc và hoa san hô lấp lánh màu hồng san hô (#F6BDB6, #FF99C8, #FCB7AF) bay phập phồng quanh bình san hô. |
+| **Sương mai thiền tịnh** | `BambooMistEffect` | `bambooMist` | Chùm hạt sương mai thanh khiết và đốm sáng xanh mạ thiền tịnh (#A7D7C5, #E4E978, #C9E4DE) quanh ống tre mộc. |
 
 ---
 
@@ -121,7 +127,7 @@ Ma trận Z-Index trong chậu:
 
 ---
 
-## 4. Bảng Tra Cứu Cấu Hình Toàn Bộ 18 Chậu (Pot1 -> Pot18)
+## 4. Bảng Tra Cứu Cấu Hình Toàn Bộ 30 Chậu (Pot1 -> Pot30)
 
 | Chậu | Loại Chậu | Hiệu Ứng Chuyển Động (`motionEffect`) | Hiệu Ứng Hạt (`tapEffects`) |
 | :--- | :--- | :--- | :--- |

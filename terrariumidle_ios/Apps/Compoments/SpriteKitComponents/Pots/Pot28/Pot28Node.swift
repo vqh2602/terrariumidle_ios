@@ -10,7 +10,7 @@ import UIKit
 
 /// Node SpriteKit chuyên biệt cho Chậu 28: "Chậu ngọc bích băng tuyết" (pot28)
 /// - Hỗ trợ Kiến trúc Lai (Hybrid Visual Architecture): Nạp từ `Pot28Scene.sks` nếu có
-/// - Kích thước chuẩn: (1600.0 x 1509.0)
+/// - Kích thước chuẩn: (512.0 x 483.0)
 /// - Đổ bóng mềm mại phía dưới đáy chậu (tỉ lệ tiếp xúc đáy ~45%)
 public final class Pot28Node: SKNode, PotInteractiveNode {
 
@@ -82,7 +82,7 @@ public final class Pot28Node: SKNode, PotInteractiveNode {
 
         guard containerSize.width > 0, containerSize.height > 0 else { return }
 
-        let aspect: CGFloat = 1509.0 / 1600.0
+        let aspect: CGFloat = 483.0 / 512.0
         let targetH = containerSize.height * 0.98
         let naturalW = targetH / aspect
         let maxW = max(naturalW, containerSize.width * 0.96)
@@ -123,8 +123,8 @@ public final class Pot28Node: SKNode, PotInteractiveNode {
                 mount.removeFromParent()
                 mount.isHidden = false
                 mount.isPaused = false
-                let scaleX = targetW / 1600.0
-                let scaleY = targetH / 1509.0
+                let scaleX = targetW / 512.0
+                let scaleY = targetH / 483.0
                 mount.position = CGPoint(x: mount.position.x * scaleX, y: mount.position.y * scaleY)
                 mount.zPosition = 10
                 potRootNode.addChild(mount)

@@ -4,7 +4,11 @@ import SpriteKit
 public final class ConnectedPlantSwayMotionEffect: PlantMotionEffect {
     public var name: String { "ConnectedPlantSway" }
 
-    public init() {}
+    public var swayAngle: CGFloat
+
+    public init(swayAngle: CGFloat = 0.026) {
+        self.swayAngle = swayAngle
+    }
 
     public func apply(context: PlantMotionContext) {
         context.stopIdleActions()
@@ -26,10 +30,10 @@ public final class ConnectedPlantSwayMotionEffect: PlantMotionEffect {
 
         // Không xoay hoặc co giãn riêng thân/hoa; toàn bộ hình ghép dùng chung biến đổi.
         root.run(.sequence([
-            rotation(0.026, 0.42),
-            rotation(-0.014, 0.65),
-            rotation(0.006, 0.52),
-            rotation(-0.002, 0.42),
+            rotation(swayAngle, 0.32),
+            rotation(-swayAngle * 0.54, 0.52),
+            rotation(swayAngle * 0.23, 0.42),
+            rotation(-swayAngle * 0.08, 0.34),
             rotation(0, 0.36),
             .run { [weak root] in
                 root?.zRotation = 0

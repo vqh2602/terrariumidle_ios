@@ -28,6 +28,19 @@ extension PlantInteractiveNode {
         set { }
     }
     public func resumeIdleAnimation() {}
+
+    /// Watering auto taps emit only oxygen; they never interrupt idle motion.
+    public func playOxygenBubbles(containerSize: CGSize, level: Int) {
+        var leaves: [SKNode] = []
+        asNode.enumerateChildNodes(withName: "//*") { node, _ in
+            if node.name?.hasPrefix("leaf_") == true { leaves.append(node) }
+        }
+        let oxygenEffects = tapEffects.compactMap { $0 as? OxygenBubblesEffect }
+        let effects = oxygenEffects.isEmpty ? [OxygenBubblesEffect()] : oxygenEffects
+        for effect in effects {
+            effect.trigger(on: asNode, containerSize: containerSize, level: level, leaves: leaves)
+        }
+    }
 }
 
 extension PlantInteractiveNode where Self: SKNode {

@@ -29,6 +29,10 @@ public struct TerrariumSlotView: View {
     public var overflowRatioX: CGFloat = 0.12
     public var overflowRatioY: CGFloat = 0.08
     public var onTap: (() -> Void)? = nil
+    public var autoTapTrigger: Int = 0
+    public var onAutoTap: (() -> Void)? = nil
+    public var careAnimation: PlantCareAnimationRequest? = nil
+    public var onCareAnimationCompleted: ((UUID) -> Void)? = nil
 
     @State private var currentScene: TerrariumSlotScene? = nil
     /// Opacity dùng để fade-in scene sau khi render frame đầu, tránh màu xám chớp lên
@@ -55,7 +59,11 @@ public struct TerrariumSlotView: View {
         widthFill: CGFloat? = nil,
         overflowRatioX: CGFloat = 0.12,
         overflowRatioY: CGFloat = 0.08,
-        onTap: (() -> Void)? = nil
+        onTap: (() -> Void)? = nil,
+        autoTapTrigger: Int = 0,
+        onAutoTap: (() -> Void)? = nil,
+        careAnimation: PlantCareAnimationRequest? = nil,
+        onCareAnimationCompleted: ((UUID) -> Void)? = nil
     ) {
         self.potId = potId
         self.plantId = plantId
@@ -68,6 +76,10 @@ public struct TerrariumSlotView: View {
         self.overflowRatioX = overflowRatioX
         self.overflowRatioY = overflowRatioY
         self.onTap = onTap
+        self.autoTapTrigger = autoTapTrigger
+        self.onAutoTap = onAutoTap
+        self.careAnimation = careAnimation
+        self.onCareAnimationCompleted = onCareAnimationCompleted
 
         let activeFill = widthFill ?? PotRegistry.defaultWidthFill(for: potId)
         let rWidth = width * (1.0 + overflowRatioX)
@@ -118,6 +130,7 @@ public struct TerrariumSlotView: View {
             itemTypeAttribute: itemTypeAttribute,
             onTap: onTap
         )
+        scene.onAutoTap = onAutoTap
 
         return SpriteView(scene: scene, options: [.allowsTransparency])
             .frame(width: renderWidth, height: renderHeight)
@@ -126,12 +139,19 @@ public struct TerrariumSlotView: View {
             .onTapGesture {
                 scene.handleTap()
             }
+            .onChange(of: autoTapTrigger) { _, _ in
+                scene.handleAutoTap()
+            }
+            .onChange(of: careAnimation?.id) { _, _ in
+                playCareAnimation(in: scene)
+            }
             .opacity(sceneOpacity)
             .id("slot-\(potId)-\(plantId)-\(plantLevel)-\(isHanging)-\(itemTypeAttribute?.rawValue ?? "auto")-\(activeFill)-\(width)-\(height)")
             .onAppear {
                 if currentScene == nil {
                     currentScene = scene
                 }
+                playCareAnimation(in: scene)
                 // Fade-in sau 1 frame để tránh màu xám lúc SpriteKit chưa render xong
                 let delay = SpriteKitPreloader.shared.isReady ? 0.05 : 0.15
                 DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
@@ -152,6 +172,13 @@ public struct TerrariumSlotView: View {
     }
 
     // MARK: - Helper
+
+    private func playCareAnimation(in scene: TerrariumSlotScene) {
+        guard let request = careAnimation else { return }
+        scene.playCareAnimation(request) {
+            onCareAnimationCompleted?(request.id)
+        }
+    }
 
     private static func makeScene(
         potId: String,

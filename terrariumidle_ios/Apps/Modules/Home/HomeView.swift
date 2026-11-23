@@ -183,7 +183,7 @@ struct HomeView: View {
                                                         draggedPlant: $draggedPlant,
                                                         onDrop: handleDrop
                                                     )
-                                                    .id("\(rowIndex)-\(columnIndex)-\(plantData?.idPlant ?? "empty")-\(plantData?.idPot ?? "empty")-\(plantData?.plantLevel ?? 0)")
+                                                    .id("\(rowIndex)-\(columnIndex)-\(plantData?.idPlant ?? "empty")-\(plantData?.idPot ?? "empty")")
                                                 }
                                             }
                                         }

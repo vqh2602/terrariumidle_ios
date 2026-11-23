@@ -83,7 +83,7 @@ public final class Plant29Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
-    public var motionEffect: PlantMotionEffect = ConnectedPlantSwayMotionEffect()
+    public var motionEffect: PlantMotionEffect = ConnectedPlantSwayMotionEffect(swayAngle: 0.075)
     public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .goldenSun)]
 
     private let plantRootNode = SKNode()
@@ -331,10 +331,10 @@ public final class Plant29Node: SKNode {
         // Key này được stopIdleActions() dừng sạch trước khi chạy hiệu ứng tap.
         plantRootNode.removeAction(forKey: "plantSway")
         plantRootNode.zRotation = 0
-        let lean = SKAction.rotate(toAngle: 0.008, duration: 1.8)
-        let rebound = SKAction.rotate(toAngle: -0.005, duration: 2.4)
-        let followThrough = SKAction.rotate(toAngle: 0.002, duration: 1.4)
-        let settle = SKAction.rotate(toAngle: 0, duration: 1.2)
+        let lean = SKAction.rotate(toAngle: 0.028, duration: 1.2)
+        let rebound = SKAction.rotate(toAngle: -0.020, duration: 1.8)
+        let followThrough = SKAction.rotate(toAngle: 0.010, duration: 1.0)
+        let settle = SKAction.rotate(toAngle: 0, duration: 0.8)
         for action in [lean, rebound, followThrough, settle] {
             action.timingMode = .easeInEaseOut
         }
