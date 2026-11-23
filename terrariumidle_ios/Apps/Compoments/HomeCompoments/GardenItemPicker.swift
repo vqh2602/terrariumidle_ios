@@ -6,11 +6,13 @@ struct GardenItemPicker: View {
     let placeholder: String
     @Binding var selection: String?
     let onSelect: (String) -> Void
+    var recommendedItemId: String? = nil
     @State private var query = ""
 
     private var results: [ItemData] {
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        return items.filter { text.isEmpty || $0.name.localizedStandardContains(text) || $0.description.localizedStandardContains(text) }
+        let filtered = items.filter { text.isEmpty || $0.name.localizedStandardContains(text) || $0.description.localizedStandardContains(text) }
+        return filtered.filter { $0.id == recommendedItemId } + filtered.filter { $0.id != recommendedItemId }
     }
 
     var body: some View {
@@ -51,10 +53,10 @@ struct GardenItemPicker: View {
                         .frame(maxWidth: .infinity)
                     }
                     ForEach(results) { item in
-                        GardenInventoryRow(item: item, isSelected: selection == item.id) {
+                        GardenInventoryRow(item: item, isSelected: selection == item.id, onSelect: {
                             selection = item.id
                             onSelect(item.id)
-                        }
+                        }, recommendationText: item.id == recommendedItemId ? "Phù hợp nhất" : nil)
                     }
                 }
                 .padding(.horizontal, 12)
@@ -71,6 +73,7 @@ struct GardenInventoryRow: View {
     let item: ItemData
     let isSelected: Bool
     let onSelect: () -> Void
+    var recommendationText: String? = nil
 
     var body: some View {
         Button(action: onSelect) {
@@ -85,6 +88,11 @@ struct GardenInventoryRow: View {
                 .frame(width: 56, height: 64)
                 .background(AccountStyle.green.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
                 VStack(alignment: .leading, spacing: 4) {
+                    if let recommendationText {
+                        Label(recommendationText, systemImage: "sparkles")
+                            .font(.system(.caption, design: .rounded, weight: .bold))
+                            .foregroundStyle(AccountStyle.green)
+                    }
                     Text(item.name)
                         .font(.system(.subheadline, design: .rounded, weight: .bold))
                         .foregroundStyle(AccountStyle.ink)

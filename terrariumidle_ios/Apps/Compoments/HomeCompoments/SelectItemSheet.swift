@@ -110,6 +110,22 @@ struct SelectItemSheet: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
 
+                if selectedTab == .plant, let pot = recommendedPot, selectedPotId != pot.id {
+                    GardenInventoryRow(item: pot, isSelected: false, onSelect: {
+                        selectedPotId = pot.id
+                        selectedTab = .pot
+                    }, recommendationText: "Chậu phù hợp nhất với cây đã chọn")
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
+                } else if selectedTab == .pot, let plant = recommendedPlant, selectedPlantId != plant.id {
+                    GardenInventoryRow(item: plant, isSelected: false, onSelect: {
+                        selectedPlantId = plant.id
+                        selectedTab = .plant
+                    }, recommendationText: "Cây phù hợp nhất với chậu đã chọn")
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
+                }
+
                 // MARK: - Content
 
                 Group {
@@ -120,7 +136,8 @@ struct SelectItemSheet: View {
                             onSelect: { potId in
                                 print("Selected pot: \(potId)")
                             },
-                            selectedPotId: $selectedPotId
+                            selectedPotId: $selectedPotId,
+                            recommendedPotId: recommendedPot?.id
                         )
                     case .plant:
                         PlantSelectionView(
@@ -130,7 +147,8 @@ struct SelectItemSheet: View {
                             onSelect: { plantId in
                                 print("Selected plant: \(plantId)")
                             },
-                            selectedPlantId: $selectedPlantId
+                            selectedPlantId: $selectedPlantId,
+                            recommendedPlantId: recommendedPlant?.id
                         )
                     case .decoration:
                         DecorationSelectionView(
@@ -226,6 +244,35 @@ struct SelectItemSheet: View {
     }
 
     // MARK: - Helper Methods
+
+    private var recommendedPot: ItemData? {
+        guard let plantId = selectedPlantId,
+              let plant = ItemDataManager.shared.getPlant(byId: plantId),
+              let potId = matchingItemId(plantId, from: "plant", to: "pot"),
+              cartPots.contains(potId),
+              let pot = ItemDataManager.shared.getPot(byId: potId),
+              plant.itemTypeAttribute.isHanging == pot.itemTypeAttribute.isHanging
+        else { return nil }
+        return pot
+    }
+
+    private var recommendedPlant: ItemData? {
+        guard let potId = selectedPotId,
+              let pot = ItemDataManager.shared.getPot(byId: potId),
+              let plantId = matchingItemId(potId, from: "pot", to: "plant"),
+              cartPlants.contains(plantId),
+              let plant = ItemDataManager.shared.getPlant(byId: plantId),
+              plant.itemTypeAttribute.isHanging == pot.itemTypeAttribute.isHanging
+        else { return nil }
+        return plant
+    }
+
+    private func matchingItemId(_ id: String, from prefix: String, to targetPrefix: String) -> String? {
+        guard id.hasPrefix(prefix) else { return nil }
+        let number = id.dropFirst(prefix.count)
+        guard !number.isEmpty, number.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
+        return targetPrefix + number
+    }
 
     // Check if plant and pot types are compatible (both hanging or both non-hanging)
     private var areTypesCompatible: Bool {

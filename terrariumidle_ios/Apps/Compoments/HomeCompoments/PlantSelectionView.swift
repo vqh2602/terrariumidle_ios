@@ -6,11 +6,13 @@ struct PlantSelectionView: View {
     let columnIndex: Int
     let onSelect: (String) -> Void
     @Binding var selectedPlantId: String?
+    var recommendedPlantId: String? = nil
 
     var body: some View {
         GardenItemPicker(items: ItemDataManager.shared.getAllPlants().filter { cartPlants.contains($0.id) },
                          placeholder: "Tìm cây trong kho…",
-                         selection: $selectedPlantId, onSelect: onSelect)
+                         selection: $selectedPlantId, onSelect: onSelect,
+                         recommendedItemId: recommendedPlantId)
     }
 }
 
