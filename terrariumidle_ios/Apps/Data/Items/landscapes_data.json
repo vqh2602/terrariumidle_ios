@@ -74,16 +74,7 @@
         "name": "Minamoto no Yuuhi",
         "description": "源の夕陽 - Origin of the Sunset",
         "image": "i_landscape6",
-        "sksFile": "BackgroundScene.sks",
-        "skyGradient": [
-            "#6B386B",
-            "#E06B42",
-            "#F0BE60"
-        ],
-        "elements": [
-            "sun_sunset",
-            "clouds_sunset"
-        ],
+        "sksFile": "Landscape6Scene.sks",
         "priceStore": 0,
         "priceOxygen": 0,
         "currencyUnit": "",
