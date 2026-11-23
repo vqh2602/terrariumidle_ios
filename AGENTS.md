@@ -171,6 +171,31 @@ Mọi Chậu cây (`SpriteKitPotView`, `PotView`, và các View chuyên biệt `
      * `SubtleWobbleMotionEffect`: Rung lắc nhẹ trái/phải tần số nhanh (Micro-wobble/jiggle).
    - Khi cần đổi kiểu rung giữa các chậu (ví dụ muốn Pot16 rung nảy giống Pot15 hoặc ngược lại), chỉ cần sửa 1 dòng khai báo `motionEffect` trong Node chậu đó. Chi tiết tra cứu tại `PotEffects/POT_EFFECTS_README.md`.
 
+## Quy chuẩn Tối ưu Asset & Đồng bộ Kích thước Scene SpriteKit
+
+Khi người dùng yêu cầu giảm kích thước hoặc bộ nhớ của asset, **BẮT BUỘC xử lý đồng bộ ảnh, scene và Swift**. Không được chỉ thu nhỏ PNG rồi để Xcode Scene Editor vẫn hiển thị canvas/sprite theo kích thước cũ.
+
+1. **Chọn độ phân giải theo kích thước hiển thị thực tế**:
+   - Với chậu nhỏ trên kệ, ưu tiên cạnh dài khoảng **512 px**, giữ tỉ lệ ảnh và kênh alpha; chỉ dùng ảnh lớn hơn nếu kích thước hiển thị/Preview thực sự cần.
+   - Ước tính bộ nhớ ảnh RGBA bằng `width * height * 4`, không dựa vào dung lượng PNG nén. Đây là ước tính dữ liệu ảnh, không phải số đo tổng RAM/VRAM của ứng dụng.
+   - Ví dụ chuẩn **Pot28**: ảnh `1600×1509` được thu về `512×483`, dữ liệu RGBA giảm từ khoảng `9.2 MiB` xuống `0.94 MiB`.
+2. **Đồng bộ đầy đủ trong `.sks` khi đổi hệ kích thước thiết kế**:
+   - Canvas `Scene_bounds`, vùng nhìn `_visibleRect` và kích thước preview `_PB_previewSKEditorSceneSizeWidth/Height`.
+   - Kích thước sprite `_bounds` và metadata texture `_size`, `_pixelSize`; giữ texture thật trỏ đúng asset trong `Assets.xcassets`.
+   - Giữ nguyên `anchorPoint`, thứ tự layer và cấu trúc node. Scale tọa độ các node con/socket như `plantMount` theo hệ tọa độ mới, không để lại tọa độ của canvas cũ.
+3. **Đồng bộ Swift và fallback procedural**:
+   - Cập nhật kích thước canvas chuẩn, aspect ratio, mẫu số scale và tọa độ fallback liên quan trong `PotXNode.swift` hoặc Node tương ứng.
+   - Công thức chuyển đổi: `newX = oldX * newWidth / oldWidth`, `newY = oldY * newHeight / oldHeight`. Tỉ lệ `mountY / canvasHeight` phải được giữ nguyên để cây vẫn cắm đúng miệng chậu.
+   - Không dùng việc thu nhỏ kích thước hiển thị trong Swift thay cho việc giảm pixel texture.
+   - Với cây ghép nhiều layer/SVG, đồng bộ cả metadata và tọa độ các layer theo cùng hệ thiết kế; không tự đổi canvas của cây nếu chỉ đang tối ưu một chậu.
+4. **Dọn archive `.sks` an toàn**:
+   - Loại bỏ object không còn được tham chiếu từ root, như các node/texture sót lại từ scene mẫu.
+   - Khi thu gọn `$objects` trong `NSKeyedArchiver`, phải remap toàn bộ `plistlib.UID` còn được sử dụng, kể cả tham chiếu class và danh sách node con. Không xóa object chỉ dựa trên tên.
+5. **Kiểm tra nhẹ, không tự chạy build**:
+   - Mặc định không chạy `xcodebuild`, test có bước build hoặc mở simulator nếu người dùng chưa yêu cầu build/test đó.
+   - Kiểm tra pixel/alpha của ảnh, `plutil -lint` cho `.sks`, `swiftc -parse` nếu sửa Swift và `git diff --check`.
+   - Xác nhận canvas, sprite và preview đều theo kích thước mới; texture reference hợp lệ; tỉ lệ điểm gắn cây không đổi. Xem ảnh sau tối ưu để phát hiện mất alpha hoặc biến dạng.
+
 ## Quy chuẩn Kiến trúc Slot Hợp nhất (Unified Terrarium Slot: Cây + Chậu)
 
 Để giải quyết triệt để các vấn đề:
