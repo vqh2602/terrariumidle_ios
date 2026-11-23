@@ -333,6 +333,49 @@ Mọi Sticker / Vật trang trí (`Sticker1`, `Sticker2`, ...) tuân thủ mô h
      * `"front"`: Sticker phủ mặt trước kệ.
    - **Vùng đệm an toàn chống cắt mép (Anti-Clipping Buffer)**: `SpriteKitStickerView` mở rộng biên render `overflowRatioX: 0.22`, `overflowRatioY: 0.15` và khống chế bán kính hào quang trong `safeRadius` để hiệu ứng mặt trời không bao giờ bị cắt mép.
 
+## Quy chuẩn Phong cảnh Nền SpriteKit & Tối ưu Hóa VRAM GPU (Landscape Convention & GPU Texture Memory Optimization)
+
+Mọi Phong cảnh nền (`Landscape1`, `Landscape2`, `Landscape6`, `Landscape7`,...) **BẮT BUỘC** tuân thủ mô hình Kiến trúc Lai SpriteKit và quy chuẩn kiểm soát bộ nhớ VRAM nghiêm ngặt:
+
+### 1. Cấu trúc Bộ 3 File Phong Cảnh Chuẩn
+Mỗi Phong cảnh `LandscapeX` được đặt trong thư mục `Apps/Compoments/SpriteKitComponents/Landscapes/LandscapeX/`:
+- **`LandscapeXScene.sks` (Thiết kế trực quan trong Xcode Scene Editor)**:
+  - Canvas chuẩn $750 \times 1334$ (hoặc $1700 \times 1943.233$ dạng dọc portrait), `anchorPoint = (0.5, 0.5)` hoặc `(0.5, 0.0)`.
+  - Bắt buộc gắn sẵn texture thật vào mọi sprite trong scene (`bgNode`, `sunNode`, các lớp núi `mountain_X`, mây `cloud_X`).
+- **`LandscapeXNode.swift` (Lập trình Hoạt cảnh & Tương tác)**:
+  - Tuân thủ protocol `LandscapeInteractiveNode` (`configure(containerSize:)`, `asNode`, `playTapAnimation(at:)`).
+  - Nạp ưu tiên từ file `.sks` (`loadSceneTemplate()`), kèm cơ chế Fallback Procedural an toàn khi scene chưa tải được.
+  - Quản lý toạ độ nghỉ `restPositions: [String: CGPoint]` để chống trôi lệch toạ độ tuyệt đối khi bị ngắt bởi tương tác tap.
+- **`LandscapeXView.swift` (Xem trước SwiftUI độc lập)**:
+  - Bọc `SpriteView(scene: activeScene, options: [.allowsTransparency, .shouldCullNonVisibleNodes])` kèm SwiftUI `#Preview`.
+- **Đăng ký vào hệ thống**:
+  - Đăng ký ID và các alias trong `LandscapeFactory.createLandscape(id:containerSize:)`.
+  - Bổ sung `"sksFile": "LandscapeXScene.sks"` trong [landscapes_data.json](file:///Users/vuongquanghuy/code/prj_ios/terrariumidle_ios/terrariumidle_ios/Apps/Data/Items/landscapes_data.json).
+
+### 2. Quy chuẩn Bóc Tách SVG & Thứ Tự Phân Tầng Chiều Sâu (Back-to-Front Z-Order)
+- **Hệ toạ độ chuyển đổi**:
+  - SVG: Gốc $(0, 0)$ tại Top-Left, Y chúc xuống dưới.
+  - SpriteKit: Gốc $(0, 0)$ tại Center $(0.5, 0.5)$ hoặc Bottom-Center $(0.5, 0.0)$, Y hướng lên trời.
+- **Thứ tự phân tầng chuẩn từ sau ra trước (Back-to-Front)**:
+  $$\mathbf{Background\ (Nền\ trời,\ z = 0)} \;\longrightarrow\; \mathbf{Mặt\ trời\ (Sun,\ z = 5)} \;\longrightarrow\; \mathbf{Dãy\ núi\ (Layers\ từ\ xa\ tới\ gần,\ z = 10 \dots 20)} \;\longrightarrow\; \mathbf{Hạt\ hiệu\ ứng\ (z = 30)}$$
+  * **Hiện tượng che khuất tự nhiên**: Đỉnh của các dãy núi xa (Layer 11) vươn cao hơn đáy mặt trời và che khuất chân mặt trời, tạo hiệu ứng vầng dương đang lặn/mọc sau núi. **TUYỆT ĐỐI KHÔNG** đặt mặt trời đè lên trên dãy núi làm mất đường chân trời tự nhiên.
+
+### 3. Quy chuẩn Tối Ưu Hóa VRAM GPU & Chống Lỗi Metal / SIGKILL (BẮT BUỘC TUÂN THỦ)
+- **Giới hạn phần cứng Apple Metal**: Mọi texture nạp vào Metal GPU **TUYỆT ĐỐI KHÔNG ĐƯỢC VƯỢT QUÁ $8192\text{px}$** ở cả chiều rộng lẫn chiều cao. Ảnh $> 8192\text{px}$ sẽ kích hoạt assertion crash: `MTLTextureDescriptor has height/width greater than the maximum allowed size of 8192`.
+- **Ngăn ngừa sập ứng dụng Out Of Memory (`SIGKILL` / Jetsam)**:
+  * Ảnh xuất thô tỉ lệ `@4.167x` từ Figma/AI thường có kích thước $3000\text{px} - 7000\text{px}$. Nạp đồng loạt 10-20 layer sẽ ngốn $> 1.2\text{ GB}$ VRAM, khiến iOS Jetsam gửi tín hiệu `SIGKILL` buộc dừng app.
+  * **BẮT BUỘC Resample về kích thước Retina chuẩn ($750\text{px} - 1000\text{px}$)**:
+    - Nền toàn màn hình: tối đa $750\text{px} - 1000\text{px}$ chiều ngang (hoặc $1334\text{px}$ chiều dọc).
+    - Các thành phần nhỏ hơn (mặt trời, mây, sóng, rặng đá): resample về $300\text{px} - 600\text{px}$.
+  * **Nền đơn sắc (`bgNode`)**: Dùng `SKSpriteNode(color: ...)` hoặc ảnh texture siêu nhỏ ($64 \times 64\text{px}$ hoặc $128 \times 128\text{px}$), tiêu tốn $0\text{ MB}$ VRAM texture thay vì $16 - 30\text{ MB}$.
+  * **Hào quang & Shape Node**: Tránh lạm dụng `SKShapeNode.glowWidth` lớn (gây pass blur offscreen ngốn GPU), ưu tiên dùng các vành tròn đồng tâm phẳng với alpha dịu nhẹ.
+  * **Particle Limiting**: Giới hạn số lượng hạt bụi/sao hoạt động đồng thời (tối đa 12-15 hạt) kèm `removeFromParent()`.
+  * **Texture Caching**: Khai báo `static var sharedTextureCache: [String: SKTexture]` để tái sử dụng texture trong VRAM khi chuyển cảnh hoặc resize view.
+  * **Tool tự động tối ưu toàn bộ Landscape**:
+    ```bash
+    python3 .agent/skills/plant-asset-convention/scripts/optimize_all_landscapes.py
+    ```
+
 ## Quy chuẩn Cấu hình Dữ liệu JSON Mới & Âm Thanh Chạm (Data Schema & Audio Convention)
 
 ### 1. Phân định rõ giữa Code Node SpriteKit và File JSON
