@@ -12,22 +12,28 @@ Bao gồm các layer phân tầng ghép lại (Multi-component assembled structu
 import os
 import copy
 import plistlib
+from pathlib import Path
+from optimize_plant_assets import Scene
+from optimize_sticker_assets import optimize_sticker
 
 WORKSPACE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
 BASE_SKS = os.path.join(WORKSPACE_ROOT, "terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Plants/Plant1/Plant1Scene.sks")
 OUT_FILE = os.path.join(WORKSPACE_ROOT, "terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Stickers/Sticker1/Sticker1Scene.sks")
 
 def create_sticker1_scene():
-    with open(BASE_SKS, "rb") as f:
-        pl = plistlib.load(f)
-
-    objs = pl["$objects"]
+    template = Scene(Path(BASE_SKS))
+    pl = template.data
+    objs = template.objects
+    prototype = next(node for node in template.nodes()
+                     if template.get(node.get("_name")) == "seedSprite")
+    nsvalue_class = template.get(prototype["_position"])["$class"]
+    array_class = template.get(template.root["_children"])["$class"]
 
     def add_obj(val):
         objs.append(val)
         return plistlib.UID(len(objs) - 1)
 
-    root = objs[1]
+    root = template.root
     canvas_w = 122.0
     canvas_h = 375.0
 
@@ -42,22 +48,23 @@ def create_sticker1_scene():
     anchor_uid = root["_anchorPoint"].data
     objs[objs[anchor_uid]["NS.pointval"].data] = "{0.5, 1}"
 
-    # Helper tạo SKSpriteNode từ prototype objs[19] (seedSprite)
+    # Resolve the prototype and archive classes dynamically; templates may be compacted.
     def make_sprite(name, img_name, x, y, w, h, z_pos):
-        sp = copy.deepcopy(objs[19])
+        sp = copy.deepcopy(prototype)
+        sp["_children"] = add_obj({"NS.objects": [], "$class": array_class})
         sp["_name"] = add_obj(name)
 
         # pos
         pos_val_uid = add_obj(f"{{{x}, {y}}}")
-        sp["_position"] = add_obj({"NS.pointval": pos_val_uid, "$class": plistlib.UID(5), "NS.special": 1})
+        sp["_position"] = add_obj({"NS.pointval": pos_val_uid, "$class": nsvalue_class, "NS.special": 1})
 
         # anchor (0.5, 0.5) vì đã tính toạ độ tâm sprite
         anchor_val_uid = add_obj("{0.5, 0.5}")
-        sp["_anchorPoint"] = add_obj({"NS.pointval": anchor_val_uid, "$class": plistlib.UID(5), "NS.special": 1})
+        sp["_anchorPoint"] = add_obj({"NS.pointval": anchor_val_uid, "$class": nsvalue_class, "NS.special": 1})
 
         # bounds {{-w/2, -h/2}, {w, h}}
         bounds_val_uid = add_obj(f"{{{{{-w/2.0}, {-h/2.0}}}, {{{w}, {h}}}}}")
-        sp["_bounds"] = add_obj({"NS.rectval": bounds_val_uid, "$class": plistlib.UID(5), "NS.special": 3})
+        sp["_bounds"] = add_obj({"NS.rectval": bounds_val_uid, "$class": nsvalue_class, "NS.special": 3})
 
         # zPos
         sp["_zPosition"] = add_obj(float(z_pos))
@@ -66,7 +73,7 @@ def create_sticker1_scene():
         tex = copy.deepcopy(objs[sp["_texture"].data])
         tex["_imgName"] = add_obj(img_name)
         size_val = add_obj(f"{{{w}, {h}}}")
-        size_uid = add_obj({"NS.sizeval": size_val, "$class": plistlib.UID(5), "NS.special": 2})
+        size_uid = add_obj({"NS.sizeval": size_val, "$class": nsvalue_class, "NS.special": 2})
         tex["_size"] = size_uid
         tex["_pixelSize"] = size_uid
         sp["_texture"] = add_obj(tex)
@@ -98,7 +105,8 @@ def create_sticker1_scene():
     with open(OUT_FILE, "wb") as f:
         plistlib.dump(pl, f, fmt=plistlib.FMT_BINARY)
 
-    print(f"✅ Đã tạo thành công {OUT_FILE}!")
+    optimize_sticker(1, apply=True, scene_path=OUT_FILE)
+    print(f"✅ Đã tạo và kiểm tra ngân sách texture: {OUT_FILE}")
 
 if __name__ == "__main__":
     create_sticker1_scene()

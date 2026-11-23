@@ -21,6 +21,7 @@ import argparse
 import plistlib
 import subprocess
 import xml.etree.ElementTree as ET
+from optimize_plant_assets import optimize_plant
 
 WORKSPACE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
 RESOURCES_SVG_DIR = os.path.join(WORKSPACE_ROOT, "terrariumidle_ios/Resources/SVGPlants")
@@ -60,8 +61,8 @@ def find_reference_canvas_size(plant_num):
     if os.path.exists(swift_path):
         with open(swift_path, "r", encoding="utf-8") as f:
             content = f.read()
-            w_m = re.search(r"let baseCanvasWidth:\s*CGFloat\s*=\s*([\d.]+)", content)
-            h_m = re.search(r"let baseCanvasHeight:\s*CGFloat\s*=\s*([\d.]+)", content)
+            w_m = re.search(r"let baseCanvas(?:Width|W):\s*CGFloat\s*=\s*([\d.]+)", content)
+            h_m = re.search(r"let baseCanvas(?:Height|H):\s*CGFloat\s*=\s*([\d.]+)", content)
             if w_m and h_m:
                 return (float(w_m.group(1)), float(h_m.group(1)))
 
@@ -367,6 +368,8 @@ def process_plant(plant_num, svg_path=None, do_update=False, offset_y=10.0):
                 print(f"✅ Đã cập nhật metadata trong {os.path.basename(swift_path)}")
             else:
                 print(f"⚠️  Không tìm thấy block leavesMetadata trong {swift_path}")
+
+        optimize_plant(plant_num, apply=True)
 
 def main():
     parser = argparse.ArgumentParser(description="Tự động bóc tách SVG và cập nhật SpriteKit Scene")

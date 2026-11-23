@@ -47,7 +47,7 @@ public enum Plant28GrowthState: Equatable {
 
 public final class Plant28Node: SKNode {
 
-    // MARK: - Metadata cấu trúc các bộ phận Xương rồng myrtle xanh (Canvas 2480 x 2642)
+    // MARK: - Metadata cấu trúc các bộ phận Xương rồng myrtle xanh (Canvas 566.487 x 603.491)
 
     private struct LeafData {
         let assetId: Int
@@ -65,36 +65,36 @@ public final class Plant28Node: SKNode {
     }
 
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId: 2, imgX:     9.1, imgY:  1734.5, width:  220.0, height:  898.0, anchorX: 0.08, anchorY: 0.00, isLeft: false, zPos: 11.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 3, imgX:  -343.7, imgY:  1639.0, width:  220.0, height:  898.0, anchorX: 0.08, anchorY: 0.00, isLeft: true , zPos: 11.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 4, imgX:    93.7, imgY:  1325.5, width:  669.0, height: 1003.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 12.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 5, imgX:  -140.2, imgY:   475.8, width:  636.0, height: 1102.0, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 12.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 6, imgX:   230.1, imgY:   924.0, width:  636.0, height: 1102.0, anchorX: 0.42, anchorY: 0.00, isLeft: false, zPos: 13.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 7, imgX:   532.6, imgY:   656.3, width:  906.0, height:  865.0, anchorX: 0.22, anchorY: 0.00, isLeft: false, zPos: 13.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 8, imgX:    79.5, imgY:   388.4, width:  810.0, height: 1224.0, anchorX: 0.34, anchorY: 0.00, isLeft: false, zPos: 14.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 9, imgX:    72.0, imgY:  1430.0, width:  426.0, height: 1161.0, anchorX: 0.62, anchorY: 0.00, isLeft: false, zPos: 14.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 10, imgX:  -147.6, imgY:   871.6, width:  691.0, height: 1256.0, anchorX: 0.37, anchorY: 0.00, isLeft: true , zPos: 15.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 11, imgX:    47.6, imgY:  1029.2, width:  470.0, height: 1520.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 15.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 12, imgX:   -38.8, imgY:   511.6, width:  365.0, height: 1179.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 16.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 13, imgX:   533.1, imgY:   778.8, width:  636.0, height: 1102.0, anchorX: 0.42, anchorY: 0.00, isLeft: false, zPos: 16.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 14, imgX:   521.2, imgY:   777.1, width:  781.0, height:  369.0, anchorX: 0.08, anchorY: 0.00, isLeft: false, zPos: 17.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 15, imgX:   364.0, imgY:   781.2, width:  279.0, height:  901.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 17.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 16, imgX:  -511.9, imgY:   631.6, width:  712.0, height:  634.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 18.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 17, imgX:  -252.8, imgY:  1176.1, width:  669.0, height: 1003.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 18.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 18, imgX:  -754.1, imgY:  1119.1, width:  636.0, height: 1102.0, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 19.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 19, imgX:  -603.6, imgY:   583.5, width:  810.0, height: 1224.0, anchorX: 0.66, anchorY: 0.00, isLeft: true , zPos: 19.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 20, imgX:  -485.2, imgY:   706.7, width:  365.0, height: 1179.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 20.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 21, imgX:  -347.8, imgY:   633.5, width:  636.0, height: 1102.0, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 20.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 22, imgX:  -193.3, imgY:  1135.3, width:  426.0, height: 1161.0, anchorX: 0.38, anchorY: 0.00, isLeft: true , zPos: 21.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 23, imgX:  -180.0, imgY:   541.9, width:  502.0, height: 1321.0, anchorX: 0.37, anchorY: 0.00, isLeft: true , zPos: 21.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 24, imgX:  -170.2, imgY:   734.5, width:  470.0, height: 1520.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 22.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 25, imgX:  -579.0, imgY:   549.2, width:  826.0, height:  941.0, anchorX: 0.80, anchorY: 0.00, isLeft: true , zPos: 22.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 26, imgX:  -535.0, imgY:   200.3, width:  365.0, height: 1179.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 23.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 27, imgX:  -397.6, imgY:   127.1, width:  636.0, height: 1102.0, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 23.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 28, imgX:  -229.8, imgY:    35.5, width:  502.0, height: 1321.0, anchorX: 0.37, anchorY: 0.00, isLeft: true , zPos: 24.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 29, imgX:   283.0, imgY:   575.2, width:  964.0, height: 1070.0, anchorX: 0.21, anchorY: 0.00, isLeft: false, zPos: 24.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 30, imgX:  -220.0, imgY:   228.1, width:  470.0, height: 1520.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 25.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
-        LeafData(assetId: 31, imgX:    68.4, imgY:    -8.5, width:  470.0, height: 1520.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 25.5, bendAngle: 0.076, duration: 2.8, shouldSway: true)
+        LeafData(assetId: 2, imgX:     2.078640810, imgY:  396.198075356, width:  50.252854758, height:  205.123016241, anchorX: 0.08, anchorY: 0.00, isLeft: false, zPos: 11.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 3, imgX:  -78.508664457, imgY:  374.383767950, width:  50.252854758, height:  205.123016241, anchorX: 0.08, anchorY: 0.00, isLeft: true , zPos: 11.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 4, imgX:    21.403147686, imgY:  302.773449919, width:  152.814362879, height: 229.107333285, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 12.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 5, imgX:  -32.024773805, imgY:   108.683219518, width:  145.276434665, height: 251.721117926, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 12.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 6, imgX:   52.559917636, imgY:   211.061989985, width:  145.276434665, height: 251.721117926, anchorX: 0.42, anchorY: 0.00, isLeft: false, zPos: 13.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 7, imgX:   121.657592929, imgY:   149.913402627, width:  206.950392778, height:  197.585088027, anchorX: 0.22, anchorY: 0.00, isLeft: false, zPos: 13.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 8, imgX:    18.159554333, imgY:   88.719130855, width:  185.021874338, height: 279.588610110, anchorX: 0.34, anchorY: 0.00, isLeft: false, zPos: 14.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 9, imgX:    16.446388830, imgY:  326.643555929, width:  97.307800578, height: 265.198019884, anchorX: 0.62, anchorY: 0.00, isLeft: false, zPos: 14.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 10, imgX:  -33.715097102, imgY:   199.092673670, width:  157.839648355, height: 286.898116257, anchorX: 0.37, anchorY: 0.00, isLeft: true , zPos: 15.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 11, imgX:    10.872890393, imgY:  235.091991442, width:  107.358371529, height: 347.201541967, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 15.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 12, imgX:   -8.862776203, imgY:   116.860729520, width:  83.374054485, height: 269.309617091, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 16.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 13, imgX:   121.771803962, imgY:   177.895105845, width:  145.276434665, height: 251.721117926, anchorX: 0.42, anchorY: 0.00, isLeft: false, zPos: 16.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 14, imgX:   119.053581364, imgY:   177.506788331, width:  178.397634392, height:  84.287742754, anchorX: 0.08, anchorY: 0.00, isLeft: false, zPos: 17.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 15, imgX:   83.145632418, imgY:   178.443318806, width:  63.729756716, height:  205.808282442, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 17.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 16, imgX:  -116.929256140, imgY:   144.271377570, width:  162.636511763, height:  144.819590531, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 18.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 17, imgX:  -57.745098559, imgY:  268.647193097, width:  152.814362879, height: 229.107333285, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 18.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 18, imgX:  -172.253080788, imgY:  255.627135273, width:  145.276434665, height: 251.721117926, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 19.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 19, imgX:  -137.875559692, imgY:   133.284276143, width:  185.021874338, height: 279.588610110, anchorX: 0.66, anchorY: 0.00, isLeft: true , zPos: 19.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 20, imgX:  -110.830386949, imgY:   161.425874808, width:  83.374054485, height: 269.309617091, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 20.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 21, imgX:  -79.445194932, imgY:   144.705379497, width:  145.276434665, height: 251.721117926, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 20.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 22, imgX:  -44.153985567, imgY:  259.327572760, width:  97.307800578, height: 265.198019884, anchorX: 0.38, anchorY: 0.00, isLeft: true , zPos: 21.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 23, imgX:  -41.115972075, imgY:   123.781918153, width:  114.667877676, height: 301.745550617, anchorX: 0.37, anchorY: 0.00, isLeft: true , zPos: 21.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 24, imgX:  -38.877435818, imgY:   167.776008273, width:  107.358371529, height: 347.201541967, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 22.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 25, imgX:  -132.256376841, imgY:   125.449399242, width:  188.676627411, height:  214.945165126, anchorX: 0.80, anchorY: 0.00, isLeft: true , zPos: 22.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 26, imgX:  -122.205805890, imgY:   45.752940037, width:  83.374054485, height: 269.309617091, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 23.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 27, imgX:  -90.820613872, imgY:   29.032444726, width:  145.276434665, height: 251.721117926, anchorX: 0.58, anchorY: 0.00, isLeft: true , zPos: 23.5, bendAngle: 0.076, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 28, imgX:  -52.491391016, imgY:    8.108983381, width:  114.667877676, height: 301.745550617, anchorX: 0.37, anchorY: 0.00, isLeft: true , zPos: 24.0, bendAngle: 0.058, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 29, imgX:   64.643444985, imgY:   131.388372986, width:  220.198872668, height: 244.411611779, anchorX: 0.21, anchorY: 0.00, isLeft: false, zPos: 24.5, bendAngle: 0.064, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 30, imgX:  -50.252854758, imgY:   52.103073502, width:  107.358371529, height: 347.201541967, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 25.0, bendAngle: 0.070, duration: 2.8, shouldSway: true),
+        LeafData(assetId: 31, imgX:    15.624069389, imgY:    -1.941587570, width:  107.358371529, height: 347.201541967, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 25.5, bendAngle: 0.076, duration: 2.8, shouldSway: true)
     ]
 
     // MARK: - Properties
@@ -178,8 +178,8 @@ public final class Plant28Node: SKNode {
     // MARK: - State 100: Hạt giống (Seed)
 
     private func buildSeedState() {
-        let baseCanvasW: CGFloat = 2480.0
-        let baseCanvasH: CGFloat = 2642.0
+        let baseCanvasW: CGFloat = 566.486726367
+        let baseCanvasH: CGFloat = 603.491101234
         let scaleX = containerSize.width / baseCanvasW
         let scaleY = containerSize.height / baseCanvasH
         self.baseScale = min(scaleX, scaleY) * 0.90
@@ -211,13 +211,13 @@ public final class Plant28Node: SKNode {
         // Fallback procedural
         let fallbackGroup = SKNode()
         fallbackGroup.name = "seedNode"
-        fallbackGroup.position = CGPoint(x: 0, y: 0)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: 0.000000000)
 
         let node = SKSpriteNode(texture: loadSeedTexture())
         node.name = "seedSprite"
-        node.size = CGSize(width: 80, height: 60)
+        node.size = CGSize(width: 18.273765367, height: 13.705324025)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        node.position = CGPoint(x: 0, y: -18.5)
+        node.position = CGPoint(x: 0.000000000, y: -4.225808241)
         node.zPosition = 10
         fallbackGroup.addChild(node)
         plantRootNode.addChild(fallbackGroup)
@@ -228,8 +228,8 @@ public final class Plant28Node: SKNode {
     // MARK: - State 200: Cây con (Sprout)
 
     private func buildSproutState() {
-        let baseCanvasW: CGFloat = 2480.0
-        let baseCanvasH: CGFloat = 2642.0
+        let baseCanvasW: CGFloat = 566.486726367
+        let baseCanvasH: CGFloat = 603.491101234
         let scaleX = containerSize.width / baseCanvasW
         let scaleY = containerSize.height / baseCanvasH
         self.baseScale = min(scaleX, scaleY) * 0.90
@@ -261,13 +261,13 @@ public final class Plant28Node: SKNode {
         // Fallback procedural
         let fallbackGroup = SKNode()
         fallbackGroup.name = "sproutNode"
-        fallbackGroup.position = CGPoint(x: 0, y: 0)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: 0.000000000)
 
         let node = SKSpriteNode(texture: loadSproutTexture())
         node.name = "sproutSprite"
-        node.size = CGSize(width: 140, height: 160)
+        node.size = CGSize(width: 31.979089392, height: 36.547530733)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        node.position = CGPoint(x: 0, y: -18.5)
+        node.position = CGPoint(x: 0.000000000, y: -4.225808241)
         node.zPosition = 10
         fallbackGroup.addChild(node)
         plantRootNode.addChild(fallbackGroup)
@@ -278,8 +278,8 @@ public final class Plant28Node: SKNode {
     // MARK: - State 3+: Trưởng thành (Mature Xương rồng myrtle xanh)
 
     private func buildMatureState() {
-        let baseCanvasW: CGFloat = 2480.0
-        let baseCanvasH: CGFloat = 2642.0
+        let baseCanvasW: CGFloat = 566.486726367
+        let baseCanvasH: CGFloat = 603.491101234
 
         let scaleX = containerSize.width / baseCanvasW
         let scaleY = containerSize.height / baseCanvasH
@@ -332,7 +332,7 @@ public final class Plant28Node: SKNode {
         // 2. Procedural Fallback nếu chưa tải được .sks
         let fallbackGroup = SKNode()
         fallbackGroup.name = "matureNode"
-        fallbackGroup.position = CGPoint(x: 0, y: -10)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: -2.284220671)
         plantRootNode.addChild(fallbackGroup)
 
         for leafData in Self.leavesMetadata {

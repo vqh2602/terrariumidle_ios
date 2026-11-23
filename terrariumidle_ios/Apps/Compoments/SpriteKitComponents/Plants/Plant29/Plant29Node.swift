@@ -47,7 +47,7 @@ public enum Plant29GrowthState: Equatable {
 
 public final class Plant29Node: SKNode {
 
-    // MARK: - Metadata cấu trúc các bộ phận Xương rồng trụ xoắn (Canvas 864 x 1529)
+    // MARK: - Metadata cấu trúc các bộ phận Xương rồng trụ xoắn (Canvas 449.561 x 795.577)
 
     private struct LeafData {
         let assetId: Int
@@ -61,20 +61,20 @@ public final class Plant29Node: SKNode {
     }
 
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId: 2, imgX:  -112.8, imgY:   -10.1, width:  712.0, height: 1476.0, anchorX: 0.34, anchorY: 0.00, zPos: 11),
-        LeafData(assetId: 3, imgX:  -299.6, imgY:  1055.4, width:  165.0, height:  136.0, anchorX: 0.62, anchorY: 0.00, zPos: 12),
-        LeafData(assetId: 4, imgX:  -215.7, imgY:   270.2, width:  175.0, height:  189.0, anchorX: 0.47, anchorY: 0.00, zPos: 13),
-        LeafData(assetId: 5, imgX:  -249.4, imgY:  1169.0, width:   63.0, height:   71.0, anchorX: 0.47, anchorY: 0.00, zPos: 14),
-        LeafData(assetId: 6, imgX:  -120.8, imgY:  1276.5, width:   79.0, height:   68.0, anchorX: 0.35, anchorY: 0.00, zPos: 15),
-        LeafData(assetId: 7, imgX:   164.9, imgY:   309.9, width:   86.0, height:  130.0, anchorX: 0.45, anchorY: 0.00, zPos: 16),
-        LeafData(assetId: 8, imgX:  -164.3, imgY:   880.9, width:  227.0, height:  314.0, anchorX: 0.46, anchorY: 0.00, zPos: 17),
-        LeafData(assetId: 9, imgX:   311.8, imgY:   314.0, width:  238.0, height:  238.0, anchorX: 0.49, anchorY: 0.00, zPos: 18),
-        LeafData(assetId: 10, imgX:  -240.7, imgY:   776.7, width:  237.0, height:  186.0, anchorX: 0.73, anchorY: 0.00, zPos: 19),
-        LeafData(assetId: 11, imgX:  -348.2, imgY:  1176.9, width:  216.0, height:  208.0, anchorX: 0.39, anchorY: 0.00, zPos: 20),
-        LeafData(assetId: 12, imgX:    11.1, imgY:   341.4, width:  280.0, height:  380.0, anchorX: 0.53, anchorY: 0.00, zPos: 21),
-        LeafData(assetId: 13, imgX:   -20.2, imgY:   740.8, width:  354.0, height:  319.0, anchorX: 0.29, anchorY: 0.00, zPos: 22),
-        LeafData(assetId: 14, imgX:     7.8, imgY:  1276.0, width:  215.0, height:  243.0, anchorX: 0.62, anchorY: 0.00, zPos: 23),
-        LeafData(assetId: 15, imgX:   305.0, imgY:   549.1, width:  147.0, height:  207.0, anchorX: 0.60, anchorY: 0.00, zPos: 24)
+        LeafData(assetId: 2, imgX:  -58.692682927, imgY:   -5.255284553, width:  370.471544715, height: 768.000000000, anchorX: 0.34, anchorY: 0.00, zPos: 11),
+        LeafData(assetId: 3, imgX:  -155.889430894, imgY:  549.151219512, width:  85.853658537, height:  70.764227642, anchorX: 0.62, anchorY: 0.00, zPos: 12),
+        LeafData(assetId: 4, imgX:  -112.234146341, imgY:   140.591869919, width:  91.056910569, height:  98.341463415, anchorX: 0.47, anchorY: 0.00, zPos: 13),
+        LeafData(assetId: 5, imgX:  -129.769105691, imgY:  608.260162602, width:   32.780487805, height:   36.943089431, anchorX: 0.47, anchorY: 0.00, zPos: 14),
+        LeafData(assetId: 6, imgX:  -62.855284553, imgY:  664.195121951, width:   41.105691057, height:   35.382113821, anchorX: 0.35, anchorY: 0.00, zPos: 15),
+        LeafData(assetId: 7, imgX:   85.801626016, imgY:   161.248780488, width:   44.747967480, height:  67.642276423, anchorX: 0.45, anchorY: 0.00, zPos: 16),
+        LeafData(assetId: 8, imgX:  -85.489430894, imgY:   458.354471545, width:  118.113821138, height:  163.382113821, anchorX: 0.46, anchorY: 0.00, zPos: 17),
+        LeafData(assetId: 9, imgX:   162.237398374, imgY:   163.382113821, width:  123.837398374, height:  123.837398374, anchorX: 0.49, anchorY: 0.00, zPos: 18),
+        LeafData(assetId: 10, imgX:  -125.242276423, imgY:   404.136585366, width:  123.317073171, height:  96.780487805, anchorX: 0.73, anchorY: 0.00, zPos: 19),
+        LeafData(assetId: 11, imgX:  -181.177235772, imgY:  612.370731707, width:  112.390243902, height:  108.227642276, anchorX: 0.39, anchorY: 0.00, zPos: 20),
+        LeafData(assetId: 12, imgX:    5.775609756, imgY:   177.639024390, width:  145.691056911, height:  197.723577236, anchorX: 0.53, anchorY: 0.00, zPos: 21),
+        LeafData(assetId: 13, imgX:   -10.510569106, imgY:   385.456910569, width:  184.195121951, height:  165.983739837, anchorX: 0.29, anchorY: 0.00, zPos: 22),
+        LeafData(assetId: 14, imgX:     4.058536585, imgY:  663.934959350, width:  111.869918699, height:  126.439024390, anchorX: 0.62, anchorY: 0.00, zPos: 23),
+        LeafData(assetId: 15, imgX:   158.699186992, imgY:   285.710569106, width:  76.487804878, height:  107.707317073, anchorX: 0.60, anchorY: 0.00, zPos: 24)
     ]
 
     // MARK: - Properties
@@ -158,8 +158,8 @@ public final class Plant29Node: SKNode {
     // MARK: - State 100: Hạt giống (Seed)
 
     private func buildSeedState() {
-        let baseCanvasW: CGFloat = 864.0
-        let baseCanvasH: CGFloat = 1529.0
+        let baseCanvasW: CGFloat = 449.560975610
+        let baseCanvasH: CGFloat = 795.577235772
         let scaleX = containerSize.width / baseCanvasW
         let scaleY = containerSize.height / baseCanvasH
         self.baseScale = min(scaleX, scaleY) * 0.90
@@ -191,13 +191,13 @@ public final class Plant29Node: SKNode {
         // Fallback procedural
         let fallbackGroup = SKNode()
         fallbackGroup.name = "seedNode"
-        fallbackGroup.position = CGPoint(x: 0, y: 0)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: 0.000000000)
 
         let node = SKSpriteNode(texture: loadSeedTexture())
         node.name = "seedSprite"
-        node.size = CGSize(width: 80, height: 60)
+        node.size = CGSize(width: 41.626016260, height: 31.219512195)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        node.position = CGPoint(x: 0, y: -18.5)
+        node.position = CGPoint(x: 0.000000000, y: -9.626016260)
         node.zPosition = 10
         fallbackGroup.addChild(node)
         plantRootNode.addChild(fallbackGroup)
@@ -208,8 +208,8 @@ public final class Plant29Node: SKNode {
     // MARK: - State 200: Cây con (Sprout)
 
     private func buildSproutState() {
-        let baseCanvasW: CGFloat = 864.0
-        let baseCanvasH: CGFloat = 1529.0
+        let baseCanvasW: CGFloat = 449.560975610
+        let baseCanvasH: CGFloat = 795.577235772
         let scaleX = containerSize.width / baseCanvasW
         let scaleY = containerSize.height / baseCanvasH
         self.baseScale = min(scaleX, scaleY) * 0.90
@@ -241,13 +241,13 @@ public final class Plant29Node: SKNode {
         // Fallback procedural
         let fallbackGroup = SKNode()
         fallbackGroup.name = "sproutNode"
-        fallbackGroup.position = CGPoint(x: 0, y: 0)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: 0.000000000)
 
         let node = SKSpriteNode(texture: loadSproutTexture())
         node.name = "sproutSprite"
-        node.size = CGSize(width: 140, height: 160)
+        node.size = CGSize(width: 72.845528455, height: 83.252032520)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        node.position = CGPoint(x: 0, y: -18.5)
+        node.position = CGPoint(x: 0.000000000, y: -9.626016260)
         node.zPosition = 10
         fallbackGroup.addChild(node)
         plantRootNode.addChild(fallbackGroup)
@@ -258,8 +258,8 @@ public final class Plant29Node: SKNode {
     // MARK: - State 3+: Trưởng thành (Mature Xương rồng trụ xoắn)
 
     private func buildMatureState() {
-        let baseCanvasW: CGFloat = 864.0
-        let baseCanvasH: CGFloat = 1529.0
+        let baseCanvasW: CGFloat = 449.560975610
+        let baseCanvasH: CGFloat = 795.577235772
 
         let scaleX = containerSize.width / baseCanvasW
         let scaleY = containerSize.height / baseCanvasH
@@ -302,7 +302,7 @@ public final class Plant29Node: SKNode {
         // 2. Procedural Fallback nếu chưa tải được .sks
         let fallbackGroup = SKNode()
         fallbackGroup.name = "matureNode"
-        fallbackGroup.position = CGPoint(x: 0, y: -10)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: -5.203252033)
         plantRootNode.addChild(fallbackGroup)
 
         for leafData in Self.leavesMetadata {

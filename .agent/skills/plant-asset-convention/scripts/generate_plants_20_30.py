@@ -12,6 +12,7 @@ import copy
 import struct
 import plistlib
 import xml.etree.ElementTree as ET
+from optimize_plant_assets import optimize_plant
 
 WORKSPACE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
 BASE_SKS = os.path.join(WORKSPACE_ROOT, "terrariumidle_ios/Apps/Compoments/SpriteKitComponents/Plants/Plant14/Plant14Scene.sks")
@@ -943,6 +944,10 @@ def main():
         generate_sks(pdata)
         generate_swift_node(pdata)
         generate_swift_view(pdata)
+        # Normalize all three growth states, fallback geometry and textures together.
+        # Never ship raw SVG export resolution directly into SpriteKit.
+        memory = optimize_plant(pid, apply=True)
+        print(f"  Texture budget: {memory['before_mib']:.2f} -> {memory['after_mib']:.2f} MiB")
     print("\\n🎉 Hoàn tất sinh toàn bộ 11 loài cây (Plant20 -> Plant30)!")
 
 if __name__ == "__main__":

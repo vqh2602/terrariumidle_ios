@@ -5,7 +5,7 @@
 Mọi loài cây mới (`Plant2`, `Plant3`, `Plant4`, ...) **BẮT BUỘC** phải có đầy đủ bộ 3 file cấu trúc tương tự `Plant1`:
 1. **`PlantXScene.sks` (Thiết kế trực quan trong Xcode Scene Editor)**:
    - Bắt buộc phải có file `.sks` cho mỗi loài cây!
-   - Kích thước canvas bằng đúng kích thước ảnh đại diện tham chiếu (ví dụ: Plant1: 428x862, Plant2: 484x641, Plant3: 796x538), `anchorPoint = (0.5, 0.0)`.
+   - Kích thước canvas theo ảnh đại diện tham chiếu **sau chuẩn hóa ngân sách texture** bên dưới; không lấy nguyên độ phân giải ảnh xuất SVG/Figma quá lớn. Giữ `anchorPoint = (0.5, 0.0)` và tỉ lệ thiết kế, đồng bộ mọi layer theo cùng hệ tọa độ.
    - **TỰ FILL ASSET VÀO MỌI SPRITE**: Mọi `SKSpriteNode` (`seedSprite`, `sproutSprite`, `leaf_X`) trong `.sks` **BẮT BUỘC PHẢI CÓ TEXTURE THẬT** (`imageNamed: ...`) tương ứng trong `Assets.xcassets`. Tuyệt đối không để `_texture = nil / $null` hoặc `color: .clear` khiến Xcode Scene Editor hiển thị khung chữ nhật rỗng.
    - Cấu trúc cây phân cấp bắt buộc:
      - `seedNode` (SKNode, pos: (0, 0)) -> child `seedSprite` (SKSpriteNode, pos: (0, -18.5), anchor: (0.5, 0.05), zPos: 10, texture: `plant1_Asset-100@4.167x`).
@@ -196,6 +196,26 @@ Khi người dùng yêu cầu giảm kích thước hoặc bộ nhớ của asse
    - Kiểm tra pixel/alpha của ảnh, `plutil -lint` cho `.sks`, `swiftc -parse` nếu sửa Swift và `git diff --check`.
    - Xác nhận canvas, sprite và preview đều theo kích thước mới; texture reference hợp lệ; tỉ lệ điểm gắn cây không đổi. Xem ảnh sau tối ưu để phát hiện mất alpha hoặc biến dạng.
 
+## Ngân sách Texture Cây & Quy trình Sinh Plant Nhẹ Bộ nhớ (BẮT BUỘC)
+
+- **Ngân sách mỗi cây trưởng thành: tối đa 4 MiB RGBA** cho tổng các texture khác nhau được `matureNode` tham chiếu. Khi vượt, chuẩn hóa về khoảng **3.75 MiB** để chừa sai số làm tròn pixel. Không chỉ kiểm tra từng ảnh: Plant28 có 30 lớp từng gây tổng khoảng 72 MiB.
+- **Cạnh dài texture lá/thân tối đa 768 px; canvas thiết kế tối đa 1024 đơn vị.** Ảnh đại diện/composite không dùng trong animation cũng phải được thu nhỏ, tối đa 1024 px; ảnh tham chiếu được scale đồng bộ với bộ thiết kế. Không upscale ảnh nhỏ.
+- **Dùng cùng một hệ số scale cho toàn bộ hình ghép**, không ép từng lá về cùng chiều rộng/cao. Scale canvas, vị trí/kích thước mọi node, group offset, `leavesMetadata`, canvas constants Swift, tọa độ/kích thước fallback và cả hạt/mầm để giữ kích thước hiển thị ở cả ba trạng thái. Giữ nguyên anchor, zPosition, góc nghỉ và kiểu animation. Pixel ảnh làm tròn nguyên; tọa độ thiết kế có thể là số thực.
+- Các giá trị chuẩn `-18.5` (hạt/mầm), `-10` (mature group) và kích thước fallback là giá trị trong **hệ thiết kế nguồn**; khi chuẩn hóa phải nhân cùng hệ số, không ghi đè lại offset nguồn vào scene đã tối ưu. `plantRootNode.position` vẫn luôn `.zero`.
+- Giữ SVG nguồn làm tham chiếu. Không khôi phục PNG độ phân giải lớn vào asset runtime khi parse/gen lại. Không chạy lại toàn bộ generator lên các cây đã chỉnh thủ công chỉ để tối ưu ảnh; dùng công cụ bên dưới để giữ nguyên tọa độ và animation hiện tại.
+- Công cụ chuẩn: `.agent/skills/plant-asset-convention/scripts/optimize_plant_assets.py` (Python standard library + `sips`, không cần Pillow):
+  ```bash
+  # Audit, không sửa file
+  python3 .agent/skills/plant-asset-convention/scripts/optimize_plant_assets.py
+  # Tối ưu mọi cây, đồng bộ PNG + SKS + Swift và sửa preview
+  python3 .agent/skills/plant-asset-convention/scripts/optimize_plant_assets.py --apply
+  # Chỉ một cây
+  python3 .agent/skills/plant-asset-convention/scripts/optimize_plant_assets.py --plant 28 --apply
+  # Chốt kiểm tra sau mỗi lần gen; phải trả exit code 0
+  python3 .agent/skills/plant-asset-convention/scripts/optimize_plant_assets.py --check
+  ```
+- `generate_plants_20_30.py` và `parse_plant_svg.py` phải gọi bước tối ưu sau khi cập nhật các file. **Mọi generator cây mới cũng bắt buộc áp dụng bước này trước khi báo hoàn tất.** Không chạy build để kiểm tra ngân sách; dùng audit, `plutil -lint`, `swiftc -parse`, và đối chiếu bố cục trước/sau.
+
 ## Quy chuẩn Kiến trúc Slot Hợp nhất (Unified Terrarium Slot: Cây + Chậu)
 
 Để giải quyết triệt để các vấn đề:
@@ -357,6 +377,22 @@ Mọi Sticker / Vật trang trí (`Sticker1`, `Sticker2`, ...) tuân thủ mô h
      * `"none"`: Sticker để bàn (`alignment: .bottom`, `anchorPoint = (0.5, 0.0)` như `sticker2`, `sticker3`, `sticker4`).
      * `"front"`: Sticker phủ mặt trước kệ.
    - **Vùng đệm an toàn chống cắt mép (Anti-Clipping Buffer)**: `SpriteKitStickerView` mở rộng biên render `overflowRatioX: 0.22`, `overflowRatioY: 0.15` và khống chế bán kính hào quang trong `safeRadius` để hiệu ứng mặt trời không bao giờ bị cắt mép.
+
+### Ngân sách texture sticker & bước tối ưu bắt buộc
+
+- Tổng texture khác nhau được scene sticker tham chiếu **không vượt 4 MiB RGBA** (`width * height * 4`); nếu vượt, giảm về mục tiêu 3.75 MiB hoặc thấp hơn. Mọi ảnh layer và thumbnail/composite có cạnh dài **tối đa 768 px**, giữ alpha và tỉ lệ, không upscale ảnh nhỏ.
+- **Phân biệt pixel ảnh với hệ tọa độ thiết kế**: các sticker hiện có dùng canvas khoảng 122–433 đơn vị, trong khi PNG xuất `@4.167x` có thể cao 1100–1800 px. Khi canvas/sprite đã nhỏ và Swift dùng cùng hệ tọa độ, chỉ resample PNG và cập nhật texture `_size`, `_pixelSize`; **không nhân lại tọa độ/canvas/Swift theo tỉ lệ giảm pixel**. Giữ nguyên vị trí, bounds, anchor, zPosition, rig và fallback. Canvas sticker mặc định không vượt 512 đơn vị; nếu thiết kế thật sự quá lớn, phải chuẩn hóa scene và Swift cùng nhau trước.
+- Đồng bộ preview `_PB_previewSKEditorSceneSizeWidth/Height` đúng với `Scene_bounds`. Không để lại preview mẫu `428×862` cho sticker có canvas khác. Dọn object không còn được root tham chiếu và remap đầy đủ UID.
+- Dùng một hệ số giảm chung cho các layer của sticker; ảnh đại diện/composite có thể bị giới hạn thêm về 768 px. Giữ các tên asset/alias đang được JSON, Swift hoặc scene sử dụng; không xóa ảnh trùng khi chưa kiểm tra mọi nơi tham chiếu.
+- Công cụ chuẩn (Python standard library + `sips`, không build):
+  ```bash
+  python3 .agent/skills/plant-asset-convention/scripts/optimize_sticker_assets.py
+  python3 .agent/skills/plant-asset-convention/scripts/optimize_sticker_assets.py --apply
+  python3 .agent/skills/plant-asset-convention/scripts/optimize_sticker_assets.py --sticker 3 --apply
+  python3 .agent/skills/plant-asset-convention/scripts/optimize_sticker_assets.py --check
+  ```
+- **Mọi generator sticker phải gọi `optimize_sticker(...)` sau khi tạo scene và trước khi báo hoàn tất.** `generate_sticker1_scene.py` và `generate_sticker_scenes.py` đã tích hợp. Tìm prototype theo tên node và class trong archive; cấm hardcode chỉ số như `objs[19]` hoặc UID class cố định vì archive có thể đã được thu gọn.
+- Kiểm tra PNG/alpha, tính hợp lệ và đầy đủ của texture reference, bố cục trước/sau, `plutil -lint`, ngân sách `--check` và tính lặp lại không thay đổi file sau lần tối ưu đầu tiên. Không chạy lại generator lên scene đã chỉnh tay chỉ để giảm texture; dùng `--apply`.
 
 ## Quy chuẩn Phong cảnh Nền SpriteKit & Tối ưu Hóa VRAM GPU (Landscape Convention & GPU Texture Memory Optimization)
 

@@ -47,7 +47,7 @@ public enum Plant25GrowthState: Equatable {
 
 public final class Plant25Node: SKNode {
 
-    // MARK: - Metadata cấu trúc các bộ phận Xương rồng thùng hồng (Canvas 1128 x 1048)
+    // MARK: - Metadata cấu trúc các bộ phận Xương rồng thùng hồng (Canvas 654.478 x 608.061)
 
     private struct LeafData {
         let assetId: Int
@@ -65,17 +65,17 @@ public final class Plant25Node: SKNode {
     }
 
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId: 2, imgX:    31.0, imgY:    -5.6, width:  529.0, height:  754.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: -0.035, duration: 3.00, shouldSway: true),
-        LeafData(assetId: 3, imgX:    34.8, imgY:    -3.9, width:  345.0, height:  213.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 12, bendAngle: -0.035, duration: 3.35, shouldSway: true),
-        LeafData(assetId: 4, imgX:   -79.7, imgY:    -7.5, width:  513.0, height:  303.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 13, bendAngle:  0.035, duration: 3.70, shouldSway: true),
-        LeafData(assetId: 5, imgX:    45.4, imgY:     2.2, width:  557.0, height:  522.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 14, bendAngle: -0.035, duration: 4.05, shouldSway: true),
-        LeafData(assetId: 6, imgX:   -58.2, imgY:    -1.7, width:  371.0, height:  533.0, anchorX: 0.62, anchorY: 0.00, isLeft: true , zPos: 15, bendAngle:  0.035, duration: 3.00, shouldSway: true),
-        LeafData(assetId: 7, imgX:    43.4, imgY:    -5.9, width:  307.0, height:  348.0, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 16, bendAngle: -0.035, duration: 3.35, shouldSway: true),
-        LeafData(assetId: 8, imgX:   -58.1, imgY:     6.5, width:  500.0, height: 1036.0, anchorX: 0.37, anchorY: 0.00, isLeft: false, zPos: 17, bendAngle: -0.035, duration: 3.70, shouldSway: true),
-        LeafData(assetId: 9, imgX:   -44.0, imgY:    11.2, width:  526.0, height:  929.0, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 18, bendAngle:  0.035, duration: 4.05, shouldSway: true),
-        LeafData(assetId: 10, imgX:   -26.3, imgY:    -0.8, width:  550.0, height:  962.0, anchorX: 0.36, anchorY: 0.00, isLeft: false, zPos: 19, bendAngle: -0.035, duration: 3.00, shouldSway: true),
-        LeafData(assetId: 11, imgX:  -257.8, imgY:   133.9, width:  394.0, height:  394.0, anchorX: 0.33, anchorY: 0.00, isLeft: true , zPos: 20, bendAngle:  0.035, duration: 3.35, shouldSway: true),
-        LeafData(assetId: 12, imgX:    -2.9, imgY:    -6.4, width:  200.0, height:   30.0, anchorX: 0.57, anchorY: 0.00, isLeft: true , zPos: 21, bendAngle:  0.035, duration: 3.70, shouldSway: true)
+        LeafData(assetId: 2, imgX:    17.986533040, imgY:    -3.249180162, width:  306.931483171, height:  437.478900399, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: -0.035, duration: 3.00, shouldSway: true),
+        LeafData(assetId: 3, imgX:    20.191333865, imgY:    -2.262821899, width:  200.172706416, height:  123.584888309, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 12, bendAngle: -0.035, duration: 3.35, shouldSway: true),
+        LeafData(assetId: 4, imgX:   -46.242796236, imgY:    -4.351580574, width:  297.648111280, height:  175.803855200, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 13, bendAngle:  0.035, duration: 3.70, shouldSway: true),
+        LeafData(assetId: 5, imgX:    26.341567743, imgY:     1.276463635, width:  323.177383982, height:  302.870007969, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 14, bendAngle: -0.035, duration: 4.05, shouldSway: true),
+        LeafData(assetId: 6, imgX:   -33.768265256, imgY:    -0.986358263, width:  215.258185740, height:  309.252326144, anchorX: 0.62, anchorY: 0.00, isLeft: true , zPos: 15, bendAngle:  0.035, duration: 3.00, shouldSway: true),
+        LeafData(assetId: 7, imgX:    25.181146256, imgY:    -3.423243385, width:  178.124698173, height:  201.913338646, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 16, bendAngle: -0.035, duration: 3.35, shouldSway: true),
+        LeafData(assetId: 8, imgX:   -33.710244182, imgY:     3.771369831, width:  290.105371618, height: 601.098329991, anchorX: 0.37, anchorY: 0.00, isLeft: false, zPos: 17, bendAngle: -0.035, duration: 3.70, shouldSway: true),
+        LeafData(assetId: 9, imgX:   -25.529272702, imgY:    6.498360324, width:  305.190850942, height:  539.015780465, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 18, bendAngle:  0.035, duration: 4.05, shouldSway: true),
+        LeafData(assetId: 10, imgX:   -15.259542547, imgY:    -0.464168595, width:  319.115908779, height:  558.162734992, anchorX: 0.36, anchorY: 0.00, isLeft: false, zPos: 19, bendAngle: -0.035, duration: 3.00, shouldSway: true),
+        LeafData(assetId: 11, imgX:  -149.578329606, imgY:   77.690218519, width:  228.603032835, height:  228.603032835, anchorX: 0.33, anchorY: 0.00, isLeft: true , zPos: 20, bendAngle:  0.035, duration: 3.35, shouldSway: true),
+        LeafData(assetId: 12, imgX:    -1.682611155, imgY:    -3.713348757, width:  116.042148647, height:   17.406322297, anchorX: 0.57, anchorY: 0.00, isLeft: true , zPos: 21, bendAngle:  0.035, duration: 3.70, shouldSway: true)
     ]
 
     // MARK: - Properties
@@ -158,8 +158,8 @@ public final class Plant25Node: SKNode {
     // MARK: - State 100: Hạt giống (Seed)
 
     private func buildSeedState() {
-        let baseCanvasW: CGFloat = 1128.0
-        let baseCanvasH: CGFloat = 1048.0
+        let baseCanvasW: CGFloat = 654.477718369
+        let baseCanvasH: CGFloat = 608.060858910
         let scaleX = containerSize.width / baseCanvasW
         let scaleY = containerSize.height / baseCanvasH
         self.baseScale = min(scaleX, scaleY) * 0.90
@@ -191,13 +191,13 @@ public final class Plant25Node: SKNode {
         // Fallback procedural
         let fallbackGroup = SKNode()
         fallbackGroup.name = "seedNode"
-        fallbackGroup.position = CGPoint(x: 0, y: 0)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: 0.000000000)
 
         let node = SKSpriteNode(texture: loadSeedTexture())
         node.name = "seedSprite"
-        node.size = CGSize(width: 80, height: 60)
+        node.size = CGSize(width: 46.416859459, height: 34.812644594)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        node.position = CGPoint(x: 0, y: -18.5)
+        node.position = CGPoint(x: 0.000000000, y: -10.733898750)
         node.zPosition = 10
         fallbackGroup.addChild(node)
         plantRootNode.addChild(fallbackGroup)
@@ -208,8 +208,8 @@ public final class Plant25Node: SKNode {
     // MARK: - State 200: Cây con (Sprout)
 
     private func buildSproutState() {
-        let baseCanvasW: CGFloat = 1128.0
-        let baseCanvasH: CGFloat = 1048.0
+        let baseCanvasW: CGFloat = 654.477718369
+        let baseCanvasH: CGFloat = 608.060858910
         let scaleX = containerSize.width / baseCanvasW
         let scaleY = containerSize.height / baseCanvasH
         self.baseScale = min(scaleX, scaleY) * 0.90
@@ -241,13 +241,13 @@ public final class Plant25Node: SKNode {
         // Fallback procedural
         let fallbackGroup = SKNode()
         fallbackGroup.name = "sproutNode"
-        fallbackGroup.position = CGPoint(x: 0, y: 0)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: 0.000000000)
 
         let node = SKSpriteNode(texture: loadSproutTexture())
         node.name = "sproutSprite"
-        node.size = CGSize(width: 140, height: 160)
+        node.size = CGSize(width: 81.229504053, height: 92.833718918)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        node.position = CGPoint(x: 0, y: -18.5)
+        node.position = CGPoint(x: 0.000000000, y: -10.733898750)
         node.zPosition = 10
         fallbackGroup.addChild(node)
         plantRootNode.addChild(fallbackGroup)
@@ -258,8 +258,8 @@ public final class Plant25Node: SKNode {
     // MARK: - State 3+: Trưởng thành (Mature Xương rồng thùng hồng)
 
     private func buildMatureState() {
-        let baseCanvasW: CGFloat = 1128.0
-        let baseCanvasH: CGFloat = 1048.0
+        let baseCanvasW: CGFloat = 654.477718369
+        let baseCanvasH: CGFloat = 608.060858910
 
         let scaleX = containerSize.width / baseCanvasW
         let scaleY = containerSize.height / baseCanvasH
@@ -303,7 +303,7 @@ public final class Plant25Node: SKNode {
         // 2. Procedural Fallback nếu chưa tải được .sks
         let fallbackGroup = SKNode()
         fallbackGroup.name = "matureNode"
-        fallbackGroup.position = CGPoint(x: 0, y: -10)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: -5.802107432)
         plantRootNode.addChild(fallbackGroup)
 
         for leafData in Self.leavesMetadata {

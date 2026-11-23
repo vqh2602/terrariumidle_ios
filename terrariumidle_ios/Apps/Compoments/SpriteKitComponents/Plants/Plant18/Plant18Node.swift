@@ -47,7 +47,7 @@ public enum Plant18GrowthState: Equatable {
 
 public final class Plant18Node: SKNode {
 
-    // MARK: - Metadata cấu trúc dải cành lá Sen đá chuỗi ngọc Curio rowleyanus (Canvas 654 x 1174)
+    // MARK: - Metadata cấu trúc dải cành lá Sen đá chuỗi ngọc Curio rowleyanus (Canvas 427.830 x 768.000)
 
     private struct LeafData {
         let assetId: Int
@@ -68,8 +68,8 @@ public final class Plant18Node: SKNode {
     /// - assetId 2 (Crown / Cụm hạt ngọc trên miệng chậu): shouldSway = false -> Cố định trên miệng chậu, bám rễ vào đất, KHÔNG đung đưa theo gió!
     /// - assetId 3 (Vines / Các chuỗi hạt ngọc buông rủ dài): shouldSway = true -> Neo tại đỉnh cuống rủ (anchorY = 1.0), đung đưa mềm mại theo gió dạng con lắc.
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId: 2, imgX: -7.0, imgY:  865.0, width: 509.0, height:  293.0, anchorX: 0.50, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: 0.0,   duration: 0.0, shouldSway: false),
-        LeafData(assetId: 3, imgX:  0.0, imgY: 1164.0, width: 654.0, height: 1174.0, anchorX: 0.50, anchorY: 1.00, isLeft: false, zPos: 12, bendAngle: 0.045, duration: 4.2, shouldSway: true),
+        LeafData(assetId: 2, imgX: -4.579216354, imgY:  565.860306644, width: 332.974446337, height:  191.672913118, anchorX: 0.50, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: 0.0,   duration: 0.0, shouldSway: false),
+        LeafData(assetId: 3, imgX:  0.000000000, imgY: 761.458262351, width: 427.829642249, height: 768.000000000, anchorX: 0.50, anchorY: 1.00, isLeft: false, zPos: 12, bendAngle: 0.045, duration: 4.2, shouldSway: true),
     ]
 
     // MARK: - Properties
@@ -156,8 +156,8 @@ public final class Plant18Node: SKNode {
     // MARK: - 1. Giai đoạn Hạt giống (Seed - Level 1)
 
     private func buildSeedState() {
-        let baseCanvasWidth: CGFloat = 654.0
-        let baseCanvasHeight: CGFloat = 1174.0
+        let baseCanvasWidth: CGFloat = 427.829642249
+        let baseCanvasHeight: CGFloat = 768.000000000
 
         let fitW = containerSize.width / baseCanvasWidth
         let fitH = containerSize.height / baseCanvasHeight
@@ -194,9 +194,9 @@ public final class Plant18Node: SKNode {
         guard let seedTexture = loadTexture(assetId: 100) else { return }
         let seed = SKSpriteNode(texture: seedTexture)
         seed.name = "seedSprite"
-        seed.size = CGSize(width: 80, height: 60)
+        seed.size = CGSize(width: 52.333901193, height: 39.250425894)
         seed.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        seed.position = CGPoint(x: 0, y: -18.5)
+        seed.position = CGPoint(x: 0.000000000, y: -12.102214651)
         seed.zPosition = 10
         seed.isPaused = false
         seed.speed = 1.0
@@ -216,8 +216,8 @@ public final class Plant18Node: SKNode {
     // MARK: - 2. Giai đoạn Cây con (Sprout - Level 2)
 
     private func buildSproutState() {
-        let baseCanvasWidth: CGFloat = 654.0
-        let baseCanvasHeight: CGFloat = 1174.0
+        let baseCanvasWidth: CGFloat = 427.829642249
+        let baseCanvasHeight: CGFloat = 768.000000000
 
         let fitW = containerSize.width / baseCanvasWidth
         let fitH = containerSize.height / baseCanvasHeight
@@ -254,9 +254,9 @@ public final class Plant18Node: SKNode {
         guard let sproutTexture = loadTexture(assetId: 200) else { return }
         let sprout = SKSpriteNode(texture: sproutTexture)
         sprout.name = "sproutSprite"
-        sprout.size = CGSize(width: 140, height: 160)
+        sprout.size = CGSize(width: 91.584327087, height: 104.667802385)
         sprout.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        sprout.position = CGPoint(x: 0, y: -18.5)
+        sprout.position = CGPoint(x: 0.000000000, y: -12.102214651)
         sprout.zPosition = 10
         sprout.isPaused = false
         sprout.speed = 1.0
@@ -276,8 +276,8 @@ public final class Plant18Node: SKNode {
     // MARK: - 3. Giai đoạn Trưởng thành (Mature - Level 3+)
 
     private func buildMatureState(level: Int) {
-        let baseCanvasWidth: CGFloat = 654.0
-        let baseCanvasHeight: CGFloat = 1174.0
+        let baseCanvasWidth: CGFloat = 427.829642249
+        let baseCanvasHeight: CGFloat = 768.000000000
 
         let fitW = containerSize.width / baseCanvasWidth
         let fitH = containerSize.height / baseCanvasHeight
@@ -292,7 +292,7 @@ public final class Plant18Node: SKNode {
            let templateMature = scene.childNode(withName: "matureNode") {
             templateMature.removeFromParent()
             plantRootNode.addChild(templateMature)
-            templateMature.position = CGPoint(x: 0, y: -10)
+            templateMature.position = CGPoint(x: 0.000000000, y: -6.541737649)
 
             var sortedLeaves: [SKSpriteNode] = []
             for child in templateMature.children {
@@ -335,7 +335,7 @@ public final class Plant18Node: SKNode {
         // 2. Fallback procedural nếu chưa nạp được .sks
         let fallbackGroup = SKNode()
         fallbackGroup.name = "matureNode"
-        fallbackGroup.position = CGPoint(x: 0, y: -10)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: -6.541737649)
         plantRootNode.addChild(fallbackGroup)
 
         for (idx, data) in Self.leavesMetadata.enumerated() {
