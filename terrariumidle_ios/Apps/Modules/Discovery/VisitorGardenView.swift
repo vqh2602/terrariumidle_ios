@@ -1,46 +1,141 @@
 import SwiftUI
 
-/// Màn hình này không có store của chủ vườn, không có binding chỉnh sửa, không callback kinh tế và không thay đổi âm nhạc.
+/// Visitor snapshots and interactions stay independent of the owner's garden.
 struct VisitorGardenView: View {
     let profile: DiscoveredProfile
     @Environment(\.dismiss) private var dismiss
     @StateObject private var model: VisitorGardenViewModel
     @State private var reloadID = 0
+    @State private var showLikeNotice = false
 
-    init(profile: DiscoveredProfile, repository: any DiscoveryReading) {
+    init(profile: DiscoveredProfile, repository: any DiscoveryReading,
+         onLike: ((String, Int) -> Void)? = nil) {
         self.profile = profile
-        _model = StateObject(wrappedValue: VisitorGardenViewModel(repository: repository))
+        _model = StateObject(wrappedValue: VisitorGardenViewModel(repository: repository,
+                                                                liking: GardenLikeService.shared,
+                                                                onLike: onLike))
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Button { dismiss() } label: { Image(systemName: "chevron.left").frame(width: 44, height: 44) }
-                    .accessibilityLabel("Rời khu vườn")
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(model.garden?.profile.name ?? profile.name).font(.headline).lineLimit(1)
-                    Text("Đang ghé thăm · Chỉ xem").font(.caption).foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button { reloadID += 1 } label: { Image(systemName: "arrow.clockwise").frame(width: 44, height: 44) }
-                    .accessibilityLabel("Tải lại khu vườn")
-            }.padding(.horizontal, 8).background(AccountStyle.cream)
+        ZStack {
             if let garden = model.garden {
-                VisitorShelvesView(garden: garden).id(garden.profile.id)
+                VisitorShelvesView(garden: garden)
+                    .id(garden.profile.id)
+                    .ignoresSafeArea()
             } else if model.isLoading {
-                Spacer()
                 ProgressView("Đang ghé thăm khu vườn…")
-                Spacer()
             } else {
-                Spacer()
-                Text(model.error ?? "Không tải được khu vườn.").multilineTextAlignment(.center).padding()
-                Button("Thử lại") { reloadID += 1 }
-                Spacer()
+                VStack(spacing: 16) {
+                    Text(model.error ?? "Không tải được khu vườn.")
+                        .multilineTextAlignment(.center)
+                    Button("Thử lại") { reloadID += 1 }
+                }.padding(24)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AccountStyle.cream.ignoresSafeArea())
         .foregroundStyle(AccountStyle.ink)
+        .overlay(alignment: .top) {
+            visitorToolbar
+                .padding(.horizontal, 12)
+                .padding(.top, 6)
+        }
+        .overlay(alignment: .bottom) {
+            if showLikeNotice, let message = model.likeMessage {
+                Text(message)
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 18).padding(.vertical, 12)
+                    .modifier(VisitorGlassSurface())
+                    .padding(.horizontal, 24).padding(.bottom, 12)
+                    .accessibilityAddTraits(.updatesFrequently)
+            }
+        }
         .task(id: reloadID) { await model.load(id: profile.id) }
+        .task(id: model.likeMessage) {
+            showLikeNotice = model.likeMessage != nil
+            guard showLikeNotice else { return }
+            do {
+                try await Task.sleep(for: .seconds(3))
+                try Task.checkCancellation()
+                showLikeNotice = false
+            } catch { }
+        }
+    }
+
+    private var visitorToolbar: some View {
+        HStack(spacing: 6) {
+            Button { dismiss() } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 17, weight: .semibold))
+                    .frame(width: 44, height: 44).contentShape(Circle())
+            }
+            .accessibilityLabel("Rời khu vườn")
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(model.garden?.profile.name ?? profile.name)
+                    .font(.system(.subheadline, design: .rounded, weight: .bold))
+                    .lineLimit(1)
+                Text("Đang ghé thăm")
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .foregroundStyle(AccountStyle.ink.opacity(0.65))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button { Task { await model.like() } } label: {
+                HStack(spacing: 5) {
+                    if model.isLiking {
+                        ProgressView().tint(Color(hex: "BC796C"))
+                    } else {
+                        Image(systemName: model.hasLiked ? "heart.fill" : "heart")
+                            .font(.system(size: 17, weight: .semibold))
+                    }
+                    Text(displayedLikes.formatted(.number.notation(.compactName)))
+                        .font(.system(.caption, design: .rounded, weight: .bold))
+                        .monospacedDigit()
+                }
+                .foregroundStyle(Color(hex: "AE6259"))
+                .padding(.horizontal, 10).frame(minWidth: 54, minHeight: 44)
+                .background(model.hasLiked ? Color(hex: "DBA397").opacity(0.18) : .clear, in: Capsule())
+                .contentShape(Capsule())
+            }
+            .disabled(!model.canLike)
+            .accessibilityLabel(model.hasLiked ? "Đã thích khu vườn này" : "Thích khu vườn này")
+            .accessibilityValue("\(displayedLikes) lượt yêu thích")
+
+            Button { reloadID += 1 } label: {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 17, weight: .semibold))
+                    .frame(width: 44, height: 44).contentShape(Circle())
+            }
+            .accessibilityLabel("Tải lại khu vườn")
+            .disabled(model.isLiking)
+        }
+        .buttonStyle(DiscoveryPressStyle())
+        .padding(5)
+        .modifier(VisitorGlassSurface())
+    }
+
+    private var displayedLikes: Int { model.garden == nil ? profile.likes : model.likeCount }
+}
+
+private struct VisitorGlassSurface: ViewModifier {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if reduceTransparency {
+            content
+                .background(AccountStyle.cream, in: Capsule())
+                .overlay { Capsule().strokeBorder(AccountStyle.border, lineWidth: 1) }
+        } else if #available(iOS 26.0, *) {
+            content.glassEffect(.regular.tint(AccountStyle.cream.opacity(0.25)), in: Capsule())
+        } else {
+            content
+                .background(.ultraThinMaterial, in: Capsule())
+                .overlay { Capsule().strokeBorder(.white.opacity(0.65), lineWidth: 1) }
+                .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
+        }
     }
 }
 
@@ -74,7 +169,10 @@ private struct VisitorShelvesView: View {
                                 }
                             }
                         }
-                    }.defaultScrollAnchor(.bottom)
+                    }
+                    .contentMargins(.top, 76, for: .scrollContent)
+                    .contentMargins(.bottom, 24, for: .scrollContent)
+                    .defaultScrollAnchor(.bottom)
                     Image("r1").resizable().frame(width: 16).scaleEffect(x: -1, y: 1)
                 }
             }

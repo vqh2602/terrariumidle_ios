@@ -14,13 +14,12 @@ final class DiscoveryRepository: DiscoveryReading {
     init(db: Firestore = Firestore.firestore()) { self.db = db }
 
     func profiles(category: DiscoveryCategory, after cursor: String?) async throws -> DiscoveryPage {
-        let limit = category == .world ? 30 : 10
+        if category == .world { return try await randomWorldPage(after: cursor) }
+        let limit = 10
         let collection = category == .oxygen ? "rankings" : "users"
         var query: Query = db.collection(collection)
         switch category {
-        case .world:
-            query = query.order(by: FieldPath.documentID())
-            if let cursor { query = query.start(after: [cursor]) }
+        case .world: break
         case .likes: query = query.order(by: "user.userTotalLike", descending: true)
         case .level: query = query.order(by: "user.userLevel", descending: true)
         case .oxygen: query = query.order(by: "oxygenCollect", descending: true)
@@ -29,11 +28,55 @@ final class DiscoveryRepository: DiscoveryReading {
         try Task.checkCancellation()
         let profiles = snapshot.documents.compactMap { document -> DiscoveredProfile? in
             let data = document.data()
-            if category == .world && (data["plants"] as? [Any] ?? []).isEmpty { return nil }
             return DiscoveredProfile(documentID: document.documentID, data: data,
                                      oxygenCollected: category == .oxygen ? DiscoveryValue.int(data["oxygenCollect"]) : nil)
         }
-        let next = category == .world && snapshot.documents.count == limit ? snapshot.documents.last?.documentID : nil
+        return DiscoveryPage(profiles: profiles, nextCursor: nil)
+    }
+
+    private struct WorldCursor: Codable {
+        let pivot: String
+        let lastID: String
+        let wrapped: Bool
+    }
+
+    private func randomWorldPage(after cursor: String?) async throws -> DiscoveryPage {
+        let limit = 30
+        let previous = cursor.flatMap { Data(base64Encoded: $0) }
+            .flatMap { try? JSONDecoder().decode(WorldCursor.self, from: $0) }
+        // Generating an auto-ID does not create or write a document.
+        let pivot = previous?.pivot ?? db.collection("users").document().documentID
+        let base = db.collection("users").order(by: FieldPath.documentID())
+        var wrapped = previous?.wrapped ?? false
+        var query: Query
+        if wrapped {
+            query = base.start(after: [previous?.lastID ?? pivot]).end(before: [pivot])
+        } else if let previous {
+            query = base.start(after: [previous.lastID])
+        } else {
+            query = base.start(at: [pivot])
+        }
+        var documents = try await query.limit(to: limit).getDocuments().documents
+        try Task.checkCancellation()
+        // Continue from the beginning once, then stop at the original pivot.
+        if !wrapped && documents.count < limit {
+            wrapped = true
+            let remaining = limit - documents.count
+            let beginning = try await base.end(before: [pivot]).limit(to: remaining).getDocuments()
+            try Task.checkCancellation()
+            documents.append(contentsOf: beginning.documents)
+        }
+        let profiles = documents.compactMap { document -> DiscoveredProfile? in
+            let data = document.data()
+            guard !(data["plants"] as? [Any] ?? []).isEmpty else { return nil }
+            return DiscoveredProfile(documentID: document.documentID, data: data)
+        }.shuffled()
+        let next: String?
+        if documents.count == limit, let lastID = documents.last?.documentID {
+            next = try JSONEncoder().encode(WorldCursor(pivot: pivot, lastID: lastID, wrapped: wrapped)).base64EncodedString()
+        } else {
+            next = nil
+        }
         return DiscoveryPage(profiles: profiles, nextCursor: next)
     }
 

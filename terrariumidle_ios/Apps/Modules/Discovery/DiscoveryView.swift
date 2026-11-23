@@ -6,6 +6,7 @@ struct DiscoveryView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @StateObject private var model: DiscoveryViewModel
     @State private var selected: DiscoveredProfile?
+    @State private var listPosition = ScrollPosition(edge: .top)
     private let repository: any DiscoveryReading
 
     init() {
@@ -38,9 +39,11 @@ struct DiscoveryView: View {
                 }
         }
         .navigationBarHidden(true)
-        .task(id: model.requestKey) { await model.load() }
+        .task(id: model.requestKey) { await model.loadIfNeeded() }
         .fullScreenCover(item: $selected) { profile in
-            VisitorGardenView(profile: profile, repository: repository)
+            VisitorGardenView(profile: profile, repository: repository) { gardenID, total in
+                model.updateLikes(gardenID: gardenID, total: total)
+            }
         }
     }
 
@@ -181,7 +184,9 @@ struct DiscoveryView: View {
                 }
                 .frame(maxWidth: 600).padding(.horizontal, 20)
                 .padding(.top, 4).padding(.bottom, 28).frame(maxWidth: .infinity)
-            }.scrollIndicators(.hidden)
+            }
+            .scrollPosition($listPosition)
+            .scrollIndicators(.hidden)
         }
     }
 

@@ -48,7 +48,7 @@ public final class Sticker3Node: SKNode, StickerInteractiveNode {
     public var motionEffect: StickerMotionEffect = KoiWindSwayStickerMotionEffect()
 
     /// Danh sách hiệu ứng thị giác khi chạm (Lấp lánh tam sắc Xanh dương - Đỏ - Vàng theo màu cá)
-    public var tapEffects: [StickerTapEffect] = [KoiTricolorSparkleEffect(), SparkleBurstStickerEffect()]
+    public var tapEffects: [StickerTapEffect] = [KoiTricolorSparkleEffect()]
 
     // MARK: - Initializer
 

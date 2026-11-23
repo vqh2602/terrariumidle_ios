@@ -7,7 +7,7 @@ struct DiscoveredProfile: Identifiable, Equatable {
     let avatar: String?
     let level: Int
     let floors: Int
-    let likes: Int
+    private(set) var likes: Int
     let oxygenCollected: Int?
 
     init?(documentID: String, data: [String: Any], oxygenCollected: Int? = nil) {
@@ -24,6 +24,13 @@ struct DiscoveredProfile: Identifiable, Equatable {
         likes = max(0, DiscoveryValue.int(user["userTotalLike"]))
         self.oxygenCollected = oxygenCollected.map { max(0, $0) }
     }
+
+    func updatingLikes(_ total: Int) -> DiscoveredProfile {
+        var updated = self
+        updated.likes = max(0, total)
+        return updated
+    }
+
 }
 
 struct VisitorGarden {

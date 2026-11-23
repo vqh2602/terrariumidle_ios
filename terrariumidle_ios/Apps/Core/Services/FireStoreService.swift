@@ -262,9 +262,15 @@ class FireStoreService: ObservableObject {
         }
 
         // Chuyển đổi model sang Dictionary trên background thread để tránh chiếm dụng Main Thread
-        let updateData = await Task.detached(priority: .utility) {
+        var updateData = await Task.detached(priority: .utility) {
             return gardenModel.toDictionary()
         }.value
+        // Likes are changed independently by visitors. An older owner snapshot
+        // must never overwrite them while saving plants, inventory or currency.
+        if var profile = updateData["user"] as? [String: Any] {
+            profile.removeValue(forKey: "userTotalLike")
+            updateData["user"] = profile
+        }
 
         do {
             let docRef = db.collection("users").document(userId)

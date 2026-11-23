@@ -193,11 +193,10 @@ public final class Landscape3Node: SKNode, LandscapeInteractiveNode {
             bg.removeFromParent()
             bg.anchorPoint = CGPoint(x: 0.5, y: 0.5)
             bg.position = CGPoint(x: containerSize.width / 2.0, y: containerSize.height / 2.0)
-            let fillW = max(containerSize.width, 1085.0 * activeScale)
-            let fillH = max(containerSize.height, 2145.0 * activeScale)
-            bg.size = CGSize(width: fillW, height: fillH)
+            let backgroundTexture = loadBackgroundTexture()
+            bg.size = backgroundSize(for: backgroundTexture)
             bg.zPosition = 0.0
-            if let realBgTex = loadTexture(name: "landscape3-1@4.167x") {
+            if let realBgTex = backgroundTexture {
                 bg.texture = realBgTex
             }
             landscapeRootNode.addChild(bg)
@@ -259,10 +258,8 @@ public final class Landscape3Node: SKNode, LandscapeInteractiveNode {
 
     private func buildProceduralFallback() {
         // 1. Nền bầu trời mưa u ám
-        let fillW = max(containerSize.width, 1085.0 * activeScale)
-        let fillH = max(containerSize.height, 2145.0 * activeScale)
-        let bgTex = loadTexture(name: "landscape3-1@4.167x")
-        let bg = SKSpriteNode(texture: bgTex, size: CGSize(width: fillW, height: fillH))
+        let bgTex = loadBackgroundTexture()
+        let bg = SKSpriteNode(texture: bgTex, size: backgroundSize(for: bgTex))
         bg.name = "bgNode"
         bg.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         bg.position = CGPoint(x: containerSize.width / 2.0, y: containerSize.height / 2.0)
@@ -367,6 +364,27 @@ public final class Landscape3Node: SKNode, LandscapeInteractiveNode {
     }
 
     // MARK: - Texture Loader Helper
+
+    private func loadBackgroundTexture() -> SKTexture? {
+        guard let texture = loadTexture(name: "landscape3-1@4.167x") else { return nil }
+
+        // The 1085 x 2145 source contains transparent side margins and a gray
+        // footer. Keep only the opaque sky at top-left pixel rect (64, 0, 958, 2083).
+        // SKTexture rectangles use a bottom-left origin.
+        let skyRect = CGRect(
+            x: 64.0 / 1085.0,
+            y: 62.0 / 2145.0,
+            width: 958.0 / 1085.0,
+            height: 2083.0 / 2145.0
+        )
+        return SKTexture(rect: skyRect, in: texture)
+    }
+
+    private func backgroundSize(for texture: SKTexture?) -> CGSize {
+        let skySize = texture?.size() ?? CGSize(width: 958, height: 2083)
+        let scale = max(containerSize.width / skySize.width, containerSize.height / skySize.height)
+        return CGSize(width: skySize.width * scale, height: skySize.height * scale)
+    }
 
     private func loadTexture(name: String) -> SKTexture? {
         if let img = UIImage(named: name) {
