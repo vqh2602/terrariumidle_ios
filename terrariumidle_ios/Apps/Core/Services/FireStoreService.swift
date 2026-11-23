@@ -223,6 +223,24 @@ class FireStoreService: ObservableObject {
         }
     }
 
+    /// Event pages wait for persistence before acknowledging the JS callback.
+    @MainActor
+    func saveEventReward(gardenModel: GardenModel) async -> Bool {
+        debounceTask?.cancel()
+        debounceTask = nil
+        let previousPending = pendingGardenModel
+        pendingGardenModel = gardenModel // Ignore realtime snapshots during this write.
+        let saved = await performFirestoreUpdate(gardenModel: gardenModel) != nil
+        pendingGardenModel = previousPending
+        if saved {
+            pendingGardenModel = nil
+            gradenModel = gardenModel
+        } else if previousPending != nil {
+            flushPendingUpdates()
+        }
+        return saved
+    }
+
     /// Lưu ngay lập tức các thay đổi đang chờ debounce (khi app chuẩn bị vào background hoặc thoát)
     func flushPendingUpdates() {
         debounceTask?.cancel()

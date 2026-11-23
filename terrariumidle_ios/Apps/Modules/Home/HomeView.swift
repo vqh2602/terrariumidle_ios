@@ -259,24 +259,12 @@ struct HomeView: View {
             }
         }
         .overlay {
-            if !dataReady || !backgroundReady {
-                ZStack {
-                    AccountStyle.cream.ignoresSafeArea()
-                    VStack(spacing: 14) {
-                        Image(systemName: "leaf.fill").font(.largeTitle).foregroundStyle(AccountStyle.green)
-                        if loadFailed {
-                            Text("Chưa tải được khu vườn").foregroundStyle(AccountStyle.ink)
-                            Button("Thử lại") { reloadID += 1 }.tint(AccountStyle.green)
-                        } else {
-                            ProgressView("Đang chuẩn bị khu vườn…").tint(AccountStyle.green)
-                        }
-                    }
-                    .font(.system(.subheadline, design: .rounded))
-                }
-                .transition(.opacity)
-            }
+            CurtainLoadingOverlay(
+                isLoading: !dataReady || !backgroundReady,
+                loadFailed: loadFailed,
+                onRetry: { reloadID += 1 }
+            )
         }
-        .animation(.easeInOut(duration: 0.25), value: dataReady && backgroundReady)
         .task(id: reloadID) { await loadGarden() }
         .task(id: "load-\(reloadID)-\(dataReady)-\(backgroundReady)") {
             guard !dataReady || !backgroundReady else { return }

@@ -101,7 +101,7 @@ struct SpeedDial: View {
         case .store: router.push(.storeView)
         case .account: router.push(.accountView)
         case .layout: isEditing = true
-        case .events: break // No event destination is available yet.
+        case .events: router.push(.eventView)
         }
     }
 
@@ -180,7 +180,7 @@ struct GardenMenuPanel: View {
                     .background(destination.tint.opacity(0.11), in: RoundedRectangle(cornerRadius: 12))
                 Text(destination.rawValue)
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
-                    .foregroundStyle(destination == .events ? AccountStyle.muted : AccountStyle.ink)
+                    .foregroundStyle(AccountStyle.ink)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -192,22 +192,10 @@ struct GardenMenuPanel: View {
                 RoundedRectangle(cornerRadius: 16)
                     .strokeBorder(AccountStyle.border.opacity(0.7), lineWidth: 1)
             }
-            .overlay(alignment: .topTrailing) {
-                if destination == .events {
-                    Text("Sắp có")
-                        .font(.system(size: 8, weight: .bold, design: .rounded))
-                        .foregroundStyle(AccountStyle.muted)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 3)
-                        .background(AccountStyle.cream, in: Capsule())
-                        .padding(5)
-                }
-            }
             .contentShape(RoundedRectangle(cornerRadius: 16))
         }
         .buttonStyle(.plain)
-        .disabled(destination == .events)
-        .accessibilityLabel(destination == .events ? "Sự kiện, sắp có" : destination.rawValue)
+        .accessibilityLabel(destination.rawValue)
     }
 }
 
