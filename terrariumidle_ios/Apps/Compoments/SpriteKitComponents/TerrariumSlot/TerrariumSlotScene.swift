@@ -159,8 +159,9 @@ public final class TerrariumSlotScene: SKScene {
             )
 
             if isHanging {
-                // Neo chính xác tại đỉnh cao nhất của Scene (y = size.height) để dính sát mép trên thanh kệ
-                pot.asNode.position = CGPoint(x: 0, y: size.height)
+                // The hook belongs to the logical slot top, not the padded render top.
+                // This keeps its shelf attachment fixed while bubbles rise above it.
+                pot.asNode.position = CGPoint(x: 0, y: baseH)
             } else {
                 // Đáy chậu nằm ngay ngắn trên mặt kệ (y = 0)
                 pot.asNode.position = CGPoint(x: 0, y: 0)
@@ -180,7 +181,7 @@ public final class TerrariumSlotScene: SKScene {
             }
         } else {
             // Không có chậu: điểm cắm ở đáy slot
-            slotMountPosition = CGPoint(x: 0, y: isHanging ? size.height : 0)
+            slotMountPosition = CGPoint(x: 0, y: isHanging ? baseH : 0)
         }
 
         // ==========================================

@@ -18,6 +18,10 @@ struct GardenModel {
     var money: Money
     var user: UserProfile
     var plants: [Plant]
+    /// Cumulative sleep credit already reflected in this local wallet snapshot.
+    var sleepRewardOxygen: Int = 0
+    var sleepRewardGems: Int = 0
+    var sleepRewardTickets: Int = 0
     var weatherUntil: TimeInterval = 0
     var weatherKind: WeatherKind = .rain
 
@@ -157,6 +161,9 @@ extension GardenModel {
         item = try Item(dict: dict.dict("item"))
         cart = try Cart(dict: dict.dict("cart"))
         money = try Money(dict: dict.dict("money"))
+        sleepRewardOxygen = dict.int("sleepRewardOxygen")
+        sleepRewardGems = dict.int("sleepRewardGems")
+        sleepRewardTickets = dict.int("sleepRewardTickets")
         user = try UserProfile(dict: dict.dict("user"))
 
         let plantsAny = dict.array("plants")

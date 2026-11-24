@@ -192,6 +192,9 @@ struct HomeView: View {
                                             }
                                         }
                                         .frame(maxWidth: .infinity, alignment: .center)
+                                        // SpriteKit particle zPositions cannot cross SwiftUI siblings.
+                                        // Let the padded slot surface draw over its own wooden shelf.
+                                        .zIndex(1)
 
                                         Image("r2")
                                             .resizable()
@@ -201,6 +204,9 @@ struct HomeView: View {
                                                 height: 16
                                             )
                                     }
+                                    // Rows below draw last so rising bubbles from a hanging
+                                    // pot remain above the wooden shelf in the preceding row.
+                                    .zIndex(Double(userFloors - rowIndex))
                                 }
                             }
                         }

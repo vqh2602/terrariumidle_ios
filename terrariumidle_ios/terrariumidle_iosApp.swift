@@ -33,10 +33,14 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct terrariumidle_iosApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .task(id: scenePhase) {
+                    if scenePhase == .active { await SleepHealthStore.shared.sync() }
+                }
                 .onAppear {
                     // Tự động phát BGM thư giãn ngay khi mở app
                     if !BackgroundAudioManager.shared.isPlaying {

@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Terrarium đọc giấc ngủ để hiển thị nhật ký ngày, tuần, tháng và tặng Oxy cho khu vườn khi bạn đạt mục tiêu nghỉ ngơi. Dữ liệu giấc ngủ chỉ được xử lý trên thiết bị.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

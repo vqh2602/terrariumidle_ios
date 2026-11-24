@@ -7,6 +7,7 @@ struct SpeedDial: View {
     @State private var showMusicSheet = false
     @State private var showEffectsSheet = false
     @State private var showWeatherSheet = false
+    @State private var showSleepSheet = false
     @Binding var isEditing: Bool
     @Binding var backgroundRive: String
     @Binding var overlayRive: String?
@@ -42,12 +43,15 @@ struct SpeedDial: View {
         }
         .task(id: idleTimerKey) {
             isIdle = false
-            guard !isOpen, !showMusicSheet, !showEffectsSheet, !showWeatherSheet, scenePhase == .active else { return }
+            guard !isOpen, !showMusicSheet, !showEffectsSheet, !showWeatherSheet, !showSleepSheet, scenePhase == .active else { return }
             do {
                 try await Task.sleep(for: .seconds(4))
                 try Task.checkCancellation()
                 withAnimation(.easeInOut(duration: 0.6)) { isIdle = true }
             } catch { /* View disappearance or interaction cancels the idle delay. */ }
+        }
+        .sheet(isPresented: $showSleepSheet) {
+            SleepGardenView()
         }
         .sheet(isPresented: $showWeatherSheet) {
             GardenWeatherSheet()
@@ -61,7 +65,7 @@ struct SpeedDial: View {
     }
 
     private var idleTimerKey: String {
-        "\(isOpen)-\(showMusicSheet)-\(showEffectsSheet)-\(showWeatherSheet)-\(scenePhase)"
+        "\(isOpen)-\(showMusicSheet)-\(showEffectsSheet)-\(showWeatherSheet)-\(showSleepSheet)-\(scenePhase)"
     }
 
     private var launcher: some View {
@@ -97,6 +101,7 @@ struct SpeedDial: View {
         close()
         switch destination {
         case .weather: showWeatherSheet = true
+        case .sleep: showSleepSheet = true
         case .landscape: showEffectsSheet = true
         case .music: showMusicSheet = true
         case .store: router.push(.storeView)
@@ -114,6 +119,7 @@ struct SpeedDial: View {
 
 enum GardenMenuDestination: String, CaseIterable, Identifiable {
     case weather = "Thời tiết"
+    case sleep = "Giấc ngủ"
     case landscape = "Phong cảnh"
     case music = "Âm nhạc"
     case store = "Cửa hàng"
@@ -126,6 +132,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .weather: return "cloud.sun.fill"
+        case .sleep: return "moon.stars.fill"
         case .landscape: return "sun.horizon.fill"
         case .music: return "music.note"
         case .store: return "basket.fill"
@@ -138,6 +145,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
     var tint: Color {
         switch self {
         case .weather: return Color(hex: "5E99B5")
+        case .sleep: return Color(hex: "8D9360")
         case .landscape: return Color(hex: "B18A45")
         case .music: return Color(hex: "AC7862")
         case .store, .layout: return AccountStyle.green

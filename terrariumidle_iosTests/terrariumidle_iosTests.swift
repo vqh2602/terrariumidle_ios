@@ -53,6 +53,28 @@ struct terrariumidle_iosTests {
         #expect(abs(end.x - start.x + 20) < 0.001)
     }
 
+    @Test(arguments: [false, true])
+    func slotMountDoesNotMoveWhenParticleRenderPaddingChanges(isHanging: Bool) throws {
+        let slotSize = CGSize(width: 120, height: 234)
+        let scene = TerrariumSlotScene(size: CGSize(width: 140, height: 374))
+        scene.configure(potId: isHanging ? "pot16" : "pot1", plantId: "none",
+                        isHanging: isHanging, slotSize: slotSize)
+        let pot = try #require(scene.children.compactMap { $0 as? PotInteractiveNode }.first)
+        let mount = try #require(pot.plantMountNode)
+        let originalMount = mount.convert(CGPoint.zero, to: scene)
+        let expectedHook = CGPoint(x: 0, y: isHanging ? slotSize.height : 0)
+        #expect(pot.asNode.position == expectedHook)
+
+        // Render space may grow without changing the pot's shelf or plant socket.
+        scene.size = CGSize(width: 140, height: 434)
+        let resizedPot = try #require(scene.children.compactMap { $0 as? PotInteractiveNode }.first)
+        let resizedMount = try #require(resizedPot.plantMountNode)
+        let newMount = resizedMount.convert(CGPoint.zero, to: scene)
+        #expect(resizedPot.asNode.position == expectedHook)
+        #expect(abs(newMount.x - originalMount.x) < 0.001)
+        #expect(abs(newMount.y - originalMount.y) < 0.001)
+    }
+
     @Test func wateringFeedbackOnlyEmitsOxygenAndPreservesIdleMotion() {
         let plant = AutoTapFeedbackPlant()
         let otherEffect = NonOxygenEffectSpy()

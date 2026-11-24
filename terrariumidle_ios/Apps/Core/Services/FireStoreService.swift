@@ -21,6 +21,7 @@ class FireStoreService: ObservableObject {
     // MARK: - Debounce & Background Persistence Properties
     private var debounceTask: Task<Void, Never>?
     private var pendingGardenModel: GardenModel?
+    private var isClaimingSleepReward = false
 
     // MARK: - Dependencies
 
@@ -58,7 +59,7 @@ class FireStoreService: ObservableObject {
                 }
                 // Nếu snapshot này sinh ra do local write của chính thiết bị (hasPendingWrites),
                 // hoặc đang có thay đổi local đang chờ debounce, bỏ qua để tránh re-render giật lag
-                if document.metadata.hasPendingWrites || self.pendingGardenModel != nil {
+                if document.metadata.hasPendingWrites || self.pendingGardenModel != nil || self.isClaimingSleepReward {
                     return
                 }
                 guard let data = document.data() else {
@@ -285,6 +286,7 @@ class FireStoreService: ObservableObject {
         // Cập nhật ngay local model để UI phản hồi ngay lập tức
         self.gradenModel = sanitized
         self.pendingGardenModel = sanitized
+        guard !isClaimingSleepReward else { return }
 
         if debounce {
             debounceTask?.cancel()
@@ -312,9 +314,99 @@ class FireStoreService: ObservableObject {
         }
     }
 
+    /// The receipt and currency credit commit together. No sleep samples leave the device.
+    @MainActor
+    func claimSleepReward(grant: SleepRewardGrant, goal: Double) async throws -> Bool {
+        guard !isClaimingSleepReward,
+              SleepRewardRules.isValid(grant, goal: goal),
+              let garden = gradenModel,
+              Auth.auth().currentUser?.uid == garden.user.userID else {
+            throw EventReward.failure("Chưa thể nhận phần thưởng lúc này.")
+        }
+        let uid = garden.user.userID
+        isClaimingSleepReward = true
+        debounceTask?.cancel()
+        debounceTask = nil
+        pendingGardenModel = nil
+        defer {
+            isClaimingSleepReward = false
+            flushPendingUpdates()
+        }
+        // Drain previously queued garden writes and persist the current local balance first.
+        guard await performFirestoreUpdate(gardenModel: garden) != nil else {
+            pendingGardenModel = gradenModel
+            throw EventReward.failure("Chưa lưu được khu vườn. Hãy kiểm tra mạng và thử lại.")
+        }
+        let target = db.collection("users").document(uid)
+        let key = grant.id
+        do {
+            let outcome: [String: Int] = try await GardenWriteQueue.shared.perform {
+                let result = try await self.db.runTransaction { transaction, errorPointer -> Any? in
+                    do {
+                        let snapshot = try transaction.getDocument(target)
+                        guard let data = snapshot.data() else {
+                            throw EventReward.failure("Không tìm thấy khu vườn.")
+                        }
+                        let receiptField = grant.kind == .daily ? "sleepRewardDays" : "sleepRewardMilestones"
+                        let receipts = data[receiptField] as? [String: Any] ?? [:]
+                        let oxygen = (data["sleepRewardOxygen"] as? NSNumber)?.intValue ?? 0
+                        let gems = (data["sleepRewardGems"] as? NSNumber)?.intValue ?? 0
+                        let tickets = (data["sleepRewardTickets"] as? NSNumber)?.intValue ?? 0
+                        let covered = data["sleepRewardWeekDays"] as? [String: Any] ?? [:]
+                        let overlaps = grant.kind == .weekly && grant.days.contains { covered[$0.id] != nil }
+                        guard receipts[key] == nil, !overlaps else {
+                            return ["credited": 0, "oxygen": oxygen, "gems": gems, "tickets": tickets]
+                        }
+                        var updates: [String: Any] = [
+                            "\(receiptField).\(key)": FieldValue.serverTimestamp(),
+                            "money.oxygen": FieldValue.increment(Int64(grant.oxygen)),
+                            "money.gemstone": FieldValue.increment(Int64(grant.gems)),
+                            "money.ticket": FieldValue.increment(Int64(grant.tickets)),
+                            "sleepRewardOxygen": FieldValue.increment(Int64(grant.oxygen)),
+                            "sleepRewardGems": FieldValue.increment(Int64(grant.gems)),
+                            "sleepRewardTickets": FieldValue.increment(Int64(grant.tickets))
+                        ]
+                        if grant.kind == .weekly {
+                            for day in grant.days { updates["sleepRewardWeekDays.\(day.id)"] = true }
+                        }
+                        transaction.updateData(updates, forDocument: target)
+                        return ["credited": 1, "oxygen": oxygen + grant.oxygen,
+                                "gems": gems + grant.gems, "tickets": tickets + grant.tickets]
+                    } catch {
+                        errorPointer?.pointee = error as NSError
+                        return nil
+                    }
+                }
+                guard let outcome = result as? [String: Int] else {
+                    throw EventReward.failure("Chưa nhận được phần thưởng. Hãy thử lại.")
+                }
+                return outcome
+            }
+            // Retain taps/edits made while waiting, then persist them after crediting locally.
+            if var latest = gradenModel, latest.user.userID == uid {
+                let oxygen = outcome["oxygen"] ?? latest.sleepRewardOxygen
+                let gems = outcome["gems"] ?? latest.sleepRewardGems
+                let tickets = outcome["tickets"] ?? latest.sleepRewardTickets
+                latest.money.oxygen += max(0, oxygen - latest.sleepRewardOxygen)
+                latest.money.gemstone += max(0, gems - latest.sleepRewardGems)
+                latest.money.ticket += max(0, tickets - latest.sleepRewardTickets)
+                latest.sleepRewardOxygen = max(latest.sleepRewardOxygen, oxygen)
+                latest.sleepRewardGems = max(latest.sleepRewardGems, gems)
+                latest.sleepRewardTickets = max(latest.sleepRewardTickets, tickets)
+                gradenModel = latest
+                pendingGardenModel = latest
+            }
+            return outcome["credited"] == 1
+        } catch {
+            if gradenModel?.user.userID == uid { pendingGardenModel = gradenModel }
+            throw EventReward.failure("Chưa nhận được phần thưởng. Hãy kiểm tra mạng và thử lại.")
+        }
+    }
+
     /// Event pages wait for persistence before acknowledging the JS callback.
     @MainActor
     func saveEventReward(gardenModel: GardenModel) async -> Bool {
+        guard !isClaimingSleepReward else { return false }
         debounceTask?.cancel()
         debounceTask = nil
         let previousPending = pendingGardenModel
@@ -332,6 +424,7 @@ class FireStoreService: ObservableObject {
 
     /// Lưu ngay lập tức các thay đổi đang chờ debounce (khi app chuẩn bị vào background hoặc thoát)
     func flushPendingUpdates() {
+        guard !isClaimingSleepReward else { return }
         debounceTask?.cancel()
         debounceTask = nil
         guard let model = pendingGardenModel else { return }
@@ -363,8 +456,31 @@ class FireStoreService: ObservableObject {
 
         do {
             let docRef = db.collection("users").document(userId)
-            // Ghi trực tiếp bằng setData merge: true bất đồng bộ, không cần getDocument() trước
-            try await docRef.setData(updateData, merge: true)
+            // Protect sleep credits from garden snapshots created before the reward transaction.
+            let payload = updateData
+            try await GardenWriteQueue.shared.perform {
+                _ = try await self.db.runTransaction { transaction, errorPointer -> Any? in
+                    do {
+                        let snapshot = try transaction.getDocument(docRef)
+                        let remoteCredit = (snapshot.data()?["sleepRewardOxygen"] as? NSNumber)?.intValue ?? 0
+                        let remoteGems = (snapshot.data()?["sleepRewardGems"] as? NSNumber)?.intValue ?? 0
+                        let remoteTickets = (snapshot.data()?["sleepRewardTickets"] as? NSNumber)?.intValue ?? 0
+                        var protectedPayload = payload
+                        if var money = protectedPayload["money"] as? [String: Any] {
+                            // A delayed snapshot must not erase a reward credited since it was created.
+                            money["oxygen"] = gardenModel.money.oxygen + max(0, remoteCredit - gardenModel.sleepRewardOxygen)
+                            money["gemstone"] = gardenModel.money.gemstone + max(0, remoteGems - gardenModel.sleepRewardGems)
+                            money["ticket"] = gardenModel.money.ticket + max(0, remoteTickets - gardenModel.sleepRewardTickets)
+                            protectedPayload["money"] = money
+                        }
+                        transaction.setData(protectedPayload, forDocument: docRef, merge: true)
+                        return nil
+                    } catch {
+                        errorPointer?.pointee = error as NSError
+                        return nil
+                    }
+                }
+            }
             print("✅ Update Firestore thành công cho user: \(gardenModel.user.userName)")
             return gardenModel
         } catch {

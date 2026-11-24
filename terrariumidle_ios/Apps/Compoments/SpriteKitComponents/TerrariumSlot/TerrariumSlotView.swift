@@ -44,7 +44,9 @@ public struct TerrariumSlotView: View {
     }
 
     private var renderHeight: CGFloat {
-        height * (1.0 + overflowRatioY)
+        // A mature bubble rises up to 115pt and grows to a ~10pt radius.
+        // Hanging pots need this space ABOVE their hook, just like standing pots.
+        height + max(height * overflowRatioY, 140)
     }
 
     // MARK: - Initializer
@@ -86,7 +88,7 @@ public struct TerrariumSlotView: View {
 
         let activeFill = widthFill ?? PotRegistry.defaultWidthFill(for: potId)
         let rWidth = width * (1.0 + overflowRatioX)
-        let rHeight = height * (1.0 + overflowRatioY)
+        let rHeight = height + max(height * overflowRatioY, 140)
         let initialScene = Self.makeScene(
             potId: potId,
             plantId: plantId,
@@ -137,7 +139,9 @@ public struct TerrariumSlotView: View {
 
         return SpriteView(scene: scene, options: [.allowsTransparency])
             .frame(width: renderWidth, height: renderHeight)
-            .frame(width: width, height: height, alignment: isHanging ? .top : .bottom)
+            // Both layouts share the logical shelf bottom. The larger render surface
+            // extends upward, leaving the hanging hook below the render boundary.
+            .frame(width: width, height: height, alignment: .bottom)
             .contentShape(Rectangle())
             .onTapGesture {
                 scene.handleTap()
