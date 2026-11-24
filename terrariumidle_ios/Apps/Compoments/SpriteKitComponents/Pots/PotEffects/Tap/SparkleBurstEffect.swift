@@ -22,17 +22,72 @@ public final class SparkleBurstEffect: PotTapEffect {
         self.burstCountRange = burstCountRange
     }
 
+    // MARK: - Texture Cache (Tối ưu Metal Batching)
+    private static var starTextureCache: [Bool: SKTexture] = [:] // true: gold, false: pink
+
+    private static func getStarTexture(isGold: Bool) -> SKTexture {
+        if let cached = starTextureCache[isGold] {
+            return cached
+        }
+        let dimension: CGFloat = 40.0
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: dimension, height: dimension))
+        let img = renderer.image { ctx in
+            let cgCtx = ctx.cgContext
+            let center = CGPoint(x: dimension / 2, y: dimension / 2)
+            let r = (dimension - 4) / 2
+            let innerR = r * 0.25
+
+            let path = CGMutablePath()
+            path.move(to: CGPoint(x: center.x, y: center.y - r))
+            path.addLine(to: CGPoint(x: center.x + innerR, y: center.y - innerR))
+            path.addLine(to: CGPoint(x: center.x + r, y: center.y))
+            path.addLine(to: CGPoint(x: center.x + innerR, y: center.y + innerR))
+            path.addLine(to: CGPoint(x: center.x, y: center.y + r))
+            path.addLine(to: CGPoint(x: center.x - innerR, y: center.y + innerR))
+            path.addLine(to: CGPoint(x: center.x - r, y: center.y))
+            path.addLine(to: CGPoint(x: center.x - innerR, y: center.y - innerR))
+            path.closeSubpath()
+
+            let color = isGold
+                ? UIColor(red: 1.0, green: 0.92, blue: 0.55, alpha: 0.95)
+                : UIColor(red: 1.0, green: 0.65, blue: 0.78, alpha: 0.95)
+
+            cgCtx.addPath(path)
+            cgCtx.setFillColor(color.cgColor)
+            cgCtx.fillPath()
+
+            cgCtx.addPath(path)
+            cgCtx.setStrokeColor(UIColor.white.withAlphaComponent(0.8).cgColor)
+            cgCtx.setLineWidth(1.0)
+            cgCtx.strokePath()
+
+            // Điểm sáng trắng trung tâm
+            let dotRect = CGRect(x: center.x - innerR * 0.8, y: center.y - innerR * 0.8, width: innerR * 1.6, height: innerR * 1.6)
+            cgCtx.setFillColor(UIColor.white.cgColor)
+            cgCtx.fillEllipse(in: dotRect)
+        }
+        let texture = SKTexture(image: img)
+        starTextureCache[isGold] = texture
+        return texture
+    }
+
     public func trigger(on potNode: SKSpriteNode, in containerNode: SKNode, isHanging: Bool) {
+        var existingCount = 0
+        for child in containerNode.children where child.name == "potSparkle" {
+            existingCount += 1
+        }
+        guard existingCount < 16 else { return }
+
         let potFrame = potNode.frame
-        let burstCount = Int.random(in: burstCountRange)
+        let burstCount = min(Int.random(in: burstCountRange), 16 - existingCount)
 
         for i in 0..<burstCount {
             let radius = CGFloat.random(in: minRadius...maxRadius)
-            let starColor = (i % 2 == 0)
-                ? UIColor(red: 1.0, green: 0.92, blue: 0.55, alpha: 0.95) // Vàng hoàng yến lấp lánh
-                : UIColor(red: 1.0, green: 0.65, blue: 0.78, alpha: 0.95) // Hồng phấn lấp lánh
+            let isGold = (i % 2 == 0)
+            let texture = Self.getStarTexture(isGold: isGold)
 
-            let star = Self.createStarSparkleNode(radius: radius, color: starColor)
+            let star = SKSpriteNode(texture: texture, size: CGSize(width: radius * 2, height: radius * 2))
+            star.name = "potSparkle"
 
             // Vị trí xuất phát từ lòng/thân chậu (xử lý chính xác dựa trên frame chuẩn của potNode)
             let startX = CGFloat.random(in: (potFrame.minX + potFrame.width * 0.15)...(potFrame.maxX - potFrame.width * 0.15))

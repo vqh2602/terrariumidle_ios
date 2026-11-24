@@ -14,16 +14,33 @@ public final class SparklePollenEffect: PlantTapEffect {
 
     public let name: String = "SparklePollenEffect"
 
+    private static var pollenTexture: SKTexture = {
+        let dimension: CGFloat = 24.0
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: dimension, height: dimension))
+        let img = renderer.image { ctx in
+            let cgCtx = ctx.cgContext
+            let rect = CGRect(x: 1, y: 1, width: dimension - 2, height: dimension - 2)
+            cgCtx.setFillColor(UIColor(red: 1.0, green: 0.92, blue: 0.45, alpha: 0.95).cgColor)
+            cgCtx.fillEllipse(in: rect)
+        }
+        return SKTexture(image: img)
+    }()
+
     public init() {}
 
     public func trigger(on plantNode: SKNode, containerSize: CGSize, level: Int, leaves: [SKNode]) {
-        let count = level <= 2 ? 4 : 10
+        var existingCount = 0
+        for child in plantNode.children where child.name == "pollenParticle" {
+            existingCount += 1
+        }
+        guard existingCount < 16 else { return }
+
+        let count = min(level <= 2 ? 4 : 10, 16 - existingCount)
 
         for i in 0..<count {
             let radius = CGFloat.random(in: 1.8...3.2)
-            let particle = SKShapeNode(circleOfRadius: radius)
-            particle.fillColor = UIColor(red: 1.0, green: 0.92, blue: 0.45, alpha: 0.95)
-            particle.strokeColor = .clear
+            let particle = SKSpriteNode(texture: Self.pollenTexture, size: CGSize(width: radius * 2, height: radius * 2))
+            particle.name = "pollenParticle"
 
             let spawnX: CGFloat
             let spawnY: CGFloat

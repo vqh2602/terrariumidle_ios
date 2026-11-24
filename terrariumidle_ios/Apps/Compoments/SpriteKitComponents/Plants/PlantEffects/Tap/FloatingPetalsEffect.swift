@@ -14,17 +14,35 @@ public final class FloatingPetalsEffect: PlantTapEffect {
 
     public let name: String = "FloatingPetalsEffect"
 
+    private static var petalTexture: SKTexture = {
+        let width: CGFloat = 24.0
+        let height: CGFloat = 38.0
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: width, height: height))
+        let img = renderer.image { ctx in
+            let cgCtx = ctx.cgContext
+            let rect = CGRect(x: 1, y: 1, width: width - 2, height: height - 2)
+            cgCtx.setFillColor(UIColor(red: 0.98, green: 0.65, blue: 0.75, alpha: 0.85).cgColor)
+            cgCtx.fillEllipse(in: rect)
+        }
+        return SKTexture(image: img)
+    }()
+
     public init() {}
 
     public func trigger(on plantNode: SKNode, containerSize: CGSize, level: Int, leaves: [SKNode]) {
-        let count = level <= 2 ? 3 : 6
+        var existingCount = 0
+        for child in plantNode.children where child.name == "petalParticle" {
+            existingCount += 1
+        }
+        guard existingCount < 16 else { return }
+
+        let count = min(level <= 2 ? 3 : 6, 16 - existingCount)
 
         for i in 0..<count {
             let petalW = CGFloat.random(in: 4.5...7.5)
             let petalH = petalW * 1.6
-            let petal = SKShapeNode(ellipseOf: CGSize(width: petalW, height: petalH))
-            petal.fillColor = UIColor(red: 0.98, green: 0.65, blue: 0.75, alpha: 0.85) // Hồng cánh sen nhẹ
-            petal.strokeColor = .clear
+            let petal = SKSpriteNode(texture: Self.petalTexture, size: CGSize(width: petalW, height: petalH))
+            petal.name = "petalParticle"
 
             let spawnX = CGFloat.random(in: -containerSize.width * 0.35...containerSize.width * 0.35)
             let spawnY = CGFloat.random(in: containerSize.height * 0.55...containerSize.height * 0.85)

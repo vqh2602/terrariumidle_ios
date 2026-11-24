@@ -84,8 +84,15 @@ public final class Plant25Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
-    public var motionEffect: PlantMotionEffect = ConnectedPlantSwayMotionEffect(swayAngle: 0.018)
-    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .floralPink)]
+    public var motionEffect: PlantMotionEffect = ConnectedPlantSwayMotionEffect(
+        swayAngle: 0.052,
+        bounceScale: 1.14,
+        flowerNodeNames: ["leaf_11"]
+    )
+    public var tapEffects: [PlantTapEffect] = [
+        FloatingPetalsEffect(),
+        OxygenBubblesEffect(theme: .floralPink)
+    ]
 
     private let plantRootNode = SKNode()
     private var leafNodes: [SKSpriteNode] = []
@@ -185,6 +192,7 @@ public final class Plant25Node: SKNode {
                 self.seedNode = sprite
                 self.initialSeedPosition = sprite.position
             }
+            startPlantIdleAnimation()
             return
         }
 
@@ -203,6 +211,7 @@ public final class Plant25Node: SKNode {
         plantRootNode.addChild(fallbackGroup)
         self.seedNode = node
         self.initialSeedPosition = node.position
+        startPlantIdleAnimation()
     }
 
     // MARK: - State 200: Cây con (Sprout)
@@ -235,6 +244,7 @@ public final class Plant25Node: SKNode {
                 self.sproutNode = sprite
                 self.initialSproutPosition = sprite.position
             }
+            startPlantIdleAnimation()
             return
         }
 
@@ -253,6 +263,7 @@ public final class Plant25Node: SKNode {
         plantRootNode.addChild(fallbackGroup)
         self.sproutNode = node
         self.initialSproutPosition = node.position
+        startPlantIdleAnimation()
     }
 
     // MARK: - State 3+: Trưởng thành (Mature Xương rồng thùng hồng)
@@ -324,27 +335,80 @@ public final class Plant25Node: SKNode {
         startPlantIdleAnimation()
     }
 
-    // Keep the assembled stems and leaves attached while gently swaying the whole plant.
+    // MARK: - Hoạt ảnh nhàn rỗi (Idle Animation)
+
+    /// Toàn bộ thân cây xương rồng đu đưa nhịp nhàng + thở đàn hồi mọng nước, bông hoa đỉnh đung đưa nhẹ đón gió
     private func startPlantIdleAnimation() {
+        plantRootNode.removeAction(forKey: "plantSway")
         plantRootNode.removeAction(forKey: "idleSway")
         plantRootNode.zRotation = 0
         plantRootNode.setScale(baseScale)
-        guard case .mature = growthState else { return }
-        let right = SKAction.rotate(toAngle: 0.004, duration: 2.4)
-        let left = SKAction.rotate(toAngle: -0.004, duration: 4.8)
-        let settle = SKAction.rotate(toAngle: 0, duration: 2.4)
-        right.timingMode = .easeInEaseOut
-        left.timingMode = .easeInEaseOut
-        settle.timingMode = .easeInEaseOut
-        plantRootNode.run(.repeatForever(.sequence([right, left, settle])), withKey: "idleSway")
-    }
 
-    public func resumeIdleAnimation() {
         for leaf in leafNodes {
+            leaf.removeAction(forKey: "leafSway")
             leaf.removeAction(forKey: "plantIdleAction")
             leaf.zRotation = leaf.restZRotation
             leaf.setScale(1)
         }
+
+        switch growthState {
+        case .seed:
+            // Hạt giống: nhấp nháy phát sáng & thở nhẹ
+            guard let seed = seedNode else { return }
+            seed.removeAction(forKey: "seedBreath")
+            let b1 = SKAction.scale(to: 1.07, duration: 1.6)
+            b1.timingMode = .easeInEaseOut
+            let b2 = SKAction.scale(to: 1.0, duration: 1.8)
+            b2.timingMode = .easeInEaseOut
+            seed.run(.repeatForever(.sequence([b1, b2])), withKey: "seedBreath")
+
+        case .sprout:
+            // Cây con: đung đưa nhẹ mầm non
+            guard let sprout = sproutNode else { return }
+            sprout.removeAction(forKey: "sproutSway")
+            let s1 = SKAction.rotate(toAngle: 0.040, duration: 1.5)
+            s1.timingMode = .easeInEaseOut
+            let s2 = SKAction.rotate(toAngle: -0.040, duration: 1.9)
+            s2.timingMode = .easeInEaseOut
+            let s3 = SKAction.rotate(toAngle: 0, duration: 1.4)
+            s3.timingMode = .easeInEaseOut
+            sprout.run(.repeatForever(.sequence([s1, s2, s3])), withKey: "sproutSway")
+
+        case .mature:
+            // 1. Toàn bộ thân cây xương rồng: Đu đưa nhịp nhàng + Nhịp thở đàn hồi mọng nước
+            let swayRight = SKAction.rotate(toAngle: 0.024, duration: 2.2)
+            swayRight.timingMode = .easeInEaseOut
+            let swayLeft = SKAction.rotate(toAngle: -0.020, duration: 2.6)
+            swayLeft.timingMode = .easeInEaseOut
+            let swaySettle = SKAction.rotate(toAngle: 0, duration: 1.8)
+            swaySettle.timingMode = .easeInEaseOut
+            let swaySeq = SKAction.sequence([swayRight, swayLeft, swaySettle])
+
+            let breatheUp = SKAction.scaleX(to: baseScale * 0.985, y: baseScale * 1.025, duration: 2.2)
+            breatheUp.timingMode = .easeInEaseOut
+            let breatheDown = SKAction.scaleX(to: baseScale * 1.015, y: baseScale * 0.985, duration: 2.4)
+            breatheDown.timingMode = .easeInEaseOut
+            let breatheSettle = SKAction.scale(to: baseScale, duration: 2.0)
+            breatheSettle.timingMode = .easeInEaseOut
+            let breatheSeq = SKAction.sequence([breatheUp, breatheDown, breatheSettle])
+
+            plantRootNode.run(.repeatForever(SKAction.group([swaySeq, breatheSeq])), withKey: "plantSway")
+
+            // 2. Bông hoa hồng trên đỉnh (leaf_11): Đung đưa nhẹ quanh cuống đón gió
+            if let flower = leafNodes.first(where: { $0.name == "leaf_11" }) {
+                let rest = flower.restZRotation
+                let fRight = SKAction.rotate(toAngle: rest + 0.038, duration: 1.8)
+                fRight.timingMode = .easeInEaseOut
+                let fLeft = SKAction.rotate(toAngle: rest - 0.032, duration: 2.2)
+                fLeft.timingMode = .easeInEaseOut
+                let fBack = SKAction.rotate(toAngle: rest, duration: 1.6)
+                fBack.timingMode = .easeInEaseOut
+                flower.run(.repeatForever(.sequence([fRight, fLeft, fBack])), withKey: "leafSway")
+            }
+        }
+    }
+
+    public func resumeIdleAnimation() {
         startPlantIdleAnimation()
     }
 

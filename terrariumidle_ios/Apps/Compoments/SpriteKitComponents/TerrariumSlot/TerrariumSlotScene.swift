@@ -286,7 +286,7 @@ public final class TerrariumSlotScene: SKScene {
     public func handleTap() {
         guard !isPerformingCare else { return }
         let now = CACurrentMediaTime()
-        guard now - lastTapTime > 0.08 else { return } // Debounce 80ms chống tap đúp
+        guard now - lastTapTime > 0.12 else { return } // Debounce 120ms chống spam tap
         lastTapTime = now
 
         // ÁP DỤNG HIỆU ỨNG TAP ĐỒNG THỜI CHO CẢ CHẬU VÀ CÂY:
@@ -304,9 +304,5 @@ public final class TerrariumSlotScene: SKScene {
 
         // Bắn callback ra ngoài SwiftUI
         onTap?()
-    }
-
-    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        handleTap()
     }
 }

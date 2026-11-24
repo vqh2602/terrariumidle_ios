@@ -10,6 +10,7 @@ final class AudioPlayer {
     /// Pool player âm thanh ngắn (tối đa 4 player cho mỗi âm thanh để tap nhanh không bị trễ hay ngắt quãng)
     private var soundPool: [String: [AVAudioPlayer]] = [:]
     private let maxPlayersPerSound = 4
+    private var lastClickSoundTime: TimeInterval = 0
 
     var isBgmEnabled = true
     var isSfxEnabled = true
@@ -34,7 +35,16 @@ final class AudioPlayer {
     }
 
     private func preloadCommonSounds() {
-        _ = getOrCreatePlayer(fileName: "tap", ext: "mp3")
+        let key = "tap.mp3"
+        guard let url = Bundle.main.url(forResource: "tap", withExtension: "mp3") else { return }
+        var list: [AVAudioPlayer] = []
+        for _ in 0..<maxPlayersPerSound {
+            if let p = try? AVAudioPlayer(contentsOf: url) {
+                p.prepareToPlay()
+                list.append(p)
+            }
+        }
+        soundPool[key] = list
     }
 
     /// Lấy player rảnh từ pool hoặc tạo mới nếu cần
@@ -109,6 +119,10 @@ final class AudioPlayer {
     /// Phát âm thanh click từ cấu hình JSON (nếu không truyền hoặc không tìm thấy, mặc định là "tap")
     func playClickSound(named soundName: String?, volume: Float = 1.0) {
         guard isSfxEnabled else { return }
+        let now = CACurrentMediaTime()
+        guard now - lastClickSoundTime >= 0.035 else { return } // Throttle click sounds chống nghẽn audio khi tap nhiều cây cùng lúc
+        lastClickSoundTime = now
+
         let cleanName = (soundName ?? "").trimmingCharacters(in: .whitespaces)
         let targetName = cleanName.isEmpty ? "tap" : cleanName
         let baseName = (targetName as NSString).deletingPathExtension

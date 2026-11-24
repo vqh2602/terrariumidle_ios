@@ -46,7 +46,7 @@ public var motionEffect: PlantMotionEffect = ...
 | **Gió quét cành dài (Bản mới)** | `FrondWindMotionEffect` | `frondWind` | Cây cành lá nhọn, sen đá đinh, tán xẻ (Mặc định: **Plant23**) | Gió quét qua cành lá dài, giữ gốc và dao động tắt dần theo quán tính uyển chuyển. |
 | **Cành hoa đu đưa (Bản mới)** | `FlowerSwayMotionEffect` | `flowerSway` | Cây hoa vươn cao, cành hoa nhiều nhánh (Mặc định: **Plant28**) | Các cành hoa đón gió cùng chiều, hồi theo quán tính nhịp nhàng và giữ nguyên cuống liên kết. |
 | **Gió lay thân trúc (Bản mới)** | `BambooWindMotionEffect` | `bambooWind` | Trúc, tre cảnh, cành mảnh lá rung (Mặc định: **Plant30**) | Thân tre đung đưa rất nhẹ quanh gốc; các cụm lá gắn vào thân rung lắc riêng quanh cuống với tần số cao. |
-| **Chuyển động liên khối (Bản mới)** | `ConnectedPlantSwayMotionEffect` | `connectedPlantSway` | Cây có thân/cành ghép liền hoa/chồi khối (Mặc định: **Plant25, 29**) | Toàn bộ cây xoay nhẹ theo một khối thống nhất (`swayAngle: 0.026 rad`) để các điểm tiếp giáp luôn liền mạch, không rời cuống. |
+| **Chuyển động liên khối (Bản mới)** | `ConnectedPlantSwayMotionEffect` | `connectedPlantTap` | Cây có thân/cành ghép liền hoa/chồi khối (Mặc định: **Plant25, 29**) | Kết hợp Squash & Stretch nén nảy lò xo đàn hồi và lắc lư khối chung (`swayAngle: 0.048 rad`, `bounceScale: 1.12`), giữ nguyên tiếp giáp cuống lá / múi thân không bị hở khớp, đồng thời kích hoạt phản xạ nhún phụ trên hoa/nụ đỉnh (`flowerNodeNames`). |
 
 ### 1.2. Protocol `PlantMotionEffect` & `PlantMotionContext`
 
@@ -164,7 +164,7 @@ public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
 | **Plant22** | Thất mạt hương (*Plectranthus tomentosa*) | `WindSwayMotionEffect()` | `[SparklePollenEffect(), OxygenBubblesEffect(theme: .emerald)]` |
 | **Plant23** | Sen đá đinh (*Sedum coryne*) | `FrondWindMotionEffect()` | `[OxygenBubblesEffect(theme: .emerald)]` |
 | **Plant24** | Hoa đào (*Prunus persica*) | `WindSwayMotionEffect()` | `[FloatingPetalsEffect(), OxygenBubblesEffect(theme: .floralPink)]` |
-| **Plant25** | Xương rồng thùng hồng (*Ferocactus*) | `ConnectedPlantSwayMotionEffect()` | `[OxygenBubblesEffect(theme: .floralPink)]` |
+| **Plant25** | Xương rồng thùng hồng (*Ferocactus*) | `ConnectedPlantSwayMotionEffect(swayAngle: 0.052, bounceScale: 1.14, flowerNodeNames: ["leaf_11"])` | `[FloatingPetalsEffect(), OxygenBubblesEffect(theme: .floralPink)]` |
 | **Plant26** | Trúc tiểu cảnh (*Bambusoideae*) | `WindSwayMotionEffect()` | `[SparklePollenEffect(), OxygenBubblesEffect(theme: .emerald)]` |
 | **Plant27** | Xương rồng cột Andes (*Trichocereus*) | `BroadleafWindMotionEffect()` | `[OxygenBubblesEffect(theme: .goldenSun)]` |
 | **Plant28** | Xương rồng myrtle xanh (*Myrtillocactus*) | `FlowerSwayMotionEffect()` | `[OxygenBubblesEffect(theme: .deepOcean)]` |

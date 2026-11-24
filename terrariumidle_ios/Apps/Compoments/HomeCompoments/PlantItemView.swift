@@ -32,7 +32,7 @@ struct PlantItemView: View {
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var router: AppRouter
     @State private var floatingTexts: [(id: UUID, text: String, offset: CGFloat)] = []
-    @ObservedObject var fireStoreService: FireStoreService = .shared
+    private let fireStoreService: FireStoreService = .shared
 
     // Confirmation alerts
     @State private var showFertilizeAlert = false
@@ -279,79 +279,34 @@ struct PlantItemView: View {
 
     // MARK: - Tap Mechanics Helper Functions
 
-    /// Handle plant tap with probability-based oxygen drop
+    /// Handle plant tap with probability-based oxygen drop (Atomic & Race-free)
     private func handlePlantTap(playsSound: Bool = true) {
-        guard let displayedPlant = plantData,
-              var gardenModel = fireStoreService.gradenModel,
-              let plant = gardenModel.plants.last(where: {
-                  $0.position == "\(rowIndex),\(columnIndex)" && $0.idPlant == displayedPlant.idPlant
-              }) else { return }
+        guard let displayedPlant = plantData else { return }
 
-        let level = plant.plantLevel
+        guard let result = fireStoreService.recordPlantTap(
+            at: "\(rowIndex),\(columnIndex)",
+            plantId: displayedPlant.idPlant
+        ) else { return }
 
-        // Get drop rate and oxygen amount based on level
-        let (dropChance, oxygenDrop) = ShareFunc.getDropRate(level: level)
-
-        // Random check
-        if Double.random(in: 0 ... 1) <= dropChance {
-            // SUCCESS: Drop oxygen
-            var updatedMoney = gardenModel.money
-            updatedMoney.oxygen += oxygenDrop
-
-            // Update plant in plants array
-            var updatedPlants = gardenModel.plants
-            let targetPos = "\(rowIndex),\(columnIndex)"
-            guard let plantIndex = updatedPlants.lastIndex(where: {
-                $0.position == targetPos && !$0.idPlant.isEmpty
-            }) ?? updatedPlants.firstIndex(where: { $0.position == targetPos }) else { return }
-
-            var updatedPlant = updatedPlants[plantIndex]
-            updatedPlant.platLevelExp += 100
-
-            // Check plant level up (max level 3)
-            if level < 3 {
-                let maxExp = ShareFunc.calculatePlantMaxExp(level: level)
-                if updatedPlant.platLevelExp >= maxExp {
-                    updatedPlant.plantLevel += 1
-                    updatedPlant.platLevelExp -= maxExp
-                    showFloatingText("🌟 Plant Level \(updatedPlant.plantLevel)!")
-                }
-            }
-
-            // Xoá mọi bản ghi trùng tại toạ độ này và cập nhật lại bằng bản ghi mới nhất
-            updatedPlants.removeAll { $0.position == targetPos }
-            updatedPlants.append(updatedPlant)
-
-            // Add EXP to user
-            var updatedUser = gardenModel.user
-            updatedUser.userLevelEXP += 100
-
-            // Check user level up
-            let userMaxExp = ShareFunc.calculateUserMaxExp(level: updatedUser.userLevel)
-            if updatedUser.userLevelEXP >= userMaxExp {
-                if playsSound {
-                    AudioPlayer.shared.playSFX(fileName: "level_up")
-                }
-                updatedUser.userLevel += 1
-                updatedUser.userLevelEXP -= userMaxExp
-                showFloatingText("⭐ Level \(updatedUser.userLevel)!")
-            }
-
-            // Update model
-            gardenModel.money = updatedMoney
-            gardenModel.plants = updatedPlants
-            gardenModel.user = updatedUser
-
-            // Show oxygen collected
-            showFloatingText("+\(oxygenDrop) 💨")
-
-            // Save to Firestore asynchronously with debouncing (gom các lần tap lại thành 1 lần ghi Firestore ở background)
-            fireStoreService.saveGarden(gardenModel: gardenModel, debounce: true)
+        if result.didPlantLevelUp {
+            showFloatingText("🌟 Plant Level \(result.newPlantLevel)!")
         }
+
+        if result.didUserLevelUp {
+            if playsSound {
+                AudioPlayer.shared.playSFX(fileName: "level_up")
+            }
+            showFloatingText("⭐ Level \(result.newUserLevel)!")
+        }
+
+        showFloatingText("+\(result.oxygenGained) 💨")
     }
 
-    /// Show floating text animation
+    /// Show floating text animation (giới hạn tối đa 4 nhãn cùng lúc để tránh quá tải view tree)
     private func showFloatingText(_ text: String) {
+        if floatingTexts.count >= 4 {
+            floatingTexts.removeFirst()
+        }
         let id = UUID()
         floatingTexts.append((id: id, text: text, offset: 0))
 

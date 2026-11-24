@@ -46,6 +46,45 @@ public final class OxygenBubblesEffect: PlantTapEffect {
         }
     }
 
+    // MARK: - Texture Cache (Tối ưu SpriteKit Metal Batching)
+    private static var textureCache: [Theme: SKTexture] = [:]
+
+    private static func getBubbleTexture(theme: Theme) -> SKTexture {
+        if let cached = textureCache[theme] {
+            return cached
+        }
+
+        let dimension: CGFloat = 48.0
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: dimension, height: dimension))
+        let img = renderer.image { ctx in
+            let cgCtx = ctx.cgContext
+            let rect = CGRect(x: 2, y: 2, width: dimension - 4, height: dimension - 4)
+
+            // Vỏ bọt khí 3D căng bóng
+            cgCtx.setFillColor(theme.fillColor.cgColor)
+            cgCtx.fillEllipse(in: rect)
+
+            cgCtx.setStrokeColor(theme.strokeColor.cgColor)
+            cgCtx.setLineWidth(1.5)
+            cgCtx.strokeEllipse(in: rect)
+
+            // Điểm sáng phản chiếu góc Tây-Bắc (White Highlight)
+            let hlSize: CGFloat = (dimension - 4) * 0.30
+            let hlRect = CGRect(
+                x: rect.midX - (dimension - 4) * 0.32 - hlSize * 0.5,
+                y: rect.midY - (dimension - 4) * 0.32 - hlSize * 0.5,
+                width: hlSize,
+                height: hlSize
+            )
+            cgCtx.setFillColor(UIColor.white.withAlphaComponent(0.85).cgColor)
+            cgCtx.fillEllipse(in: hlRect)
+        }
+
+        let texture = SKTexture(image: img)
+        textureCache[theme] = texture
+        return texture
+    }
+
     // MARK: - Properties
 
     public let name: String = "OxygenBubblesEffect"
@@ -60,6 +99,13 @@ public final class OxygenBubblesEffect: PlantTapEffect {
     // MARK: - Trigger Effect
 
     public func trigger(on plantNode: SKNode, containerSize: CGSize, level: Int, leaves: [SKNode]) {
+        // Kiểm tra ngân sách hạt (Particle Budget Cap) để ngăn tràn GPU/CPU khi tap nhiều cây cùng lúc
+        var existingBubbleCount = 0
+        for child in plantNode.children where child.name == "oxygenBubble" {
+            existingBubbleCount += 1
+        }
+        guard existingBubbleCount < 16 else { return }
+
         let bubbleCount: Int
         if level <= 1 {
             bubbleCount = Int.random(in: 1...2)
@@ -69,7 +115,10 @@ public final class OxygenBubblesEffect: PlantTapEffect {
             bubbleCount = Int.random(in: 8...12)
         }
 
-        for i in 0..<bubbleCount {
+        let allowedCount = min(bubbleCount, 16 - existingBubbleCount)
+        let texture = Self.getBubbleTexture(theme: theme)
+
+        for i in 0..<allowedCount {
             let radius: CGFloat
             let spawnX: CGFloat
             let spawnY: CGFloat
@@ -105,8 +154,10 @@ public final class OxygenBubblesEffect: PlantTapEffect {
                 }
             }
 
-            // Tạo bong bóng 3D
-            let bubble = Self.create3DBubble(radius: radius, theme: theme)
+            // Tạo bong bóng 3D từ SpriteKit Texture chia sẻ (100% Metal batching, cực nhẹ)
+            let diameter = radius * 2.0
+            let bubble = SKSpriteNode(texture: texture, size: CGSize(width: diameter, height: diameter))
+            bubble.name = "oxygenBubble"
             bubble.position = CGPoint(x: spawnX, y: spawnY)
             bubble.zPosition = 200
             bubble.alpha = 0.0
@@ -131,23 +182,5 @@ public final class OxygenBubblesEffect: PlantTapEffect {
 
             bubble.run(SKAction.sequence([delay, fadeIn, motionGroup, SKAction.removeFromParent()]))
         }
-    }
-
-    // MARK: - Factory Tạo Bong Bóng 3D Căng Bóng
-
-    private static func create3DBubble(radius: CGFloat, theme: Theme) -> SKShapeNode {
-        let bubble = SKShapeNode(circleOfRadius: radius)
-        bubble.fillColor = theme.fillColor
-        bubble.strokeColor = theme.strokeColor
-        bubble.lineWidth = 1.0
-
-        // Điểm sáng phản chiếu 3D góc Tây-Bắc (Highlight)
-        let highlight = SKShapeNode(circleOfRadius: radius * 0.30)
-        highlight.fillColor = UIColor.white.withAlphaComponent(0.85)
-        highlight.strokeColor = .clear
-        highlight.position = CGPoint(x: -radius * 0.32, y: radius * 0.32)
-        bubble.addChild(highlight)
-
-        return bubble
     }
 }

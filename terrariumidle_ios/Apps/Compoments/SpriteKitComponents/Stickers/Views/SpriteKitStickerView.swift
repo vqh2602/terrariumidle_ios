@@ -121,7 +121,7 @@ public struct SpriteKitStickerView: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 let now = CACurrentMediaTime()
-                guard now - lastTapTime > 0.08 else { return }
+                guard now - lastTapTime > 0.12 else { return }
                 lastTapTime = now
 
                 scene.playTapAnimation()

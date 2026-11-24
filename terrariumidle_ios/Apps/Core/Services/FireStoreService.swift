@@ -185,6 +185,95 @@ class FireStoreService: ObservableObject {
 
     // MARK: - Update User Data
 
+    public struct PlantTapResult {
+        public let oxygenGained: Int
+        public let newPlantLevel: Int
+        public let didPlantLevelUp: Bool
+        public let newUserLevel: Int
+        public let didUserLevelUp: Bool
+
+        public init(
+            oxygenGained: Int,
+            newPlantLevel: Int,
+            didPlantLevelUp: Bool,
+            newUserLevel: Int,
+            didUserLevelUp: Bool
+        ) {
+            self.oxygenGained = oxygenGained
+            self.newPlantLevel = newPlantLevel
+            self.didPlantLevelUp = didPlantLevelUp
+            self.newUserLevel = newUserLevel
+            self.didUserLevelUp = didUserLevelUp
+        }
+    }
+
+    /// Xử lý tap cây một cách nguyên tử (atomic), ngăn chặn race condition khi tap nhiều cây cùng lúc,
+    /// gom toàn bộ các lần tap đồng thời vào cùng một snapshot dữ liệu duy nhất và debounce Firestore.
+    @MainActor
+    @discardableResult
+    func recordPlantTap(at position: String, plantId: String) -> PlantTapResult? {
+        guard var garden = self.gradenModel else { return nil }
+
+        let targetPos = position
+        guard let plantIndex = garden.plants.lastIndex(where: {
+            $0.position == targetPos && $0.idPlant == plantId
+        }) ?? garden.plants.lastIndex(where: {
+            $0.position == targetPos && !$0.idPlant.isEmpty
+        }) ?? garden.plants.firstIndex(where: { $0.position == targetPos }) else {
+            return nil
+        }
+
+        var plant = garden.plants[plantIndex]
+        let currentLevel = plant.plantLevel
+
+        // Lấy tỉ lệ drop và lượng oxy nhận được theo cấp độ
+        let (dropChance, oxygenDrop) = ShareFunc.getDropRate(level: currentLevel)
+
+        guard Double.random(in: 0...1) <= dropChance else {
+            return nil
+        }
+
+        // 1. Tăng oxy
+        garden.money.oxygen += oxygenDrop
+
+        // 2. Tăng EXP cho cây
+        plant.platLevelExp += 100
+        var didPlantLevelUp = false
+        if currentLevel < 3 {
+            let maxExp = ShareFunc.calculatePlantMaxExp(level: currentLevel)
+            if plant.platLevelExp >= maxExp {
+                plant.plantLevel += 1
+                plant.platLevelExp -= maxExp
+                didPlantLevelUp = true
+            }
+        }
+
+        // Cập nhật lại danh sách cây: loại bỏ trùng lặp tại toạ độ này và gán bản ghi mới
+        garden.plants.removeAll { $0.position == targetPos }
+        garden.plants.append(plant)
+
+        // 3. Tăng EXP cho người dùng
+        garden.user.userLevelEXP += 100
+        var didUserLevelUp = false
+        let userMaxExp = ShareFunc.calculateUserMaxExp(level: garden.user.userLevel)
+        if garden.user.userLevelEXP >= userMaxExp {
+            garden.user.userLevel += 1
+            garden.user.userLevelEXP -= userMaxExp
+            didUserLevelUp = true
+        }
+
+        // Cập nhật model và debounce lưu Firestore
+        saveGarden(gardenModel: garden, debounce: true)
+
+        return PlantTapResult(
+            oxygenGained: oxygenDrop,
+            newPlantLevel: plant.plantLevel,
+            didPlantLevelUp: didPlantLevelUp,
+            newUserLevel: garden.user.userLevel,
+            didUserLevelUp: didUserLevelUp
+        )
+    }
+
     /// Cập nhật dữ liệu khu vườn:
     /// - Cập nhật ngay lập tức `gradenModel` trên MainActor để UI hiển thị mượt mà 60/120 FPS không độ trễ.
     /// - `debounce == true`: Dành cho thao tác lặp lại nhiều lần liên tục (như tap nhặt oxy).

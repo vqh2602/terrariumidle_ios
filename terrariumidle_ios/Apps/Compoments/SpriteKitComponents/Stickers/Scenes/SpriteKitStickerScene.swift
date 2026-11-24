@@ -114,11 +114,4 @@ public final class SpriteKitStickerScene: SKScene {
                         ItemDataManager.shared.getItem(byId: stickerId)?.clickSound ?? "tap"
         AudioPlayer.shared.playClickSound(named: soundName)
     }
-
-    // MARK: - Touch Handling
-
-    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        playTapAnimation()
-        onTap?()
-    }
 }
