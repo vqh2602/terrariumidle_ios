@@ -141,22 +141,15 @@ public final class OxygenBubblesEffect: PlantTapEffect {
                 radius = CGFloat.random(in: 3.5...7.5)
                 floatDistance = CGFloat.random(in: 60...115)
 
-                if !leaves.isEmpty && Bool.random() {
-                    // Chọn ngẫu nhiên một phiến lá và chuyển toạ độ sang plantNode
-                    let leaf = leaves.randomElement()!
-                    let leafPos = leaf.parent != nil ? leaf.parent!.convert(leaf.position, to: plantNode) : leaf.position
-                    spawnX = leafPos.x + CGFloat.random(in: -16...16)
-                    let minY = leafPos.y < 0 ? -containerSize.height * 0.85 : containerSize.height * 0.18
-                    spawnY = max(minY, min(containerSize.height * 0.92, leafPos.y + CGFloat.random(in: -10...18)))
+                if let leaf = leaves.randomElement() {
+                    // Sample the blade itself, rather than its stalk anchor or a
+                    // positive-height container band (which lies inside hanging ropes).
+                    let point = Self.emissionPoint(on: leaf, relativeTo: plantNode)
+                    spawnX = point.x
+                    spawnY = point.y
                 } else {
-                    // Trải đều tự nhiên khắp toàn bộ tán cây
                     spawnX = CGFloat.random(in: -containerSize.width * 0.44...containerSize.width * 0.44)
-                    let hasHangingLeaves = leaves.contains { leaf in
-                        let y = leaf.parent != nil ? leaf.parent!.convert(leaf.position, to: plantNode).y : leaf.position.y
-                        return y < -10
-                    }
-                    let minY = hasHangingLeaves ? -containerSize.height * 0.5 : containerSize.height * 0.18
-                    spawnY = CGFloat.random(in: minY...containerSize.height * 0.90)
+                    spawnY = CGFloat.random(in: containerSize.height * 0.18...containerSize.height * 0.90)
                 }
             }
 
@@ -171,11 +164,15 @@ public final class OxygenBubblesEffect: PlantTapEffect {
 
             // Hoạt ảnh bay uốn lượn hình sin, giãn nở và mờ dần
             let floatDuration = Double.random(in: 0.85...1.55)
-            let driftX = CGFloat.random(in: -22...22)
+            // Drift away from the centre so hanging foliage releases bubbles
+            // outward instead of drawing them back into the rope frame.
+            let side: CGFloat = spawnX == 0 ? (Bool.random() ? 1 : -1) : (spawnX > 0 ? 1 : -1)
+            let driftX = side * CGFloat.random(in: 10...28)
 
             let delay = SKAction.wait(forDuration: Double(i) * 0.035)
             let fadeIn = SKAction.fadeAlpha(to: 0.95, duration: 0.12)
-            let floatUp = SKAction.moveBy(x: driftX, y: floatDistance, duration: floatDuration)
+            let offset = Self.riseOffset(on: plantNode, distance: floatDistance, drift: driftX)
+            let floatUp = SKAction.moveBy(x: offset.dx, y: offset.dy, duration: floatDuration)
             floatUp.timingMode = .easeOut
             let fadeOut = SKAction.fadeOut(withDuration: floatDuration * 0.55)
             let scaleUp = SKAction.scale(by: 1.30, duration: floatDuration)
@@ -189,4 +186,25 @@ public final class OxygenBubblesEffect: PlantTapEffect {
             bubble.run(SKAction.sequence([delay, fadeIn, motionGroup, SKAction.removeFromParent()]))
         }
     }
+
+    static func emissionPoint(on leaf: SKNode, relativeTo plantNode: SKNode) -> CGPoint {
+        if let sprite = leaf as? SKSpriteNode {
+            // Stay in the central blade area; respect its authored stalk anchor.
+            let point = CGPoint(
+                x: (CGFloat.random(in: 0.25...0.75) - sprite.anchorPoint.x) * sprite.size.width,
+                y: (CGFloat.random(in: 0.30...0.80) - sprite.anchorPoint.y) * sprite.size.height
+            )
+            return sprite.convert(point, to: plantNode)
+        }
+        return leaf.convert(CGPoint.zero, to: plantNode)
+    }
+
+    static func riseOffset(on plantNode: SKNode, distance: CGFloat, drift: CGFloat) -> CGVector {
+        guard let scene = plantNode.scene else { return CGVector(dx: drift, dy: distance) }
+        // Rising means screen/scene up, even while the hanging rig is rotated or scaled.
+        let origin = plantNode.convert(CGPoint.zero, to: scene)
+        let target = plantNode.convert(CGPoint(x: origin.x + drift, y: origin.y + distance), from: scene)
+        return CGVector(dx: target.x, dy: target.y)
+    }
+
 }

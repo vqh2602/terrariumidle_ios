@@ -12,6 +12,47 @@ import SpriteKit
 @MainActor
 struct terrariumidle_iosTests {
 
+    @Test func oxygenStartsOnHangingLeafInsteadOfInsideRopeFrame() {
+        let plant = SKNode()
+        let root = SKNode()
+        root.position = CGPoint(x: 7, y: -90)
+        root.setScale(0.4)
+        plant.addChild(root)
+        let leaf = SKSpriteNode(color: .green, size: CGSize(width: 100, height: 160))
+        leaf.anchorPoint = CGPoint(x: 0.9, y: 0.05)
+        leaf.zRotation = 0.3
+        root.addChild(leaf)
+
+        OxygenBubblesEffect().trigger(on: plant, containerSize: CGSize(width: 120, height: 180),
+                                     level: 3, leaves: [leaf])
+
+        #expect((8...12).contains(plant.children.filter { $0.name == "oxygenBubble" }.count))
+        for bubble in plant.children where bubble.name == "oxygenBubble" {
+            let point = leaf.convert(bubble.position, from: plant)
+            #expect((-65 ... -15).contains(point.x))
+            #expect((40 ... 120).contains(point.y))
+            #expect(bubble.position.y < 0)
+            #expect(bubble.parent === plant)
+        }
+    }
+
+    @Test func oxygenRisesInSceneCoordinatesWhileHangingRigSwings() {
+        let scene = SKScene(size: CGSize(width: 300, height: 500))
+        let rig = SKNode()
+        rig.zRotation = 0.25
+        rig.xScale = 0.8
+        rig.yScale = 1.2
+        scene.addChild(rig)
+        let plant = SKNode()
+        plant.position = CGPoint(x: 12, y: -150)
+        rig.addChild(plant)
+        let offset = OxygenBubblesEffect.riseOffset(on: plant, distance: 100, drift: -20)
+        let start = plant.convert(CGPoint.zero, to: scene)
+        let end = plant.convert(CGPoint(x: offset.dx, y: offset.dy), to: scene)
+        #expect(abs(end.y - start.y - 100) < 0.001)
+        #expect(abs(end.x - start.x + 20) < 0.001)
+    }
+
     @Test func wateringFeedbackOnlyEmitsOxygenAndPreservesIdleMotion() {
         let plant = AutoTapFeedbackPlant()
         let otherEffect = NonOxygenEffectSpy()
@@ -81,30 +122,30 @@ struct terrariumidle_iosTests {
     @Test func rainChargesOneTicketAndPersistsSixtySecondDeadline() throws {
         var garden = try wateringGarden(diamonds: 10)
         garden.money.ticket = 2
-        #expect(garden.rainUntil == 0)
-        #expect(garden.startRain(now: 100) == .started)
+        #expect(garden.weatherUntil == 0)
+        #expect(garden.startWeather(.rain, now: 100) == .started)
         #expect(garden.money.ticket == 1)
         #expect(garden.money.gemstone == 10)
-        #expect(garden.rainUntil == 160)
+        #expect(garden.weatherUntil == 160)
         let restored = try GardenModel(dict: garden.toDictionary())
-        #expect(restored.rainUntil == 160)
+        #expect(restored.weatherUntil == 160)
         #expect(restored.money.ticket == 1)
-        #expect(garden.startRain(now: 159.99) == .alreadyRaining)
+        #expect(garden.startWeather(.rain, now: 159.99) == .alreadyActive)
         #expect(garden.money.ticket == 1)
-        #expect(garden.startRain(now: 160) == .started)
+        #expect(garden.startWeather(.rain, now: 160) == .started)
         #expect(garden.money.ticket == 0)
-        #expect(garden.rainUntil == 220)
+        #expect(garden.weatherUntil == 220)
     }
 
     @Test func rainRejectsMissingTicketsAndEmptyGardensWithoutCharging() throws {
         var garden = try wateringGarden(diamonds: 10)
-        #expect(garden.startRain(now: 100) == .insufficientTickets)
-        #expect(garden.rainUntil == 0)
+        #expect(garden.startWeather(.rain, now: 100) == .insufficientTickets)
+        #expect(garden.weatherUntil == 0)
         garden.money.ticket = 1
         garden.plants.removeAll()
-        #expect(garden.startRain(now: 100) == .noPlants)
+        #expect(garden.startWeather(.rain, now: 100) == .noPlants)
         #expect(garden.money.ticket == 1)
-        #expect(garden.rainUntil == 0)
+        #expect(garden.weatherUntil == 0)
     }
 
     @Test func rainIncludesAllFloorsButExcludesStickersEmptyAndDuplicateSockets() throws {
@@ -122,19 +163,68 @@ struct terrariumidle_iosTests {
         empty.position = "2,3"
         empty.idPot = ""
         garden.plants.append(empty)
-        #expect(Set(garden.rainPlants.map(\.position)) == ["0,0", "0,1", "20,1"])
-        #expect(garden.rainPlants.count == 3)
+        #expect(Set(garden.weatherPlants.map(\.position)) == ["0,0", "0,1", "20,1"])
+        #expect(garden.weatherPlants.count == 3)
     }
 
     @Test func rainPreservesExistingWateringAndPreventsExtraDiamondCharge() throws {
         var garden = try wateringGarden(diamonds: 20)
         garden.money.ticket = 1
         #expect(garden.waterPlant(at: "0,0", plantId: "plant1", now: 90) == .watered)
-        #expect(garden.startRain(now: 100) == .started)
+        #expect(garden.startWeather(.rain, now: 100) == .started)
         #expect(garden.plants[0].wateringUntil == 150)
         #expect(garden.waterPlant(at: "0,1", plantId: "plant2", now: 120) == .alreadyWatering)
         #expect(garden.money.gemstone == 10)
         #expect(garden.waterPlant(at: "0,1", plantId: "plant2", now: 160) == .watered)
+    }
+
+    @Test func windUsesOneTicketAndSameSixtySecondWeatherSession() throws {
+        var garden = try wateringGarden(diamonds: 20)
+        garden.money.ticket = 2
+        #expect(garden.startWeather(.wind, now: 100) == .started)
+        #expect(garden.weatherKind == .wind)
+        #expect(garden.weatherUntil == 160)
+        #expect(garden.money.ticket == 1)
+        #expect(garden.weatherPlants.count == 2)
+        #expect(garden.startWeather(.rain, now: 120) == .alreadyActive)
+        #expect(garden.startWeather(.wind, now: 120) == .alreadyActive)
+        #expect(garden.money.ticket == 1)
+        #expect(garden.waterPlant(at: "0,0", plantId: "plant1", now: 120) == .alreadyWatering)
+        #expect(garden.money.gemstone == 20)
+        let restored = try GardenModel(dict: garden.toDictionary())
+        #expect(restored.weatherKind == .wind)
+        #expect(restored.weatherUntil == 160)
+        #expect(garden.startWeather(.rain, now: 160) == .started)
+        #expect(garden.weatherKind == .rain)
+        #expect(garden.weatherUntil == 220)
+        #expect(garden.money.ticket == 0)
+    }
+
+    @Test func windRejectsInsufficientTicketsAndEmptyGarden() throws {
+        var garden = try wateringGarden(diamonds: 20)
+        #expect(garden.startWeather(.wind, now: 100) == .insufficientTickets)
+        #expect(garden.weatherUntil == 0)
+        garden.money.ticket = 1
+        garden.plants.removeAll()
+        #expect(garden.startWeather(.wind, now: 100) == .noPlants)
+        #expect(garden.money.ticket == 1)
+        #expect(garden.weatherUntil == 0)
+    }
+
+    @Test func weatherRestoresLegacyRainSession() throws {
+        let garden = try wateringGarden(diamonds: 10)
+        var data = garden.toDictionary()
+        data.removeValue(forKey: "weatherUntil")
+        data.removeValue(forKey: "weatherKind")
+        data["rainUntil"] = 160.0
+        let restored = try GardenModel(dict: data)
+        #expect(restored.weatherKind == .rain)
+        #expect(restored.weatherUntil == 160)
+        data["weatherUntil"] = 220.0
+        data["weatherKind"] = "wind"
+        let updated = try GardenModel(dict: data)
+        #expect(updated.weatherKind == .wind)
+        #expect(updated.weatherUntil == 220)
     }
 
     @Test func testPlantPositionParsing() async throws {

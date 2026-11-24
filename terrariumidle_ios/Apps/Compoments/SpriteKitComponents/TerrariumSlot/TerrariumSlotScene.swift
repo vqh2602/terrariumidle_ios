@@ -249,7 +249,7 @@ public final class TerrariumSlotScene: SKScene {
         isPerformingCare = true
         let target: CGPoint
         if let plant = plantNode?.asNode {
-            target = plant.convert(.zero, to: self)
+            target = plant.convert(CGPoint.zero, to: self)
         } else if let pot = potNode {
             target = pot.asNode.convert(pot.plantMountPoint, to: self)
         } else {

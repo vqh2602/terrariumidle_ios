@@ -6,8 +6,7 @@ struct SpeedDial: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var showMusicSheet = false
     @State private var showEffectsSheet = false
-    @State private var rainMessage: String?
-    @ObservedObject private var fireStore = FireStoreService.shared
+    @State private var showWeatherSheet = false
     @Binding var isEditing: Bool
     @Binding var backgroundRive: String
     @Binding var overlayRive: String?
@@ -43,19 +42,15 @@ struct SpeedDial: View {
         }
         .task(id: idleTimerKey) {
             isIdle = false
-            guard !isOpen, !showMusicSheet, !showEffectsSheet, scenePhase == .active else { return }
+            guard !isOpen, !showMusicSheet, !showEffectsSheet, !showWeatherSheet, scenePhase == .active else { return }
             do {
                 try await Task.sleep(for: .seconds(4))
                 try Task.checkCancellation()
                 withAnimation(.easeInOut(duration: 0.6)) { isIdle = true }
             } catch { /* View disappearance or interaction cancels the idle delay. */ }
         }
-        .alert("Tạo mưa", isPresented: Binding(
-            get: { rainMessage != nil }, set: { if !$0 { rainMessage = nil } }
-        )) {
-            Button("Đã hiểu", role: .cancel) { rainMessage = nil }
-        } message: {
-            Text(rainMessage ?? "")
+        .sheet(isPresented: $showWeatherSheet) {
+            GardenWeatherSheet()
         }
         .sheet(isPresented: $showMusicSheet) {
             MusicSheetView()
@@ -66,7 +61,7 @@ struct SpeedDial: View {
     }
 
     private var idleTimerKey: String {
-        "\(isOpen)-\(showMusicSheet)-\(showEffectsSheet)-\(scenePhase)"
+        "\(isOpen)-\(showMusicSheet)-\(showEffectsSheet)-\(showWeatherSheet)-\(scenePhase)"
     }
 
     private var launcher: some View {
@@ -101,15 +96,7 @@ struct SpeedDial: View {
     private func select(_ destination: GardenMenuDestination) {
         close()
         switch destination {
-        case .rain:
-            guard var garden = fireStore.gradenModel else { return }
-            switch garden.startRain(now: Date().timeIntervalSince1970) {
-            case .started:
-                fireStore.saveGarden(gardenModel: garden, debounce: false)
-            case .insufficientTickets: rainMessage = "Bạn cần 1 ticket để tạo mưa."
-            case .alreadyRaining: rainMessage = "Trời đang mưa. Hãy chờ cơn mưa hiện tại kết thúc."
-            case .noPlants: rainMessage = "Hãy trồng cây trong vườn trước khi tạo mưa."
-            }
+        case .weather: showWeatherSheet = true
         case .landscape: showEffectsSheet = true
         case .music: showMusicSheet = true
         case .store: router.push(.storeView)
@@ -126,7 +113,7 @@ struct SpeedDial: View {
 }
 
 enum GardenMenuDestination: String, CaseIterable, Identifiable {
-    case rain = "Tạo mưa"
+    case weather = "Thời tiết"
     case landscape = "Phong cảnh"
     case music = "Âm nhạc"
     case store = "Cửa hàng"
@@ -138,7 +125,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
     var id: Self { self }
     var icon: String {
         switch self {
-        case .rain: return "cloud.rain.fill"
+        case .weather: return "cloud.sun.fill"
         case .landscape: return "sun.horizon.fill"
         case .music: return "music.note"
         case .store: return "basket.fill"
@@ -150,7 +137,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
     }
     var tint: Color {
         switch self {
-        case .rain: return Color(hex: "5E99B5")
+        case .weather: return Color(hex: "5E99B5")
         case .landscape: return Color(hex: "B18A45")
         case .music: return Color(hex: "AC7862")
         case .store, .layout: return AccountStyle.green
@@ -229,7 +216,7 @@ struct GardenMenuPanel: View {
                     .foregroundStyle(AccountStyle.ink)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                if destination == .rain {
+                if destination == .weather {
                     Text("1 ticket · 60 giây")
                         .font(.caption2)
                         .foregroundStyle(AccountStyle.ink.opacity(0.7))

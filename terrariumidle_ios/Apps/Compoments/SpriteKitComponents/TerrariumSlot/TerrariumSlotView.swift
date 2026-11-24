@@ -30,7 +30,7 @@ public struct TerrariumSlotView: View {
     public var overflowRatioY: CGFloat = 0.08
     public var onTap: (() -> Void)? = nil
     public var autoTapTrigger: Int = 0
-    public var rainTapTrigger: Int = 0
+    public var weatherTapTrigger: Int = 0
     public var onAutoTap: (() -> Void)? = nil
     public var careAnimation: PlantCareAnimationRequest? = nil
     public var onCareAnimationCompleted: ((UUID) -> Void)? = nil
@@ -62,7 +62,7 @@ public struct TerrariumSlotView: View {
         overflowRatioY: CGFloat = 0.08,
         onTap: (() -> Void)? = nil,
         autoTapTrigger: Int = 0,
-        rainTapTrigger: Int = 0,
+        weatherTapTrigger: Int = 0,
         onAutoTap: (() -> Void)? = nil,
         careAnimation: PlantCareAnimationRequest? = nil,
         onCareAnimationCompleted: ((UUID) -> Void)? = nil
@@ -79,7 +79,7 @@ public struct TerrariumSlotView: View {
         self.overflowRatioY = overflowRatioY
         self.onTap = onTap
         self.autoTapTrigger = autoTapTrigger
-        self.rainTapTrigger = rainTapTrigger
+        self.weatherTapTrigger = weatherTapTrigger
         self.onAutoTap = onAutoTap
         self.careAnimation = careAnimation
         self.onCareAnimationCompleted = onCareAnimationCompleted
@@ -145,7 +145,7 @@ public struct TerrariumSlotView: View {
             .onChange(of: autoTapTrigger) { _, _ in
                 scene.handleAutoTap()
             }
-            .onChange(of: rainTapTrigger) { _, _ in
+            .onChange(of: weatherTapTrigger) { _, _ in
                 // Rewards were already granted centrally for every floor.
                 scene.handleAutoTap(grantsReward: false)
             }

@@ -341,8 +341,8 @@ public final class Plant30Node: SKNode {
         for leaf in leafNodes where !BambooWindMotionEffect.stemNames.contains(leaf.name ?? "") {
             guard let parent = leaf.parent,
                   let stem = stems.min(by: {
-                      abs($0.convert(.zero, to: parent).x - leaf.position.x)
-                        < abs($1.convert(.zero, to: parent).x - leaf.position.x)
+                      abs($0.convert(CGPoint.zero, to: parent).x - leaf.position.x)
+                        < abs($1.convert(CGPoint.zero, to: parent).x - leaf.position.x)
                   }) else { continue }
             let position = stem.convert(leaf.position, from: parent)
             let rotation = leaf.zRotation - stem.zRotation

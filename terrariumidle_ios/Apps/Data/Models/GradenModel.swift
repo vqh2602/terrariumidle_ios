@@ -18,7 +18,8 @@ struct GardenModel {
     var money: Money
     var user: UserProfile
     var plants: [Plant]
-    var rainUntil: TimeInterval = 0
+    var weatherUntil: TimeInterval = 0
+    var weatherKind: WeatherKind = .rain
 
     struct Item {
         var fertilizer: Int
@@ -85,7 +86,7 @@ extension GardenModel {
             $0.position == position && $0.idPlant == plantId &&
             $0.idPlant.hasPrefix("plant") && !$0.idPot.isEmpty
         }) else { return .invalidPlant }
-        guard max(plants[index].wateringUntil, rainUntil) <= now else { return .alreadyWatering }
+        guard max(plants[index].wateringUntil, weatherUntil) <= now else { return .alreadyWatering }
         guard money.gemstone >= 10 else { return .insufficientDiamonds }
         money.gemstone -= 10
         plants[index].wateringUntil = now + 60
@@ -93,14 +94,22 @@ extension GardenModel {
     }
 }
 
-// MARK: - Garden rain
+// MARK: - Garden weather
 
 extension GardenModel {
-    enum RainResult {
-        case started, insufficientTickets, alreadyRaining, noPlants
+    enum WeatherKind: String, CaseIterable, Identifiable {
+        case rain, wind
+
+        var id: Self { self }
+        var title: String { self == .rain ? "Mưa" : "Gió" }
+        var icon: String { self == .rain ? "cloud.rain.fill" : "wind" }
     }
 
-    var rainPlants: [Plant] {
+    enum WeatherResult {
+        case started, insufficientTickets, alreadyActive, noPlants
+    }
+
+    var weatherPlants: [Plant] {
         // Only the last record at each socket is displayed by the garden.
         var positions = Set<String>()
         return plants.reversed().filter { plant in
@@ -109,12 +118,13 @@ extension GardenModel {
         }
     }
 
-    mutating func startRain(now: TimeInterval) -> RainResult {
-        guard rainUntil <= now else { return .alreadyRaining }
-        guard !rainPlants.isEmpty else { return .noPlants }
+    mutating func startWeather(_ kind: WeatherKind, now: TimeInterval) -> WeatherResult {
+        guard weatherUntil <= now else { return .alreadyActive }
+        guard !weatherPlants.isEmpty else { return .noPlants }
         guard money.ticket >= 1 else { return .insufficientTickets }
         money.ticket -= 1
-        rainUntil = now + 60
+        weatherKind = kind
+        weatherUntil = now + 60
         return .started
     }
 }
@@ -137,7 +147,10 @@ enum ParseError: Error, CustomStringConvertible {
 
 extension GardenModel {
     init(dict: [String: Any]) throws {
-        rainUntil = (dict["rainUntil"] as? NSNumber)?.doubleValue ?? 0
+        // Preserve a rain session saved by the previous app version.
+        weatherUntil = (dict["weatherUntil"] as? NSNumber)?.doubleValue
+            ?? (dict["rainUntil"] as? NSNumber)?.doubleValue ?? 0
+        weatherKind = WeatherKind(rawValue: dict["weatherKind"] as? String ?? "") ?? .rain
         isBan = dict.int("isBan")
         isServerUpdate = dict.int("isServerUpdate")
 
@@ -285,7 +298,8 @@ private extension Dictionary where Key == String, Value == Any {
 extension GardenModel {
     func toDictionary() -> [String: Any] {
         return [
-            "rainUntil": rainUntil,
+            "weatherUntil": weatherUntil,
+            "weatherKind": weatherKind.rawValue,
             "isBan": isBan,
             "isServerUpdate": isServerUpdate,
             "item": item.toDictionary(),

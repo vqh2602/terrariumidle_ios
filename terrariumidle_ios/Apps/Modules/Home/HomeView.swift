@@ -56,7 +56,7 @@ struct HomeView: View {
     @EnvironmentObject var router: AppRouter
 
     @Environment(\.scenePhase) private var scenePhase
-    @State private var rainTapTrigger = 0
+    @State private var weatherTapTrigger = 0
     @State private var dataReady = false
     @State private var backgroundReady = false
     @State private var loadFailed = false
@@ -175,8 +175,8 @@ struct HomeView: View {
                                                     // Plant slot: Tương tác tap trực tiếp trên cây và chậu, không bọc TouchScaleMenu khung ngoài
                                                     PlantItemView(
                                                         itemWidth: itemWidth,
-                                                        rainUntil: fireStoreService.gradenModel?.rainUntil ?? 0,
-                                                        rainTapTrigger: rainTapTrigger,
+                                                        weatherUntil: fireStoreService.gradenModel?.weatherUntil ?? 0,
+                                                        weatherTapTrigger: weatherTapTrigger,
                                                         plantData: plantData,
                                                         rowIndex: rowIndex,
                                                         columnIndex: columnIndex,
@@ -234,7 +234,8 @@ struct HomeView: View {
                         .ignoresSafeArea(.all)
                         .allowsHitTesting(false)
 
-                    GardenRainOverlay(rainUntil: fireStoreService.gradenModel?.rainUntil ?? 0)
+                    GardenWeatherOverlay(weatherUntil: fireStoreService.gradenModel?.weatherUntil ?? 0,
+                                         kind: fireStoreService.gradenModel?.weatherKind ?? .rain)
                         .ignoresSafeArea()
                         .allowsHitTesting(false)
 
@@ -273,8 +274,8 @@ struct HomeView: View {
                 onRetry: { reloadID += 1 }
             )
         }
-        .task(id: "rain-\(fireStoreService.gradenModel?.rainUntil ?? 0)-\(scenePhase)-\(dataReady)") {
-            await runRainAutoTap()
+        .task(id: "weather-\(fireStoreService.gradenModel?.weatherUntil ?? 0)-\(scenePhase)-\(dataReady)") {
+            await runWeatherAutoTap()
         }
         .task(id: reloadID) { await loadGarden() }
         .task(id: "load-\(reloadID)-\(dataReady)-\(backgroundReady)") {
@@ -319,16 +320,16 @@ struct HomeView: View {
     }
 
     @MainActor
-    private func runRainAutoTap() async {
+    private func runWeatherAutoTap() async {
         guard dataReady, scenePhase == .active,
-              let deadline = fireStoreService.gradenModel?.rainUntil else { return }
+              let deadline = fireStoreService.gradenModel?.weatherUntil else { return }
         while !Task.isCancelled, Date().timeIntervalSince1970 < deadline {
-            guard let garden = fireStoreService.gradenModel, garden.rainUntil == deadline else { return }
+            guard let garden = fireStoreService.gradenModel, garden.weatherUntil == deadline else { return }
             // Award every planted socket, including floors outside the lazy scroll viewport.
-            for plant in garden.rainPlants {
+            for plant in garden.weatherPlants {
                 fireStoreService.recordPlantTap(at: plant.position, plantId: plant.idPlant)
             }
-            rainTapTrigger += 1
+            weatherTapTrigger += 1
             do { try await Task.sleep(for: .seconds(1)) } catch { return }
         }
     }

@@ -15,8 +15,8 @@ import UniformTypeIdentifiers
 /// Widget hiển thị plant/pot với logic cho hanging và normal layout
 struct PlantItemView: View {
     let itemWidth: CGFloat
-    var rainUntil: TimeInterval = 0
-    var rainTapTrigger: Int = 0
+    var weatherUntil: TimeInterval = 0
+    var weatherTapTrigger: Int = 0
     let plantData: GardenModel.Plant?
     let rowIndex: Int
     let columnIndex: Int
@@ -61,7 +61,7 @@ struct PlantItemView: View {
     }
 
     private var wateringDeadline: TimeInterval {
-        max(plantData?.wateringUntil ?? 0, rainUntil)
+        max(plantData?.wateringUntil ?? 0, weatherUntil)
     }
 
     /// Fixed shelf height keeps standing and hanging sockets aligned.
@@ -163,7 +163,7 @@ struct PlantItemView: View {
                         handleDetailTap()
                     },
                     autoTapTrigger: autoTapTrigger,
-                    rainTapTrigger: rainTapTrigger,
+                    weatherTapTrigger: weatherTapTrigger,
                     onAutoTap: { handleDetailTap(isAutomatic: true) },
                     careAnimation: careAnimation,
                     onCareAnimationCompleted: finishCareAnimation
@@ -193,7 +193,7 @@ struct PlantItemView: View {
                         })
                         return items
                     }())
-        .task(id: "\(plantData?.wateringUntil ?? 0)-\(rainUntil)-\(scenePhase)-\(isEditing)") {
+        .task(id: "\(plantData?.wateringUntil ?? 0)-\(weatherUntil)-\(scenePhase)-\(isEditing)") {
             await runWateringAutoTap()
         }
         .task(id: careAnimation?.id) {
@@ -379,7 +379,7 @@ struct PlantItemView: View {
             guard let current = fireStoreService.gradenModel?.plants.last(where: {
                 $0.position == "\(rowIndex),\(columnIndex)"
             }), current.idPlant == plant.idPlant, current.wateringUntil == deadline else { return }
-            if scenePhase == .active && !isEditing && rainUntil <= Date().timeIntervalSince1970 {
+            if scenePhase == .active && !isEditing && weatherUntil <= Date().timeIntervalSince1970 {
                 autoTapTrigger += 1
             }
             do {
