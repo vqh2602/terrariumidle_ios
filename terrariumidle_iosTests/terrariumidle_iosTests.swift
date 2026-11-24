@@ -78,6 +78,65 @@ struct terrariumidle_iosTests {
         #expect(garden.plants[0].wateringUntil == 220)
     }
 
+    @Test func rainChargesOneTicketAndPersistsSixtySecondDeadline() throws {
+        var garden = try wateringGarden(diamonds: 10)
+        garden.money.ticket = 2
+        #expect(garden.rainUntil == 0)
+        #expect(garden.startRain(now: 100) == .started)
+        #expect(garden.money.ticket == 1)
+        #expect(garden.money.gemstone == 10)
+        #expect(garden.rainUntil == 160)
+        let restored = try GardenModel(dict: garden.toDictionary())
+        #expect(restored.rainUntil == 160)
+        #expect(restored.money.ticket == 1)
+        #expect(garden.startRain(now: 159.99) == .alreadyRaining)
+        #expect(garden.money.ticket == 1)
+        #expect(garden.startRain(now: 160) == .started)
+        #expect(garden.money.ticket == 0)
+        #expect(garden.rainUntil == 220)
+    }
+
+    @Test func rainRejectsMissingTicketsAndEmptyGardensWithoutCharging() throws {
+        var garden = try wateringGarden(diamonds: 10)
+        #expect(garden.startRain(now: 100) == .insufficientTickets)
+        #expect(garden.rainUntil == 0)
+        garden.money.ticket = 1
+        garden.plants.removeAll()
+        #expect(garden.startRain(now: 100) == .noPlants)
+        #expect(garden.money.ticket == 1)
+        #expect(garden.rainUntil == 0)
+    }
+
+    @Test func rainIncludesAllFloorsButExcludesStickersEmptyAndDuplicateSockets() throws {
+        var garden = try wateringGarden(diamonds: 10)
+        var highFloor = garden.plants[0]
+        highFloor.position = "20,1"
+        garden.plants.append(highFloor)
+        garden.plants.append(highFloor)
+        var sticker = highFloor
+        sticker.position = "2,2"
+        sticker.idPlant = "sticker1"
+        sticker.idPot = "sticker1"
+        garden.plants.append(sticker)
+        var empty = highFloor
+        empty.position = "2,3"
+        empty.idPot = ""
+        garden.plants.append(empty)
+        #expect(Set(garden.rainPlants.map(\.position)) == ["0,0", "0,1", "20,1"])
+        #expect(garden.rainPlants.count == 3)
+    }
+
+    @Test func rainPreservesExistingWateringAndPreventsExtraDiamondCharge() throws {
+        var garden = try wateringGarden(diamonds: 20)
+        garden.money.ticket = 1
+        #expect(garden.waterPlant(at: "0,0", plantId: "plant1", now: 90) == .watered)
+        #expect(garden.startRain(now: 100) == .started)
+        #expect(garden.plants[0].wateringUntil == 150)
+        #expect(garden.waterPlant(at: "0,1", plantId: "plant2", now: 120) == .alreadyWatering)
+        #expect(garden.money.gemstone == 10)
+        #expect(garden.waterPlant(at: "0,1", plantId: "plant2", now: 160) == .watered)
+    }
+
     @Test func testPlantPositionParsing() async throws {
         let pos1 = PlantPosition(from: "1,2")
         #expect(pos1?.row == 1)

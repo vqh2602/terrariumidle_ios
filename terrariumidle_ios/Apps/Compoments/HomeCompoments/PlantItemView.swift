@@ -15,6 +15,8 @@ import UniformTypeIdentifiers
 /// Widget hiển thị plant/pot với logic cho hanging và normal layout
 struct PlantItemView: View {
     let itemWidth: CGFloat
+    var rainUntil: TimeInterval = 0
+    var rainTapTrigger: Int = 0
     let plantData: GardenModel.Plant?
     let rowIndex: Int
     let columnIndex: Int
@@ -58,8 +60,11 @@ struct PlantItemView: View {
         return plantData?.isHanging ?? false
     }
 
-    /// Chiều cao cố định chuẩn cho một tầng kệ, giúp tất cả các ô trên kệ đồng nhất
-    /// và cho phép chậu treo dính sát đỉnh trên cùng của kệ
+    private var wateringDeadline: TimeInterval {
+        max(plantData?.wateringUntil ?? 0, rainUntil)
+    }
+
+    /// Fixed shelf height keeps standing and hanging sockets aligned.
     private var slotHeight: CGFloat {
         itemWidth * 1.95
     }
@@ -158,6 +163,7 @@ struct PlantItemView: View {
                         handleDetailTap()
                     },
                     autoTapTrigger: autoTapTrigger,
+                    rainTapTrigger: rainTapTrigger,
                     onAutoTap: { handleDetailTap(isAutomatic: true) },
                     careAnimation: careAnimation,
                     onCareAnimationCompleted: finishCareAnimation
@@ -187,7 +193,7 @@ struct PlantItemView: View {
                         })
                         return items
                     }())
-        .task(id: "\(plantData?.wateringUntil ?? 0)-\(scenePhase)-\(isEditing)") {
+        .task(id: "\(plantData?.wateringUntil ?? 0)-\(rainUntil)-\(scenePhase)-\(isEditing)") {
             await runWateringAutoTap()
         }
         .task(id: careAnimation?.id) {
@@ -202,7 +208,8 @@ struct PlantItemView: View {
             finishCareAnimation(request.id)
         }
         .overlay(alignment: .top) {
-            if let end = plantData?.wateringUntil, end > Date().timeIntervalSince1970 {
+            if !isSticker, !hasEmptyIds, wateringDeadline > Date().timeIntervalSince1970 {
+                let end = wateringDeadline
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     let seconds = max(0, Int(ceil(end - context.date.timeIntervalSince1970)))
                     if seconds > 0 {
@@ -372,7 +379,7 @@ struct PlantItemView: View {
             guard let current = fireStoreService.gradenModel?.plants.last(where: {
                 $0.position == "\(rowIndex),\(columnIndex)"
             }), current.idPlant == plant.idPlant, current.wateringUntil == deadline else { return }
-            if scenePhase == .active && !isEditing {
+            if scenePhase == .active && !isEditing && rainUntil <= Date().timeIntervalSince1970 {
                 autoTapTrigger += 1
             }
             do {

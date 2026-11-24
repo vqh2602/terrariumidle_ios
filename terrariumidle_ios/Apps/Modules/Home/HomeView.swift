@@ -55,6 +55,8 @@ struct HomeView: View {
     @StateObject private var fireStoreService: FireStoreService = .shared
     @EnvironmentObject var router: AppRouter
 
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var rainTapTrigger = 0
     @State private var dataReady = false
     @State private var backgroundReady = false
     @State private var loadFailed = false
@@ -173,6 +175,8 @@ struct HomeView: View {
                                                     // Plant slot: Tương tác tap trực tiếp trên cây và chậu, không bọc TouchScaleMenu khung ngoài
                                                     PlantItemView(
                                                         itemWidth: itemWidth,
+                                                        rainUntil: fireStoreService.gradenModel?.rainUntil ?? 0,
+                                                        rainTapTrigger: rainTapTrigger,
                                                         plantData: plantData,
                                                         rowIndex: rowIndex,
                                                         columnIndex: columnIndex,
@@ -230,6 +234,10 @@ struct HomeView: View {
                         .ignoresSafeArea(.all)
                         .allowsHitTesting(false)
 
+                    GardenRainOverlay(rainUntil: fireStoreService.gradenModel?.rainUntil ?? 0)
+                        .ignoresSafeArea()
+                        .allowsHitTesting(false)
+
                 }.frame(alignment: .leading)
             }
 
@@ -264,6 +272,9 @@ struct HomeView: View {
                 loadFailed: loadFailed,
                 onRetry: { reloadID += 1 }
             )
+        }
+        .task(id: "rain-\(fireStoreService.gradenModel?.rainUntil ?? 0)-\(scenePhase)-\(dataReady)") {
+            await runRainAutoTap()
         }
         .task(id: reloadID) { await loadGarden() }
         .task(id: "load-\(reloadID)-\(dataReady)-\(backgroundReady)") {
@@ -304,6 +315,21 @@ struct HomeView: View {
             if !BackgroundAudioManager.shared.isPlaying {
                 BackgroundAudioManager.shared.startDefaultBGM()
             }
+        }
+    }
+
+    @MainActor
+    private func runRainAutoTap() async {
+        guard dataReady, scenePhase == .active,
+              let deadline = fireStoreService.gradenModel?.rainUntil else { return }
+        while !Task.isCancelled, Date().timeIntervalSince1970 < deadline {
+            guard let garden = fireStoreService.gradenModel, garden.rainUntil == deadline else { return }
+            // Award every planted socket, including floors outside the lazy scroll viewport.
+            for plant in garden.rainPlants {
+                fireStoreService.recordPlantTap(at: plant.position, plantId: plant.idPlant)
+            }
+            rainTapTrigger += 1
+            do { try await Task.sleep(for: .seconds(1)) } catch { return }
         }
     }
 

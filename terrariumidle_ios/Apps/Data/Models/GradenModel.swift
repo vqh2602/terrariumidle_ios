@@ -18,6 +18,7 @@ struct GardenModel {
     var money: Money
     var user: UserProfile
     var plants: [Plant]
+    var rainUntil: TimeInterval = 0
 
     struct Item {
         var fertilizer: Int
@@ -84,11 +85,37 @@ extension GardenModel {
             $0.position == position && $0.idPlant == plantId &&
             $0.idPlant.hasPrefix("plant") && !$0.idPot.isEmpty
         }) else { return .invalidPlant }
-        guard plants[index].wateringUntil <= now else { return .alreadyWatering }
+        guard max(plants[index].wateringUntil, rainUntil) <= now else { return .alreadyWatering }
         guard money.gemstone >= 10 else { return .insufficientDiamonds }
         money.gemstone -= 10
         plants[index].wateringUntil = now + 60
         return .watered
+    }
+}
+
+// MARK: - Garden rain
+
+extension GardenModel {
+    enum RainResult {
+        case started, insufficientTickets, alreadyRaining, noPlants
+    }
+
+    var rainPlants: [Plant] {
+        // Only the last record at each socket is displayed by the garden.
+        var positions = Set<String>()
+        return plants.reversed().filter { plant in
+            guard positions.insert(plant.position).inserted else { return false }
+            return plant.idPlant.hasPrefix("plant") && !plant.idPot.isEmpty
+        }
+    }
+
+    mutating func startRain(now: TimeInterval) -> RainResult {
+        guard rainUntil <= now else { return .alreadyRaining }
+        guard !rainPlants.isEmpty else { return .noPlants }
+        guard money.ticket >= 1 else { return .insufficientTickets }
+        money.ticket -= 1
+        rainUntil = now + 60
+        return .started
     }
 }
 
@@ -110,6 +137,7 @@ enum ParseError: Error, CustomStringConvertible {
 
 extension GardenModel {
     init(dict: [String: Any]) throws {
+        rainUntil = (dict["rainUntil"] as? NSNumber)?.doubleValue ?? 0
         isBan = dict.int("isBan")
         isServerUpdate = dict.int("isServerUpdate")
 
@@ -257,6 +285,7 @@ private extension Dictionary where Key == String, Value == Any {
 extension GardenModel {
     func toDictionary() -> [String: Any] {
         return [
+            "rainUntil": rainUntil,
             "isBan": isBan,
             "isServerUpdate": isServerUpdate,
             "item": item.toDictionary(),

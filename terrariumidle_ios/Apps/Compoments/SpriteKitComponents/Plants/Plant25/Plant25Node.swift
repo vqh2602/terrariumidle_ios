@@ -61,21 +61,22 @@ public final class Plant25Node: SKNode {
         let zPos: CGFloat
         let bendAngle: CGFloat
         let duration: TimeInterval
+        let phaseDelay: TimeInterval
         let shouldSway: Bool
     }
 
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId: 2, imgX:    17.986533040, imgY:    -3.249180162, width:  306.931483171, height:  437.478900399, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: -0.035, duration: 3.00, shouldSway: true),
-        LeafData(assetId: 3, imgX:    20.191333865, imgY:    -2.262821899, width:  200.172706416, height:  123.584888309, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 12, bendAngle: -0.035, duration: 3.35, shouldSway: true),
-        LeafData(assetId: 4, imgX:   -46.242796236, imgY:    -4.351580574, width:  297.648111280, height:  175.803855200, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 13, bendAngle:  0.035, duration: 3.70, shouldSway: true),
-        LeafData(assetId: 5, imgX:    26.341567743, imgY:     1.276463635, width:  323.177383982, height:  302.870007969, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 14, bendAngle: -0.035, duration: 4.05, shouldSway: true),
-        LeafData(assetId: 6, imgX:   -33.768265256, imgY:    -0.986358263, width:  215.258185740, height:  309.252326144, anchorX: 0.62, anchorY: 0.00, isLeft: true , zPos: 15, bendAngle:  0.035, duration: 3.00, shouldSway: true),
-        LeafData(assetId: 7, imgX:    25.181146256, imgY:    -3.423243385, width:  178.124698173, height:  201.913338646, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 16, bendAngle: -0.035, duration: 3.35, shouldSway: true),
-        LeafData(assetId: 8, imgX:   -33.710244182, imgY:     3.771369831, width:  290.105371618, height: 601.098329991, anchorX: 0.37, anchorY: 0.00, isLeft: false, zPos: 17, bendAngle: -0.035, duration: 3.70, shouldSway: true),
-        LeafData(assetId: 9, imgX:   -25.529272702, imgY:    6.498360324, width:  305.190850942, height:  539.015780465, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 18, bendAngle:  0.035, duration: 4.05, shouldSway: true),
-        LeafData(assetId: 10, imgX:   -15.259542547, imgY:    -0.464168595, width:  319.115908779, height:  558.162734992, anchorX: 0.36, anchorY: 0.00, isLeft: false, zPos: 19, bendAngle: -0.035, duration: 3.00, shouldSway: true),
-        LeafData(assetId: 11, imgX:  -149.578329606, imgY:   77.690218519, width:  228.603032835, height:  228.603032835, anchorX: 0.33, anchorY: 0.00, isLeft: true , zPos: 20, bendAngle:  0.035, duration: 3.35, shouldSway: true),
-        LeafData(assetId: 12, imgX:    -1.682611155, imgY:    -3.713348757, width:  116.042148647, height:   17.406322297, anchorX: 0.57, anchorY: 0.00, isLeft: true , zPos: 21, bendAngle:  0.035, duration: 3.70, shouldSway: true)
+        LeafData(assetId:  2, imgX:    17.986533040, imgY:    -3.249180162, width:  306.931483171, height:  437.478900399, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 11, bendAngle: 0.085, duration: 2.80, phaseDelay: 0.15, shouldSway: true),
+        LeafData(assetId:  3, imgX:    20.191333865, imgY:    -2.262821899, width:  200.172706416, height:  123.584888309, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 12, bendAngle: 0.095, duration: 2.30, phaseDelay: 0.50, shouldSway: true),
+        LeafData(assetId:  4, imgX:   -46.242796236, imgY:    -4.351580574, width:  297.648111280, height:  175.803855200, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 13, bendAngle: 0.100, duration: 2.60, phaseDelay: 0.35, shouldSway: true),
+        LeafData(assetId:  5, imgX:    26.341567743, imgY:     1.276463635, width:  323.177383982, height:  302.870007969, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 14, bendAngle: 0.090, duration: 3.00, phaseDelay: 0.70, shouldSway: true),
+        LeafData(assetId:  6, imgX:   -33.768265256, imgY:    -0.986358263, width:  215.258185740, height:  309.252326144, anchorX: 0.62, anchorY: 0.00, isLeft: true , zPos: 15, bendAngle: 0.095, duration: 2.70, phaseDelay: 0.20, shouldSway: true),
+        LeafData(assetId:  7, imgX:    25.181146256, imgY:    -3.423243385, width:  178.124698173, height:  201.913338646, anchorX: 0.05, anchorY: 0.00, isLeft: false, zPos: 16, bendAngle: 0.090, duration: 2.40, phaseDelay: 0.85, shouldSway: true),
+        LeafData(assetId:  8, imgX:   -33.710244182, imgY:     3.771369831, width:  290.105371618, height: 601.098329991, anchorX: 0.37, anchorY: 0.00, isLeft: false, zPos: 17, bendAngle: 0.075, duration: 3.50, phaseDelay: 0.45, shouldSway: true),
+        LeafData(assetId:  9, imgX:   -25.529272702, imgY:     6.498360324, width:  305.190850942, height:  539.015780465, anchorX: 0.95, anchorY: 0.00, isLeft: true , zPos: 18, bendAngle: 0.085, duration: 3.20, phaseDelay: 0.60, shouldSway: true),
+        LeafData(assetId: 10, imgX:   -15.259542547, imgY:    -0.464168595, width:  319.115908779, height:  558.162734992, anchorX: 0.36, anchorY: 0.00, isLeft: false, zPos: 19, bendAngle: 0.030, duration: 3.80, phaseDelay: 0.05, shouldSway: true),
+        LeafData(assetId: 11, imgX:  -149.578329606, imgY:    77.690218519, width:  228.603032835, height:  228.603032835, anchorX: 0.33, anchorY: 0.00, isLeft: true , zPos: 20, bendAngle: 0.125, duration: 2.10, phaseDelay: 0.25, shouldSway: true),
+        LeafData(assetId: 12, imgX:    -1.682611155, imgY:    -3.713348757, width:  116.042148647, height:   17.406322297, anchorX: 0.57, anchorY: 0.00, isLeft: true , zPos: 21, bendAngle: 0.008, duration: 4.00, phaseDelay: 0.00, shouldSway: false)
     ]
 
     // MARK: - Properties
@@ -84,10 +85,19 @@ public final class Plant25Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
-    public var motionEffect: PlantMotionEffect = ConnectedPlantSwayMotionEffect(
-        swayAngle: 0.052,
-        bounceScale: 1.14,
-        flowerNodeNames: ["leaf_11"]
+    public var motionEffect: PlantMotionEffect = WindSwayMotionEffect(
+        swayAngle: 0.055,
+        leafBendAngle: 0.13,
+        durationMultiplier: 1.05,
+        leafBendMultipliers: [
+            "leaf_11": 1.5,
+            "leaf_8": 1.3,
+            "leaf_9": 1.3,
+            "leaf_4": 1.25,
+            "leaf_2": 1.25,
+            "leaf_10": 0.4,
+            "leaf_12": 0.1
+        ]
     )
     public var tapEffects: [PlantTapEffect] = [
         FloatingPetalsEffect(),
@@ -337,7 +347,7 @@ public final class Plant25Node: SKNode {
 
     // MARK: - Hoạt ảnh nhàn rỗi (Idle Animation)
 
-    /// Toàn bộ thân cây xương rồng đu đưa nhịp nhàng + thở đàn hồi mọng nước, bông hoa đỉnh đung đưa nhẹ đón gió
+    /// Toàn bộ tán lá, cành và bông hoa đung đưa riêng biệt theo gió tự nhiên
     private func startPlantIdleAnimation() {
         plantRootNode.removeAction(forKey: "plantSway")
         plantRootNode.removeAction(forKey: "idleSway")
@@ -345,6 +355,7 @@ public final class Plant25Node: SKNode {
         plantRootNode.setScale(baseScale)
 
         for leaf in leafNodes {
+            leaf.removeAction(forKey: "leafWind")
             leaf.removeAction(forKey: "leafSway")
             leaf.removeAction(forKey: "plantIdleAction")
             leaf.zRotation = leaf.restZRotation
@@ -375,36 +386,88 @@ public final class Plant25Node: SKNode {
             sprout.run(.repeatForever(.sequence([s1, s2, s3])), withKey: "sproutSway")
 
         case .mature:
-            // 1. Toàn bộ thân cây xương rồng: Đu đưa nhịp nhàng + Nhịp thở đàn hồi mọng nước
-            let swayRight = SKAction.rotate(toAngle: 0.024, duration: 2.2)
+            // 1. Thân cây tổng thể: Đu đưa nhịp nhàng kết hợp nhịp thở đàn hồi
+            let swayRight = SKAction.rotate(toAngle: 0.024, duration: 2.7)
             swayRight.timingMode = .easeInEaseOut
-            let swayLeft = SKAction.rotate(toAngle: -0.020, duration: 2.6)
+            let swayLeft = SKAction.rotate(toAngle: -0.020, duration: 3.1)
             swayLeft.timingMode = .easeInEaseOut
-            let swaySettle = SKAction.rotate(toAngle: 0, duration: 1.8)
+            let swaySettle = SKAction.rotate(toAngle: 0, duration: 2.2)
             swaySettle.timingMode = .easeInEaseOut
             let swaySeq = SKAction.sequence([swayRight, swayLeft, swaySettle])
 
-            let breatheUp = SKAction.scaleX(to: baseScale * 0.985, y: baseScale * 1.025, duration: 2.2)
+            let breatheUp = SKAction.scaleX(to: baseScale * 0.985, y: baseScale * 1.020, duration: 2.7)
             breatheUp.timingMode = .easeInEaseOut
-            let breatheDown = SKAction.scaleX(to: baseScale * 1.015, y: baseScale * 0.985, duration: 2.4)
+            let breatheDown = SKAction.scaleX(to: baseScale * 1.015, y: baseScale * 0.985, duration: 3.1)
             breatheDown.timingMode = .easeInEaseOut
-            let breatheSettle = SKAction.scale(to: baseScale, duration: 2.0)
+            let breatheSettle = SKAction.scale(to: baseScale, duration: 2.2)
             breatheSettle.timingMode = .easeInEaseOut
             let breatheSeq = SKAction.sequence([breatheUp, breatheDown, breatheSettle])
 
             plantRootNode.run(.repeatForever(SKAction.group([swaySeq, breatheSeq])), withKey: "plantSway")
 
-            // 2. Bông hoa hồng trên đỉnh (leaf_11): Đung đưa nhẹ quanh cuống đón gió
-            if let flower = leafNodes.first(where: { $0.name == "leaf_11" }) {
-                let rest = flower.restZRotation
-                let fRight = SKAction.rotate(toAngle: rest + 0.038, duration: 1.8)
-                fRight.timingMode = .easeInEaseOut
-                let fLeft = SKAction.rotate(toAngle: rest - 0.032, duration: 2.2)
-                fLeft.timingMode = .easeInEaseOut
-                let fBack = SKAction.rotate(toAngle: rest, duration: 1.6)
-                fBack.timingMode = .easeInEaseOut
-                flower.run(.repeatForever(.sequence([fRight, fLeft, fBack])), withKey: "leafSway")
+            // 2. Từng cành và phiến lá đung đưa riêng biệt, nhịp nhàng theo gió với biên độ mạnh mẽ rõ nét
+            for (idx, leaf) in leafNodes.enumerated() {
+                let assetId = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
+                guard let meta = Self.leavesMetadata.first(where: { $0.assetId == assetId }) else { continue }
+                guard meta.shouldSway else { continue }
+
+                startLeafIdleAnimation(
+                    leaf: leaf,
+                    isLeft: meta.isLeft,
+                    bendAngle: meta.bendAngle,
+                    duration: meta.duration,
+                    phaseDelay: meta.phaseDelay > 0 ? meta.phaseDelay : Double(idx) * 0.15
+                )
             }
+        }
+    }
+
+    /// Kích hoạt hoạt ảnh đung đưa riêng biệt cho từng cành/lá/hoa
+    private func startLeafIdleAnimation(leaf: SKSpriteNode, isLeft: Bool, bendAngle: CGFloat, duration: TimeInterval, phaseDelay: TimeInterval) {
+        leaf.removeAction(forKey: "leafWind")
+        leaf.removeAction(forKey: "leafSway")
+        let rest = leaf.restZRotation
+        leaf.zRotation = rest
+
+        let direction: CGFloat = isLeft ? -1.0 : 1.0
+
+        // 4 nhịp sóng gió uốn lượn tự nhiên: Đón gió -> Giật lùi quán tính -> Đung đưa thứ cấp -> Về trạng thái nghỉ
+        let gust = SKAction.rotate(toAngle: rest + direction * bendAngle, duration: duration * 0.42)
+        gust.timingMode = .easeInEaseOut
+
+        let recoil = SKAction.rotate(toAngle: rest - direction * bendAngle * 0.52, duration: duration * 0.48)
+        recoil.timingMode = .easeInEaseOut
+
+        let flutter = SKAction.rotate(toAngle: rest + direction * bendAngle * 0.22, duration: duration * 0.38)
+        flutter.timingMode = .easeInEaseOut
+
+        let settle = SKAction.rotate(toAngle: rest, duration: duration * 0.42)
+        settle.timingMode = .easeInEaseOut
+
+        let swayCycle = SKAction.sequence([gust, recoil, flutter, settle])
+
+        // Đối với bông hoa trên đỉnh (leaf_11), kết hợp nhịp thở & nhún nhẹ cánh hoa
+        let fullAction: SKAction
+        if leaf.name == "leaf_11" {
+            let b1 = SKAction.scaleX(to: 0.96, y: 1.04, duration: duration * 0.45)
+            b1.timingMode = .easeInEaseOut
+            let b2 = SKAction.scaleX(to: 1.03, y: 0.97, duration: duration * 0.45)
+            b2.timingMode = .easeInEaseOut
+            let b3 = SKAction.scale(to: 1.0, duration: duration * 0.40)
+            b3.timingMode = .easeInEaseOut
+            let breathSeq = SKAction.sequence([b1, b2, b3])
+            fullAction = SKAction.group([swayCycle, breathSeq])
+        } else {
+            fullAction = swayCycle
+        }
+
+        if phaseDelay > 0 {
+            leaf.run(SKAction.sequence([
+                SKAction.wait(forDuration: phaseDelay),
+                SKAction.repeatForever(fullAction)
+            ]), withKey: "leafWind")
+        } else {
+            leaf.run(SKAction.repeatForever(fullAction), withKey: "leafWind")
         }
     }
 

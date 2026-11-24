@@ -276,10 +276,10 @@ public final class TerrariumSlotScene: SKScene {
     private var lastTapTime: TimeInterval = 0
 
     /// Automatic watering keeps rewards and oxygen, without sound or plant/pot motion.
-    public func handleAutoTap() {
+    public func handleAutoTap(grantsReward: Bool = true) {
         guard !isPerformingCare, let plant = plantNode else { return }
         plant.playOxygenBubbles(containerSize: plantContainerSize, level: plantLevel)
-        onAutoTap?()
+        if grantsReward { onAutoTap?() }
     }
 
     /// Kích hoạt hiệu ứng tap đồng thời cho cả Cây và Chậu (tránh xung đột vùng bấm và không bị miss tap)
