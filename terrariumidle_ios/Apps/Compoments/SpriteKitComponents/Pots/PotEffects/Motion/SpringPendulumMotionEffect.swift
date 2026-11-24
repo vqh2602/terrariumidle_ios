@@ -52,12 +52,13 @@ public final class SpringPendulumMotionEffect: PotMotionEffect {
         }
 
         // Nếu có Sprite thân chậu và bật cờ alsoBouncePot: áp dụng Squash & Stretch
+        // Lưu ý: với chậu treo, hangingRigNode đã xử lý chuyển động xoay con lắc (swing), nên thân chậu chỉ nén/giãn đàn hồi (scale), không tự chao nghiêng thêm để tránh co giật
         if alsoBouncePot, let pot = context.potNode {
             PotBounceAnimator.applyBounce(
                 to: pot,
                 shadowNode: context.shadowNode,
                 initialPosition: context.initialPosition,
-                isHanging: context.isHanging,
+                isHanging: false,
                 config: .standard
             )
         }

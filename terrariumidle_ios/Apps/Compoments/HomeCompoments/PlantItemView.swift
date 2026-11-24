@@ -49,6 +49,12 @@ struct PlantItemView: View {
                 return item.itemTypeAttribute.isHanging
             }
         }
+        if let plantId = plantData?.idPlant, let plant = ItemDataManager.shared.getPlant(byId: plantId) {
+            if plant.itemTypeAttribute.isHanging { return true }
+        }
+        if let potId = plantData?.idPot, let pot = ItemDataManager.shared.getPot(byId: potId) {
+            if pot.itemTypeAttribute.isHanging { return true }
+        }
         return plantData?.isHanging ?? false
     }
 
@@ -183,6 +189,17 @@ struct PlantItemView: View {
                     }())
         .task(id: "\(plantData?.wateringUntil ?? 0)-\(scenePhase)-\(isEditing)") {
             await runWateringAutoTap()
+        }
+        .task(id: careAnimation?.id) {
+            guard let request = careAnimation else { return }
+            // Scene rebuilds or pauses can interrupt SKActions and their completion.
+            // Finish the model update even when SpriteKit cannot report completion.
+            do {
+                try await Task.sleep(for: .seconds(PlantCareAnimation.duration + 0.2))
+            } catch {
+                return
+            }
+            finishCareAnimation(request.id)
         }
         .overlay(alignment: .top) {
             if let end = plantData?.wateringUntil, end > Date().timeIntervalSince1970 {

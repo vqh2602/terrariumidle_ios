@@ -387,8 +387,13 @@ public final class Plant17Node: SKNode {
             for (idx, leaf) in leafNodes.enumerated() {
                 let assetNum = Int(leaf.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
                 let meta = Self.leavesMetadata.first(where: { $0.assetId == assetNum })
+                guard meta?.shouldSway ?? (assetNum != 1) else {
+                    leaf.removeAction(forKey: "leafSway")
+                    leaf.zRotation = leaf.restZRotation
+                    continue
+                }
                 let bendAngle = meta?.bendAngle ?? 0.048
-                let duration = meta?.duration ?? 3.8
+                let duration = max(0.2, meta?.duration ?? 3.8)
                 let delay = Double(idx) * 0.22
                 startLeafSwayAnimation(leaf: leaf, bendAngle: bendAngle, duration: duration, phaseDelay: delay)
             }
@@ -488,11 +493,12 @@ public final class Plant17Node: SKNode {
         plantRootNode.removeAction(forKey: "trunkSway")
         plantRootNode.removeAction(forKey: "trunkBob")
         plantRootNode.zRotation = 0.0
+        plantRootNode.position = .zero
 
-        // Thân nhấp nhô nhẹ nhàng, êm ái theo phương thẳng đứng (không rung lắc, không xoay)
-        let bobUp = SKAction.moveBy(x: 0, y: 2.0, duration: 2.8)
+        // Thân nhấp nhô nhẹ nhàng, êm ái theo phương thẳng đứng (dùng moveTo chống trôi toạ độ tuyệt đối)
+        let bobUp = SKAction.moveTo(y: 2.0, duration: 2.8)
         bobUp.timingMode = .easeInEaseOut
-        let bobDown = SKAction.moveBy(x: 0, y: -2.0, duration: 3.0)
+        let bobDown = SKAction.moveTo(y: 0.0, duration: 3.0)
         bobDown.timingMode = .easeInEaseOut
 
         let sequence = SKAction.sequence([bobUp, bobDown])
@@ -503,6 +509,11 @@ public final class Plant17Node: SKNode {
         leaf.removeAction(forKey: "leafSway")
         let rest = leaf.restZRotation
         leaf.zRotation = rest
+
+        // Chốt chặn an toàn: Tuyệt đối không tạo SKAction.repeatForever với duration == 0 (gây vòng lặp vô hạn treo app)
+        guard duration > 0.05, abs(bendAngle) > 0.001 else {
+            return
+        }
 
         // Cành đung đưa con lắc gió uyển chuyển quanh cuống rủ
         let swingLeft = SKAction.rotate(toAngle: rest - bendAngle, duration: duration * 0.50)

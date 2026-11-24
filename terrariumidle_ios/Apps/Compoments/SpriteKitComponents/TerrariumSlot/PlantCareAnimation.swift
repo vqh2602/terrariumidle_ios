@@ -11,6 +11,8 @@ public struct PlantCareAnimationRequest: Equatable {
 
 /// Tools and particles use scene coordinates, independently of the plant's scale.
 final class PlantCareAnimation: SKNode {
+    static let duration: TimeInterval = 2.3
+
     init(action: PlantCareAction, target: CGPoint, width: CGFloat,
          plant: SKNode?, completion: @escaping () -> Void) {
         super.init()
@@ -44,7 +46,14 @@ final class PlantCareAnimation: SKNode {
                 .group([.fadeOut(withDuration: 0.2), .moveBy(x: width * 0.1, y: width * 0.12, duration: 0.2)])
             ]))
         }
-        run(.sequence([.wait(forDuration: 2.3), .run(completion), .removeFromParent()]))
+        run(.sequence([
+            .wait(forDuration: Self.duration),
+            .run { [weak self] in
+                // Updating SwiftUI may tear down the scene immediately.
+                self?.removeFromParent()
+                completion()
+            }
+        ]))
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }

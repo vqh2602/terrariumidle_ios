@@ -10,36 +10,94 @@ import UIKit
 
 /// Hiệu ứng: "Tam thạch anh hồng" (Rose Quartz Crystal Burst)
 /// - Bung tỏa các tinh thể hình thoi thạch anh hồng phấn và tím pha lê lấp lánh xoay 360 độ
+/// - Tối ưu 100% Metal Batching bằng bộ đệm SKTexture chung + giới hạn ngân sách hạt tối đa 16
 public final class QuartzBurstEffect: PotTapEffect {
 
     public let name: String = "QuartzBurstEffect"
 
-    public var burstCountRange: ClosedRange<Int> = 8...12
+    public var burstCountRange: ClosedRange<Int> = 6...8
     public var minRadius: CGFloat = 3.5
-    public var maxRadius: CGFloat = 6.5
+    public var maxRadius: CGFloat = 6.0
 
-    public init(burstCountRange: ClosedRange<Int> = 8...12) {
+    public init(burstCountRange: ClosedRange<Int> = 6...8) {
         self.burstCountRange = burstCountRange
     }
 
+    // MARK: - Texture Cache
+    private static var crystalTextureCache: [Bool: SKTexture] = [:] // true: pink, false: purple
+
+    private static func getCrystalTexture(isPink: Bool) -> SKTexture {
+        if let cached = crystalTextureCache[isPink] {
+            return cached
+        }
+        let w: CGFloat = 36.0
+        let h: CGFloat = 64.0
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: w, height: h))
+        let img = renderer.image { ctx in
+            let cgCtx = ctx.cgContext
+            let center = CGPoint(x: w / 2, y: h / 2)
+            let rw = (w - 4) / 2
+            let rh = (h - 4) / 2
+
+            let path = CGMutablePath()
+            path.move(to: CGPoint(x: center.x, y: center.y - rh))
+            path.addLine(to: CGPoint(x: center.x + rw, y: center.y))
+            path.addLine(to: CGPoint(x: center.x, y: center.y + rh))
+            path.addLine(to: CGPoint(x: center.x - rw, y: center.y))
+            path.closeSubpath()
+
+            let color = isPink
+                ? UIColor(red: 1.0, green: 0.72, blue: 0.88, alpha: 0.95)
+                : UIColor(red: 0.95, green: 0.85, blue: 1.0, alpha: 0.95)
+
+            cgCtx.addPath(path)
+            cgCtx.setFillColor(color.cgColor)
+            cgCtx.fillPath()
+
+            cgCtx.addPath(path)
+            cgCtx.setStrokeColor(UIColor.white.withAlphaComponent(0.85).cgColor)
+            cgCtx.setLineWidth(1.2)
+            cgCtx.strokePath()
+
+            // Đường vân phản chiếu bên trong
+            let facetPath = CGMutablePath()
+            facetPath.move(to: CGPoint(x: center.x, y: center.y - rh * 0.6))
+            facetPath.addLine(to: CGPoint(x: center.x + rw * 0.45, y: center.y))
+            facetPath.addLine(to: CGPoint(x: center.x, y: center.y + rh * 0.6))
+            cgCtx.addPath(facetPath)
+            cgCtx.setStrokeColor(UIColor.white.withAlphaComponent(0.65).cgColor)
+            cgCtx.setLineWidth(1.0)
+            cgCtx.strokePath()
+        }
+        let texture = SKTexture(image: img)
+        crystalTextureCache[isPink] = texture
+        return texture
+    }
+
     public func trigger(on potNode: SKSpriteNode, in containerNode: SKNode, isHanging: Bool) {
+        var existingCount = 0
+        for child in containerNode.children where child.name == "potQuartzCrystal" {
+            existingCount += 1
+        }
+        guard existingCount < 16 else { return }
+
         let potFrame = potNode.frame
-        let burstCount = Int.random(in: burstCountRange)
+        let burstCount = min(Int.random(in: burstCountRange), 16 - existingCount)
 
         for i in 0..<burstCount {
             let radius = CGFloat.random(in: minRadius...maxRadius)
-            let color = (i % 2 == 0)
-                ? UIColor(red: 1.0, green: 0.72, blue: 0.88, alpha: 0.95) // Hồng thạch anh phấn
-                : UIColor(red: 0.95, green: 0.85, blue: 1.0, alpha: 0.95) // Ánh pha lê tím nhạt
+            let isPink = (i % 2 == 0)
+            let texture = Self.getCrystalTexture(isPink: isPink)
 
-            let crystal = Self.createDiamondCrystalNode(radius: radius, color: color)
+            let crystal = SKSpriteNode(texture: texture, size: CGSize(width: radius * 1.5, height: radius * 2.7))
+            crystal.name = "potQuartzCrystal"
 
             let startX = CGFloat.random(in: (potFrame.minX + potFrame.width * 0.15)...(potFrame.maxX - potFrame.width * 0.15))
             let startY = CGFloat.random(in: (potFrame.minY + potFrame.height * 0.25)...(potFrame.maxY - potFrame.height * 0.15))
             crystal.position = CGPoint(x: startX, y: startY)
             crystal.zPosition = 150
             crystal.alpha = 0.0
-            crystal.setScale(0.2)
+            crystal.setScale(0.3)
             containerNode.addChild(crystal)
 
             let flyAngle = CGFloat.random(in: 0...(.pi * 2))
@@ -49,6 +107,9 @@ public final class QuartzBurstEffect: PotTapEffect {
 
             let delay = SKAction.wait(forDuration: Double(i) * 0.02)
             let fadeIn = SKAction.fadeAlpha(to: 1.0, duration: 0.10)
+            let scaleUp = SKAction.scale(to: 1.0, duration: 0.12)
+            let appearGroup = SKAction.group([fadeIn, scaleUp])
+
             let floatOut = SKAction.moveBy(x: dx, y: dy, duration: 0.55)
             floatOut.timingMode = .easeOut
             let rotate = SKAction.rotate(byAngle: CGFloat.random(in: -3.5...3.5), duration: 0.55)
@@ -58,12 +119,12 @@ public final class QuartzBurstEffect: PotTapEffect {
             ])
 
             let motionGroup = SKAction.group([floatOut, rotate, fadeOut])
-            let fullSeq = SKAction.sequence([delay, fadeIn, motionGroup, SKAction.removeFromParent()])
+            let fullSeq = SKAction.sequence([delay, appearGroup, motionGroup, SKAction.removeFromParent()])
             crystal.run(fullSeq)
         }
     }
 
-    // MARK: - Helper tạo hình thoi thạch anh (Diamond Quartz Crystal)
+    // MARK: - Compatibility Helper (cho Pot6Node hoặc các hiệu ứng tĩnh)
 
     public static func createDiamondCrystalNode(radius: CGFloat, color: UIColor) -> SKShapeNode {
         let path = CGMutablePath()
@@ -81,7 +142,6 @@ public final class QuartzBurstEffect: PotTapEffect {
         crystalNode.strokeColor = UIColor.white.withAlphaComponent(0.85)
         crystalNode.lineWidth = 0.5
 
-        // Đường vân lăng kính phản chiếu bên trong
         let facetPath = CGMutablePath()
         facetPath.move(to: CGPoint(x: 0, y: rh * 0.6))
         facetPath.addLine(to: CGPoint(x: rw * 0.45, y: 0))

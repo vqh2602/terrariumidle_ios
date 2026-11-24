@@ -62,8 +62,11 @@ public final class CascadingVineMotionEffect: PlantMotionEffect {
 
         let completionAction = SKAction.run {
             // Khi toàn bộ thân và lá đã trở về trạng thái nghỉ tuyệt đối -> Khôi phục nhịp gió nhàn rỗi
-            (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
-            context.onComplete?()
+            if let onComplete = context.onComplete {
+                onComplete()
+            } else {
+                (context.plantNode as? PlantInteractiveNode)?.resumeIdleAnimation()
+            }
         }
         rootActions.append(completionAction)
 
@@ -72,8 +75,23 @@ public final class CascadingVineMotionEffect: PlantMotionEffect {
         // Chuỗi dây leo / phiến lá đung đưa lan truyền từ trên xuống dưới
         for (idx, leaf) in context.leafNodes.enumerated() {
             leaf.removeAction(forKey: "vineLeafWave")
+            leaf.removeAction(forKey: "crownTapBounce")
             let restAngle = leaf.restZRotation
             leaf.zRotation = restAngle // Triệt tiêu tức thì góc xoay trôi dạt do ngắt action trước
+
+            // Nếu là cụm tán / lá cắm trên miệng chậu (anchor gần đáy, không buông rủ):
+            // Thực hiện nảy nhẹ Squash & Stretch đàn hồi thay vì xoay nghiêng làm bật khỏi miệng chậu
+            let isCrown = ((leaf as? SKSpriteNode)?.anchorPoint.y ?? 0.0) < 0.25
+            if isCrown {
+                let squash = SKAction.scaleX(to: 1.05, y: 0.94, duration: 0.10 * mult)
+                squash.timingMode = .easeOut
+                let stretch = SKAction.scaleX(to: 0.98, y: 1.04, duration: 0.14 * mult)
+                stretch.timingMode = .easeOut
+                let settle = SKAction.scale(to: 1.0, duration: 0.12 * mult)
+                settle.timingMode = .easeInEaseOut
+                leaf.run(SKAction.sequence([squash, stretch, settle]), withKey: "crownTapBounce")
+                continue
+            }
 
             let delay = SKAction.wait(forDuration: Double(idx) * 0.035 * mult)
             let dir: CGFloat = (idx % 2 == 0) ? 1.0 : -0.8

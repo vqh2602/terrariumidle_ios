@@ -41,28 +41,11 @@ final class BackgroundAudioManager: ObservableObject {
         ensureAudioSession()
     }
 
-    private static var isSessionConfigured = false
+    private var playbackGeneration = 0
+    private var sfxGenerations: [String: Int] = [:]
 
-    /// Gọi từ AppDelegate sau khi session đã được set từ bên ngoài
-    static func markSessionConfigured() {
-        isSessionConfigured = true
-    }
-
-    /// Cấu hình AudioSession đồng bộ ngay trước khi phát nhạc.
-    /// Dùng category .playback (không có .mixWithOthers) để kích hoạt Remote Controls và Now Playing
-    /// trên thanh thông báo (Notification Center), màn hình khóa (Lock Screen) và Control Center.
     func ensureAudioSession() {
-        let session = AVAudioSession.sharedInstance()
-        do {
-            if session.category != .playback {
-                try session.setCategory(.playback, mode: .default, options: [])
-            }
-            try session.setActive(true)
-            Self.isSessionConfigured = true
-            print("✅ BackgroundAudioManager: AVAudioSession .playback active")
-        } catch {
-            print("⚠️ Lỗi thiết lập AVAudioSession:", error)
-        }
+        AudioSessionController.activate()
     }
 
     // MARK: - Audio File Resolution Helper
@@ -98,7 +81,15 @@ final class BackgroundAudioManager: ObservableObject {
         image: String? = nil,
         id: String? = nil
     ) {
-        ensureAudioSession()
+        playbackGeneration += 1
+        guard AudioSessionController.isActive else {
+            let generation = playbackGeneration
+            AudioSessionController.activate { [weak self] in
+                guard let self, self.playbackGeneration == generation else { return }
+                self.startBGM(fileName: fileName, ext: ext, title: title, image: image, id: id)
+            }
+            return
+        }
 
         guard let url = findAudioURL(fileName: fileName, ext: ext) else {
             print("❌ Missing BGM: \(fileName).\(ext)")
@@ -157,6 +148,7 @@ final class BackgroundAudioManager: ObservableObject {
     }
 
     func pause() {
+        playbackGeneration += 1
         player?.pause()
         for (_, sfxPlayer) in sfxPlayers {
             sfxPlayer.pause()
@@ -167,7 +159,15 @@ final class BackgroundAudioManager: ObservableObject {
     }
 
     func resume() {
-        ensureAudioSession()
+        playbackGeneration += 1
+        guard AudioSessionController.isActive else {
+            let generation = playbackGeneration
+            AudioSessionController.activate { [weak self] in
+                guard let self, self.playbackGeneration == generation else { return }
+                self.resume()
+            }
+            return
+        }
 
         // 1. Kiểm tra player BGM
         if let p = player {
@@ -208,6 +208,7 @@ final class BackgroundAudioManager: ObservableObject {
     }
 
     func stop() {
+        playbackGeneration += 1
         player?.stop()
         player = nil
         isPlaying = false
@@ -283,6 +284,15 @@ final class BackgroundAudioManager: ObservableObject {
     }
 
     func startSFX(id: String, fileName: String, ext: String = "mp3") {
+        sfxGenerations[id, default: 0] += 1
+        guard AudioSessionController.isActive else {
+            let generation = sfxGenerations[id]
+            AudioSessionController.activate { [weak self] in
+                guard let self, self.sfxGenerations[id] == generation else { return }
+                self.startSFX(id: id, fileName: fileName, ext: ext)
+            }
+            return
+        }
         guard let url = findAudioURL(fileName: fileName, ext: ext) else {
             print("❌ Missing SFX: \(fileName).\(ext)")
             return
@@ -309,6 +319,7 @@ final class BackgroundAudioManager: ObservableObject {
     }
 
     func stopSFX(id: String) {
+        sfxGenerations[id, default: 0] += 1
         sfxPlayers[id]?.stop()
         sfxPlayers.removeValue(forKey: id)
         activeSFXIds.remove(id)
@@ -316,6 +327,7 @@ final class BackgroundAudioManager: ObservableObject {
     }
 
     func stopAllSFX() {
+        for id in Array(sfxGenerations.keys) { sfxGenerations[id, default: 0] += 1 }
         sfxPlayers.values.forEach { $0.stop() }
         sfxPlayers.removeAll()
         activeSFXIds.removeAll()
@@ -481,6 +493,7 @@ final class BackgroundAudioManager: ObservableObject {
             }
             if type == .began {
                 Task { @MainActor [weak self] in
+                    AudioSessionController.invalidate()
                     self?.pause()
                 }
             } else if type == .ended {

@@ -17,18 +17,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     ) -> Bool {
         FirebaseApp.configure()
 
-        // Cấu hình AudioSession với category .playback ngay khi app khởi động
-        // để kích hoạt bảng điều khiển nhạc Now Playing trên thanh thông báo / màn hình khóa iOS
-        do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .default, options: [])
-            try session.setActive(true)
-            // Đánh dấu để BackgroundAudioManager không gọi lại setActive
-            BackgroundAudioManager.markSessionConfigured()
-            print("✅ AppDelegate: Đã kích hoạt AVAudioSession .playback thành công")
-        } catch {
-            print("⚠️ AppDelegate: Lỗi thiết lập AVAudioSession:", error)
-        }
+        AudioSessionController.activate()
 
         // Kích hoạt nhận sự kiện điều khiển từ xa (Lock Screen, Notification Center, Control Center)
         application.beginReceivingRemoteControlEvents()

@@ -146,11 +146,17 @@ public final class OxygenBubblesEffect: PlantTapEffect {
                     let leaf = leaves.randomElement()!
                     let leafPos = leaf.parent != nil ? leaf.parent!.convert(leaf.position, to: plantNode) : leaf.position
                     spawnX = leafPos.x + CGFloat.random(in: -16...16)
-                    spawnY = max(containerSize.height * 0.18, min(containerSize.height * 0.92, leafPos.y + CGFloat.random(in: -10...18)))
+                    let minY = leafPos.y < 0 ? -containerSize.height * 0.85 : containerSize.height * 0.18
+                    spawnY = max(minY, min(containerSize.height * 0.92, leafPos.y + CGFloat.random(in: -10...18)))
                 } else {
                     // Trải đều tự nhiên khắp toàn bộ tán cây
                     spawnX = CGFloat.random(in: -containerSize.width * 0.44...containerSize.width * 0.44)
-                    spawnY = CGFloat.random(in: containerSize.height * 0.18...containerSize.height * 0.90)
+                    let hasHangingLeaves = leaves.contains { leaf in
+                        let y = leaf.parent != nil ? leaf.parent!.convert(leaf.position, to: plantNode).y : leaf.position.y
+                        return y < -10
+                    }
+                    let minY = hasHangingLeaves ? -containerSize.height * 0.5 : containerSize.height * 0.18
+                    spawnY = CGFloat.random(in: minY...containerSize.height * 0.90)
                 }
             }
 

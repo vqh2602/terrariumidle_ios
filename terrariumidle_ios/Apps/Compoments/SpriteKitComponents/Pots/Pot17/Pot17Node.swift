@@ -182,11 +182,17 @@ public final class Pot17Node: SKNode, PotInteractiveNode {
                 self.frontRopeNode = frontRope
             }
 
+            if isHanging {
+                addIdlePendulumSway()
+            }
             return
         }
 
         // 2. FALLBACK PROCEDURAL (Nếu chưa nạp được scene)
         buildProceduralLayers(scaleX: scaleX, scaleY: scaleY)
+        if isHanging {
+            addIdlePendulumSway()
+        }
     }
 
     private func buildProceduralLayers(scaleX: CGFloat, scaleY: CGFloat) {
@@ -262,6 +268,18 @@ public final class Pot17Node: SKNode, PotInteractiveNode {
         return nil
     }
 
+    // MARK: - Idle Pendulum Sway (Chậu treo đu đưa êm dịu trong gió)
+
+    private func addIdlePendulumSway() {
+        hangingRigNode.removeAction(forKey: "idleSway")
+        let swayLeft = SKAction.rotate(toAngle: -0.016, duration: 3.6)
+        swayLeft.timingMode = .easeInEaseOut
+        let swayRight = SKAction.rotate(toAngle: 0.016, duration: 3.6)
+        swayRight.timingMode = .easeInEaseOut
+        let swaySequence = SKAction.sequence([swayLeft, swayRight])
+        hangingRigNode.run(SKAction.repeatForever(swaySequence), withKey: "idleSway")
+    }
+
     // MARK: - Phản hồi tương tác Tap (Motion & Visual Tap Animation)
 
     public func playTapAnimation() {
@@ -271,7 +289,12 @@ public final class Pot17Node: SKNode, PotInteractiveNode {
             potNode: potBodyNode,
             shadowNode: nil,
             initialPosition: .zero,
-            isHanging: isHanging
+            isHanging: isHanging,
+            onComplete: { [weak self] in
+                if self?.isHanging == true {
+                    self?.addIdlePendulumSway()
+                }
+            }
         )
 
         // 2. Kích hoạt các hiệu ứng hạt tap (StoneDustEffect z = 150)
