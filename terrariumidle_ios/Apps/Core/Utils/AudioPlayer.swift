@@ -263,27 +263,42 @@ enum AudioSessionController {
         isActivating = true
         let requestGeneration = generation
         queue.async {
-            let succeeded: Bool
-            do {
-                let session = AVAudioSession.sharedInstance()
-                try session.setCategory(.playback, mode: .default, options: [])
-                try session.setActive(true)
-                succeeded = true
-            } catch {
-                print("⚠️ Lỗi thiết lập AVAudioSession:", error)
-                succeeded = false
-            }
-            Task { @MainActor in
-                isActivating = false
-                guard requestGeneration == generation else {
-                    if !completions.isEmpty { activate() }
-                    return
+            configureAndActivate { succeeded in
+                Task { @MainActor in
+                    isActivating = false
+                    guard requestGeneration == generation else {
+                        if !completions.isEmpty { activate() }
+                        return
+                    }
+                    isActive = succeeded
+                    let pending = completions
+                    completions.removeAll()
+                    if succeeded { pending.forEach { $0() } }
                 }
-                isActive = succeeded
-                let pending = completions
-                completions.removeAll()
-                if succeeded { pending.forEach { $0() } }
             }
+        }
+    }
+
+    /// Session configuration and the legacy synchronous API must stay off the main thread.
+    private nonisolated static func configureAndActivate(completion: @escaping @Sendable (Bool) -> Void) {
+        dispatchPrecondition(condition: .notOnQueue(.main))
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .default, options: [])
+            if #available(iOS 27.0, *) {
+                session.activate(options: []) { activated, error in
+                    if let error {
+                        print("⚠️ Lỗi thiết lập AVAudioSession:", error)
+                    }
+                    completion(activated && error == nil)
+                }
+            } else {
+                try session.setActive(true)
+                completion(true)
+            }
+        } catch {
+            print("⚠️ Lỗi thiết lập AVAudioSession:", error)
+            completion(false)
         }
     }
 }

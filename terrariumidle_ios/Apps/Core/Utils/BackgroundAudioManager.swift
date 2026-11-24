@@ -32,8 +32,10 @@ final class BackgroundAudioManager: ObservableObject {
 
     // MARK: - Private Players
 
-    private var player: AVAudioPlayer?
-    private var sfxPlayers: [String: AVAudioPlayer] = [:]
+    private let playback = BackgroundAudioPlayback()
+    private var isStartingBGM = false
+    private var pendingSFXIds: Set<String> = []
+    private var nowPlayingGeneration = 0
 
     private init() {
         setupRemoteCommands()
@@ -92,38 +94,51 @@ final class BackgroundAudioManager: ObservableObject {
         }
 
         guard let url = findAudioURL(fileName: fileName, ext: ext) else {
+            isStartingBGM = false
             print("❌ Missing BGM: \(fileName).\(ext)")
             return
         }
 
-        do {
-            player = try AVAudioPlayer(contentsOf: url)
-            player?.numberOfLoops = -1
-            player?.volume = bgmVolume
-            player?.prepareToPlay()
-
-            isPlaying = true
-            currentBGMTitle = title
-            if let id = id {
-                currentBGMId = id
+        isStartingBGM = true
+        currentBGMTitle = title
+        if let id { currentBGMId = id }
+        if let image {
+            currentBGMImage = image
+        } else if currentBGMImage == nil {
+            currentBGMImage = currentBGMId
+        }
+        // Discard metadata snapshots from the previous track while this one loads.
+        nowPlayingGeneration += 1
+        let generation = playbackGeneration
+        let volume = bgmVolume
+        playback.perform { playback in
+            let played: Bool
+            do {
+                playback.player?.stop()
+                playback.player = nil
+                let player = try AVAudioPlayer(contentsOf: url)
+                player.numberOfLoops = -1
+                player.volume = volume
+                played = player.prepareToPlay() && player.play()
+                playback.player = played ? player : nil
+            } catch {
+                print("❌ startBGM error:", error)
+                played = false
             }
-            if let image = image {
-                currentBGMImage = image
-            } else if currentBGMImage == nil {
-                currentBGMImage = currentBGMId
+            Task { @MainActor [weak self] in
+                guard let self, self.playbackGeneration == generation else { return }
+                self.isStartingBGM = false
+                self.isPlaying = played
+                guard played else {
+                    self.updateNowPlaying()
+                    return
+                }
+                self.updateNowPlaying()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                    guard let self, self.playbackGeneration == generation else { return }
+                    self.updateNowPlaying()
+                }
             }
-
-            player?.play()
-            print("🎵 BGM playing: \(title) (\(fileName))")
-
-            // Cập nhật Now Playing ngay lập tức và sau 0.2s để lock screen widget nhận diện
-            updateNowPlaying(title: title)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-                self?.updateNowPlaying(title: title)
-            }
-
-        } catch {
-            print("❌ startBGM error:", error)
         }
     }
 
@@ -143,15 +158,23 @@ final class BackgroundAudioManager: ObservableObject {
 
     /// Phát bản nhạc BGM mặc định ("m0" - "Relax...") nếu chưa có nhạc đang phát
     func startDefaultBGM() {
-        guard !isPlaying else { return }
+        guard !isPlaying, !isStartingBGM else { return }
         switchBGM(id: "m0", fileName: "m0", title: "Relax...", image: "m0")
     }
 
     func pause() {
         playbackGeneration += 1
-        player?.pause()
-        for (_, sfxPlayer) in sfxPlayers {
-            sfxPlayer.pause()
+        isStartingBGM = false
+        let pendingIds = pendingSFXIds
+        for id in pendingIds { sfxGenerations[id, default: 0] += 1 }
+        pendingSFXIds.removeAll()
+        activeSFXIds.subtract(pendingIds)
+        playback.perform { playback in
+            for id in pendingIds {
+                playback.sfxPlayers.removeValue(forKey: id)?.stop()
+            }
+            playback.player?.pause()
+            playback.sfxPlayers.values.forEach { $0.pause() }
         }
         isPlaying = false
         updateNowPlaying()
@@ -169,38 +192,30 @@ final class BackgroundAudioManager: ObservableObject {
             return
         }
 
-        // 1. Kiểm tra player BGM
-        if let p = player {
-            p.prepareToPlay()
-            let played = p.play()
-            print("🎵 resume: player.play() = \(played), currentTime = \(p.currentTime)")
-            if !played {
-                print("⚠️ player.play() returned false, re-creating player...")
-                let trackId = currentBGMId ?? "m0"
-                startBGM(fileName: trackId, title: currentBGMTitle, image: currentBGMImage, id: trackId)
-                return
+        isStartingBGM = true
+        let generation = playbackGeneration
+        playback.perform { playback in
+            let played = playback.player.map { $0.prepareToPlay() && $0.play() } ?? false
+            if played {
+                playback.sfxPlayers.values.forEach { $0.play() }
             }
-        } else {
-            // Player chưa có hoặc đã bị giải phóng -> khởi động lại track hiện tại
-            print("🔄 resume: player was nil, re-starting BGM...")
-            let trackId = currentBGMId ?? "m0"
-            startBGM(fileName: trackId, title: currentBGMTitle, image: currentBGMImage, id: trackId)
-            return
+            Task { @MainActor [weak self] in
+                guard let self, self.playbackGeneration == generation else { return }
+                self.isStartingBGM = false
+                if !played {
+                    let trackId = self.currentBGMId ?? "m0"
+                    self.startBGM(fileName: trackId, title: self.currentBGMTitle,
+                                  image: self.currentBGMImage, id: trackId)
+                    return
+                }
+                self.isPlaying = true
+                self.updateNowPlaying()
+            }
         }
-
-        // 2. Resume các SFX đang hoạt động
-        for (_, sfxPlayer) in sfxPlayers {
-            sfxPlayer.play()
-        }
-
-        isPlaying = true
-        updateNowPlaying()
     }
 
     func toggle() {
-        if let p = player, p.isPlaying {
-            pause()
-        } else if isPlaying {
+        if isPlaying || isStartingBGM {
             pause()
         } else {
             resume()
@@ -209,21 +224,27 @@ final class BackgroundAudioManager: ObservableObject {
 
     func stop() {
         playbackGeneration += 1
-        player?.stop()
-        player = nil
+        isStartingBGM = false
+        playback.perform { playback in
+            playback.player?.stop()
+            playback.player = nil
+        }
         isPlaying = false
         updateNowPlaying()
     }
 
     func seek(to time: TimeInterval) {
-        guard let p = player else { return }
-        p.currentTime = max(0, min(time, p.duration))
+        playback.perform { playback in
+            guard let player = playback.player else { return }
+            player.currentTime = max(0, min(time, player.duration))
+        }
         updateNowPlaying()
     }
 
     func setBGMVolume(_ vol: Float) {
         bgmVolume = max(0, min(1, vol))
-        player?.volume = bgmVolume
+        let volume = bgmVolume
+        playback.perform { $0.player?.volume = volume }
     }
 
     // MARK: - Next / Previous Track (Remote Command Support)
@@ -249,11 +270,21 @@ final class BackgroundAudioManager: ObservableObject {
     }
 
     func playPreviousTrack() {
-        if let p = player, p.currentTime > 3.0 {
-            seek(to: 0)
-            return
+        let generation = playbackGeneration
+        playback.perform { playback in
+            let shouldRestart = (playback.player?.currentTime ?? 0) > 3.0
+            Task { @MainActor [weak self] in
+                guard let self, self.playbackGeneration == generation else { return }
+                if shouldRestart {
+                    self.seek(to: 0)
+                } else {
+                    self.switchToPreviousTrack()
+                }
+            }
         }
+    }
 
+    private func switchToPreviousTrack() {
         let allMusics = ItemDataManager.shared.getAllMusics()
         guard !allMusics.isEmpty else { return }
 
@@ -276,7 +307,7 @@ final class BackgroundAudioManager: ObservableObject {
     // MARK: - SFX (Layered Multi-SFX Management & Mixer)
 
     func toggleSFX(id: String, fileName: String, ext: String = "mp3") {
-        if activeSFXIds.contains(id) {
+        if activeSFXIds.contains(id) || pendingSFXIds.contains(id) {
             stopSFX(id: id)
         } else {
             startSFX(id: id, fileName: fileName, ext: ext)
@@ -285,6 +316,7 @@ final class BackgroundAudioManager: ObservableObject {
 
     func startSFX(id: String, fileName: String, ext: String = "mp3") {
         sfxGenerations[id, default: 0] += 1
+        pendingSFXIds.insert(id)
         guard AudioSessionController.isActive else {
             let generation = sfxGenerations[id]
             AudioSessionController.activate { [weak self] in
@@ -294,42 +326,54 @@ final class BackgroundAudioManager: ObservableObject {
             return
         }
         guard let url = findAudioURL(fileName: fileName, ext: ext) else {
+            pendingSFXIds.remove(id)
             print("❌ Missing SFX: \(fileName).\(ext)")
             return
         }
 
-        do {
-            let p = try AVAudioPlayer(contentsOf: url)
-            p.numberOfLoops = -1
-
-            let indVol = sfxVolumes[id] ?? 1.0
-            p.volume = indVol * sfxVolume
-            p.prepareToPlay()
-            p.play()
-
-            sfxPlayers[id] = p
-            activeSFXIds.insert(id)
-            if sfxVolumes[id] == nil {
-                sfxVolumes[id] = 1.0
+        let generation = sfxGenerations[id]
+        let volume = (sfxVolumes[id] ?? 1.0) * sfxVolume
+        playback.perform { playback in
+            let played: Bool
+            do {
+                playback.sfxPlayers.removeValue(forKey: id)?.stop()
+                let player = try AVAudioPlayer(contentsOf: url)
+                player.numberOfLoops = -1
+                player.volume = volume
+                played = player.prepareToPlay() && player.play()
+                if played { playback.sfxPlayers[id] = player }
+            } catch {
+                print("❌ SFX error:", error)
+                played = false
             }
-            print("🔊 SFX playing: \(id) (vol: \(p.volume))")
-        } catch {
-            print("❌ SFX error:", error)
+            Task { @MainActor [weak self] in
+                guard let self, self.sfxGenerations[id] == generation else { return }
+                self.pendingSFXIds.remove(id)
+                if played {
+                    self.activeSFXIds.insert(id)
+                    if self.sfxVolumes[id] == nil { self.sfxVolumes[id] = 1.0 }
+                } else {
+                    self.activeSFXIds.remove(id)
+                }
+            }
         }
     }
 
     func stopSFX(id: String) {
         sfxGenerations[id, default: 0] += 1
-        sfxPlayers[id]?.stop()
-        sfxPlayers.removeValue(forKey: id)
+        pendingSFXIds.remove(id)
+        playback.perform { $0.sfxPlayers.removeValue(forKey: id)?.stop() }
         activeSFXIds.remove(id)
         print("🔇 SFX stopped: \(id)")
     }
 
     func stopAllSFX() {
         for id in Array(sfxGenerations.keys) { sfxGenerations[id, default: 0] += 1 }
-        sfxPlayers.values.forEach { $0.stop() }
-        sfxPlayers.removeAll()
+        pendingSFXIds.removeAll()
+        playback.perform { playback in
+            playback.sfxPlayers.values.forEach { $0.stop() }
+            playback.sfxPlayers.removeAll()
+        }
         activeSFXIds.removeAll()
         print("🔇 All SFX stopped")
     }
@@ -338,9 +382,8 @@ final class BackgroundAudioManager: ObservableObject {
     func setIndividualSFXVolume(id: String, volume: Float) {
         let clamped = max(0, min(1, volume))
         sfxVolumes[id] = clamped
-        if let p = sfxPlayers[id] {
-            p.volume = clamped * sfxVolume
-        }
+        let volume = clamped * sfxVolume
+        playback.perform { $0.sfxPlayers[id]?.volume = volume }
     }
 
     func getIndividualSFXVolume(id: String) -> Float {
@@ -350,15 +393,31 @@ final class BackgroundAudioManager: ObservableObject {
     /// Điều chỉnh âm lượng tổng thể cho toàn bộ SFX
     func setSFXVolume(_ vol: Float) {
         sfxVolume = max(0, min(1, vol))
-        for (id, p) in sfxPlayers {
-            let indVol = sfxVolumes[id] ?? 1.0
-            p.volume = indVol * sfxVolume
+        let volume = sfxVolume
+        let volumes = sfxVolumes
+        playback.perform { playback in
+            for (id, player) in playback.sfxPlayers {
+                player.volume = (volumes[id] ?? 1.0) * volume
+            }
         }
     }
 
     // MARK: - Now Playing (Notification Center / Lock Screen / Control Center)
 
     func updateNowPlaying(title: String? = nil) {
+        nowPlayingGeneration += 1
+        let generation = nowPlayingGeneration
+        playback.perform { playback in
+            let time = playback.player?.currentTime ?? 0
+            let duration = playback.player?.duration ?? 0
+            Task { @MainActor [weak self] in
+                guard let self, self.nowPlayingGeneration == generation else { return }
+                self.publishNowPlaying(title: title, time: time, duration: duration)
+            }
+        }
+    }
+
+    private func publishNowPlaying(title: String?, time: TimeInterval, duration: TimeInterval) {
         let displayTitle = title ?? currentBGMTitle
 
         var info: [String: Any] = [
@@ -367,11 +426,11 @@ final class BackgroundAudioManager: ObservableObject {
             MPMediaItemPropertyAlbumTitle: "Nhạc thư giãn",
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
             MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
-            MPNowPlayingInfoPropertyElapsedPlaybackTime: player?.currentTime ?? 0,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: time,
             MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
         ]
 
-        if let duration = player?.duration, duration > 0 {
+        if duration > 0 {
             info[MPMediaItemPropertyPlaybackDuration] = duration
         }
 
@@ -384,7 +443,7 @@ final class BackgroundAudioManager: ObservableObject {
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
         MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
-        print("📻 Now Playing updated: [\(displayTitle)] isPlaying: \(isPlaying), time: \(player?.currentTime ?? 0)")
+        print("📻 Now Playing updated: [\(displayTitle)] isPlaying: \(isPlaying), time: \(time)")
     }
 
     private func updatePlaybackState() {
@@ -506,6 +565,21 @@ final class BackgroundAudioManager: ObservableObject {
                     }
                 }
             }
+        }
+    }
+}
+
+/// Owns all AVAudioPlayer instances. Access mutable state only inside `perform`.
+/// @unchecked Sendable is safe because every operation uses the same serial queue.
+nonisolated private final class BackgroundAudioPlayback: @unchecked Sendable {
+    private let queue = DispatchQueue(label: "terrarium.background-audio", qos: .userInitiated)
+    var player: AVAudioPlayer?
+    var sfxPlayers: [String: AVAudioPlayer] = [:]
+
+    func perform(_ operation: @escaping @Sendable (BackgroundAudioPlayback) -> Void) {
+        queue.async {
+            dispatchPrecondition(condition: .notOnQueue(.main))
+            operation(self)
         }
     }
 }
