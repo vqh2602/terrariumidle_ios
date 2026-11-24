@@ -111,7 +111,7 @@ final class BackgroundAudioManager: ObservableObject {
         nowPlayingGeneration += 1
         let generation = playbackGeneration
         let volume = bgmVolume
-        playback.perform { playback in
+        playback.perform { [weak self] playback in
             let played: Bool
             do {
                 playback.player?.stop()
@@ -194,7 +194,7 @@ final class BackgroundAudioManager: ObservableObject {
 
         isStartingBGM = true
         let generation = playbackGeneration
-        playback.perform { playback in
+        playback.perform { [weak self] playback in
             let played = playback.player.map { $0.prepareToPlay() && $0.play() } ?? false
             if played {
                 playback.sfxPlayers.values.forEach { $0.play() }
@@ -271,7 +271,7 @@ final class BackgroundAudioManager: ObservableObject {
 
     func playPreviousTrack() {
         let generation = playbackGeneration
-        playback.perform { playback in
+        playback.perform { [weak self] playback in
             let shouldRestart = (playback.player?.currentTime ?? 0) > 3.0
             Task { @MainActor [weak self] in
                 guard let self, self.playbackGeneration == generation else { return }
@@ -333,7 +333,7 @@ final class BackgroundAudioManager: ObservableObject {
 
         let generation = sfxGenerations[id]
         let volume = (sfxVolumes[id] ?? 1.0) * sfxVolume
-        playback.perform { playback in
+        playback.perform { [weak self] playback in
             let played: Bool
             do {
                 playback.sfxPlayers.removeValue(forKey: id)?.stop()
@@ -407,7 +407,7 @@ final class BackgroundAudioManager: ObservableObject {
     func updateNowPlaying(title: String? = nil) {
         nowPlayingGeneration += 1
         let generation = nowPlayingGeneration
-        playback.perform { playback in
+        playback.perform { [weak self] playback in
             let time = playback.player?.currentTime ?? 0
             let duration = playback.player?.duration ?? 0
             Task { @MainActor [weak self] in
