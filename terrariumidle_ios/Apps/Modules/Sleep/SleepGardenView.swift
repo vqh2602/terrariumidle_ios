@@ -48,7 +48,7 @@ struct SleepGardenView: View {
                         connectionCard
                     }
                     tonightCard
-                    actionButton("Ghi giấc ngủ thủ công", icon: "square.and.pencil") { showManualEntry = true }
+                    actionButton("Ghi giấc ngủ", icon: "square.and.pencil") { showManualEntry = true }
                     if let message = health.message { notice(message, icon: "exclamationmark.circle") }
                     if health.days.allSatisfy({ $0.seconds == 0 }) && !health.isSyncing { emptyCard }
                     statisticsCard
@@ -96,7 +96,7 @@ struct SleepGardenView: View {
             Text("Cho phép đọc giấc ngủ từ Apple Health. Mỗi lần mở Terrarium, nhật ký sẽ tự cập nhật để bạn nhận quà cho vườn.")
             Text("Đọc giấc ngủ • Chỉ ghi nhật ký thủ công khi bạn chọn đồng bộ")
                 .font(.caption).foregroundStyle(AccountStyle.muted)
-            actionButton(health.isSyncing ? "Đang kết nối…" : "Kết nối Apple Health", icon: "heart.fill") {
+            actionButton(health.isSyncing ? "Đang kết nối…" : "Kết nối Health", icon: "heart.fill") {
                 Task { await health.connect() }
             }.disabled(health.isSyncing)
             if let message = health.message { Text(message).font(.caption) }
@@ -217,29 +217,40 @@ struct SleepGardenView: View {
     }
 
     private var manualJournalCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("Nhật ký thủ công & cảm nhận", systemImage: "book.closed").font(.headline)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .firstTextBaseline) {
+                Label("Nhật ký", systemImage: "book.closed").font(.headline)
+                Spacer()
+                NavigationLink {
+                    SleepJournalHistoryView(health: health)
+                } label: {
+                    Label("Tất cả", systemImage: "chevron.right")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.vertical, 10)
+                }
+                .accessibilityLabel("Xem tất cả nhật ký giấc ngủ")
+            }
             if health.manualEntries.isEmpty {
-                Text("Chưa có bản ghi thủ công.").font(.subheadline)
+                Text("Chưa có bản ghi thủ công.")
+                    .font(.subheadline).foregroundStyle(AccountStyle.muted)
             }
-            ForEach(health.manualEntries.sorted { $0.end > $1.end }.prefix(7)) { entry in
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(entry.start.formatted(date: .abbreviated, time: .shortened)) → \(entry.end.formatted(date: .abbreviated, time: .shortened))")
-                        .font(.subheadline.bold())
-                    Text("\(SleepSummary.duration(entry.interval.duration)) • \(entry.feeling)")
-                    Text(entry.exported ? "Đã ghi sang Apple Health" : "Chỉ trên thiết bị")
-                        .foregroundStyle(AccountStyle.muted)
-                }.font(.caption)
+            ForEach(Array(health.manualEntries.sorted { $0.end > $1.end }.prefix(2))) { entry in
+                SleepJournalEntryRow(entry: entry)
+                Divider().overlay(AccountStyle.border.opacity(0.4))
             }
-            if health.isAvailable {
-                Button("Kết nối / kiểm tra quyền Apple Health") { Task { await health.connect() } }
-                    .disabled(health.isSyncing || health.isSaving)
-                Button("Đồng bộ nhật ký thủ công sang Apple Health") {
-                    Task { await health.syncManualJournal() }
-                }.disabled(!health.hasRequestedAccess || health.isSyncing || health.isSaving)
-                Text("Nút đồng bộ sẽ ghi tất cả bản ghi thủ công còn trên thiết bị sang Apple Health nếu có quyền ghi. Các khoảng trùng nguồn chỉ được tính một lần trong biểu đồ.")
-                    .font(.caption).foregroundStyle(AccountStyle.muted)
-            }
+            NavigationLink {
+                SleepHealthSettingsView(health: health)
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "heart.fill").foregroundStyle(AccountStyle.green)
+                    Text("Apple Health").font(.subheadline.weight(.semibold))
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption.weight(.bold))
+                }
+                .padding(.vertical, 12).padding(.horizontal, 14)
+                .background(AccountStyle.green.opacity(0.07), in: RoundedRectangle(cornerRadius: 14))
+                .contentShape(Rectangle())
+            }.buttonStyle(.plain)
         }.padding(20).modifier(AccountPanel())
     }
 
@@ -328,7 +339,7 @@ struct SleepGardenView: View {
                     Text("2. Trong Sức khỏe, mở hồ sơ → Ứng dụng / quyền truy cập dữ liệu → Terrarium, cho phép đọc và, nếu muốn đồng bộ nhật ký thủ công, cho phép ghi Giấc ngủ. Tên mục có thể khác theo phiên bản iOS.")
                     Text("3. Quay lại Terrarium. App tự đồng bộ khi hoạt động; bạn cũng có thể kéo xuống để thử lại.")
                     Text("Bạn có thể dùng Lịch trình ngủ để đặt giờ nghỉ ngơi và Ghi giấc ngủ thủ công để bổ sung nhật ký. Terrarium không tự đo giấc ngủ. Đánh giá chỉ dựa trên mục tiêu cá nhân và cảm nhận tự ghi.")
-                    actionButton("Kiểm tra quyền Apple Health", icon: "heart.fill") {
+                    actionButton("Cấp quyền Health", icon: "heart.fill") {
                         Task { await health.connect() }
                     }.disabled(health.isSyncing || !health.isAvailable)
                 }.padding(24)
@@ -357,14 +368,10 @@ struct SleepGardenView: View {
     }
 
     private func actionButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Label(title, systemImage: icon)
-                .font(.system(.headline, design: .rounded))
-                .frame(maxWidth: .infinity).padding(15)
-                .foregroundStyle(AccountStyle.cream)
-                .background(AccountStyle.green, in: RoundedRectangle(cornerRadius: 16))
-        }.buttonStyle(.plain)
+        Button(action: action) { Label(title, systemImage: icon) }
+            .buttonStyle(SleepActionButtonStyle())
     }
+
 }
 
 private struct SleepGardenHeader: View {

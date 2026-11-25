@@ -38,6 +38,7 @@ struct terrariumidle_iosApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(.light)
                 .task(id: scenePhase) {
                     if scenePhase == .active {
                         _ = await GardenReminderScheduler.shared.update(.saved())

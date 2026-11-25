@@ -26,5 +26,7 @@
 	</array>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Cho phép Terrarium ghi các giấc ngủ bạn nhập thủ công vào Apple Health khi bạn chọn đồng bộ.</string>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 </dict>
 </plist>
