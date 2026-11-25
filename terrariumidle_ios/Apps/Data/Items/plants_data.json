@@ -36,7 +36,7 @@
         "effectDescription": "",
         "music": "",
         "musicDescription": "",
-        "effectLandscape": "landscape1",
+        "effectLandscape": "Landscape1",
         "effectLandscapeDescription": "Ban công quang đãng",
         "effectSfx": "",
         "effectSfxDescription": ""
@@ -57,7 +57,7 @@
         "effectDescription": "",
         "music": "",
         "musicDescription": "",
-        "effectLandscape": "landscape2",
+        "effectLandscape": "Landscape2",
         "effectLandscapeDescription": "Ban công chiều tà",
         "effectSfx": "",
         "effectSfxDescription": ""
@@ -141,7 +141,7 @@
         "effectDescription": "",
         "music": "",
         "musicDescription": "",
-        "effectLandscape": "landscape3",
+        "effectLandscape": "Landscape3",
         "effectLandscapeDescription": "Ban công mưa bão",
         "effectSfx": "",
         "effectSfxDescription": ""
@@ -330,7 +330,7 @@
         "effectDescription": "",
         "music": "",
         "musicDescription": "",
-        "effectLandscape": "landscape4",
+        "effectLandscape": "Landscape4",
         "effectLandscapeDescription": "Ban công trời sao",
         "effectSfx": "",
         "effectSfxDescription": ""
@@ -498,7 +498,7 @@
         "effectDescription": "",
         "music": "",
         "musicDescription": "",
-        "effectLandscape": "landscape5",
+        "effectLandscape": "Landscape5",
         "effectLandscapeDescription": "Mưa đêm giông bão",
         "effectSfx": "",
         "effectSfxDescription": ""
@@ -519,7 +519,7 @@
         "effectDescription": "",
         "music": "",
         "musicDescription": "",
-        "effectLandscape": "landscape6",
+        "effectLandscape": "Landscape6",
         "effectLandscapeDescription": "Mặt trời trên đỉnh núi",
         "effectSfx": "",
         "effectSfxDescription": ""

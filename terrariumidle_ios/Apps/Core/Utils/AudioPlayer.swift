@@ -70,13 +70,20 @@ final class AudioPlayer {
         let cleanName = (soundName ?? "").trimmingCharacters(in: .whitespaces)
         let targetName = cleanName.isEmpty ? "tap" : cleanName
         let baseName = (targetName as NSString).deletingPathExtension
-        let fileExt = (targetName as NSString).pathExtension.isEmpty ? "mp3" : (targetName as NSString).pathExtension
+        let explicitExt = (targetName as NSString).pathExtension
 
-        if Bundle.main.url(forResource: baseName, withExtension: fileExt) != nil {
-            playTap(fileName: baseName, ext: fileExt, volume: volume)
-        } else {
-            playTap(fileName: "tap", ext: "mp3", volume: volume)
+        let candidateExts = explicitExt.isEmpty
+            ? ["mp3", "wav", "m4a", "caf", "aac"]
+            : [explicitExt, explicitExt.uppercased()]
+
+        for ext in candidateExts {
+            if Bundle.main.url(forResource: baseName, withExtension: ext) != nil {
+                playTap(fileName: baseName, ext: ext, volume: volume)
+                return
+            }
         }
+
+        playTap(fileName: "tap", ext: "mp3", volume: volume)
     }
 
     // MARK: - Sound Effects (có thể chồng nhiều hiệu ứng)

@@ -17,8 +17,8 @@
         "musicDescription": "",
         "effectLandscape": "",
         "effectLandscapeDescription": "",
-        "effectSfx": "sfx4",
-        "effectSfxDescription": "Tiếng gió"
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "sticker2",
@@ -38,8 +38,8 @@
         "musicDescription": "",
         "effectLandscape": "",
         "effectLandscapeDescription": "",
-        "effectSfx": "sfx1",
-        "effectSfxDescription": "Tiếng chuông vàng"
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "sticker3",
@@ -59,8 +59,8 @@
         "musicDescription": "",
         "effectLandscape": "",
         "effectLandscapeDescription": "",
-        "effectSfx": "sfx4",
-        "effectSfxDescription": "Tiếng gió"
+        "effectSfx": "",
+        "effectSfxDescription": ""
     },
     {
         "id": "sticker4",
@@ -80,7 +80,7 @@
         "musicDescription": "",
         "effectLandscape": "",
         "effectLandscapeDescription": "",
-        "effectSfx": "sfx3",
-        "effectSfxDescription": "Tiếng lửa nến"
+        "effectSfx": "",
+        "effectSfxDescription": ""
     }
 ]
