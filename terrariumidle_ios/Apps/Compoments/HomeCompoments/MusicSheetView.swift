@@ -51,7 +51,7 @@ struct MusicSheetView: View {
                                             guard !isLocked else { return }
                                             audioManager.switchBGM(
                                                 id: item.id,
-                                                fileName: item.id,
+                                                fileName: item.sound ?? item.id,
                                                 title: item.name.tr,
                                                 image: item.image
                                             )

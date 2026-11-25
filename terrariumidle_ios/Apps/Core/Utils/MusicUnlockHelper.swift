@@ -12,12 +12,12 @@ enum MusicUnlockHelper {
     /// Hỗ trợ cả định dạng JSON mới (music, effect, effectLandscape, effectSfx)
     /// và định dạng legacy ("Tiếng bão - sfx7", "Relax - m0")
     static func getUnlockedMusicIds(from gardenModel: GardenModel?) -> Set<String> {
-        guard let plants = gardenModel?.plants else { return ["m0"] }
+        guard let plants = gardenModel?.plants else { return ["m0", "music1"] }
 
         var unlockedIds: Set<String> = []
 
         // Always unlock default track
-        unlockedIds.insert("m0")
+        unlockedIds.formUnion(["m0", "music1"])
 
         for plant in plants {
             // Check plant item
@@ -35,6 +35,12 @@ enum MusicUnlockHelper {
             }
         }
 
+        // Legacy gardens store audio names (m0, m1); the catalog uses music1, music2.
+        for track in ItemDataManager.shared.getAllMusics() {
+            if unlockedIds.contains(track.sound ?? track.id) || unlockedIds.contains(track.image) {
+                unlockedIds.insert(track.id)
+            }
+        }
         return unlockedIds
     }
 

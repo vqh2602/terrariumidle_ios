@@ -33,6 +33,8 @@ final class BackgroundAudioManager: ObservableObject {
     // MARK: - Private Players
 
     private let playback = BackgroundAudioPlayback()
+    private var currentBGMFileName: String?
+    private var currentBGMExtension = "mp3"
     private var isStartingBGM = false
     private var pendingSFXIds: Set<String> = []
     private var nowPlayingGeneration = 0
@@ -102,13 +104,6 @@ final class BackgroundAudioManager: ObservableObject {
         }
 
         isStartingBGM = true
-        currentBGMTitle = title
-        if let id { currentBGMId = id }
-        if let image {
-            currentBGMImage = image
-        } else if currentBGMImage == nil {
-            currentBGMImage = currentBGMId
-        }
         // Discard metadata snapshots from the previous track while this one loads.
         nowPlayingGeneration += 1
         let generation = playbackGeneration
@@ -116,13 +111,15 @@ final class BackgroundAudioManager: ObservableObject {
         playback.perform { [weak self] playback in
             let played: Bool
             do {
-                playback.player?.stop()
-                playback.player = nil
+                // Keep the current track until its replacement is ready to play.
                 let player = try AVAudioPlayer(contentsOf: url)
                 player.numberOfLoops = -1
                 player.volume = volume
                 played = player.prepareToPlay() && player.play()
-                playback.player = played ? player : nil
+                if played {
+                    playback.player?.stop()
+                    playback.player = player
+                }
             } catch {
                 print("❌ startBGM error:", error)
                 played = false
@@ -130,11 +127,16 @@ final class BackgroundAudioManager: ObservableObject {
             Task { @MainActor [weak self] in
                 guard let self, self.playbackGeneration == generation else { return }
                 self.isStartingBGM = false
-                self.isPlaying = played
                 guard played else {
                     self.updateNowPlaying()
                     return
                 }
+                self.isPlaying = true
+                self.currentBGMId = id ?? fileName
+                self.currentBGMTitle = title
+                self.currentBGMImage = image ?? id ?? fileName
+                self.currentBGMFileName = fileName
+                self.currentBGMExtension = ext
                 self.updateNowPlaying()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
                     guard let self, self.playbackGeneration == generation else { return }
@@ -151,17 +153,13 @@ final class BackgroundAudioManager: ObservableObject {
         title: String = "Terrarium Idle",
         image: String? = nil
     ) {
-        stop()
-        currentBGMId = id
-        currentBGMTitle = title
-        currentBGMImage = image ?? id
-        startBGM(fileName: fileName, title: title, image: currentBGMImage, id: id)
+        startBGM(fileName: fileName, title: title, image: image ?? id, id: id)
     }
 
     /// Phát bản nhạc BGM mặc định ("m0" - "Relax...") nếu chưa có nhạc đang phát
     func startDefaultBGM() {
         guard !isPlaying, !isStartingBGM else { return }
-        switchBGM(id: "m0", fileName: "m0", title: "Relax...", image: "m0")
+        switchBGM(id: "music1", fileName: "m0", title: "Relax...", image: "m0")
     }
 
     func pause() {
@@ -205,8 +203,9 @@ final class BackgroundAudioManager: ObservableObject {
                 guard let self, self.playbackGeneration == generation else { return }
                 self.isStartingBGM = false
                 if !played {
-                    let trackId = self.currentBGMId ?? "m0"
-                    self.startBGM(fileName: trackId, title: self.currentBGMTitle,
+                    let trackId = self.currentBGMId ?? "music1"
+                    self.startBGM(fileName: self.currentBGMFileName ?? "m0",
+                                  ext: self.currentBGMExtension, title: self.currentBGMTitle,
                                   image: self.currentBGMImage, id: trackId)
                     return
                 }
@@ -257,7 +256,10 @@ final class BackgroundAudioManager: ObservableObject {
 
         let unlockedIds = MusicUnlockHelper.getUnlockedMusicIds(from: FireStoreService.shared.gradenModel)
         let unlockedTracks = allMusics.filter { unlockedIds.contains($0.id) }
-        let playlist = unlockedTracks.isEmpty ? allMusics : unlockedTracks
+        let playlist = unlockedTracks.filter {
+            findAudioURL(fileName: $0.sound ?? $0.id) != nil
+        }
+        guard !playlist.isEmpty else { return }
 
         let currentIndex = playlist.firstIndex(where: { $0.id == currentBGMId }) ?? 0
         let nextIndex = (currentIndex + 1) % playlist.count
@@ -265,7 +267,7 @@ final class BackgroundAudioManager: ObservableObject {
 
         switchBGM(
             id: nextTrack.id,
-            fileName: nextTrack.id,
+            fileName: nextTrack.sound ?? nextTrack.id,
             title: nextTrack.name,
             image: nextTrack.image
         )
@@ -292,7 +294,10 @@ final class BackgroundAudioManager: ObservableObject {
 
         let unlockedIds = MusicUnlockHelper.getUnlockedMusicIds(from: FireStoreService.shared.gradenModel)
         let unlockedTracks = allMusics.filter { unlockedIds.contains($0.id) }
-        let playlist = unlockedTracks.isEmpty ? allMusics : unlockedTracks
+        let playlist = unlockedTracks.filter {
+            findAudioURL(fileName: $0.sound ?? $0.id) != nil
+        }
+        guard !playlist.isEmpty else { return }
 
         let currentIndex = playlist.firstIndex(where: { $0.id == currentBGMId }) ?? 0
         let prevIndex = (currentIndex - 1 + playlist.count) % playlist.count
@@ -300,7 +305,7 @@ final class BackgroundAudioManager: ObservableObject {
 
         switchBGM(
             id: prevTrack.id,
-            fileName: prevTrack.id,
+            fileName: prevTrack.sound ?? prevTrack.id,
             title: prevTrack.name,
             image: prevTrack.image
         )
