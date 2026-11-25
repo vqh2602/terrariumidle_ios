@@ -92,16 +92,17 @@ final class StoreViewModel: ObservableObject {
         }
     }
 
-    func canAfford(item: ItemData) -> Bool {
-        guard let money = fireStore.gradenModel?.money else { return false }
+    func canAfford(item: ItemData, quantity: Int = 1) -> Bool {
+        guard let money = fireStore.gradenModel?.money,
+              let totalPrice = item.totalStorePrice(quantity: quantity) else { return false }
 
         switch item.currencyUnit {
         case "oxygen":
-            return money.oxygen >= item.priceStore
+            return money.oxygen >= totalPrice
         case "gemstone":
-            return money.gemstone >= item.priceStore
+            return money.gemstone >= totalPrice
         case "ticket":
-            return money.ticket >= item.priceStore
+            return money.ticket >= totalPrice
         default:
             return false
         }
@@ -118,104 +119,96 @@ final class StoreViewModel: ObservableObject {
         return ownedIds.contains(item.id)
     }
 
-    func purchaseItem(_ item: ItemData) async {
-        guard let gardenModel = fireStore.gradenModel else {
-            errorMessage = "Không thể tải thông tin người dùng".tr
-            hasError = true
+    func purchaseItem(_ item: ItemData, quantity: Int = 1) async {
+        guard !isLoading else { return }
+        guard var updatedModel = fireStore.gradenModel else {
+            showError("Không thể tải thông tin người dùng".tr)
+            return
+        }
+        guard let totalPrice = item.totalStorePrice(quantity: quantity),
+              item.supportsPurchaseQuantity || quantity == 1 else {
+            showError("Số lượng không hợp lệ".tr)
+            return
+        }
+        guard meetsLevelRequirement(item: item) else {
+            showError("Mở khóa ở cấp %d".tr(item.levelUnlock))
+            return
+        }
+        guard canAfford(item: item, quantity: quantity) else {
+            showError("Không đủ tiền để mua".tr)
             return
         }
 
-        // Check if can afford
-        guard canAfford(item: item) else {
-            errorMessage = "Không đủ tiền để mua".tr
-            hasError = true
-            return
+        // Apply the reward before charging; reject invalid or overflowing amounts.
+        if item.supportsPurchaseQuantity {
+            guard let reward = item.shopReward(quantity: quantity) else {
+                showError("Số lượng không hợp lệ".tr)
+                return
+            }
+            let addition: (partialValue: Int, overflow: Bool)
+            switch reward.kind {
+            case "item1":
+                addition = updatedModel.item.fertilizer.addingReportingOverflow(reward.amount)
+                updatedModel.item.fertilizer = addition.partialValue
+            case "item2":
+                addition = updatedModel.item.shovel.addingReportingOverflow(reward.amount)
+                updatedModel.item.shovel = addition.partialValue
+            case "item3":
+                addition = updatedModel.money.oxygen.addingReportingOverflow(reward.amount)
+                updatedModel.money.oxygen = addition.partialValue
+            default: // item4: user levels
+                addition = updatedModel.user.userLevel.addingReportingOverflow(reward.amount)
+                updatedModel.user.userLevel = addition.partialValue
+            }
+            guard !addition.overflow else {
+                showError("Số lượng không hợp lệ".tr)
+                return
+            }
+        } else {
+            var plants = updatedModel.cart.cartPlants
+            var pots = updatedModel.cart.cartPots
+            var stickers = updatedModel.cart.cartStickers
+            switch item.type {
+            case "plant":
+                guard !plants.contains(item.id) else { return }
+                plants.append(item.id)
+            case "pot":
+                guard !pots.contains(item.id) else { return }
+                pots.append(item.id)
+            case "sticker", "decoration":
+                guard !stickers.contains(item.id) else { return }
+                stickers.append(item.id)
+            default:
+                showError("Không thể mua vật phẩm này".tr)
+                return
+            }
+            updatedModel.cart = GardenModel.Cart(
+                cartPlants: plants, cartPots: pots, cartStickers: stickers
+            )
+        }
+
+        switch item.currencyUnit {
+        case "oxygen": updatedModel.money.oxygen -= totalPrice
+        case "gemstone": updatedModel.money.gemstone -= totalPrice
+        case "ticket": updatedModel.money.ticket -= totalPrice
+        default: return
         }
 
         isLoading = true
         hasError = false
         errorMessage = nil
+        defer { isLoading = false }
 
-        do {
-            // Create updated money
-            var newMoney = gardenModel.money
-            switch item.currencyUnit {
-            case "oxygen":
-                newMoney = GardenModel.Money(
-                    gemstone: gardenModel.money.gemstone,
-                    oxygen: gardenModel.money.oxygen - item.priceStore,
-                    ticket: gardenModel.money.ticket
-                )
-            case "gemstone":
-                newMoney = GardenModel.Money(
-                    gemstone: gardenModel.money.gemstone - item.priceStore,
-                    oxygen: gardenModel.money.oxygen,
-                    ticket: gardenModel.money.ticket
-                )
-            case "ticket":
-                newMoney = GardenModel.Money(
-                    gemstone: gardenModel.money.gemstone,
-                    oxygen: gardenModel.money.oxygen,
-                    ticket: gardenModel.money.ticket - item.priceStore
-                )
-            default:
-                break
-            }
-
-            // Create updated cart
-            var newCart = gardenModel.cart
-            switch selectedTab {
-            case .plants:
-                var plants = gardenModel.cart.cartPlants
-                plants.append(item.id)
-                newCart = GardenModel.Cart(
-                    cartPlants: plants,
-                    cartPots: gardenModel.cart.cartPots,
-                    cartStickers: gardenModel.cart.cartStickers
-                )
-            case .pots:
-                var pots = gardenModel.cart.cartPots
-                pots.append(item.id)
-                newCart = GardenModel.Cart(
-                    cartPlants: gardenModel.cart.cartPlants,
-                    cartPots: pots,
-                    cartStickers: gardenModel.cart.cartStickers
-                )
-            case .decorations:
-                var stickers = gardenModel.cart.cartStickers
-                stickers.append(item.id)
-                newCart = GardenModel.Cart(
-                    cartPlants: gardenModel.cart.cartPlants,
-                    cartPots: gardenModel.cart.cartPots,
-                    cartStickers: stickers
-                )
-            case .tools:
-                // Tools don't go to cart, they update item counts
-                break
-            case .gemstones:
-                // Gemstones update money directly
-                break
-            }
-
-            // Create updated garden model
-            let updatedModel = GardenModel(
-                isBan: gardenModel.isBan,
-                isServerUpdate: gardenModel.isServerUpdate,
-                item: gardenModel.item,
-                cart: newCart,
-                money: newMoney,
-                user: gardenModel.user,
-                plants: gardenModel.plants
-            )
-
-            // Update Firestore
-            _ = await fireStore.updateDataUser(gardenModel: updatedModel)
-
-            // Reload items to reflect purchase
-            loadItems(for: selectedTab)
-
-            isLoading = false
+        guard await fireStore.updateDataUser(gardenModel: updatedModel) != nil else {
+            showError("Không thể hoàn tất mua hàng. Vui lòng thử lại.".tr)
+            return
         }
+        loadItems(for: selectedTab)
+    }
+
+    private func showError(_ message: String) {
+        errorMessage = message
+        hasError = true
     }
 
     // MARK: - Private Methods
@@ -230,6 +223,53 @@ final class StoreViewModel: ObservableObject {
             return gardenModel.cart.cartStickers
         case .tools, .gemstones:
             return []
+        }
+    }
+}
+
+// Existing shop IDs encode the quantity in each pack. Quantity means number of packs.
+extension ItemData {
+    var supportsPurchaseQuantity: Bool {
+        type == "item" && shopReward(quantity: 1) != nil
+    }
+
+    func totalStorePrice(quantity: Int) -> Int? {
+        guard quantity > 0, priceStore >= 0 else { return nil }
+        let total = priceStore.multipliedReportingOverflow(by: quantity)
+        return total.overflow ? nil : total.partialValue
+    }
+
+    func shopReward(quantity: Int) -> (kind: String, amount: Int)? {
+        guard type == "item", quantity > 0 else { return nil }
+        let parts = id.split(separator: "_")
+        guard let kind = parts.first.map(String.init) else { return nil }
+        let perPack: Int
+        if kind == "item4", parts.count == 1 {
+            perPack = 1
+        } else {
+            guard parts.count == 2, let size = Int(parts[1]), size > 0 else { return nil }
+            switch kind {
+            case "item1", "item2": perPack = size
+            case "item3":
+                // Convert gemstones to oxygen at the catalog's 5.5 rate.
+                let converted = size.multipliedReportingOverflow(by: 11)
+                guard !converted.overflow, converted.partialValue.isMultiple(of: 2) else { return nil }
+                perPack = converted.partialValue / 2
+            default: return nil
+            }
+        }
+        let amount = perPack.multipliedReportingOverflow(by: quantity)
+        guard !amount.overflow else { return nil }
+        return (kind, amount.partialValue)
+    }
+
+    func shopRewardDescription(quantity: Int) -> String? {
+        guard let reward = shopReward(quantity: quantity) else { return nil }
+        switch reward.kind {
+        case "item1": return "Phân bón: %@".tr(reward.amount.formatted())
+        case "item2": return "Xẻng: %@".tr(reward.amount.formatted())
+        case "item3": return "Oxygen: %@".tr(reward.amount.formatted())
+        default: return "Tăng %@ cấp".tr(reward.amount.formatted())
         }
     }
 }

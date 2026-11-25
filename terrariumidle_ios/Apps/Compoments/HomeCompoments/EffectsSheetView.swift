@@ -36,16 +36,15 @@ struct EffectsSheetView: View {
 
     private func isItemSelected(_ selectedId: String?, matches item: ItemData) -> Bool {
         guard let selectedId = selectedId, !selectedId.isEmpty else { return false }
-        if selectedId == item.image || selectedId == item.id {
+        // Accept values saved before asset names were corrected for letter case.
+        let selected = selectedId.lowercased()
+        let image = item.image.lowercased()
+        if selected == image || selected == item.id.lowercased() {
             return true
         }
-        if selectedId.hasPrefix("i_") && String(selectedId.dropFirst(2)) == item.image {
-            return true
-        }
-        if item.image.hasPrefix("i_") && selectedId == String(item.image.dropFirst(2)) {
-            return true
-        }
-        return false
+        let selectedWithoutPrefix = selected.hasPrefix("i_") ? String(selected.dropFirst(2)) : selected
+        let imageWithoutPrefix = image.hasPrefix("i_") ? String(image.dropFirst(2)) : image
+        return selectedWithoutPrefix == imageWithoutPrefix
     }
 
     var body: some View {

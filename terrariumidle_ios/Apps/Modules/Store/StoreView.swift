@@ -3,6 +3,7 @@ import SwiftUI
 
 struct StoreView: View {
     @EnvironmentObject var router: AppRouter
+    @State private var quantityItem: ItemData?
     @StateObject private var viewModel: StoreViewModel
     @StateObject private var fireStore: FireStoreService = .shared
     private let initialItemId: String?
@@ -52,7 +53,11 @@ struct StoreView: View {
                                 canAfford: viewModel.canAfford(item: item),
                                 meetsLevelRequirement: viewModel.meetsLevelRequirement(item: item),
                                 onPurchase: { item in
-                                    Task { await viewModel.purchaseItem(item) }
+                                    if item.supportsPurchaseQuantity {
+                                        quantityItem = item
+                                    } else {
+                                        Task { await viewModel.purchaseItem(item) }
+                                    }
                                 }
                             )
                         }
@@ -87,6 +92,12 @@ struct StoreView: View {
                 viewModel.searchText = plant.name.tr
             } else {
                 viewModel.loadItems(for: .plants)
+            }
+        }
+        .sheet(item: $quantityItem) { item in
+            StoreQuantityPurchaseView(item: item, viewModel: viewModel) { quantity in
+                quantityItem = nil
+                Task { await viewModel.purchaseItem(item, quantity: quantity) }
             }
         }
         .alert("Lỗi".tr, isPresented: $viewModel.hasError) {
@@ -279,4 +290,93 @@ struct StoreResourceBadge: View {
     .frame(width: 320)
     .padding(.vertical)
     .background(Color(hex: "E9EED9"))
+}
+
+private struct StoreQuantityPurchaseView: View {
+    let item: ItemData
+    @ObservedObject var viewModel: StoreViewModel
+    @ObservedObject private var fireStore = FireStoreService.shared
+    let onPurchase: (Int) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var quantityText = "1"
+
+    private var quantity: Int? {
+        guard !quantityText.isEmpty,
+              quantityText.allSatisfy({ $0 >= "0" && $0 <= "9" }),
+              let value = Int(quantityText), value > 0 else { return nil }
+        return value
+    }
+
+    private var canPurchase: Bool {
+        guard let quantity, item.shopReward(quantity: quantity) != nil else { return false }
+        return !viewModel.isLoading && viewModel.meetsLevelRequirement(item: item)
+            && viewModel.canAfford(item: item, quantity: quantity)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text(item.name.tr)
+                        .font(.headline)
+                    Text(item.description.tr)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Section("Số lượng".tr) {
+                    HStack {
+                        Text("Số lượng gói".tr)
+                        Spacer()
+                        TextField("Số lượng".tr, text: $quantityText)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(minWidth: 80)
+                            .accessibilityLabel("Số lượng gói".tr)
+                    }
+                    Stepper("Điều chỉnh số lượng".tr, onIncrement: {
+                        let next = (quantity ?? 0).addingReportingOverflow(1)
+                        if !next.overflow { quantityText = String(next.partialValue) }
+                    }, onDecrement: {
+                        quantityText = String(max(1, (quantity ?? 1) - 1))
+                    })
+                    if let quantity, let reward = item.shopRewardDescription(quantity: quantity),
+                       let total = item.totalStorePrice(quantity: quantity) {
+                        Text(reward)
+                            .foregroundStyle(AccountStyle.green)
+                        HStack {
+                            Text("Tổng cộng".tr)
+                            Spacer()
+                            Image(item.currencyUnit)
+                                .resizable().scaledToFit().frame(width: 22, height: 22)
+                            Text(total.formatted())
+                                .monospacedDigit()
+                        }
+                        if !viewModel.canAfford(item: item, quantity: quantity) {
+                            Text("Chưa đủ tài nguyên".tr)
+                                .foregroundStyle(AccountStyle.danger)
+                        }
+                    } else {
+                        Text("Số lượng không hợp lệ".tr)
+                            .foregroundStyle(AccountStyle.danger)
+                    }
+                }
+                Section {
+                    Button("Xác nhận mua".tr) {
+                        guard let quantity, canPurchase else { return }
+                        onPurchase(quantity)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .disabled(!canPurchase)
+                }
+            }
+            .tint(AccountStyle.green)
+            .navigationTitle("Mua vật phẩm".tr)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Hủy".tr) { dismiss() }
+                }
+            }
+        }
+    }
 }

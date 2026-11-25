@@ -92,7 +92,7 @@ struct MusicSheetView: View {
                                             guard !isLocked else { return }
                                             audioManager.toggleSFX(
                                                 id: item.id,
-                                                fileName: item.id
+                                                fileName: item.sound ?? item.id
                                             )
                                         }
                                     )

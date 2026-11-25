@@ -58,20 +58,20 @@ struct GardenWeatherOverlay: View {
             }
         }
         .allowsHitTesting(false)
-        .task(id: "\(weatherUntil)-\(scenePhase)") {
+        .task(id: "\(weatherUntil)-\(kind)-\(scenePhase)") {
+            guard !Task.isCancelled else { return }
             let remaining = weatherUntil - Date().timeIntervalSince1970
             isActive = remaining > 0 && scenePhase == .active
+            // Navigation can preserve isActive while onDisappear stops the audio.
+            // Resync on every appearance, even when the active value is unchanged.
+            syncWeatherAudio(active: isActive)
             guard isActive else { return }
             do {
                 try await Task.sleep(for: .seconds(remaining))
+                try Task.checkCancellation()
                 isActive = false
+                syncWeatherAudio(active: false)
             } catch { }
-        }
-        .onChange(of: isActive) { _, active in
-            syncWeatherAudio(active: active)
-        }
-        .onChange(of: kind) { _, _ in
-            syncWeatherAudio(active: isActive)
         }
         .onDisappear {
             BackgroundAudioManager.shared.stopWeatherSound()
