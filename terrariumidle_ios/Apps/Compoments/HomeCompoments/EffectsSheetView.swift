@@ -30,7 +30,7 @@ struct EffectsSheetView: View {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         return categoryItems.filter { item in
             (!unlockedOnly || unlockedIds.contains(item.id)) &&
-            (query.isEmpty || item.name.localizedStandardContains(query) || item.description.localizedStandardContains(query))
+            (query.isEmpty || item.name.tr.localizedStandardContains(query) || item.description.tr.localizedStandardContains(query))
         }
     }
 
@@ -86,11 +86,11 @@ struct EffectsSheetView: View {
                 LinearGradient(colors: [Color(hex: "E9EED9"), Color(hex: "F7EEDB")],
                                startPoint: .top, endPoint: .bottom).ignoresSafeArea()
             }
-            .navigationTitle("Phong cảnh & Hiệu ứng")
+            .navigationTitle("Phong cảnh & Hiệu ứng".tr)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Xong") { dismiss() }
+                    Button("Xong".tr) { dismiss() }
                         .fontWeight(.bold)
                         .tint(AccountStyle.green)
                 }
@@ -103,9 +103,9 @@ struct EffectsSheetView: View {
 
     private var controls: some View {
         VStack(spacing: 8) {
-            Picker("Danh mục", selection: $category) {
+            Picker("Danh mục".tr, selection: $category) {
                 ForEach(Category.allCases, id: \.self) { category in
-                    Text(category.rawValue).tag(category)
+                    Text(category.rawValue.tr).tag(category)
                 }
             }
             .pickerStyle(.segmented)
@@ -113,7 +113,7 @@ struct EffectsSheetView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(AccountStyle.green)
-                    TextField("Tìm cảnh, hiệu ứng…", text: $searchText)
+                    TextField("Tìm cảnh, hiệu ứng…".tr, text: $searchText)
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(AccountStyle.ink)
                         .submitLabel(.search)
@@ -122,7 +122,7 @@ struct EffectsSheetView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundStyle(AccountStyle.muted)
                         }
-                        .accessibilityLabel("Xóa tìm kiếm")
+                        .accessibilityLabel("Xóa tìm kiếm".tr)
                     }
                 }
                 .padding(.horizontal, 12)
@@ -130,19 +130,19 @@ struct EffectsSheetView: View {
                 .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 12))
                 .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(AccountStyle.border, lineWidth: 1) }
                 Menu {
-                    Toggle("Chỉ hiện mục đã mở khóa", isOn: $unlockedOnly)
+                    Toggle("Chỉ hiện mục đã mở khóa".tr, isOn: $unlockedOnly)
                     if category == .effects {
-                        Button("Tắt hiệu ứng", systemImage: "nosign") { overlayRive = nil }
+                        Button("Tắt hiệu ứng".tr, systemImage: "nosign") { overlayRive = nil }
                             .disabled(overlayRive == nil)
                     }
-                    Text("\(visibleItems.count) / \(categoryItems.count) lựa chọn")
+                    Text("%d / %d lựa chọn".tr(visibleItems.count, categoryItems.count))
                 } label: {
                     Image(systemName: unlockedOnly ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                         .font(.system(size: 23))
                         .foregroundStyle(AccountStyle.green)
                         .frame(width: 44, height: 44)
                 }
-                .accessibilityLabel("Bộ lọc, \(unlockedOnly ? "chỉ hiện đã mở khóa" : "hiện tất cả")")
+                .accessibilityLabel("Bộ lọc, %@".tr(unlockedOnly ? "chỉ hiện đã mở khóa".tr : "hiện tất cả".tr))
             }
         }
         .padding(.horizontal, 12)
@@ -154,10 +154,10 @@ struct EffectsSheetView: View {
             Image(systemName: "leaf")
                 .font(.system(size: 32))
                 .foregroundStyle(AccountStyle.green)
-            Text("Chưa có lựa chọn phù hợp")
+            Text("Chưa có lựa chọn phù hợp".tr)
                 .font(.system(.headline, design: .rounded))
                 .foregroundStyle(AccountStyle.ink)
-            Text(unlockedOnly ? "Thử tắt bộ lọc Đã mở khóa hoặc đổi từ khóa tìm kiếm." : "Thử tìm bằng một tên hoặc mô tả khác nhé.")
+            Text(unlockedOnly ? "Thử tắt bộ lọc Đã mở khóa hoặc đổi từ khóa tìm kiếm.".tr : "Thử tìm bằng một tên hoặc mô tả khác nhé.".tr)
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(AccountStyle.muted)
         }
@@ -209,11 +209,11 @@ private struct EffectCardView: View {
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 9))
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(item.name)
+                    Text(item.name.tr)
                         .font(.system(.subheadline, design: .rounded, weight: .bold))
                         .foregroundStyle(AccountStyle.ink)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(isLocked ? "Chưa mở khóa" : item.description)
+                    Text(isLocked ? "Chưa mở khóa".tr : item.description.tr)
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(AccountStyle.muted)
                         .lineLimit(2)
@@ -236,7 +236,7 @@ private struct EffectCardView: View {
         }
         .buttonStyle(.plain)
         .disabled(isLocked)
-        .accessibilityLabel("\(item.name). \(item.description). \(isLocked ? "Chưa mở khóa" : (isSelected ? "Đang dùng" : "Chạm để chọn"))")
+        .accessibilityLabel("\(item.name.tr). \(item.description.tr). \(isLocked ? "Chưa mở khóa".tr : (isSelected ? "Đang dùng".tr : "Chạm để chọn".tr))")
         .accessibilityAddTraits(isSelected && !isLocked ? [.isSelected] : [])
     }
 }

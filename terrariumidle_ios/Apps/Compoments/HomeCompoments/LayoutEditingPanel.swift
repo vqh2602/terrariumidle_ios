@@ -10,12 +10,12 @@ struct LayoutEditingPanel: View {
                 Image(systemName: "square.grid.3x3.fill")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(AccountStyle.green)
-                Text("Chỉnh bố cục")
+                Text("Chỉnh bố cục".tr)
                     .font(.system(.headline, design: .rounded, weight: .bold))
                     .foregroundStyle(AccountStyle.ink)
                 Spacer(minLength: 0)
                 Button(action: onFinish) {
-                    Label("Xong", systemImage: "checkmark")
+                    Label("Xong".tr, systemImage: "checkmark")
                         .font(.system(.subheadline, design: .rounded, weight: .bold))
                         .foregroundStyle(AccountStyle.cream)
                         .padding(.horizontal, 16)
@@ -23,11 +23,11 @@ struct LayoutEditingPanel: View {
                         .background(AccountStyle.green, in: Capsule())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Xong, thoát chế độ bố cục")
+                .accessibilityLabel("Xong, thoát chế độ bố cục".tr)
             }
-            tip("plus.circle.fill", "Chạm ô + để thêm cây, chậu hoặc đồ trang trí.")
-            tip("hand.draw.fill", "Nhấn giữ rồi kéo sang ô khác để di chuyển hoặc đổi chỗ.")
-            tip("arrow.up.arrow.down", "Cuộn kệ để sắp xếp các tầng khác.")
+            tip("plus.circle.fill", "Chạm ô + để thêm cây, chậu hoặc đồ trang trí.".tr)
+            tip("hand.draw.fill", "Nhấn giữ rồi kéo sang ô khác để di chuyển hoặc đổi chỗ.".tr)
+            tip("arrow.up.arrow.down", "Cuộn kệ để sắp xếp các tầng khác.".tr)
         }
         .padding(16)
         .modifier(AccountPanel())
@@ -48,7 +48,7 @@ struct LayoutEditingPanel: View {
     }
 }
 
-#Preview("Bố cục · 320pt") {
+#Preview("Bố cục · 320pt".tr) {
     LayoutEditingPanel(onFinish: {})
         .padding(12)
         .frame(width: 320)

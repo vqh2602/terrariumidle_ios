@@ -6,13 +6,13 @@ enum EventReward {
         var updated = garden
         switch handler {
         case "event_get_bag_level", "event_get_bag_floor":
-            guard (argument as? String) == "true" || (argument as? Bool) == true else { throw failure("Chưa đủ điều kiện nhận huy hiệu") }
+            guard (argument as? String) == "true" || (argument as? Bool) == true else { throw failure("Chưa đủ điều kiện nhận huy hiệu".tr) }
             let isLevel = handler == "event_get_bag_level"
-            guard isLevel ? garden.user.userLevel >= 50 : garden.user.userFloor >= 20 else { throw failure("Chưa đủ điều kiện nhận huy hiệu") }
+            guard isLevel ? garden.user.userLevel >= 50 : garden.user.userFloor >= 20 else { throw failure("Chưa đủ điều kiện nhận huy hiệu".tr) }
             try addBadge(isLevel ? "bag1" : "bag3", to: &updated)
         case "clam-lavender-plant":
-            guard let payload = argument as? [String: Any], let code = payload["code"] as? String else { throw failure("Phần thưởng không hợp lệ") }
-            guard garden.money.oxygen >= 100 else { throw failure("Cần ít nhất 100 oxygen để quay") }
+            guard let payload = argument as? [String: Any], let code = payload["code"] as? String else { throw failure("Phần thưởng không hợp lệ".tr) }
+            guard garden.money.oxygen >= 100 else { throw failure("Cần ít nhất 100 oxygen để quay".tr) }
             switch code {
             case "oxygen": updated.money.oxygen += 50
             case "gemstone": updated.money.gemstone += 10
@@ -21,23 +21,23 @@ enum EventReward {
             case "shovel": updated.item.shovel += 1
             case "bag4": try addBadge(code, to: &updated)
             case "plant20", "plant24", "plant26":
-                guard !garden.cart.cartPlants.contains(code) else { throw failure("Bạn đã sở hữu cây này") }
+                guard !garden.cart.cartPlants.contains(code) else { throw failure("Bạn đã sở hữu cây này".tr) }
                 updated.cart = GardenModel.Cart(cartPlants: garden.cart.cartPlants + [code], cartPots: garden.cart.cartPots, cartStickers: garden.cart.cartStickers)
-            default: throw failure("Mã phần thưởng chưa được hỗ trợ")
+            default: throw failure("Mã phần thưởng chưa được hỗ trợ".tr)
             }
             updated.money.oxygen -= 100
-        default: throw failure("Lệnh sự kiện chưa được hỗ trợ")
+        default: throw failure("Lệnh sự kiện chưa được hỗ trợ".tr)
         }
         return updated
     }
 
     private static func addBadge(_ id: String, to garden: inout GardenModel) throws {
-        guard !garden.user.bag.contains(where: { $0.idBag == id }) else { throw failure("Bạn đã nhận huy hiệu này") }
+        guard !garden.user.bag.contains(where: { $0.idBag == id }) else { throw failure("Bạn đã nhận huy hiệu này".tr) }
         let badge: GardenModel.UserProfile.BagItem
         switch id {
-        case "bag1": badge = .init(colorBag: 0xFF000000, idBag: id, nameBag: "Kinh nghiệm nhà vườn")
-        case "bag3": badge = .init(colorBag: 0xFF388E3C, idBag: id, nameBag: "Triệu phú giàu sang")
-        default: badge = .init(colorBag: 0xFF558B2F, idBag: id, nameBag: "Lá xanh trắng bay")
+        case "bag1": badge = .init(colorBag: 0xFF000000, idBag: id, nameBag: "Kinh nghiệm nhà vườn".tr)
+        case "bag3": badge = .init(colorBag: 0xFF388E3C, idBag: id, nameBag: "Triệu phú giàu sang".tr)
+        default: badge = .init(colorBag: 0xFF558B2F, idBag: id, nameBag: "Lá xanh trắng bay".tr)
         }
         var dictionary = garden.user.toDictionary()
         dictionary["bag"] = (garden.user.bag + [badge]).map { ["idBag": $0.idBag, "nameBag": $0.nameBag, "colorBag": $0.colorBag] as [String: Any] }

@@ -79,7 +79,7 @@ public struct UnsupportedPlantPlaceholderView: View {
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(Color.green.opacity(0.80))
 
-                Text("<update app để hiển thị>")
+                Text("<update app để hiển thị>".tr)
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -165,34 +165,34 @@ public struct SpriteKitPlantView: View {
 private struct SpriteKitPlant3StatesDemoView: View {
     var body: some View {
         VStack(spacing: 24) {
-            Text("🌿 Cây Cỏ Loe (Plant1) - SpriteKit 3 Cấp độ")
+            Text("🌿 Cây Cỏ Loe (Plant1) - SpriteKit 3 Cấp độ".tr)
                 .font(.headline)
                 .padding(.top)
 
             HStack(spacing: 12) {
                 VStack {
-                    Text("Lv.1: Hạt").font(.caption).bold()
+                    Text("Lv.1: Hạt".tr).font(.caption).bold()
                     SpriteKitPlantView(plantId: "plant1", plantLevel: 1, width: 85, height: 120)
                         .background(Color.black.opacity(0.04))
                         .cornerRadius(8)
                 }
 
                 VStack {
-                    Text("Lv.2: Cây con").font(.caption).bold()
+                    Text("Lv.2: Cây con".tr).font(.caption).bold()
                     SpriteKitPlantView(plantId: "plant1", plantLevel: 2, width: 85, height: 120)
                         .background(Color.black.opacity(0.04))
                         .cornerRadius(8)
                 }
 
                 VStack {
-                    Text("Lv.3: Trưởng thành").font(.caption).bold()
+                    Text("Lv.3: Trưởng thành".tr).font(.caption).bold()
                     SpriteKitPlantView(plantId: "plant1", plantLevel: 3, width: 95, height: 120)
                         .background(Color.black.opacity(0.04))
                         .cornerRadius(8)
                 }
 
                 VStack {
-                    Text("Chưa có (Plant2)").font(.caption).bold()
+                    Text("Chưa có (Plant2)".tr).font(.caption).bold()
                     SpriteKitPlantView(plantId: "plant2", plantLevel: 1, width: 95, height: 120)
                         .background(Color.black.opacity(0.04))
                         .cornerRadius(8)

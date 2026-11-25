@@ -99,7 +99,7 @@ public final class SpriteKitPlantScene: SKScene {
 
         // Không dùng mockup nữa: Những cây chưa có asset sẽ hiển thị thông báo update
         if !PlantAvailability.isAvailable(plantId: plantId) {
-            let label = SKLabelNode(text: "<update app để hiển thị>")
+            let label = SKLabelNode(text: "<update app để hiển thị>".tr)
             label.fontSize = 10
             label.fontColor = UIColor.secondaryLabel
             label.position = CGPoint(x: 0, y: size.height * 0.45)

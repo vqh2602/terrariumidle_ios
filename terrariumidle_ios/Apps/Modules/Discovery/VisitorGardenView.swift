@@ -23,12 +23,12 @@ struct VisitorGardenView: View {
                     .id(garden.profile.id)
                     .ignoresSafeArea()
             } else if model.isLoading {
-                ProgressView("Đang ghé thăm khu vườn…")
+                ProgressView("Đang ghé thăm khu vườn…".tr)
             } else {
                 VStack(spacing: 16) {
-                    Text(model.error ?? "Không tải được khu vườn.")
+                    Text(model.error ?? "Không tải được khu vườn.".tr)
                         .multilineTextAlignment(.center)
-                    Button("Thử lại") { reloadID += 1 }
+                    Button("Thử lại".tr) { reloadID += 1 }
                 }.padding(24)
             }
         }
@@ -70,13 +70,13 @@ struct VisitorGardenView: View {
                     .font(.system(size: 17, weight: .semibold))
                     .frame(width: 44, height: 44).contentShape(Circle())
             }
-            .accessibilityLabel("Rời khu vườn")
+            .accessibilityLabel("Rời khu vườn".tr)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(model.garden?.profile.name ?? profile.name)
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
                     .lineLimit(1)
-                Text("Đang ghé thăm")
+                Text("Đang ghé thăm".tr)
                     .font(.system(size: 10, weight: .medium, design: .rounded))
                     .foregroundStyle(AccountStyle.ink.opacity(0.65))
             }
@@ -100,15 +100,15 @@ struct VisitorGardenView: View {
                 .contentShape(Capsule())
             }
             .disabled(!model.canLike)
-            .accessibilityLabel(model.hasLiked ? "Đã thích khu vườn này" : "Thích khu vườn này")
-            .accessibilityValue("\(displayedLikes) lượt yêu thích")
+            .accessibilityLabel(model.hasLiked ? "Đã thích khu vườn này".tr : "Thích khu vườn này".tr)
+            .accessibilityValue("%d lượt yêu thích".tr(displayedLikes))
 
             Button { reloadID += 1 } label: {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 17, weight: .semibold))
                     .frame(width: 44, height: 44).contentShape(Circle())
             }
-            .accessibilityLabel("Tải lại khu vườn")
+            .accessibilityLabel("Tải lại khu vườn".tr)
             .disabled(model.isLiking)
         }
         .buttonStyle(DiscoveryPressStyle())
@@ -217,7 +217,7 @@ private struct VisitorSlotView: View {
         } placeholder: {
             VStack(spacing: 5) {
                 Image(systemName: "leaf.circle").font(.title)
-                Text(item?.name ?? "Vật phẩm chưa hỗ trợ").font(.caption2).multilineTextAlignment(.center)
+                Text(item?.name.tr ?? "Vật phẩm chưa hỗ trợ".tr).font(.caption2).multilineTextAlignment(.center)
             }.foregroundStyle(AccountStyle.muted)
         }
         .frame(width: width * 0.88, height: height * 0.86)

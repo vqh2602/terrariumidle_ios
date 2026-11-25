@@ -67,7 +67,7 @@ final class DiscoveryViewModel: ObservableObject {
             loadedRequestKey = loadingKey
         } catch {
             guard generation == token, !Task.isCancelled else { return }
-            self.error = (error as? DiscoveryError)?.localizedDescription ?? "Không tải được danh sách khu vườn. Vui lòng kiểm tra kết nối và thử lại."
+            self.error = (error as? DiscoveryError)?.localizedDescription ?? "Không tải được danh sách khu vườn. Vui lòng kiểm tra kết nối và thử lại.".tr
         }
     }
 }
@@ -110,10 +110,10 @@ final class VisitorGardenViewModel: ObservableObject {
             guard token == generation else { return }
             likeCount = total
             hasLiked = true
-            likeMessage = "Đã gửi một trái tim cho khu vườn này!"
+            likeMessage = "Đã gửi một trái tim cho khu vườn này!".tr
         } catch {
             guard token == generation else { return }
-            likeMessage = (error as? GardenLikeError)?.localizedDescription ?? "Chưa gửi được lượt thích. Vui lòng thử lại."
+            likeMessage = (error as? GardenLikeError)?.localizedDescription ?? "Chưa gửi được lượt thích. Vui lòng thử lại.".tr
         }
     }
 
@@ -137,7 +137,7 @@ final class VisitorGardenViewModel: ObservableObject {
             hasLiked = liking?.hasLiked(gardenID: snapshot.profile.id) ?? false
         } catch {
             guard generation == token, !Task.isCancelled else { return }
-            self.error = (error as? DiscoveryError)?.localizedDescription ?? "Không tải được khu vườn. Vui lòng thử lại."
+            self.error = (error as? DiscoveryError)?.localizedDescription ?? "Không tải được khu vườn. Vui lòng thử lại.".tr
         }
     }
 }

@@ -38,17 +38,17 @@ struct SleepJournalEntryRow: View {
                 Spacer(minLength: 0)
                 Image(systemName: entry.exported ? "checkmark.icloud" : "iphone")
                     .font(.caption).foregroundStyle(AccountStyle.muted)
-                    .accessibilityLabel(entry.exported ? "Đã ghi sang Apple Health" : "Chỉ trên thiết bị")
+                    .accessibilityLabel(entry.exported ? "Đã ghi sang Apple Health".tr : "Chỉ trên thiết bị".tr)
             }
             Text(timeRange).font(.subheadline).foregroundStyle(AccountStyle.muted)
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 8) {
                     duration
-                    if entry.feeling != "Chưa chọn" { Text("·"); Text(entry.feeling) }
+                    if entry.feeling != "Chưa chọn" { Text("·"); Text(entry.feeling.tr) }
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     duration
-                    if entry.feeling != "Chưa chọn" { Text(entry.feeling) }
+                    if entry.feeling != "Chưa chọn" { Text(entry.feeling.tr) }
                 }
             }.font(.caption).foregroundStyle(AccountStyle.muted)
         }
@@ -70,8 +70,8 @@ struct SleepJournalHistoryView: View {
         ScrollView {
             LazyVStack(spacing: 14) {
                 if health.manualEntries.isEmpty {
-                    ContentUnavailableView("Chưa có nhật ký", systemImage: "book.closed",
-                                           description: Text("Ghi lại giấc ngủ đầu tiên của bạn."))
+                    ContentUnavailableView("Chưa có nhật ký".tr, systemImage: "book.closed",
+                                           description: Text("Ghi lại giấc ngủ đầu tiên của bạn.".tr))
                 }
                 ForEach(health.manualEntries.sorted { $0.end > $1.end }) { entry in
                     SleepJournalEntryRow(entry: entry).padding(18).modifier(AccountPanel())
@@ -80,12 +80,12 @@ struct SleepJournalHistoryView: View {
         }
         .background(Color(hex: "EDF0DD").ignoresSafeArea())
         .foregroundStyle(AccountStyle.ink)
-        .navigationTitle("Nhật ký giấc ngủ")
+        .navigationTitle("Nhật ký giấc ngủ".tr)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showEntry = true } label: { Image(systemName: "plus") }
-                    .accessibilityLabel("Ghi giấc ngủ")
+                    .accessibilityLabel("Ghi giấc ngủ".tr)
             }
         }
         .sheet(isPresented: $showEntry) { ManualSleepSheet(health: health) }
@@ -100,27 +100,27 @@ struct SleepHealthSettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 14) {
-                    Label("Kết nối giấc ngủ", systemImage: "heart.fill")
+                    Label("Kết nối giấc ngủ".tr, systemImage: "heart.fill")
                         .font(.system(.headline, design: .rounded))
-                    Text("Đọc dữ liệu từ Apple Health và chọn ghi nhật ký thủ công của bạn sang Health.")
+                    Text("Đọc dữ liệu từ Apple Health và chọn ghi nhật ký thủ công của bạn sang Health.".tr)
                         .font(.subheadline).foregroundStyle(AccountStyle.muted)
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: 12) { healthButtons }
                         VStack(alignment: .leading, spacing: 12) { healthButtons }
                     }
-                    if health.isSyncing || health.isSaving { ProgressView("Đang xử lý…").font(.caption) }
+                    if health.isSyncing || health.isSaving { ProgressView("Đang xử lý…".tr).font(.caption) }
                     if let message = health.message {
                         Text(message).font(.caption).foregroundStyle(AccountStyle.muted)
                     }
                     if !health.isAvailable {
-                        Text("Apple Health chưa khả dụng trên thiết bị này.").font(.subheadline)
+                        Text("Apple Health chưa khả dụng trên thiết bị này.".tr).font(.subheadline)
                     }
                 }.padding(20).modifier(AccountPanel())
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Cách đồng bộ").font(.headline)
-                    Text("“Đồng bộ” sẽ ghi tất cả bản ghi thủ công còn trên thiết bị sang Apple Health nếu bạn đã cấp quyền ghi.")
-                    Text("Khi thêm bản ghi mới, bạn vẫn có thể chọn chỉ lưu trên thiết bị. Các khoảng ngủ trùng nhau chỉ được tính một lần trong biểu đồ.")
-                    Text("Nhật ký được giữ trên thiết bị nếu chưa đồng bộ được. Bạn có thể thử lại sau.")
+                    Text("Cách đồng bộ".tr).font(.headline)
+                    Text("“Đồng bộ” sẽ ghi tất cả bản ghi thủ công còn trên thiết bị sang Apple Health nếu bạn đã cấp quyền ghi.".tr)
+                    Text("Khi thêm bản ghi mới, bạn vẫn có thể chọn chỉ lưu trên thiết bị. Các khoảng ngủ trùng nhau chỉ được tính một lần trong biểu đồ.".tr)
+                    Text("Nhật ký được giữ trên thiết bị nếu chưa đồng bộ được. Bạn có thể thử lại sau.".tr)
                 }
                 .font(.subheadline).foregroundStyle(AccountStyle.muted)
                 .padding(20).modifier(AccountPanel())
@@ -135,12 +135,12 @@ struct SleepHealthSettingsView: View {
 
     @ViewBuilder private var healthButtons: some View {
         Button { Task { await health.connect() } } label: {
-            Label("Cấp quyền", systemImage: "heart.text.clipboard")
+            Label("Cấp quyền".tr, systemImage: "heart.text.clipboard")
         }
         .buttonStyle(SleepActionButtonStyle(prominent: false))
         .disabled(health.isSyncing || health.isSaving || !health.isAvailable)
         Button { Task { await health.syncManualJournal() } } label: {
-            Label("Đồng bộ", systemImage: "arrow.triangle.2.circlepath")
+            Label("Đồng bộ".tr, systemImage: "arrow.triangle.2.circlepath")
         }
         .buttonStyle(SleepActionButtonStyle())
         .disabled(!health.hasRequestedAccess || health.isSyncing || health.isSaving || !health.isAvailable

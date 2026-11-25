@@ -89,7 +89,7 @@ class AuthViewModel: ObservableObject {
 
     func signIn(email: String, password: String) {
         guard !email.isEmpty, !password.isEmpty else {
-            errorMessage = "Vui lòng nhập email và password"
+            errorMessage = "Vui lòng nhập email và password".tr
             showError = true
             return
         }
@@ -209,13 +209,13 @@ class AuthViewModel: ObservableObject {
 
      var body: some View {
          VStack(spacing: 20) {
-             Text("Đăng nhập")
+             Text("Đăng nhập".tr)
                  .font(.largeTitle)
                  .bold()
 
              // Email/Password Login
              VStack(spacing: 15) {
-                 TextField("Email", text: $email)
+                 TextField("Email".tr, text: $email)
                      .textFieldStyle(RoundedBorderTextFieldStyle())
                      .autocapitalization(.none)
                      .keyboardType(.emailAddress)
@@ -223,7 +223,7 @@ class AuthViewModel: ObservableObject {
                  SecureField("Password", text: $password)
                      .textFieldStyle(RoundedBorderTextFieldStyle())
 
-                 Button("Đăng nhập") {
+                 Button("Đăng nhập".tr) {
                      viewModel.signIn(email: email, password: password)
                  }
                  .buttonStyle(.borderedProminent)
@@ -238,7 +238,7 @@ class AuthViewModel: ObservableObject {
              } label: {
                  HStack {
                      Image(systemName: "applelogo")
-                     Text("Đăng nhập với Apple")
+                     Text("Đăng nhập với Apple".tr)
                  }
                  .frame(maxWidth: .infinity)
                  .padding()
@@ -253,8 +253,8 @@ class AuthViewModel: ObservableObject {
              }
          }
          .padding()
-         .alert("Lỗi", isPresented: $viewModel.showError) {
-             Button("OK") { }
+         .alert("Lỗi".tr, isPresented: $viewModel.showError) {
+             Button("OK".tr) { }
          } message: {
              Text(viewModel.errorMessage ?? "Unknown error")
          }
@@ -282,7 +282,7 @@ class AuthViewModel: ObservableObject {
                  .font(.caption)
                  .foregroundColor(.secondary)
 
-             Button("Đăng xuất") {
+             Button("Đăng xuất".tr) {
                  viewModel.signOut()
              }
              .buttonStyle(.borderedProminent)

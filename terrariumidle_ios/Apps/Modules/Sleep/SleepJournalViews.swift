@@ -12,15 +12,15 @@ struct SleepScheduleCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Toggle(isOn: $enabled) {
-                Label("Lịch trình ngủ", systemImage: "bed.double.fill").font(.headline)
+                Label("Lịch trình ngủ".tr, systemImage: "bed.double.fill").font(.headline)
             }
             if enabled {
-                DatePicker("Giờ đi ngủ", selection: timeBinding($bedMinutes), displayedComponents: .hourAndMinute)
-                DatePicker("Giờ thức dậy", selection: timeBinding($wakeMinutes), displayedComponents: .hourAndMinute)
-                Text("Thời gian dự kiến: \(SleepJournal.scheduledHours(bedMinutes: bedMinutes, wakeMinutes: wakeMinutes).formatted()) giờ mỗi đêm")
+                DatePicker("Giờ đi ngủ".tr, selection: timeBinding($bedMinutes), displayedComponents: .hourAndMinute)
+                DatePicker("Giờ thức dậy".tr, selection: timeBinding($wakeMinutes), displayedComponents: .hourAndMinute)
+                Text("Thời gian dự kiến: %@ giờ mỗi đêm".tr(SleepJournal.scheduledHours(bedMinutes: bedMinutes, wakeMinutes: wakeMinutes).formatted()))
                     .font(.subheadline)
-                Toggle("Nhắc giờ ngủ và thức dậy", isOn: $reminders)
-                Text("Lịch trong Terrarium áp dụng mỗi ngày, không thay đổi lịch Apple Health hoặc chế độ Tập trung. Lịch không tự tạo bản ghi giấc ngủ. Nhắc nhở là thông báo, không phải báo thức.")
+                Toggle("Nhắc giờ ngủ và thức dậy".tr, isOn: $reminders)
+                Text("Lịch trong Terrarium áp dụng mỗi ngày, không thay đổi lịch Apple Health hoặc chế độ Tập trung. Lịch không tự tạo bản ghi giấc ngủ. Nhắc nhở là thông báo, không phải báo thức.".tr)
                     .font(.caption).foregroundStyle(AccountStyle.muted)
                 if let message { Text(message).font(.caption).foregroundStyle(AccountStyle.muted) }
             }
@@ -68,12 +68,12 @@ private final class SleepReminderScheduler {
                 let allowed = try await center.requestAuthorization(options: [.alert, .sound])
                 guard !Task.isCancelled else { return nil }
                 guard allowed else {
-                    return "Thông báo chưa được cho phép. Bạn có thể bật trong Cài đặt → Thông báo → Terrarium."
+                    return "Thông báo chưa được cho phép. Bạn có thể bật trong Cài đặt → Thông báo → Terrarium.".tr
                 }
                 for (index, time) in minutes.enumerated() {
                     let content = UNMutableNotificationContent()
-                    content.title = index == 0 ? "Đến giờ nghỉ ngơi" : "Chào buổi sáng"
-                    content.body = index == 0 ? "Khép lại hôm nay, dành thời gian nghỉ ngơi cùng khu vườn." : "Khi sẵn sàng, hãy ghi lại giấc ngủ đêm qua."
+                    content.title = index == 0 ? "Đến giờ nghỉ ngơi".tr : "Chào buổi sáng".tr
+                    content.body = index == 0 ? "Khép lại hôm nay, dành thời gian nghỉ ngơi cùng khu vườn.".tr : "Khi sẵn sàng, hãy ghi lại giấc ngủ đêm qua.".tr
                     content.sound = .default
                     let trigger = UNCalendarNotificationTrigger(dateMatching: DateComponents(hour: time / 60, minute: time % 60), repeats: true)
                     try await center.add(UNNotificationRequest(identifier: ids[index], content: content, trigger: trigger))
@@ -85,7 +85,7 @@ private final class SleepReminderScheduler {
                 return nil
             } catch {
                 center.removePendingNotificationRequests(withIdentifiers: ids)
-                return Task.isCancelled ? nil : "Chưa đặt được nhắc nhở. Hãy thử tắt rồi bật lại."
+                return Task.isCancelled ? nil : "Chưa đặt được nhắc nhở. Hãy thử tắt rồi bật lại.".tr
             }
         }
         pending = next
@@ -98,40 +98,40 @@ struct ManualSleepSheet: View {
     @ObservedObject var health: SleepHealthStore
     @State private var start = Calendar.current.date(byAdding: .hour, value: -8, to: .now)!
     @State private var end = Date()
-    @State private var feeling = "Chưa chọn"
+    @State private var feeling = "Chưa chọn".tr
     @State private var export = false
-    private let feelings = ["Chưa chọn", "Mệt mỏi", "Bình thường", "Sảng khoái"]
+    private let feelings = ["Chưa chọn".tr, "Mệt mỏi".tr, "Bình thường".tr, "Sảng khoái".tr]
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Giấc ngủ thực tế") {
-                    DatePicker("Bắt đầu ngủ", selection: $start, in: ...Date())
-                    DatePicker("Thức dậy", selection: $end, in: ...Date())
+                Section("Giấc ngủ thực tế".tr) {
+                    DatePicker("Bắt đầu ngủ".tr, selection: $start, in: ...Date())
+                    DatePicker("Thức dậy".tr, selection: $end, in: ...Date())
                     if SleepJournal.isValid(start: start, end: end) {
                         Text(SleepSummary.duration(end.timeIntervalSince(start)))
                     } else {
-                        Text("Giờ thức dậy phải sau giờ ngủ, không ở tương lai và khoảng ngủ tối đa 24 giờ.")
+                        Text("Giờ thức dậy phải sau giờ ngủ, không ở tương lai và khoảng ngủ tối đa 24 giờ.".tr)
                             .foregroundStyle(.red).font(.caption)
                     }
-                    Picker("Cảm nhận khi thức dậy", selection: $feeling) {
+                    Picker("Cảm nhận khi thức dậy".tr, selection: $feeling) {
                         ForEach(feelings, id: \.self) { Text($0).tag($0) }
                     }
                 }
                 Section {
-                    Toggle("Ghi bản này sang Apple Health", isOn: $export)
+                    Toggle("Ghi bản này sang Apple Health".tr, isOn: $export)
                         .disabled(!health.isAvailable)
-                    Text("Luôn lưu nhật ký trên thiết bị. Bản ghi thủ công chỉ ghi nhận thời gian ngủ, không suy đoán các giai đoạn REM hay ngủ sâu. Cần cấp quyền ghi để xuất sang Apple Health.")
+                    Text("Luôn lưu nhật ký trên thiết bị. Bản ghi thủ công chỉ ghi nhận thời gian ngủ, không suy đoán các giai đoạn REM hay ngủ sâu. Cần cấp quyền ghi để xuất sang Apple Health.".tr)
                         .font(.caption)
                     if let message = health.message { Text(message).font(.caption) }
                 }
             }
-            .navigationTitle("Ghi giấc ngủ")
+            .navigationTitle("Ghi giấc ngủ".tr)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Hủy") { dismiss() }.disabled(health.isSaving) }
+                ToolbarItem(placement: .cancellationAction) { Button("Hủy".tr) { dismiss() }.disabled(health.isSaving) }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(health.isSaving ? "Đang lưu…" : "Lưu") {
+                    Button(health.isSaving ? "Đang lưu…".tr : "Lưu".tr) {
                         Task {
                             if await health.addManual(start: start, end: end, feeling: feeling, export: export) { dismiss() }
                         }

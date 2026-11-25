@@ -157,70 +157,70 @@ public struct PotTapEffectFactory {
             return exactType.createEffect()
         }
 
-        if clean.contains("đá lấp lánh") || clean.contains("lấp lánh") || clean.contains("sparkle") {
-            if clean.contains("cầu vồng") || clean.contains("đa sắc") || clean.contains("rainbow") {
+        if clean.contains("đá lấp lánh".tr) || clean.contains("lấp lánh".tr) || clean.contains("sparkle") {
+            if clean.contains("cầu vồng".tr) || clean.contains("đa sắc".tr) || clean.contains("rainbow") {
                 return SparkleBurstEffect(theme: .rainbow)
-            } else if clean.contains("ngọc") || clean.contains("emerald") {
+            } else if clean.contains("ngọc".tr) || clean.contains("emerald") {
                 return SparkleBurstEffect(theme: .emeraldJade)
             } else if clean.contains("lam") || clean.contains("sapphire") || clean.contains("aqua") {
                 return SparkleBurstEffect(theme: .sapphireAqua)
-            } else if clean.contains("tím") || clean.contains("amethyst") {
+            } else if clean.contains("tím".tr) || clean.contains("amethyst") {
                 return SparkleBurstEffect(theme: .amethystRose)
-            } else if clean.contains("vàng") || clean.contains("gold") {
+            } else if clean.contains("vàng".tr) || clean.contains("gold") {
                 return SparkleBurstEffect(theme: .golden)
             }
             return SparkleBurstEffect(theme: .classic)
-        } else if clean.contains("vàng") || clean.contains("gold") {
+        } else if clean.contains("vàng".tr) || clean.contains("gold") {
             return GoldGlintEffect()
-        } else if clean.contains("bụi đá") || clean.contains("stone") {
+        } else if clean.contains("bụi đá".tr) || clean.contains("stone") {
             return StoneDustEffect()
-        } else if clean.contains("trái tim") || clean.contains("heart") {
-            if clean.contains("cầu vồng") || clean.contains("đa sắc") || clean.contains("rainbow") {
+        } else if clean.contains("trái tim".tr) || clean.contains("heart") {
+            if clean.contains("cầu vồng".tr) || clean.contains("đa sắc".tr) || clean.contains("rainbow") {
                 return HeartBurstEffect(theme: .rainbow)
             } else if clean.contains("pastel") {
                 return HeartBurstEffect(theme: .pastel)
-            } else if clean.contains("đỏ") || clean.contains("crimson") {
+            } else if clean.contains("đỏ".tr) || clean.contains("crimson") {
                 return HeartBurstEffect(theme: .crimsonPassion)
             }
             return HeartBurstEffect(theme: .classic)
-        } else if clean.contains("gốm") || clean.contains("caro") || clean.contains("clay") {
+        } else if clean.contains("gốm".tr) || clean.contains("caro") || clean.contains("clay") {
             return ClayGlintEffect()
-        } else if clean.contains("thạch anh") || clean.contains("quartz") {
-            if clean.contains("lăng kính") || clean.contains("đa sắc") || clean.contains("prism") {
+        } else if clean.contains("thạch anh".tr) || clean.contains("quartz") {
+            if clean.contains("lăng kính".tr) || clean.contains("đa sắc".tr) || clean.contains("prism") {
                 return QuartzBurstEffect(theme: .prism)
-            } else if clean.contains("vàng") || clean.contains("citrine") {
+            } else if clean.contains("vàng".tr) || clean.contains("citrine") {
                 return QuartzBurstEffect(theme: .citrineGold)
-            } else if clean.contains("biển") || clean.contains("xanh") || clean.contains("aqua") {
+            } else if clean.contains("biển".tr) || clean.contains("xanh") || clean.contains("aqua") {
                 return QuartzBurstEffect(theme: .aquamarine)
             }
             return QuartzBurstEffect(theme: .roseAmethyst)
-        } else if clean.contains("đất sét") || clean.contains("đất") || clean.contains("earthen") {
+        } else if clean.contains("đất sét".tr) || clean.contains("đất".tr) || clean.contains("earthen") {
             return EarthenParticlesEffect()
-        } else if clean.contains("gỗ") || clean.contains("pollen") || clean.contains("amber") {
+        } else if clean.contains("gỗ".tr) || clean.contains("pollen") || clean.contains("amber") {
             if clean.contains("hoa") || clean.contains("blossom") {
                 return WoodPollenEffect(theme: .forestBlossom)
-            } else if clean.contains("vàng") || clean.contains("gold") {
+            } else if clean.contains("vàng".tr) || clean.contains("gold") {
                 return WoodPollenEffect(theme: .goldenDust)
             }
             return WoodPollenEffect(theme: .warmAmber)
-        } else if clean.contains("ngọc bích") || clean.contains("ngọc") || clean.contains("jade") || clean.contains("emerald") {
-            if clean.contains("lục bảo") || clean.contains("imperial") {
+        } else if clean.contains("ngọc bích".tr) || clean.contains("ngọc".tr) || clean.contains("jade") || clean.contains("emerald") {
+            if clean.contains("lục bảo".tr) || clean.contains("imperial") {
                 return EmeraldJadeEffect(theme: .imperialGreen)
-            } else if clean.contains("tím") || clean.contains("amethyst") {
+            } else if clean.contains("tím".tr) || clean.contains("amethyst") {
                 return EmeraldJadeEffect(theme: .amethystJade)
             }
             return EmeraldJadeEffect(theme: .iceJade)
-        } else if clean.contains("san hô") || clean.contains("coral") {
-            if clean.contains("đa sắc") || clean.contains("multicolor") {
+        } else if clean.contains("san hô".tr) || clean.contains("coral") {
+            if clean.contains("đa sắc".tr) || clean.contains("multicolor") {
                 return CoralBubbleEffect(theme: .multicolor)
-            } else if clean.contains("ngọc trai") || clean.contains("ocean") || clean.contains("pearl") {
+            } else if clean.contains("ngọc trai".tr) || clean.contains("ocean") || clean.contains("pearl") {
                 return CoralBubbleEffect(theme: .oceanPearl)
-            } else if clean.contains("hoàng hôn") || clean.contains("sunset") {
+            } else if clean.contains("hoàng hôn".tr) || clean.contains("sunset") {
                 return CoralBubbleEffect(theme: .sunset)
             }
             return CoralBubbleEffect(theme: .coralPink)
-        } else if clean.contains("tre") || clean.contains("sương") || clean.contains("bamboo") || clean.contains("mist") {
-            if clean.contains("trời") || clean.contains("sky") {
+        } else if clean.contains("tre") || clean.contains("sương".tr) || clean.contains("bamboo") || clean.contains("mist") {
+            if clean.contains("trời".tr) || clean.contains("sky") {
                 return BambooMistEffect(theme: .morningSky)
             } else if clean.contains("thu") || clean.contains("autumn") {
                 return BambooMistEffect(theme: .autumnZen)

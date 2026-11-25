@@ -40,10 +40,10 @@ struct TerrariumEvent: Decodable, Identifiable, Hashable {
     func unavailableReason(now: Date = Date(), appVersion: String = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0") -> String? {
         let components = Calendar.current.dateComponents([.year, .month, .day], from: now)
         let today = (components.year ?? 0) * 10000 + (components.month ?? 0) * 100 + (components.day ?? 0)
-        guard let firstDay = Self.dayValue(start), let lastDay = Self.dayValue(end) else { return "Lịch sự kiện chưa hợp lệ" }
-        if today < firstDay { return "Chưa bắt đầu" }
-        if today > lastDay { return "Đã kết thúc" }
-        if !Self.supportsVersion(appVersion, minimum: version) { return "Yêu cầu phiên bản \(version)" }
+        guard let firstDay = Self.dayValue(start), let lastDay = Self.dayValue(end) else { return "Lịch sự kiện chưa hợp lệ".tr }
+        if today < firstDay { return "Chưa bắt đầu".tr }
+        if today > lastDay { return "Đã kết thúc".tr }
+        if !Self.supportsVersion(appVersion, minimum: version) { return "Yêu cầu phiên bản %@".tr(version) }
         return nil
     }
 

@@ -12,16 +12,16 @@ struct StoreItemCard: View {
             HStack(alignment: .top, spacing: 14) {
                 itemArtwork
                 VStack(alignment: .leading, spacing: 7) {
-                    Text(item.name)
+                    Text(item.name.tr)
                         .font(.system(.headline, design: .rounded, weight: .bold))
                         .foregroundStyle(AccountStyle.ink)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(item.description)
+                    Text(item.description.tr)
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(AccountStyle.muted)
                         .lineLimit(3)
                     if !meetsLevelRequirement {
-                        Label("Mở khóa cấp \(item.levelUnlock)", systemImage: "lock.fill")
+                        Label("Mở khóa cấp %d".tr(item.levelUnlock), systemImage: "lock.fill")
                             .font(.system(.caption2, design: .rounded, weight: .bold))
                             .foregroundStyle(AccountStyle.danger)
                     }
@@ -65,13 +65,13 @@ struct StoreItemCard: View {
     @ViewBuilder
     private var purchaseButton: some View {
         if isOwned {
-            statusLabel("Đã sở hữu", icon: "checkmark.seal.fill")
+            statusLabel("Đã sở hữu".tr, icon: "checkmark.seal.fill")
         } else if !meetsLevelRequirement {
-            statusLabel("Mở khóa ở cấp \(item.levelUnlock)", icon: "lock.fill")
+            statusLabel("Mở khóa ở cấp %d".tr(item.levelUnlock), icon: "lock.fill")
         } else {
             Button { onPurchase(item) } label: {
                 HStack(spacing: 8) {
-                    Text(canAfford ? "Mua vật phẩm" : "Chưa đủ tài nguyên")
+                    Text(canAfford ? "Mua vật phẩm".tr : "Chưa đủ tài nguyên".tr)
                         .font(.system(.subheadline, design: .rounded, weight: .bold))
                     Spacer(minLength: 8)
                     currencyIcon
@@ -91,7 +91,7 @@ struct StoreItemCard: View {
             }
             .buttonStyle(.plain)
             .disabled(!canAfford)
-            .accessibilityLabel("Mua \(item.name), \(item.priceStore) \(currencyName)")
+            .accessibilityLabel("Mua %@, %d %@".tr(item.name.tr, item.priceStore, currencyName))
         }
     }
 
@@ -106,8 +106,8 @@ struct StoreItemCard: View {
     private var currencyName: String {
         switch item.currencyUnit {
         case "oxygen": return "oxy"
-        case "gemstone": return "đá quý"
-        case "ticket": return "vé"
+        case "gemstone": return "đá quý".tr
+        case "ticket": return "vé".tr
         default: return item.currencyUnit
         }
     }

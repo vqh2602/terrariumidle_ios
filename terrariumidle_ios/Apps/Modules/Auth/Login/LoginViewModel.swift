@@ -143,7 +143,7 @@ final class LoginViewModel: ObservableObject {
     func login(email: String, password: String) async -> User? {
         // Validate input
         guard !email.isEmpty, !password.isEmpty else {
-            errorMessage = "Vui lòng nhập email và mật khẩu"
+            errorMessage = "Vui lòng nhập email và mật khẩu".tr
             hasError = true
             return nil
         }
@@ -178,7 +178,7 @@ final class LoginViewModel: ObservableObject {
     func register(email: String, password: String) async -> User? {
         // Validate input
         guard !email.isEmpty, !password.isEmpty else {
-            errorMessage = "Vui lòng nhập email và mật khẩu"
+            errorMessage = "Vui lòng nhập email và mật khẩu".tr
             hasError = true
             return nil
         }

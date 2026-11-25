@@ -53,6 +53,7 @@ struct HomeView: View {
     @State private var authService: AuthService = .shared
     @StateObject private var loginViewModel: LoginViewModel = .init(auth: AuthService.shared)
     @StateObject private var fireStoreService: FireStoreService = .shared
+    @ObservedObject private var localization = LocalizationManager.shared
     @EnvironmentObject var router: AppRouter
 
     @Environment(\.scenePhase) private var scenePhase

@@ -78,13 +78,13 @@ struct OnboardingView: View {
                         .shadow(color: AccountStyle.border.opacity(0.65), radius: 0, y: 3)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Bước trước")
+                .accessibilityLabel("Bước trước".tr)
             } else {
                 HStack(spacing: 6) {
                     Image(systemName: "leaf.fill")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(AccountStyle.green)
-                    Text("Hướng dẫn")
+                    Text("Hướng dẫn".tr)
                         .font(.system(.subheadline, design: .rounded, weight: .heavy))
                         .foregroundStyle(AccountStyle.ink)
                 }
@@ -108,7 +108,7 @@ struct OnboardingView: View {
                 completeOnboarding()
             } label: {
                 HStack(spacing: 6) {
-                    Text(isReplay ? "Đóng" : "Bỏ qua")
+                    Text(isReplay ? "Đóng".tr : "Bỏ qua".tr)
                         .font(.system(.subheadline, design: .rounded, weight: .bold))
                     Image(systemName: isReplay ? "xmark" : "forward.end.fill")
                         .font(.system(size: 12, weight: .bold))
@@ -124,8 +124,8 @@ struct OnboardingView: View {
                 .shadow(color: AccountStyle.border.opacity(0.65), radius: 0, y: 3)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(isReplay ? "Đóng hướng dẫn" : "Bỏ qua hướng dẫn")
-            .accessibilityHint("Chuyển nhanh vào ứng dụng")
+            .accessibilityLabel(isReplay ? "Đóng hướng dẫn".tr : "Bỏ qua hướng dẫn".tr)
+            .accessibilityHint("Chuyển nhanh vào ứng dụng".tr)
         }
         .padding(.horizontal, 20)
         .padding(.top, 12)
@@ -265,22 +265,22 @@ struct OnboardingView: View {
             HStack(spacing: 12) {
                 gestureCard(
                     icon: "hand.tap.fill",
-                    title: "Chạm nhanh",
-                    subtitle: "Nhặt Oxy & EXP",
+                    title: "Chạm nhanh".tr,
+                    subtitle: "Nhặt Oxy & EXP".tr,
                     asset: "oxygen"
                 )
                 gestureCard(
                     icon: "hand.point.up.left.fill",
-                    title: "Nhấn giữ",
-                    subtitle: "Mở menu chăm cây",
+                    title: "Nhấn giữ".tr,
+                    subtitle: "Mở menu chăm cây".tr,
                     asset: "water-can"
                 )
             }
 
             HStack(spacing: 8) {
-                careToolPill(asset: "water-can", label: "Tưới cây")
-                careToolPill(asset: "fertilizer", label: "Bón phân")
-                careToolPill(asset: "shovel", label: "Loại bỏ")
+                careToolPill(asset: "water-can", label: "Tưới cây".tr)
+                careToolPill(asset: "fertilizer", label: "Bón phân".tr)
+                careToolPill(asset: "shovel", label: "Loại bỏ".tr)
             }
         }
         .frame(maxWidth: .infinity)
@@ -294,10 +294,10 @@ struct OnboardingView: View {
                 HStack(spacing: 10) {
                     LevelCircularBadge(level: 1, progress: 0.55, size: 46)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Huy hiệu Cấp")
+                        Text("Huy hiệu Cấp".tr)
                             .font(.system(.caption, design: .rounded, weight: .bold))
                             .foregroundStyle(AccountStyle.ink)
-                        Text("Chạm để mở ví")
+                        Text("Chạm để mở ví".tr)
                             .font(.system(.caption2, design: .rounded, weight: .medium))
                             .foregroundStyle(AccountStyle.muted)
                     }
@@ -310,7 +310,7 @@ struct OnboardingView: View {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 24))
                         .foregroundStyle(AccountStyle.green)
-                    Text("Ô thêm cây")
+                    Text("Ô thêm cây".tr)
                         .font(.system(.caption2, design: .rounded, weight: .bold))
                         .foregroundStyle(AccountStyle.ink)
                 }
@@ -325,10 +325,10 @@ struct OnboardingView: View {
 
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Nút Góc vườn")
+                    Text("Nút Góc vườn".tr)
                         .font(.system(.subheadline, design: .rounded, weight: .bold))
                         .foregroundStyle(AccountStyle.ink)
-                    Text("Cửa hàng · Bố cục · Phong cảnh · Âm nhạc")
+                    Text("Cửa hàng · Bố cục · Phong cảnh · Âm nhạc".tr)
                         .font(.system(.caption, design: .rounded, weight: .medium))
                         .foregroundStyle(AccountStyle.muted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -366,27 +366,27 @@ struct OnboardingView: View {
                 featurePreviewTile(
                     icon: "moon.stars.fill",
                     tint: Color(hex: "8D9360"),
-                    title: "Giấc ngủ",
-                    subtitle: "Quà mỗi ngày"
+                    title: "Giấc ngủ".tr,
+                    subtitle: "Quà mỗi ngày".tr
                 )
                 featurePreviewTile(
                     icon: "cloud.rain.fill",
                     tint: Color(hex: "5E99B5"),
-                    title: "Thời tiết",
-                    subtitle: "Tự tap 60s"
+                    title: "Thời tiết".tr,
+                    subtitle: "Tự tap 60s".tr
                 )
                 featurePreviewTile(
                     icon: "globe.asia.australia.fill",
                     tint: Color(hex: "648C86"),
-                    title: "Khám phá",
-                    subtitle: "Thăm & thả tim"
+                    title: "Khám phá".tr,
+                    subtitle: "Thăm & thả tim".tr
                 )
             }
 
             HStack(spacing: 10) {
                 miniResourcePill(image: "oxygen", text: "Oxy")
-                miniResourcePill(image: "gemstone", text: "Đá quý")
-                miniResourcePill(image: "ticket", text: "Vé thời tiết")
+                miniResourcePill(image: "gemstone", text: "Đá quý".tr)
+                miniResourcePill(image: "ticket", text: "Vé thời tiết".tr)
             }
         }
         .frame(maxWidth: .infinity)
@@ -531,7 +531,7 @@ struct OnboardingView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Bước \(step.rawValue + 1): \(step.eyebrow)")
+                    .accessibilityLabel("Bước %d: %@".tr(step.rawValue + 1, step.eyebrow))
                 }
             }
 
@@ -571,9 +571,9 @@ struct OnboardingView: View {
 
     private var primaryButtonTitle: String {
         if isLastStep {
-            return isReplay ? "Hoàn tất" : "Bắt đầu trồng cây"
+            return isReplay ? "Hoàn tất".tr : "Bắt đầu trồng cây".tr
         }
-        return "Tiếp theo"
+        return "Tiếp theo".tr
     }
 
     // MARK: - Actions
@@ -603,12 +603,12 @@ struct OnboardingView: View {
     }
 }
 
-#Preview("Hướng dẫn · Lần đầu") {
+#Preview("Hướng dẫn · Lần đầu".tr) {
     OnboardingView()
         .environmentObject(AppRouter())
 }
 
-#Preview("Hướng dẫn · Màn hình nhỏ") {
+#Preview("Hướng dẫn · Màn hình nhỏ".tr) {
     OnboardingView()
         .environmentObject(AppRouter())
         .frame(width: 320, height: 568)

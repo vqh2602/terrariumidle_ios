@@ -483,7 +483,7 @@ final class BackgroundAudioManager: ObservableObject {
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: displayTitle,
             MPMediaItemPropertyArtist: "Terrarium Idle",
-            MPMediaItemPropertyAlbumTitle: "Nhạc thư giãn",
+            MPMediaItemPropertyAlbumTitle: "Nhạc thư giãn".tr,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
             MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: time,

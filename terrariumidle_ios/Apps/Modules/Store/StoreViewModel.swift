@@ -47,8 +47,8 @@ final class StoreViewModel: ObservableObject {
         // Filter by search text
         if !searchText.isEmpty {
             items = items.filter { item in
-                item.name.localizedCaseInsensitiveContains(searchText) ||
-                    item.description.localizedCaseInsensitiveContains(searchText)
+                item.name.tr.localizedCaseInsensitiveContains(searchText) ||
+                    item.description.tr.localizedCaseInsensitiveContains(searchText)
             }
         }
 
@@ -120,14 +120,14 @@ final class StoreViewModel: ObservableObject {
 
     func purchaseItem(_ item: ItemData) async {
         guard let gardenModel = fireStore.gradenModel else {
-            errorMessage = "Không thể tải thông tin người dùng"
+            errorMessage = "Không thể tải thông tin người dùng".tr
             hasError = true
             return
         }
 
         // Check if can afford
         guard canAfford(item: item) else {
-            errorMessage = "Không đủ tiền để mua"
+            errorMessage = "Không đủ tiền để mua".tr
             hasError = true
             return
         }

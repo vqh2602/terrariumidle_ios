@@ -242,21 +242,21 @@ public struct PlantMotionEffectFactory {
     public static func create(named nameOrId: String) -> PlantMotionEffect {
         let clean = nameOrId.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if clean.contains("bamboo") || clean.contains("tre") || clean.contains("trúc") {
+        if clean.contains("bamboo") || clean.contains("tre") || clean.contains("trúc".tr) {
             return BambooWindMotionEffect()
         } else if clean.contains("flower") || clean.contains("hoa") {
             return FlowerSwayMotionEffect()
-        } else if clean.contains("broadleaf") || clean.contains("lá rộng") {
+        } else if clean.contains("broadleaf") || clean.contains("lá rộng".tr) {
             return BroadleafWindMotionEffect()
-        } else if clean.contains("frond") || clean.contains("lá dài") || clean.contains("dương xỉ") {
+        } else if clean.contains("frond") || clean.contains("lá dài".tr) || clean.contains("dương xỉ".tr) {
             return FrondWindMotionEffect()
-        } else if clean.contains("connected") || clean.contains("liên kết") {
+        } else if clean.contains("connected") || clean.contains("liên kết".tr) {
             return ConnectedPlantSwayMotionEffect()
-        } else if clean.contains("wind") || clean.contains("sway") || clean.contains("gió") || clean.contains("đu đưa") {
+        } else if clean.contains("wind") || clean.contains("sway") || clean.contains("gió".tr) || clean.contains("đu đưa".tr) {
             return WindSwayMotionEffect()
-        } else if clean.contains("vine") || clean.contains("cascade") || clean.contains("leo") || clean.contains("rủ") {
+        } else if clean.contains("vine") || clean.contains("cascade") || clean.contains("leo") || clean.contains("rủ".tr) {
             return CascadingVineMotionEffect()
-        } else if clean.contains("pulse") || clean.contains("mọng nước") || clean.contains("sen đá") {
+        } else if clean.contains("pulse") || clean.contains("mọng nước".tr) || clean.contains("sen đá".tr) {
             return ElasticPulseMotionEffect()
         }
 

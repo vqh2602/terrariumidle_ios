@@ -51,7 +51,7 @@ struct SelectItemSheet: View {
                         {
                             SelectedItemPreview(
                                 item: plant,
-                                type: "Cây",
+                                type: "Cây".tr,
                                 onRemove: { selectedPlantId = nil }
                             )
                             .padding(.horizontal)
@@ -62,7 +62,7 @@ struct SelectItemSheet: View {
                         {
                             SelectedItemPreview(
                                 item: pot,
-                                type: "Chậu",
+                                type: "Chậu".tr,
                                 onRemove: { selectedPotId = nil }
                             )
                             .padding(.horizontal)
@@ -73,7 +73,7 @@ struct SelectItemSheet: View {
                         {
                             SelectedItemPreview(
                                 item: decoration,
-                                type: "Trang trí",
+                                type: "Trang trí".tr,
                                 onRemove: { selectedDecorationId = nil }
                             )
                             .padding(.horizontal)
@@ -84,7 +84,7 @@ struct SelectItemSheet: View {
                             HStack {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundColor(.orange)
-                                Text("Cây và chậu phải cùng loại (cả 2 treo hoặc cả 2 không treo)")
+                                Text("Cây và chậu phải cùng loại (cả 2 treo hoặc cả 2 không treo)".tr)
                                     .font(.caption)
                                     .foregroundColor(.orange)
                             }
@@ -102,10 +102,10 @@ struct SelectItemSheet: View {
 
                 // MARK: - Tab Selector
 
-                Picker("Loại vật phẩm", selection: $selectedTab) {
-                    Text("Chậu").tag(SelectionTab.pot)
-                    Text("Cây").tag(SelectionTab.plant)
-                    Text("Trang trí").tag(SelectionTab.decoration)
+                Picker("Loại vật phẩm".tr, selection: $selectedTab) {
+                    Text("Chậu".tr).tag(SelectionTab.pot)
+                    Text("Cây".tr).tag(SelectionTab.plant)
+                    Text("Trang trí".tr).tag(SelectionTab.decoration)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 12)
@@ -119,14 +119,14 @@ struct SelectItemSheet: View {
                     GardenInventoryRow(item: pot, isSelected: false, onSelect: {
                         selectedPotId = pot.id
                         selectedTab = .pot
-                    }, recommendationText: "Chậu phù hợp nhất với cây đã chọn")
+                    }, recommendationText: "Chậu phù hợp nhất với cây đã chọn".tr)
                     .padding(.horizontal, 12)
                     .padding(.bottom, 8)
                 } else if selectedTab == .pot, let plant = recommendedPlant, selectedPlantId != plant.id {
                     GardenInventoryRow(item: plant, isSelected: false, onSelect: {
                         selectedPlantId = plant.id
                         selectedTab = .plant
-                    }, recommendationText: "Cây phù hợp nhất với chậu đã chọn")
+                    }, recommendationText: "Cây phù hợp nhất với chậu đã chọn".tr)
                     .padding(.horizontal, 12)
                     .padding(.bottom, 8)
                 }
@@ -183,11 +183,11 @@ struct SelectItemSheet: View {
             .toolbarColorScheme(.light, for: .navigationBar)
             .toolbarBackground(AccountStyle.cream, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .navigationTitle("Chọn vật phẩm")
+            .navigationTitle("Chọn vật phẩm".tr)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Đóng") {
+                    Button("Đóng".tr) {
                         isPresented = false
                     }
                     .fontWeight(.bold)
@@ -232,10 +232,10 @@ struct SelectItemSheet: View {
                     Text("\(totalCost)")
                         .fontWeight(.bold)
                     Spacer()
-                    Text(selectionMode == .plantCombo ? "Trồng cây" : "Đặt trang trí")
+                    Text(selectionMode == .plantCombo ? "Trồng cây".tr : "Đặt trang trí".tr)
                         .fontWeight(.semibold)
                 } else {
-                    Text("Không đủ oxygen")
+                    Text("Không đủ oxygen".tr)
                         .fontWeight(.semibold)
                 }
             }
@@ -260,7 +260,7 @@ struct SelectItemSheet: View {
     private func unownedItemRecommendation(_ item: ItemData) -> some View {
         let isPlant = item.type == "plant"
         return VStack(alignment: .leading, spacing: 8) {
-            Label(isPlant ? "Cây phù hợp nhất với chậu đã chọn" : "Chậu phù hợp nhất với cây đã chọn", systemImage: "sparkles")
+            Label(isPlant ? "Cây phù hợp nhất với chậu đã chọn".tr : "Chậu phù hợp nhất với cây đã chọn".tr, systemImage: "sparkles")
                 .font(.system(.caption, design: .rounded, weight: .bold))
                 .foregroundStyle(AccountStyle.green)
             HStack(spacing: 10) {
@@ -271,10 +271,10 @@ struct SelectItemSheet: View {
                 }
                 .frame(width: 48, height: 48)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(item.name)
+                    Text(item.name.tr)
                         .font(.system(.subheadline, design: .rounded, weight: .bold))
                         .foregroundStyle(AccountStyle.ink)
-                    Text(isPlant ? "Bạn chưa sở hữu cây này." : "Bạn chưa sở hữu chậu này.")
+                    Text(isPlant ? "Bạn chưa sở hữu cây này.".tr : "Bạn chưa sở hữu chậu này.".tr)
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(AccountStyle.muted)
                 }
@@ -283,7 +283,7 @@ struct SelectItemSheet: View {
                 onOpenStore(item.id)
                 isPresented = false
             } label: {
-                Label("Vào cửa hàng để mua", systemImage: "basket.fill")
+                Label("Vào cửa hàng để mua".tr, systemImage: "basket.fill")
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)

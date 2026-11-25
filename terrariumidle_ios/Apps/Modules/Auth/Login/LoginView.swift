@@ -27,7 +27,7 @@ struct LoginView: View {
                         ).padding(20)
                     Text("Terrarium idle").textStyle(.title1).foregroundColor(AppColors.primary).fontWeight(.bold)
                     Spacer()
-                    Text("Đăng nhập để tiếp tục sử dụng ứng dụng").textStyle(.caption1).foregroundColor(.black)
+                    Text("Đăng nhập để tiếp tục sử dụng ứng dụng".tr).textStyle(.caption1).foregroundColor(.black)
                     Spacer().frame(height: 20)
 
                     if loginViewModel.isLoading {
@@ -45,22 +45,22 @@ struct LoginView: View {
                             .padding(.bottom, 8)
                     }
 
-                    ButtonLogin(title: "Đăng nhập bằng google", icon: "google-fill", action: {
+                    ButtonLogin(title: "Đăng nhập bằng google".tr, icon: "google-fill", action: {
                         if let _ = await loginViewModel.loginWithGoogle() {
                             router.replaceRoot(.homeView)
                         }
                     })
-                    ButtonLogin(title: "Đăng nhập bằng apple", icon: "apple-fill", action: {
+                    ButtonLogin(title: "Đăng nhập bằng apple".tr, icon: "apple-fill", action: {
                         let data = await loginViewModel.loginWithApple()
                         if data != nil {
                             router.replaceRoot(.homeView)
                         }
                     })
-                    ButtonLogin(title: "Đăng nhập bằng email", icon: "shield-user-fill", action: {
+                    ButtonLogin(title: "Đăng nhập bằng email".tr, icon: "shield-user-fill", action: {
                         showEmailSheet = true
                     })
                     Spacer().frame(height: 40)
-                    Text("Khi bạn đăng nhập sẽ đồng ý với các điều khoản của chúng tôi").textStyle(.caption1).foregroundColor(.gray).multilineTextAlignment(.center)
+                    Text("Khi bạn đăng nhập sẽ đồng ý với các điều khoản của chúng tôi".tr).textStyle(.caption1).foregroundColor(.gray).multilineTextAlignment(.center)
                 }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .background(AppColors.backgroundLogin)
                     .navigationBarHidden(true) // Ẩn thanh navigation và nút back
@@ -124,9 +124,9 @@ struct EmailAuthSheet: View {
 
                 ScrollView {
                     VStack(spacing: 20) {
-                        Picker("Chế độ", selection: $isRegisterMode) {
-                            Text("Đăng nhập").tag(false)
-                            Text("Đăng ký").tag(true)
+                        Picker("Chế độ".tr, selection: $isRegisterMode) {
+                            Text("Đăng nhập".tr).tag(false)
+                            Text("Đăng ký".tr).tag(true)
                         }
                         .pickerStyle(SegmentedPickerStyle())
                         .padding(.top, 10)
@@ -138,7 +138,7 @@ struct EmailAuthSheet: View {
 
                         VStack(alignment: .leading, spacing: 14) {
                             VStack(alignment: .leading, spacing: 6) {
-                                Text("Email")
+                                Text("Email".tr)
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
                                 TextField("example@gmail.com", text: $email)
@@ -154,10 +154,10 @@ struct EmailAuthSheet: View {
                             }
 
                             VStack(alignment: .leading, spacing: 6) {
-                                Text("Mật khẩu")
+                                Text("Mật khẩu".tr)
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
-                                SecureField("Nhập mật khẩu", text: $password)
+                                SecureField("Nhập mật khẩu".tr, text: $password)
                                     .padding()
                                     .background(Color.white)
                                     .cornerRadius(10)
@@ -169,10 +169,10 @@ struct EmailAuthSheet: View {
 
                             if isRegisterMode {
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text("Xác nhận mật khẩu")
+                                    Text("Xác nhận mật khẩu".tr)
                                         .font(.subheadline)
                                         .foregroundColor(.gray)
-                                    SecureField("Nhập lại mật khẩu", text: $confirmPassword)
+                                    SecureField("Nhập lại mật khẩu".tr, text: $confirmPassword)
                                         .padding()
                                         .background(Color.white)
                                         .cornerRadius(10)
@@ -203,7 +203,7 @@ struct EmailAuthSheet: View {
                                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                         .padding(.trailing, 6)
                                 }
-                                Text(isRegisterMode ? "Tạo tài khoản" : "Đăng nhập")
+                                Text(isRegisterMode ? "Tạo tài khoản".tr : "Đăng nhập".tr)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.white)
                             }
@@ -220,11 +220,11 @@ struct EmailAuthSheet: View {
                     .padding(20)
                 }
             }
-            .navigationTitle(isRegisterMode ? "Đăng ký" : "Đăng nhập")
+            .navigationTitle(isRegisterMode ? "Đăng ký".tr : "Đăng nhập".tr)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Đóng") {
+                    Button("Đóng".tr) {
                         dismiss()
                     }
                     .foregroundColor(AppColors.primary)
@@ -237,20 +237,20 @@ struct EmailAuthSheet: View {
         validationError = nil
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedEmail.isEmpty else {
-            validationError = "Vui lòng nhập email"
+            validationError = "Vui lòng nhập email".tr
             return
         }
         guard !password.isEmpty else {
-            validationError = "Vui lòng nhập mật khẩu"
+            validationError = "Vui lòng nhập mật khẩu".tr
             return
         }
         if isRegisterMode {
             guard password == confirmPassword else {
-                validationError = "Mật khẩu xác nhận không khớp"
+                validationError = "Mật khẩu xác nhận không khớp".tr
                 return
             }
             guard password.count >= 6 else {
-                validationError = "Mật khẩu phải có ít nhất 6 ký tự"
+                validationError = "Mật khẩu phải có ít nhất 6 ký tự".tr
                 return
             }
             if let _ = await viewModel.register(email: trimmedEmail, password: password) {

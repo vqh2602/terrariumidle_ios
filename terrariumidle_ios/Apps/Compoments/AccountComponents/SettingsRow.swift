@@ -38,6 +38,7 @@ struct SettingsRow: View {
 
     enum TrailingContent {
         case chevron
+        case value(String)
         case toggle(Binding<Bool>)
         case none
     }
@@ -77,6 +78,17 @@ struct SettingsRow: View {
                             .foregroundStyle(AccountStyle.muted)
                             .frame(width: 26, height: 26)
                             .background(AccountStyle.border.opacity(0.28), in: Circle())
+                    } else if case let .value(text) = trailingContent {
+                        HStack(spacing: 6) {
+                            Text(text)
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                .foregroundStyle(AccountStyle.muted)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(AccountStyle.muted)
+                                .frame(width: 26, height: 26)
+                                .background(AccountStyle.border.opacity(0.28), in: Circle())
+                        }
                     }
                 }
                 .padding(.horizontal, 18)
@@ -111,8 +123,8 @@ struct SettingsRow: View {
 
 #Preview {
     VStack(spacing: 0) {
-        SettingsRow(title: "Đồng bộ dữ liệu", icon: "arrow.triangle.2.circlepath")
-        SettingsRow(title: "Hiệu suất cao", icon: "bolt.fill", trailingContent: .toggle(.constant(true)))
+        SettingsRow(title: "Đồng bộ dữ liệu".tr, icon: "arrow.triangle.2.circlepath")
+        SettingsRow(title: "Hiệu suất cao".tr, icon: "bolt.fill", trailingContent: .toggle(.constant(true)))
     }
     .modifier(AccountPanel())
     .padding()

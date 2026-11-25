@@ -39,7 +39,7 @@ struct CustomContextMenu: ViewModifier {
             }) {
                 VStack(spacing: 10) {
                     HStack {
-                        Text("Chọn hành động")
+                        Text("Chọn hành động".tr)
                             .font(.title3.bold())
                         Spacer()
                         Button {
@@ -49,7 +49,7 @@ struct CustomContextMenu: ViewModifier {
                                 .font(.title2)
                                 .foregroundStyle(.secondary)
                         }
-                        .accessibilityLabel("Đóng menu")
+                        .accessibilityLabel("Đóng menu".tr)
                     }
                     .padding(.bottom, 6)
 

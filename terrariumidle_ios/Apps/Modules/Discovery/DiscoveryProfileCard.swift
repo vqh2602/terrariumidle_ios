@@ -21,7 +21,7 @@ struct DiscoveryProfileCard: View {
                 if !dynamicTypeSize.isAccessibilitySize { visitBadge }
             }
             if let oxygen = profile.oxygenCollected {
-                Label("\(oxygen.formatted()) oxygen đã thu thập", systemImage: "wind")
+                Label("%@ oxygen đã thu thập".tr(oxygen.formatted()), systemImage: "wind")
                     .font(.system(.caption, design: .rounded, weight: .bold))
                     .foregroundStyle(Color(hex: "527F89"))
                     .padding(.horizontal, 10).padding(.vertical, 7)
@@ -72,12 +72,12 @@ struct DiscoveryProfileCard: View {
             .offset(y: 6)
         }
         .padding(.bottom, 6)
-        .accessibilityLabel("Cấp \(profile.level)")
+        .accessibilityLabel("Cấp %d".tr(profile.level))
     }
 
     @ViewBuilder
     private var statistics: some View {
-        stat("square.stack.3d.up.fill", value: "\(profile.floors) tầng", tint: AccountStyle.green)
+        stat("square.stack.3d.up.fill", value: "%d tầng".tr(profile.floors), tint: AccountStyle.green)
         stat("heart.fill", value: profile.likes.formatted(), tint: Color(hex: "BC796C"))
     }
 
@@ -103,7 +103,7 @@ struct DiscoveryProfileCard: View {
                 .overlay { Circle().strokeBorder(Color(hex: "486637"), lineWidth: 1.5) }
                 .overlay { Circle().strokeBorder(.white.opacity(0.25), lineWidth: 1).padding(4) }
                 .shadow(color: Color(hex: "486637"), radius: 0, y: 2)
-            Text("Ghé thăm")
+            Text("Ghé thăm".tr)
                 .font(.system(size: 9, weight: .heavy, design: .rounded))
                 .foregroundStyle(AccountStyle.green)
         }

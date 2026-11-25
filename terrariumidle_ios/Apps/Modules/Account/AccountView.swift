@@ -4,6 +4,7 @@ struct AccountView: View {
     @EnvironmentObject var router: AppRouter
     @StateObject private var viewModel = AccountViewModel()
     @StateObject private var fireStore: FireStoreService = .shared
+    @ObservedObject private var localization = LocalizationManager.shared
     @State private var showOnboardingGuide = false
 
     var body: some View {
@@ -27,7 +28,7 @@ struct AccountView: View {
                     accountSection
                     HStack(spacing: 8) {
                         Image(systemName: "leaf.fill")
-                        Text("Một góc vườn nhỏ, một chút bình yên")
+                        Text("Một góc vườn nhỏ, một chút bình yên".tr)
                     }
                     .font(.system(.caption, design: .rounded, weight: .medium))
                     .foregroundStyle(AccountStyle.muted)
@@ -59,22 +60,22 @@ struct AccountView: View {
                 }
         }
         .navigationBarHidden(true)
-        .alert("Đăng xuất", isPresented: $viewModel.showSignOutConfirmation) {
-            Button("Hủy", role: .cancel) {}
-            Button("Đăng xuất", role: .destructive) {
+        .alert("Đăng xuất".tr, isPresented: $viewModel.showSignOutConfirmation) {
+            Button("Hủy".tr, role: .cancel) {}
+            Button("Đăng xuất".tr, role: .destructive) {
                 viewModel.signOut()
                 router.replaceRoot(.loginView(id: ""))
             }
         } message: {
-            Text("Bạn có chắc chắn muốn đăng xuất?")
+            Text("Bạn có chắc chắn muốn đăng xuất?".tr)
         }
-        .alert("Xóa tài khoản", isPresented: $viewModel.showDeleteConfirmation) {
-            Button("Hủy", role: .cancel) {}
-            Button("Xóa", role: .destructive) {
+        .alert("Xóa tài khoản".tr, isPresented: $viewModel.showDeleteConfirmation) {
+            Button("Hủy".tr, role: .cancel) {}
+            Button("Xóa".tr, role: .destructive) {
                 viewModel.deleteAccount()
             }
         } message: {
-            Text("Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn.")
+            Text("Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn.".tr)
         }
         .fullScreenCover(isPresented: $showOnboardingGuide) {
             OnboardingView(isReplay: true) {
@@ -87,10 +88,10 @@ struct AccountView: View {
     private var header: some View {
         ZStack {
             VStack(spacing: 3) {
-                Text("Tài khoản")
+                Text("Tài khoản".tr)
                     .font(.system(.title2, design: .rounded, weight: .heavy))
                     .foregroundStyle(AccountStyle.ink)
-                Text("GÓC NHỎ CỦA BẠN")
+                Text("GÓC NHỎ CỦA BẠN".tr)
                     .font(.system(size: 9, weight: .bold, design: .rounded))
                     .tracking(2)
                     .foregroundStyle(AccountStyle.green)
@@ -109,7 +110,7 @@ struct AccountView: View {
                         .shadow(color: AccountStyle.border, radius: 0, y: 3)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Quay lại")
+                .accessibilityLabel("Quay lại".tr)
                 Spacer()
             }
         }
@@ -118,13 +119,15 @@ struct AccountView: View {
     }
 
     private var settingsSection: some View {
-        section(title: "Thiết lập khu vườn", icon: "slider.horizontal.3") {
-            SettingsRow(title: "Đồng bộ dữ liệu", icon: "arrow.triangle.2.circlepath") {
+        section(title: "Thiết lập khu vườn".tr, icon: "slider.horizontal.3") {
+            languagePickerRow
+            rowDivider
+            SettingsRow(title: "Đồng bộ dữ liệu".tr, icon: "arrow.triangle.2.circlepath") {
                 viewModel.syncData()
             }
             rowDivider
             SettingsRow(
-                title: "Hiệu suất cao", icon: "bolt.fill",
+                title: "Hiệu suất cao".tr, icon: "bolt.fill",
                 trailingContent: .toggle(Binding(
                     get: { viewModel.highPerformanceMode },
                     set: { value in
@@ -134,7 +137,7 @@ struct AccountView: View {
             )
             rowDivider
             SettingsRow(
-                title: "Chế độ phòng cảnh", icon: "house.fill",
+                title: "Chế độ phòng cảnh".tr, icon: "house.fill",
                 trailingContent: .toggle(Binding(
                     get: { viewModel.roomSceneMode },
                     set: { value in
@@ -145,31 +148,73 @@ struct AccountView: View {
         }
     }
 
+    private var languagePickerRow: some View {
+        Menu {
+            ForEach(AppLanguage.allCases) { language in
+                Button {
+                    localization.currentLanguage = language
+                } label: {
+                    if language == localization.currentLanguage {
+                        Label("\(language.flag) \(language.nativeName)", systemImage: "checkmark")
+                    } else {
+                        Text("\(language.flag) \(language.nativeName)")
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "globe")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(AccountStyle.green)
+                    .frame(width: 36, height: 36)
+                    .background(AccountStyle.green.opacity(0.10), in: RoundedRectangle(cornerRadius: 12))
+                Text("Ngôn ngữ".tr)
+                    .font(.system(.body, design: .rounded, weight: .semibold))
+                    .foregroundStyle(AccountStyle.ink)
+                Spacer(minLength: 4)
+                HStack(spacing: 6) {
+                    Text("\(localization.currentLanguage.flag) \(localization.currentLanguage.nativeName)")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(AccountStyle.muted)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(AccountStyle.muted)
+                        .frame(width: 26, height: 26)
+                        .background(AccountStyle.border.opacity(0.28), in: Circle())
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
     private var servicesSection: some View {
-        section(title: "Đồng hành cùng bạn", icon: "sparkles") {
-            SettingsRow(title: "Hướng dẫn khu vườn", icon: "sparkles.rectangle.stack.fill") {
+        section(title: "Đồng hành cùng bạn".tr, icon: "sparkles") {
+            SettingsRow(title: "Hướng dẫn khu vườn".tr, icon: "sparkles.rectangle.stack.fill") {
                 showOnboardingGuide = true
             }
             rowDivider
-            SettingsRow(title: "Đánh giá ứng dụng", icon: "star.fill") { viewModel.openRateApp() }
+            SettingsRow(title: "Đánh giá ứng dụng".tr, icon: "star.fill") { viewModel.openRateApp() }
             rowDivider
-            SettingsRow(title: "Cẩm nang khu vườn · Wiki", icon: "book.closed.fill") { viewModel.openWiki() }
+            SettingsRow(title: "Cẩm nang khu vườn · Wiki".tr, icon: "book.closed.fill") { viewModel.openWiki() }
             rowDivider
-            SettingsRow(title: "Liên hệ hỗ trợ", icon: "bubble.left.and.bubble.right.fill") { viewModel.contactSupport() }
+            SettingsRow(title: "Liên hệ hỗ trợ".tr, icon: "bubble.left.and.bubble.right.fill") { viewModel.contactSupport() }
             rowDivider
-            SettingsRow(title: "Chính sách bảo mật", icon: "checkmark.shield.fill") { viewModel.openPrivacyPolicy() }
+            SettingsRow(title: "Chính sách bảo mật".tr, icon: "checkmark.shield.fill") { viewModel.openPrivacyPolicy() }
             rowDivider
-            SettingsRow(title: "Điều khoản sử dụng", icon: "doc.text.fill") { viewModel.openTermsOfUse() }
+            SettingsRow(title: "Điều khoản sử dụng".tr, icon: "doc.text.fill") { viewModel.openTermsOfUse() }
         }
     }
 
     private var accountSection: some View {
-        section(title: "Quản lý tài khoản", icon: "person.crop.circle") {
-            SettingsRow(title: "Đăng xuất", icon: "rectangle.portrait.and.arrow.right") {
+        section(title: "Quản lý tài khoản".tr, icon: "person.crop.circle") {
+            SettingsRow(title: "Đăng xuất".tr, icon: "rectangle.portrait.and.arrow.right") {
                 viewModel.requestSignOut()
             }
             rowDivider
-            SettingsRow(title: "Xóa tài khoản", icon: "trash", isDestructive: true) {
+            SettingsRow(title: "Xóa tài khoản".tr, icon: "trash", isDestructive: true) {
                 viewModel.requestDeleteAccount()
             }
         }
@@ -177,9 +222,9 @@ struct AccountView: View {
 
     private var graphicsCredits: some View {
         VStack(spacing: 6) {
-            Text("Nguồn tài nguyên đồ họa")
+            Text("Nguồn tài nguyên đồ họa".tr)
                 .font(.system(.caption, design: .rounded, weight: .semibold))
-            Text("Hình ảnh của rattanachomphoo trên Magnific")
+            Text("Hình ảnh của rattanachomphoo trên Magnific".tr)
                 .font(.system(.caption2, design: .rounded))
         }
         .foregroundStyle(AccountStyle.muted)

@@ -51,7 +51,7 @@ final class SleepHealthStore: ObservableObject {
         do {
             try persist(manualEntries + [entry])
         } catch {
-            message = "Chưa lưu được nhật ký trên thiết bị. Hãy thử lại."
+            message = "Chưa lưu được nhật ký trên thiết bị. Hãy thử lại.".tr
             return false
         }
         if export { await exportPending() }
@@ -65,7 +65,7 @@ final class SleepHealthStore: ObservableObject {
             for index in entries.indices { entries[index].wantsExport = true }
             try persist(entries)
         } catch {
-            message = "Chưa lưu được lựa chọn đồng bộ. Hãy thử lại."
+            message = "Chưa lưu được lựa chọn đồng bộ. Hãy thử lại.".tr
             return
         }
         await sync()
@@ -74,12 +74,12 @@ final class SleepHealthStore: ObservableObject {
     private func exportPending() async {
         guard manualEntries.contains(where: { !$0.exported && $0.wantsExport == true }) else { return }
         guard isAvailable else {
-            message = "Đã lưu trên thiết bị; Apple Health chưa khả dụng."
+            message = "Đã lưu trên thiết bị; Apple Health chưa khả dụng.".tr
             return
         }
         let type = HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!
         guard store.authorizationStatus(for: type) == .sharingAuthorized else {
-            message = "Bản ghi vẫn ở trên thiết bị. Hãy cho phép ghi Giấc ngủ qua nút Kết nối Apple Health rồi đồng bộ lại."
+            message = "Bản ghi vẫn ở trên thiết bị. Hãy cho phép ghi Giấc ngủ qua nút Kết nối Apple Health rồi đồng bộ lại.".tr
             return
         }
         do {
@@ -98,7 +98,7 @@ final class SleepHealthStore: ObservableObject {
                 }
             }
         } catch {
-            message = "Nhật ký đã lưu trên thiết bị. Chưa ghi được sang Apple Health; hãy thử đồng bộ lại."
+            message = "Nhật ký đã lưu trên thiết bị. Chưa ghi được sang Apple Health; hãy thử đồng bộ lại.".tr
         }
     }
     var isAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
@@ -116,7 +116,7 @@ final class SleepHealthStore: ObservableObject {
             await sync()
         } catch {
             isSyncing = false
-            message = "Chưa mở được kết nối Apple Health. Hãy thử lại."
+            message = "Chưa mở được kết nối Apple Health. Hãy thử lại.".tr
         }
     }
 
@@ -159,7 +159,7 @@ final class SleepHealthStore: ObservableObject {
             // Do not keep stale records eligible for rewards after a failed query.
             healthIntervals = []
             rebuildDays()
-            message = "Chưa đồng bộ được. Hãy kiểm tra kết nối Apple Health rồi thử lại."
+            message = "Chưa đồng bộ được. Hãy kiểm tra kết nối Apple Health rồi thử lại.".tr
         }
     }
 }

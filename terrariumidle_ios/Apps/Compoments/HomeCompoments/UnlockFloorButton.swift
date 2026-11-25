@@ -31,7 +31,7 @@ struct UnlockFloorButton: View {
                 HStack {
                     Image(systemName: canUnlock ? "lock.open.fill" : "lock.fill")
                         .textStyle(.title2)
-                    Text("Mở khóa tầng \(currentFloor + 1)")
+                    Text("Mở khóa tầng %d".tr(currentFloor + 1))
                         .textStyle(.title2)
                 }
                 .foregroundColor(canUnlock && hasEnoughOxygen ? .green : canUnlock ? .orange : .gray)
@@ -48,12 +48,12 @@ struct UnlockFloorButton: View {
 
                     if !hasEnoughOxygen {
                         let deficit = cost - (fireStoreService.gradenModel?.money.oxygen ?? 0)
-                        Text("(Thiếu \(deficit) oxygen)")
+                        Text("(Thiếu %d oxygen)".tr(deficit))
                             .font(.caption)
                             .foregroundColor(.red)
                     }
                 } else {
-                    Text("Yêu cầu level \(requiredLevel)")
+                    Text("Yêu cầu level %d".tr(requiredLevel))
                         .font(.caption)
                         .foregroundColor(.gray)
                 }

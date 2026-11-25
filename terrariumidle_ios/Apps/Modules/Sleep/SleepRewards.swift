@@ -26,7 +26,7 @@ final class SleepRewards: ObservableObject {
                 .union((data?["sleepRewardMilestones"] as? [String: Any] ?? [:]).keys)
             weeklyDays = Set((data?["sleepRewardWeekDays"] as? [String: Any] ?? [:]).keys)
         } catch {
-            message = "Chưa tải được lịch sử nhận thưởng. Khi nhận, app sẽ kiểm tra lại để tránh trùng."
+            message = "Chưa tải được lịch sử nhận thưởng. Khi nhận, app sẽ kiểm tra lại để tránh trùng.".tr
         }
     }
 
@@ -40,14 +40,14 @@ final class SleepRewards: ObservableObject {
             guard userID == uid else { return }
             if !credited {
                 await load(userID: uid)
-                message = "Mốc này đã được nhận thưởng rồi."
+                message = "Mốc này đã được nhận thưởng rồi.".tr
                 return
             }
             claimed.insert(grant.id)
             if grant.kind == .weekly {
                 weeklyDays.formUnion(grant.days.map(\.id))
             }
-            message = "Khu vườn đã nhận \(grant.prize) từ giấc ngủ của bạn!"
+            message = "Khu vườn đã nhận %@ từ giấc ngủ của bạn!".tr(grant.prize)
         } catch { message = error.localizedDescription }
     }
 }

@@ -103,7 +103,7 @@ struct PlantItemView: View {
                             Image(systemName: "plus.circle.fill")
                                 .font(.system(size: 32))
                                 .foregroundColor(.green.opacity(0.7))
-                            Text("Thêm cây")
+                            Text("Thêm cây".tr)
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }
@@ -177,18 +177,18 @@ struct PlantItemView: View {
                         var items: [MenuItem] = []
                         if !isSticker {
                             if !hasEmptyIds {
-                                items.append(MenuItem(title: "Tưới cây", assetIcon: "water-can",
-                                                      subtitle: "10 diamond · Tự tap 60 giây") {
+                                items.append(MenuItem(title: "Tưới cây".tr, assetIcon: "water-can",
+                                                      subtitle: "10 diamond · Tự tap 60 giây".tr) {
                                     handleWaterPlant()
                                 })
                             }
-                            items.append(MenuItem(title: "Bón phân", assetIcon: "fertilizer",
-                                                  subtitle: "10 phân bón · Tăng 1 cấp") {
+                            items.append(MenuItem(title: "Bón phân".tr, assetIcon: "fertilizer",
+                                                  subtitle: "10 phân bón · Tăng 1 cấp".tr) {
                                 showFertilizeAlert = true
                             })
                         }
-                        items.append(MenuItem(title: "Loại bỏ", assetIcon: "shovel",
-                                              subtitle: "1 xẻng · Xúc cây khỏi kệ", role: .destructive) {
+                        items.append(MenuItem(title: "Loại bỏ".tr, assetIcon: "shovel",
+                                              subtitle: "1 xẻng · Xúc cây khỏi kệ".tr, role: .destructive) {
                             showRemoveAlert = true
                         })
                         return items
@@ -213,7 +213,7 @@ struct PlantItemView: View {
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     let seconds = max(0, Int(ceil(end - context.date.timeIntervalSince1970)))
                     if seconds > 0 {
-                        Label("Tự tap · \(seconds)s", systemImage: "drop.fill")
+                        Label("Tự tap · %ds".tr(seconds), systemImage: "drop.fill")
                             .font(.caption2.bold())
                             .padding(6)
                             .background(.regularMaterial, in: Capsule())
@@ -282,22 +282,22 @@ struct PlantItemView: View {
 
         // MARK: - Confirmation Alerts
 
-        .alert("Bón phân", isPresented: $showFertilizeAlert) {
-            Button("Hủy", role: .cancel) {}
-            Button("Xác nhận") {
+        .alert("Bón phân".tr, isPresented: $showFertilizeAlert) {
+            Button("Hủy".tr, role: .cancel) {}
+            Button("Xác nhận".tr) {
                 handleFertilize()
             }
         } message: {
-            Text("Sử dụng 10 phân bón để nâng cấp cây lên 1 level?")
+            Text("Sử dụng 10 phân bón để nâng cấp cây lên 1 level?".tr)
         }
 
-        .alert("Loại bỏ cây", isPresented: $showRemoveAlert) {
-            Button("Hủy", role: .cancel) {}
-            Button("Xác nhận", role: .destructive) {
+        .alert("Loại bỏ cây".tr, isPresented: $showRemoveAlert) {
+            Button("Hủy".tr, role: .cancel) {}
+            Button("Xác nhận".tr, role: .destructive) {
                 handleRemovePlant()
             }
         } message: {
-            Text("Sử dụng 1 xẻng để loại bỏ cây này?").textStyle(.bodyMedium)
+            Text("Sử dụng 1 xẻng để loại bỏ cây này?".tr).textStyle(.bodyMedium)
         }
     }
 
@@ -355,12 +355,12 @@ struct PlantItemView: View {
                 careAnimation = PlantCareAnimationRequest(action: .water)
             } else {
                 fireStoreService.saveGarden(gardenModel: garden, debounce: false)
-                showFloatingText("💧 Tự tap trong 60 giây!")
+                showFloatingText("💧 Tự tap trong 60 giây!".tr)
             }
         case .insufficientDiamonds:
-            showFloatingText("❌ Không đủ 10 diamond!")
+            showFloatingText("❌ Không đủ 10 diamond!".tr)
         case .alreadyWatering:
-            showFloatingText("💧 Cây đang được tưới!")
+            showFloatingText("💧 Cây đang được tưới!".tr)
         case .invalidPlant:
             break
         }
@@ -393,7 +393,7 @@ struct PlantItemView: View {
 
         // Check if user has enough fertilizer
         if gardenModel.item.fertilizer < 10 {
-            showFloatingText("❌ Không đủ phân bón!")
+            showFloatingText("❌ Không đủ phân bón!".tr)
             return
         }
 
@@ -439,7 +439,7 @@ struct PlantItemView: View {
                   $0.position == "\(rowIndex),\(columnIndex)" && $0.idPlant == plant.idPlant
               }) else { return }
         guard garden.item.shovel >= 1 else {
-            showFloatingText("❌ Không đủ xẻng!")
+            showFloatingText("❌ Không đủ xẻng!".tr)
             return
         }
         if isSticker {
@@ -469,7 +469,7 @@ struct PlantItemView: View {
 
         // Check if user has enough shovels
         if gardenModel.item.shovel < 1 {
-            showFloatingText("❌ Không đủ xẻng!")
+            showFloatingText("❌ Không đủ xẻng!".tr)
             return
         }
 
@@ -486,7 +486,7 @@ struct PlantItemView: View {
         gardenModel.item = updatedItem
 
         // Show success message
-        showFloatingText("✅ Đã loại bỏ cây!")
+        showFloatingText("✅ Đã loại bỏ cây!".tr)
 
         // Save to Firestore asynchronously
         fireStoreService.saveGarden(gardenModel: gardenModel, debounce: false)

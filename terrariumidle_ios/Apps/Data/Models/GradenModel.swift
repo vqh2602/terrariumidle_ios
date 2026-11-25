@@ -105,7 +105,7 @@ extension GardenModel {
         case rain, wind
 
         var id: Self { self }
-        var title: String { self == .rain ? "Mưa" : "Gió" }
+        var title: String { self == .rain ? "Mưa".tr : "Gió".tr }
         var icon: String { self == .rain ? "cloud.rain.fill" : "wind" }
         var soundFileName: String {
             switch self {

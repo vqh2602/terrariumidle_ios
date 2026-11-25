@@ -33,7 +33,7 @@ public struct OverlayEffectConfig: Identifiable, Sendable {
             // Lá rơi xanh ngọc
             return OverlayEffectConfig(
                 id: "overlay1",
-                name: "Lá rơi xanh ngọc",
+                name: "Lá rơi xanh ngọc".tr,
                 kind: .fallingLeaves(density: .medium, wind: .gentleRight, speed: .normal)
             )
 
@@ -41,7 +41,7 @@ public struct OverlayEffectConfig: Identifiable, Sendable {
             // Lá rơi mùa thu: gió mạnh hơn chút, lá thu nhiều màu sắc
             return OverlayEffectConfig(
                 id: "overlay2",
-                name: "Lá rơi mùa thu",
+                name: "Lá rơi mùa thu".tr,
                 kind: .fallingLeaves(density: .medium, wind: .breezeRight, speed: .normal)
             )
 
@@ -49,7 +49,7 @@ public struct OverlayEffectConfig: Identifiable, Sendable {
             // Cánh hoa oải hương: cánh hoa mỏng nhẹ rơi từ tốn, bay nhẹ sang trái
             return OverlayEffectConfig(
                 id: "overlay3",
-                name: "Cánh hoa oải hương",
+                name: "Cánh hoa oải hương".tr,
                 kind: .fallingLeaves(density: .medium, wind: .gentleLeft, speed: .slow)
             )
 
@@ -57,7 +57,7 @@ public struct OverlayEffectConfig: Identifiable, Sendable {
             // Đom đóm: phát sáng bay lượn
             return OverlayEffectConfig(
                 id: "overlay4",
-                name: "Đom đóm",
+                name: "Đom đóm".tr,
                 kind: .fireflies(count: 26)
             )
 
@@ -65,7 +65,7 @@ public struct OverlayEffectConfig: Identifiable, Sendable {
             // Hoa đào rơi: cánh hoa đào bồng bềnh lượn theo gió đổi hướng
             return OverlayEffectConfig(
                 id: "overlay5",
-                name: "Hoa đào rơi",
+                name: "Hoa đào rơi".tr,
                 kind: .fallingLeaves(density: .medium, wind: .variable, speed: .slow)
             )
 
@@ -73,7 +73,7 @@ public struct OverlayEffectConfig: Identifiable, Sendable {
             // Lá phong hoàng kim
             return OverlayEffectConfig(
                 id: "overlay6",
-                name: "Lá phong hoàng kim",
+                name: "Lá phong hoàng kim".tr,
                 kind: .fallingLeaves(density: .medium, wind: .breezeRight, speed: .normal)
             )
 

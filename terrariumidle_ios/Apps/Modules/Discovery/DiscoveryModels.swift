@@ -17,7 +17,7 @@ struct DiscoveredProfile: Identifiable, Equatable {
         // Document ID luôn là định danh chuẩn, kể cả với các hồ sơ legacy bị thiếu hoặc không khớp userID.
         id = documentID
         let rawName = (user["userName"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        name = rawName.isEmpty ? "Người làm vườn" : rawName
+        name = rawName.isEmpty ? "Người làm vườn".tr : rawName
         avatar = user["userAvatar"] as? String
         level = max(1, DiscoveryValue.int(user["userLevel"]))
         floors = max(0, DiscoveryValue.int(user["userFloor"]))
@@ -101,8 +101,8 @@ enum DiscoveryError: LocalizedError {
     case invalidID, unavailable
     var errorDescription: String? {
         switch self {
-        case .invalidID: return "ID khu vườn không hợp lệ."
-        case .unavailable: return "Khu vườn không tồn tại hoặc hiện không thể xem."
+        case .invalidID: return "ID khu vườn không hợp lệ.".tr
+        case .unavailable: return "Khu vườn không tồn tại hoặc hiện không thể xem.".tr
         }
     }
 }

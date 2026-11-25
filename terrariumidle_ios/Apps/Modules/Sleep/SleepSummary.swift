@@ -55,6 +55,6 @@ enum SleepSummary {
 
     static func duration(_ seconds: TimeInterval) -> String {
         let minutes = max(0, Int(seconds / 60))
-        return "\(minutes / 60) giờ \(minutes % 60) phút"
+        return "%d giờ %d phút".tr(minutes / 60, minutes % 60)
     }
 }

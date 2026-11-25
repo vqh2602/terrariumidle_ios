@@ -22,30 +22,30 @@ struct AccountReminderCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label("Hẹn lịch thông báo", systemImage: "bell.badge.fill")
+            Label("Hẹn lịch thông báo".tr, systemImage: "bell.badge.fill")
                 .font(.system(.subheadline, design: .rounded, weight: .bold))
                 .foregroundStyle(AccountStyle.green)
                 .padding(.leading, 8)
             VStack(alignment: .leading, spacing: 16) {
-                Toggle("Nhắc chăm vườn và nghỉ ngơi", isOn: $enabled)
+                Toggle("Nhắc chăm vườn và nghỉ ngơi".tr, isOn: $enabled)
                     .font(.system(.headline, design: .rounded))
-                Text("Một lời nhắc nhỏ mỗi ngày để chăm cây và dành thời gian cho mình.")
+                Text("Một lời nhắc nhỏ mỗi ngày để chăm cây và dành thời gian cho mình.".tr)
                     .font(.subheadline).foregroundStyle(AccountStyle.muted)
                 if enabled {
                     Divider()
-                    reminder(title: "Tưới cây buổi sáng", icon: "sun.max.fill", active: $morningEnabled,
+                    reminder(title: "Tưới cây buổi sáng".tr, icon: "sun.max.fill", active: $morningEnabled,
                              minutes: $morningMinutes, text: GardenReminderConfiguration.morningBody)
                     Divider()
-                    reminder(title: "Chuẩn bị ngủ", icon: "moon.stars.fill", active: $eveningEnabled,
+                    reminder(title: "Chuẩn bị ngủ".tr, icon: "moon.stars.fill", active: $eveningEnabled,
                              minutes: $eveningMinutes, text: GardenReminderConfiguration.eveningBody)
-                    Text("Lặp lại hằng ngày theo giờ trên thiết bị. Bạn có thể tắt riêng từng lời nhắc.")
+                    Text("Lặp lại hằng ngày theo giờ trên thiết bị. Bạn có thể tắt riêng từng lời nhắc.".tr)
                         .font(.caption).foregroundStyle(AccountStyle.muted)
                     if let status {
                         Text(status).font(.caption).foregroundStyle(AccountStyle.muted)
                             .accessibilityLabel(status)
                     }
                     if permissionDenied {
-                        Button("Mở cài đặt thông báo") {
+                        Button("Mở cài đặt thông báo".tr) {
                             if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
                         }.font(.subheadline.bold())
                     }
@@ -69,8 +69,8 @@ struct AccountReminderCard: View {
                 Label(title, systemImage: icon).font(.system(.subheadline, design: .rounded, weight: .bold))
             }
             if active.wrappedValue {
-                DatePicker("Giờ nhắc", selection: timeBinding(minutes), displayedComponents: .hourAndMinute)
-                    .accessibilityLabel("Giờ nhắc \(title.lowercased())")
+                DatePicker("Giờ nhắc".tr, selection: timeBinding(minutes), displayedComponents: .hourAndMinute)
+                    .accessibilityLabel("Giờ nhắc %@".tr(title.lowercased()))
                 Text(text).font(.subheadline).foregroundStyle(AccountStyle.muted)
             }
         }
@@ -112,8 +112,8 @@ struct GardenReminderConfiguration: Equatable, Hashable, Sendable {
             eveningMinutes: defaults.object(forKey: "account.reminders.eveningMinutes") as? Int ?? 21 * 60)
     }
 
-    static let morningBody = "Chào buổi sáng! Ghé vườn tưới cây, đón một ngày mới xanh tươi nhé."
-    static let eveningBody = "Đến lúc thư giãn rồi. Mở Terrarium, bật một bản nhạc dịu nhẹ và ghé mục Giấc ngủ để theo dõi, ghi lại giấc ngủ của bạn nhé."
+    static let morningBody = "Chào buổi sáng! Ghé vườn tưới cây, đón một ngày mới xanh tươi nhé.".tr
+    static let eveningBody = "Đến lúc thư giãn rồi. Mở Terrarium, bật một bản nhạc dịu nhẹ và ghé mục Giấc ngủ để theo dõi, ghi lại giấc ngủ của bạn nhé.".tr
 }
 
 @MainActor
@@ -139,18 +139,18 @@ final class GardenReminderScheduler {
             center.removeDeliveredNotifications(withIdentifiers: ids)
             guard configuration.enabled else { return Result() }
             guard configuration.morningEnabled || configuration.eveningEnabled else {
-                return Result(message: "Cả hai lời nhắc đang tắt.")
+                return Result(message: "Cả hai lời nhắc đang tắt.".tr)
             }
             do {
                 let allowed = try await center.requestAuthorization(options: [.alert, .sound])
                 guard !Task.isCancelled else { return Result() }
                 guard allowed else {
-                    return Result(message: "Thông báo chưa được cho phép. Bật quyền trong Cài đặt để nhận lời nhắc.",
+                    return Result(message: "Thông báo chưa được cho phép. Bật quyền trong Cài đặt để nhận lời nhắc.".tr,
                                   permissionDenied: true)
                 }
                 let reminders = [
-                    (configuration.morningEnabled, configuration.morningMinutes, "Vườn nhỏ chờ bạn", GardenReminderConfiguration.morningBody),
-                    (configuration.eveningEnabled, configuration.eveningMinutes, "Một chút bình yên trước giờ ngủ", GardenReminderConfiguration.eveningBody)
+                    (configuration.morningEnabled, configuration.morningMinutes, "Vườn nhỏ chờ bạn".tr, GardenReminderConfiguration.morningBody),
+                    (configuration.eveningEnabled, configuration.eveningMinutes, "Một chút bình yên trước giờ ngủ".tr, GardenReminderConfiguration.eveningBody)
                 ]
                 for (index, reminder) in reminders.enumerated() where reminder.0 {
                     let content = UNMutableNotificationContent()
@@ -166,10 +166,10 @@ final class GardenReminderScheduler {
                         return Result()
                     }
                 }
-                return Result(message: "Đã đặt lời nhắc hằng ngày.")
+                return Result(message: "Đã đặt lời nhắc hằng ngày.".tr)
             } catch {
                 center.removePendingNotificationRequests(withIdentifiers: ids)
-                return Result(message: Task.isCancelled ? nil : "Chưa đặt được lời nhắc. Hãy thử tắt rồi bật lại.")
+                return Result(message: Task.isCancelled ? nil : "Chưa đặt được lời nhắc. Hãy thử tắt rồi bật lại.".tr)
             }
         }
         pending = next

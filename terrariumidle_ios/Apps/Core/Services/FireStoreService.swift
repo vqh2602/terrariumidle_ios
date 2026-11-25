@@ -321,7 +321,7 @@ class FireStoreService: ObservableObject {
               SleepRewardRules.isValid(grant, goal: goal),
               let garden = gradenModel,
               Auth.auth().currentUser?.uid == garden.user.userID else {
-            throw EventReward.failure("Chưa thể nhận phần thưởng lúc này.")
+            throw EventReward.failure("Chưa thể nhận phần thưởng lúc này.".tr)
         }
         let uid = garden.user.userID
         isClaimingSleepReward = true
@@ -335,7 +335,7 @@ class FireStoreService: ObservableObject {
         // Drain previously queued garden writes and persist the current local balance first.
         guard await performFirestoreUpdate(gardenModel: garden) != nil else {
             pendingGardenModel = gradenModel
-            throw EventReward.failure("Chưa lưu được khu vườn. Hãy kiểm tra mạng và thử lại.")
+            throw EventReward.failure("Chưa lưu được khu vườn. Hãy kiểm tra mạng và thử lại.".tr)
         }
         let target = db.collection("users").document(uid)
         let key = grant.id
@@ -345,7 +345,7 @@ class FireStoreService: ObservableObject {
                     do {
                         let snapshot = try transaction.getDocument(target)
                         guard let data = snapshot.data() else {
-                            throw EventReward.failure("Không tìm thấy khu vườn.")
+                            throw EventReward.failure("Không tìm thấy khu vườn.".tr)
                         }
                         let receiptField = grant.kind == .daily ? "sleepRewardDays" : "sleepRewardMilestones"
                         let receipts = data[receiptField] as? [String: Any] ?? [:]
@@ -378,7 +378,7 @@ class FireStoreService: ObservableObject {
                     }
                 }
                 guard let outcome = result as? [String: Int] else {
-                    throw EventReward.failure("Chưa nhận được phần thưởng. Hãy thử lại.")
+                    throw EventReward.failure("Chưa nhận được phần thưởng. Hãy thử lại.".tr)
                 }
                 return outcome
             }
@@ -399,7 +399,7 @@ class FireStoreService: ObservableObject {
             return outcome["credited"] == 1
         } catch {
             if gradenModel?.user.userID == uid { pendingGardenModel = gradenModel }
-            throw EventReward.failure("Chưa nhận được phần thưởng. Hãy kiểm tra mạng và thử lại.")
+            throw EventReward.failure("Chưa nhận được phần thưởng. Hãy kiểm tra mạng và thử lại.".tr)
         }
     }
 

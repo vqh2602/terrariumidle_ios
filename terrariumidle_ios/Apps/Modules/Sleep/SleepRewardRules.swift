@@ -14,15 +14,15 @@ struct SleepRewardGrant: Identifiable {
     var tickets: Int { kind == .monthly ? 1 : 0 }
     var title: String {
         switch kind {
-        case .daily: return "Ngày \(endDate.formatted(.dateTime.day().month()))"
-        case .weekly: return "7 ngày liên tiếp · \(endDate.formatted(.dateTime.day().month()))"
-        case .monthly: return "Trọn tháng \(endDate.formatted(.dateTime.month().year()))"
+        case .daily: return "Ngày %@".tr(endDate.formatted(.dateTime.day().month()))
+        case .weekly: return "7 ngày liên tiếp · %@".tr(endDate.formatted(.dateTime.day().month()))
+        case .monthly: return "Trọn tháng %@".tr(endDate.formatted(.dateTime.month().year()))
         }
     }
     var prize: String {
         switch kind {
-        case .daily: return "1.000 Oxy"
-        case .weekly: return "10 gem"
+        case .daily: return "1.000 Oxy".tr
+        case .weekly: return "10 gem".tr
         case .monthly: return "20 gem + 1 ticket"
         }
     }

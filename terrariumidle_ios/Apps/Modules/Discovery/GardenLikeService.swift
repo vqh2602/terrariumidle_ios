@@ -13,11 +13,11 @@ enum GardenLikeError: LocalizedError {
     case signInRequired, ownGarden, alreadyLiked, unavailable, saveFailed
     var errorDescription: String? {
         switch self {
-        case .signInRequired: return "Vui lòng đăng nhập để gửi lượt thích."
-        case .ownGarden: return "Bạn không thể thích khu vườn của chính mình."
-        case .alreadyLiked: return "Bạn đã gửi trái tim cho khu vườn này rồi."
-        case .unavailable: return "Khu vườn hiện không thể nhận lượt thích."
-        case .saveFailed: return "Chưa gửi được lượt thích. Vui lòng thử lại."
+        case .signInRequired: return "Vui lòng đăng nhập để gửi lượt thích.".tr
+        case .ownGarden: return "Bạn không thể thích khu vườn của chính mình.".tr
+        case .alreadyLiked: return "Bạn đã gửi trái tim cho khu vườn này rồi.".tr
+        case .unavailable: return "Khu vườn hiện không thể nhận lượt thích.".tr
+        case .saveFailed: return "Chưa gửi được lượt thích. Vui lòng thử lại.".tr
         }
     }
 }

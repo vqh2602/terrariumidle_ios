@@ -23,7 +23,7 @@ struct SpeedDial: View {
                             .ignoresSafeArea()
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Đóng menu khu vườn")
+                    .accessibilityLabel("Đóng menu khu vườn".tr)
                     .transition(.opacity)
                 }
 
@@ -95,7 +95,7 @@ struct SpeedDial: View {
         }
         .buttonStyle(.plain)
         .allowsHitTesting(true)
-        .accessibilityLabel(isOpen ? "Đóng menu khu vườn" : "Mở menu khu vườn")
+        .accessibilityLabel(isOpen ? "Đóng menu khu vườn".tr : "Mở menu khu vườn".tr)
     }
 
     private func select(_ destination: GardenMenuDestination) {
@@ -168,7 +168,7 @@ struct GardenMenuPanel: View {
             HStack(spacing: 8) {
                 Image(systemName: "leaf.fill")
                     .foregroundStyle(AccountStyle.green)
-                Text("Góc vườn")
+                Text("Góc vườn".tr)
                     .font(.system(.headline, design: .rounded, weight: .heavy))
                     .foregroundStyle(AccountStyle.ink)
                 Spacer()
@@ -197,7 +197,7 @@ struct GardenMenuPanel: View {
             }
 
             HStack(spacing: 6) {
-                Text("Vuốt lên để xem thêm")
+                Text("Vuốt lên để xem thêm".tr)
                 Image(systemName: "chevron.down")
                     .accessibilityHidden(true)
             }
@@ -221,13 +221,13 @@ struct GardenMenuPanel: View {
                     .foregroundStyle(destination.tint)
                     .frame(width: 40, height: 36)
                     .background(destination.tint.opacity(0.11), in: RoundedRectangle(cornerRadius: 12))
-                Text(destination.rawValue)
+                Text(destination.rawValue.tr)
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
                     .foregroundStyle(AccountStyle.ink)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                 if destination == .weather {
-                    Text("1 ticket · 60 giây")
+                    Text("1 ticket · 60 giây".tr)
                         .font(.caption2)
                         .foregroundStyle(AccountStyle.ink.opacity(0.7))
                 }
@@ -243,7 +243,7 @@ struct GardenMenuPanel: View {
             .contentShape(RoundedRectangle(cornerRadius: 16))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(destination.rawValue)
+        .accessibilityLabel(destination.rawValue.tr)
     }
 }
 
@@ -254,7 +254,7 @@ struct GardenMenuPanel: View {
         .background(Color(hex: "E9EED9"))
 }
 
-#Preview("Menu · Chữ lớn") {
+#Preview("Menu · Chữ lớn".tr) {
     GardenMenuPanel(onSelect: { _ in })
         .padding(16)
         .frame(width: 320, height: 422)

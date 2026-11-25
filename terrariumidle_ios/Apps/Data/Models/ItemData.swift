@@ -19,7 +19,7 @@ struct ItemData: Codable, Identifiable {
     let currencyUnit: String
     let type: String // "plant", "pot", "decoration", "music", "overlay"
     let effect: String // ID(s) hiệu ứng overlay (phân tách bởi dấu phẩy, ví dụ: "overlay1", "overlay1,overlay2")
-    let effectDescription: String? // Mô tả hiệu ứng (ví dụ: "Lá rơi xanh ngọc")
+    let effectDescription: String? // Mô tả hiệu ứng (ví dụ: "Lá rơi xanh ngọc".tr)
     let itemTypeAttribute: ItemTypeAttribute
     let levelUnlock: Int
 
@@ -41,9 +41,9 @@ struct ItemData: Codable, Identifiable {
     let music: String? // ID(s) âm nhạc mở khóa ("m0,m1")
     let musicDescription: String? // Mô tả nhạc mở khóa ("Relax")
     let effectLandscape: String? // ID(s) phong cảnh mở khóa ("landscape1,landscape2")
-    let effectLandscapeDescription: String? // Mô tả phong cảnh ("Ban công quang đãng")
+    let effectLandscapeDescription: String? // Mô tả phong cảnh ("Ban công quang đãng".tr)
     let effectSfx: String? // ID(s) âm thanh sfx mở khóa ("sfx1,sfx5")
-    let effectSfxDescription: String? // Mô tả sfx ("Tiếng nước chảy")
+    let effectSfxDescription: String? // Mô tả sfx ("Tiếng nước chảy".tr)
 
     // MARK: - Helper trích xuất danh sách ID mở khóa
     var unlockedMusicIds: [String] {
@@ -77,22 +77,22 @@ struct ItemData: Codable, Identifiable {
     var displayEffect: String {
         var parts: [String] = []
         if let ed = effectDescription, !ed.isEmpty && ed != "N.A" && ed != "none" {
-            parts.append(ed)
+            parts.append(ed.tr)
         }
         if let md = musicDescription, !md.isEmpty && md != "N.A" && md != "none" {
-            parts.append("Nhạc: \(md)")
+            parts.append("Nhạc: %@".tr(md.tr))
         }
         if let ld = effectLandscapeDescription, !ld.isEmpty && ld != "N.A" && ld != "none" {
-            parts.append("Cảnh: \(ld)")
+            parts.append("Cảnh: %@".tr(ld.tr))
         }
         if let sd = effectSfxDescription, !sd.isEmpty && sd != "N.A" && sd != "none" {
-            parts.append("SFX: \(sd)")
+            parts.append("SFX: %@".tr(sd.tr))
         }
         if !parts.isEmpty {
             return parts.joined(separator: ", ")
         }
         if effect != "none" && effect != "N.A" && !effect.isEmpty {
-            return effect
+            return effect.tr
         }
         return "N.A"
     }
@@ -477,24 +477,24 @@ class ItemDataManager {
     func searchPlants(keyword: String) -> [ItemData] {
         guard !keyword.isEmpty else { return allPlants }
         return allPlants.filter {
-            $0.name.localizedCaseInsensitiveContains(keyword) ||
-                $0.description.localizedCaseInsensitiveContains(keyword)
+            $0.name.tr.localizedCaseInsensitiveContains(keyword) ||
+                $0.description.tr.localizedCaseInsensitiveContains(keyword)
         }
     }
 
     func searchPots(keyword: String) -> [ItemData] {
         guard !keyword.isEmpty else { return allPots }
         return allPots.filter {
-            $0.name.localizedCaseInsensitiveContains(keyword) ||
-                $0.description.localizedCaseInsensitiveContains(keyword)
+            $0.name.tr.localizedCaseInsensitiveContains(keyword) ||
+                $0.description.tr.localizedCaseInsensitiveContains(keyword)
         }
     }
 
     func searchDecorations(keyword: String) -> [ItemData] {
         guard !keyword.isEmpty else { return allDecorations }
         return allDecorations.filter {
-            $0.name.localizedCaseInsensitiveContains(keyword) ||
-                $0.description.localizedCaseInsensitiveContains(keyword)
+            $0.name.tr.localizedCaseInsensitiveContains(keyword) ||
+                $0.description.tr.localizedCaseInsensitiveContains(keyword)
         }
     }
 }

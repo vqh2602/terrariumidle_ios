@@ -41,7 +41,7 @@ struct GardenWeatherOverlay: View {
                         Image(systemName: kind.icon)
                             .font(.system(size: 13, weight: .bold))
                             .foregroundStyle(kind == .rain ? Color(red: 0.35, green: 0.75, blue: 1.0) : Color(red: 0.40, green: 0.85, blue: 0.55))
-                        Text("\(kind.title) · Tự tap toàn vườn · \(seconds)s")
+                        Text("%@ · Tự tap toàn vườn · %ds".tr(kind.title, seconds))
                             .font(.caption.bold())
                             .foregroundStyle(.primary)
                     }

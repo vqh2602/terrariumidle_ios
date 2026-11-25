@@ -10,7 +10,7 @@ struct PlantSelectionView: View {
 
     var body: some View {
         GardenItemPicker(items: ItemDataManager.shared.getAllPlants().filter { cartPlants.contains($0.id) },
-                         placeholder: "Tìm cây trong kho…",
+                         placeholder: "Tìm cây trong kho…".tr,
                          selection: $selectedPlantId, onSelect: onSelect,
                          recommendedItemId: recommendedPlantId)
     }

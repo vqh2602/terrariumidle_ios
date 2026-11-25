@@ -37,7 +37,7 @@ struct MusicSheetView: View {
                         VStack(alignment: .leading, spacing: 22) {
                             // MARK: - Section 1: Music (single select)
 
-                            SectionHeader(icon: "⭐", title: "Âm nhạc")
+                            SectionHeader(icon: "⭐", title: "Âm nhạc".tr)
 
                             LazyVGrid(columns: columns, spacing: 12) {
                                 ForEach(musics) { item in
@@ -52,7 +52,7 @@ struct MusicSheetView: View {
                                             audioManager.switchBGM(
                                                 id: item.id,
                                                 fileName: item.id,
-                                                title: item.name,
+                                                title: item.name.tr,
                                                 image: item.image
                                             )
                                         }
@@ -72,9 +72,9 @@ struct MusicSheetView: View {
                             // MARK: - Section 3: SFX Library (multi select)
 
                             HStack {
-                                SectionHeader(icon: "🔊", title: "Hiệu ứng âm thanh")
+                                SectionHeader(icon: "🔊", title: "Hiệu ứng âm thanh".tr)
                                 Spacer()
-                                Text("Phối nhiều âm thanh")
+                                Text("Phối nhiều âm thanh".tr)
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(.white.opacity(0.5))
                             }
@@ -109,11 +109,11 @@ struct MusicSheetView: View {
                     PlaybackBar(audioManager: audioManager)
                 }
             }
-            .navigationTitle("Âm nhạc & Hiệu ứng")
+            .navigationTitle("Âm nhạc & Hiệu ứng".tr)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Đóng") { dismiss() }
+                    Button("Đóng".tr) { dismiss() }
                         .foregroundColor(.white)
                 }
             }
@@ -159,7 +159,7 @@ private struct ActiveSFXMixerSection: View {
                 HStack(spacing: 6) {
                     Text("🎛️")
                         .font(.title3)
-                    Text("Bộ phối âm đang phát")
+                    Text("Bộ phối âm đang phát".tr)
                         .font(.system(size: 17, weight: .bold))
                         .foregroundColor(.white)
                     Text("(\(activeIds.count))")
@@ -177,7 +177,7 @@ private struct ActiveSFXMixerSection: View {
                     HStack(spacing: 4) {
                         Image(systemName: "stop.circle.fill")
                             .font(.system(size: 13))
-                        Text("Tắt tất cả")
+                        Text("Tắt tất cả".tr)
                             .font(.system(size: 12, weight: .semibold))
                     }
                     .foregroundColor(.white.opacity(0.85))
@@ -233,7 +233,7 @@ private struct SFXMixerRow: View {
             // Name and Slider
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text(item.name)
+                    Text(item.name.tr)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
 
@@ -313,7 +313,7 @@ private struct SoundCardView: View {
                         HStack(spacing: 3) {
                             Image(systemName: "waveform")
                                 .font(.system(size: 12, weight: .bold))
-                            Text("Đang phát")
+                            Text("Đang phát".tr)
                                 .font(.system(size: 10, weight: .bold))
                         }
                         .foregroundColor(.white)
@@ -322,7 +322,7 @@ private struct SoundCardView: View {
                         .background(Capsule().fill(Color.blue.opacity(0.8)))
                     }
 
-                    Text(item.name)
+                    Text(item.name.tr)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.white)
                         .lineLimit(2)
@@ -449,7 +449,7 @@ private struct PlaybackBar: View {
             VStack(spacing: 6) {
                 // BGM Volume slider
                 HStack(spacing: 8) {
-                    Text("Âm nhạc")
+                    Text("Âm nhạc".tr)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.white.opacity(0.7))
                         .frame(width: 60, alignment: .leading)
@@ -474,7 +474,7 @@ private struct PlaybackBar: View {
 
                 // SFX Master Volume slider
                 HStack(spacing: 8) {
-                    Text("Hiệu ứng")
+                    Text("Hiệu ứng".tr)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.white.opacity(0.7))
                         .frame(width: 60, alignment: .leading)

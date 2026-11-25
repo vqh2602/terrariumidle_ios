@@ -130,17 +130,17 @@ public struct PotMotionEffectFactory {
     public static func create(named nameOrId: String) -> PotMotionEffect? {
         let clean = nameOrId.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if clean.contains("elastic") || clean.contains("pot15") || clean.contains("đàn hồi") {
+        if clean.contains("elastic") || clean.contains("pot15") || clean.contains("đàn hồi".tr) {
             return ElasticPendulumMotionEffect()
-        } else if clean.contains("wide") || clean.contains("pot16") || clean.contains("pot17") || clean.contains("rộng") {
+        } else if clean.contains("wide") || clean.contains("pot16") || clean.contains("pot17") || clean.contains("rộng".tr) {
             return WidePendulumMotionEffect()
-        } else if clean.contains("spring") || clean.contains("pot18") || clean.contains("lò xo") {
+        } else if clean.contains("spring") || clean.contains("pot18") || clean.contains("lò xo".tr) {
             return SpringPendulumMotionEffect()
-        } else if clean.contains("firm") || clean.contains("đá") || clean.contains("gốm") {
+        } else if clean.contains("firm") || clean.contains("đá".tr) || clean.contains("gốm".tr) {
             return FirmBounceMotionEffect()
         } else if clean.contains("wobble") || clean.contains("vibrate") || clean.contains("rung") {
             return SubtleWobbleMotionEffect()
-        } else if clean.contains("bounce") || clean.contains("standard") || clean.contains("nảy") {
+        } else if clean.contains("bounce") || clean.contains("standard") || clean.contains("nảy".tr) {
             return StandardBounceMotionEffect()
         }
 

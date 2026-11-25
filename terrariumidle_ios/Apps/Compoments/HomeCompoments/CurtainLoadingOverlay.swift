@@ -46,14 +46,14 @@ struct CurtainLoadingOverlay: View {
                                 .foregroundStyle(AccountStyle.green)
 
                             if loadFailed {
-                                Text("Chưa tải được khu vườn")
+                                Text("Chưa tải được khu vườn".tr)
                                     .foregroundStyle(AccountStyle.ink)
-                                Button("Thử lại") {
+                                Button("Thử lại".tr) {
                                     onRetry()
                                 }
                                 .tint(AccountStyle.green)
                             } else {
-                                ProgressView("Đang chuẩn bị khu vườn…")
+                                ProgressView("Đang chuẩn bị khu vườn…".tr)
                                     .tint(AccountStyle.green)
                             }
                         }
@@ -108,7 +108,7 @@ struct CurtainLoadingOverlay: View {
 #Preview {
     ZStack {
         Color.green.opacity(0.3).ignoresSafeArea()
-        Text("🌿 Khu Vườn Terrarium")
+        Text("🌿 Khu Vườn Terrarium".tr)
             .font(.title)
 
         CurtainLoadingOverlay(

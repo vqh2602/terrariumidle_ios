@@ -34,11 +34,14 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 struct terrariumidle_iosApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @Environment(\.scenePhase) private var scenePhase
+    @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.light)
+                .environmentObject(localization)
+                .environment(\.locale, localization.currentLanguage.locale)
                 .task(id: scenePhase) {
                     if scenePhase == .active {
                         _ = await GardenReminderScheduler.shared.update(.saved())

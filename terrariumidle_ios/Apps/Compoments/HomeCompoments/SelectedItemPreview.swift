@@ -36,7 +36,7 @@ struct SelectedItemPreview: View {
                 Text(type)
                     .font(.caption)
                     .foregroundColor(AccountStyle.muted)
-                Text(item.name)
+                Text(item.name.tr)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(AccountStyle.ink)
@@ -62,7 +62,7 @@ struct SelectedItemPreview: View {
                     .font(.system(size: 18))
                     .frame(width: 44, height: 44)
             }
-            .accessibilityLabel("Bỏ chọn \(item.name)")
+            .accessibilityLabel("Bỏ chọn %@".tr(item.name.tr))
         }
         .fontDesign(.rounded)
         .padding(8)

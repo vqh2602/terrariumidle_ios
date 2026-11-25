@@ -33,8 +33,8 @@ struct UserInfoCompoment: View {
             LevelCircularBadge(level: userLevel, progress: progress)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Cấp \(userLevel), mở thanh tài nguyên")
-        .accessibilityHint("Nhấn giữ để mở tài khoản")
+        .accessibilityLabel("Cấp %d, mở thanh tài nguyên".tr(userLevel))
+        .accessibilityHint("Nhấn giữ để mở tài khoản".tr)
         .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in
             router.push(.accountView)
         })
@@ -83,21 +83,21 @@ struct GardenStatusBar: View {
                     LevelCircularBadge(level: level, progress: progress, size: 48)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Cấp \(level), thu gọn thanh tài nguyên")
-                .accessibilityHint("Nhấn giữ để mở tài khoản")
+                .accessibilityLabel("Cấp %d, thu gọn thanh tài nguyên".tr(level))
+                .accessibilityHint("Nhấn giữ để mở tài khoản".tr)
                 .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in onAccount() })
 
                 HStack(spacing: 4) {
-                    GardenResourceValue(name: "Oxy", image: "oxygen", value: oxygen)
-                    GardenResourceValue(name: "Đá quý", image: "gemstone", value: gemstones)
-                    GardenResourceValue(name: "Phân bón", image: "fertilizer", value: fertilizer)
-                    GardenResourceValue(name: "Xẻng", image: "shovel", value: shovels)
-                    GardenResourceValue(name: "Vé", image: "ticket", value: tickets)
+                    GardenResourceValue(name: "Oxy".tr, image: "oxygen", value: oxygen)
+                    GardenResourceValue(name: "Đá quý".tr, image: "gemstone", value: gemstones)
+                    GardenResourceValue(name: "Phân bón".tr, image: "fertilizer", value: fertilizer)
+                    GardenResourceValue(name: "Xẻng".tr, image: "shovel", value: shovels)
+                    GardenResourceValue(name: "Vé".tr, image: "ticket", value: tickets)
                 }
                 .frame(maxWidth: .infinity)
             }
             HStack(spacing: 8) {
-                Text("Cấp \(level)")
+                Text("Cấp %d".tr(level))
                     .font(.system(size: 10, weight: .heavy, design: .rounded))
                     .foregroundStyle(AccountStyle.green)
                 GeometryReader { geometry in
@@ -112,8 +112,8 @@ struct GardenStatusBar: View {
                 }
                 .frame(height: 6)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Kinh nghiệm")
-                .accessibilityValue("\(experience) trên \(maxExperience)")
+                .accessibilityLabel("Kinh nghiệm".tr)
+                .accessibilityValue("%d trên %d".tr(experience, maxExperience))
                 Text("\(experience.formatted()) / \(maxExperience.formatted()) XP")
                     .font(.system(size: 9, weight: .semibold, design: .rounded))
                     .foregroundStyle(AccountStyle.muted)
@@ -197,7 +197,7 @@ private struct GardenResourceValue: View {
     }
 }
 
-#Preview("Thanh thông tin · 320pt") {
+#Preview("Thanh thông tin · 320pt".tr) {
     GardenStatusBar(level: 52, experience: 42_900, maxExperience: 104_000,
                     oxygen: 272_100_000, gemstones: 799_900_000, fertilizer: 11_800,
                     shovels: 32, tickets: 6_585_800_000, onCollapse: {}, onAccount: {})

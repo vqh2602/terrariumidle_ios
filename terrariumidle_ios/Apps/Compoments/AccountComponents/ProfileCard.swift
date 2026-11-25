@@ -12,7 +12,7 @@ struct ProfileCard: View {
         VStack(spacing: 16) {
             HStack(spacing: 7) {
                 Image(systemName: "leaf.fill")
-                Text("NGƯỜI LÀM VƯỜN")
+                Text("NGƯỜI LÀM VƯỜN".tr)
                     .tracking(2)
             }
             .font(.system(size: 10, weight: .heavy, design: .rounded))
@@ -53,8 +53,8 @@ struct ProfileCard: View {
             }
 
             HStack(spacing: 12) {
-                stat(icon: "star.fill", title: "Cấp độ", value: userLevel, tint: AccountStyle.green)
-                stat(icon: "heart.fill", title: "Lượt thích", value: userLikes, tint: Color(hex: "C4776B"))
+                stat(icon: "star.fill", title: "Cấp độ".tr, value: userLevel, tint: AccountStyle.green)
+                stat(icon: "heart.fill", title: "Lượt thích".tr, value: userLikes, tint: Color(hex: "C4776B"))
             }
         }
         .padding(24)

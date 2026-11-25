@@ -49,20 +49,20 @@ struct DiscoveryView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            headerButton("chevron.left", label: "Quay lại") { router.pop() }
+            headerButton("chevron.left", label: "Quay lại".tr) { router.pop() }
             Spacer(minLength: 0)
             VStack(spacing: 4) {
-                Text("Khám phá")
+                Text("Khám phá".tr)
                     .font(.system(.title2, design: .rounded, weight: .heavy))
                 HStack(spacing: 5) {
                     Image(systemName: "leaf.fill")
-                    Text("KẾT NỐI NHỮNG GÓC XANH").tracking(1.3)
+                    Text("KẾT NỐI NHỮNG GÓC XANH".tr).tracking(1.3)
                 }
                 .font(.system(size: 8, weight: .heavy, design: .rounded))
                 .foregroundStyle(AccountStyle.green)
             }
             Spacer(minLength: 0)
-            headerButton("arrow.clockwise", label: "Tải lại danh sách") { model.refresh() }
+            headerButton("arrow.clockwise", label: "Tải lại danh sách".tr) { model.refresh() }
         }
         .padding(.horizontal, 20)
         .padding(.top, 10)
@@ -79,7 +79,7 @@ struct DiscoveryView: View {
                         Image(systemName: category.gardenIcon)
                             .font(.system(size: 19, weight: .bold))
                             .frame(height: 23)
-                        Text(category.rawValue)
+                        Text(category.rawValue.tr)
                             .font(.system(.caption2, design: .rounded, weight: .heavy))
                             .lineLimit(1).minimumScaleFactor(0.8)
                     }
@@ -111,17 +111,17 @@ struct DiscoveryView: View {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 17, weight: .bold))
                 .foregroundStyle(AccountStyle.green)
-            TextField("Tìm khu vườn bằng ID…", text: $model.searchID)
+            TextField("Tìm khu vườn bằng ID…".tr, text: $model.searchID)
                 .font(.system(.subheadline, design: .rounded, weight: .medium))
                 .textInputAutocapitalization(.never).autocorrectionDisabled()
                 .submitLabel(.search).onSubmit { model.search() }
             if !model.searchID.isEmpty || !model.submittedID.isEmpty {
                 Button { model.resetSearch() } label: { Image(systemName: "xmark.circle.fill") }
                     .foregroundStyle(AccountStyle.muted)
-                    .accessibilityLabel("Xóa tìm kiếm")
+                    .accessibilityLabel("Xóa tìm kiếm".tr)
             }
             Button { model.search() } label: {
-                Text("Tìm").font(.system(.subheadline, design: .rounded, weight: .heavy))
+                Text("Tìm".tr).font(.system(.subheadline, design: .rounded, weight: .heavy))
                     .foregroundStyle(AccountStyle.cream)
                     .padding(.horizontal, 17).frame(minHeight: 40)
                     .background(AccountStyle.green, in: RoundedRectangle(cornerRadius: 12))
@@ -139,10 +139,10 @@ struct DiscoveryView: View {
             HStack(spacing: 7) {
                 Image(systemName: model.category == .world ? "leaf.circle.fill" : "rosette")
                     .foregroundStyle(model.category.gardenTint)
-                Text(model.category == .world ? "Vườn quanh đây" : "Bảng xếp hạng")
+                Text(model.category == .world ? "Vườn quanh đây".tr : "Bảng xếp hạng".tr)
                     .font(.system(.subheadline, design: .rounded, weight: .heavy))
                 Spacer()
-                Text("GHÉ THĂM & KHÁM PHÁ")
+                Text("GHÉ THĂM & KHÁM PHÁ".tr)
                     .font(.system(size: 8, weight: .heavy, design: .rounded))
                     .tracking(0.7).foregroundStyle(AccountStyle.muted)
             }.padding(.horizontal, 24)
@@ -150,29 +150,29 @@ struct DiscoveryView: View {
             ScrollView {
                 LazyVStack(spacing: 16) {
                     if let error = model.error {
-                        messageCard(icon: "cloud.drizzle.fill", title: "Chờ một chút nhé", detail: error)
-                        Button("Thử lại") { model.refresh() }
+                        messageCard(icon: "cloud.drizzle.fill", title: "Chờ một chút nhé".tr, detail: error)
+                        Button("Thử lại".tr) { model.refresh() }
                             .font(.system(.subheadline, design: .rounded, weight: .bold))
                     }
                     if model.profiles.isEmpty && !model.isLoading && model.error == nil {
-                        messageCard(icon: "leaf.circle", title: "Chưa tìm thấy khu vườn",
-                                    detail: "Thử ID khác hoặc khám phá thêm những góc xanh mới nhé.")
+                        messageCard(icon: "leaf.circle", title: "Chưa tìm thấy khu vườn".tr,
+                                    detail: "Thử ID khác hoặc khám phá thêm những góc xanh mới nhé.".tr)
                     }
                     ForEach(model.profiles) { profile in
                         Button { selected = profile } label: {
                             DiscoveryProfileCard(profile: profile)
                         }
                         .buttonStyle(DiscoveryPressStyle())
-                        .accessibilityHint("Ghé thăm khu vườn này")
+                        .accessibilityHint("Ghé thăm khu vườn này".tr)
                     }
                     if model.isLoading {
-                        ProgressView("Đang tìm những góc xanh…")
+                        ProgressView("Đang tìm những góc xanh…".tr)
                             .font(.system(.caption, design: .rounded, weight: .semibold))
                             .tint(AccountStyle.green).padding(20)
                     }
                     if model.nextCursor != nil && !model.isLoading {
                         Button { Task { await model.load(more: true) } } label: {
-                            Label("Khám phá thêm", systemImage: "leaf.fill")
+                            Label("Khám phá thêm".tr, systemImage: "leaf.fill")
                                 .font(.system(.subheadline, design: .rounded, weight: .heavy))
                                 .foregroundStyle(AccountStyle.green)
                                 .padding(.horizontal, 24).padding(.vertical, 14)

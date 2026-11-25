@@ -7,7 +7,7 @@ struct DecorationSelectionView: View {
 
     var body: some View {
         GardenItemPicker(items: ItemDataManager.shared.getAllDecorations().filter { cartStickers.contains($0.id) },
-                         placeholder: "Tìm đồ trang trí trong kho…",
+                         placeholder: "Tìm đồ trang trí trong kho…".tr,
                          selection: $selectedDecorationId, onSelect: onSelect)
     }
 }

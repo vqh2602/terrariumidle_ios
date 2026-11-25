@@ -170,7 +170,7 @@ private struct SpriteKitPotInteractiveDemoView: View {
             Text("🪴 SpriteKit Pot View Demo")
                 .font(.headline)
 
-            Picker("Chọn chậu", selection: $selectedPotId) {
+            Picker("Chọn chậu".tr, selection: $selectedPotId) {
                 ForEach(potIds, id: \.self) { id in
                     Text(id.uppercased()).tag(id)
                 }
@@ -200,7 +200,7 @@ private struct SpriteKitPotInteractiveDemoView: View {
 
             VStack(spacing: 6) {
                 HStack {
-                    Text("Độ rộng (widthFill):")
+                    Text("Độ rộng (widthFill):".tr)
                         .font(.caption)
                     Spacer()
                     Text("\(Int(widthFill * 100))%")
@@ -210,11 +210,11 @@ private struct SpriteKitPotInteractiveDemoView: View {
             }
             .padding(.horizontal, 30)
 
-            Text("Số lần chạm: \(tapCount)")
+            Text("Số lần chạm: %d".tr(tapCount))
                 .font(.caption)
                 .foregroundColor(.secondary)
 
-            Toggle("Chậu treo (isHanging)", isOn: $isHanging)
+            Toggle("Chậu treo (isHanging)".tr, isOn: $isHanging)
                 .padding(.horizontal, 40)
         }
         .padding()

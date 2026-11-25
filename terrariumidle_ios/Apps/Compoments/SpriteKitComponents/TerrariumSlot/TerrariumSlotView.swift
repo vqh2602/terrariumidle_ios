@@ -221,7 +221,7 @@ public struct TerrariumSlotView: View {
 
 // MARK: - Interactive Preview
 
-#Preview("Terrarium Slot - Preview Đan Xen Chiều Sâu") {
+#Preview("Terrarium Slot - Preview Đan Xen Chiều Sâu".tr) {
     struct SlotInteractivePreview: View {
         @State private var potId: String = "pot1"
         @State private var plantId: String = "plant13"
@@ -279,14 +279,14 @@ public struct TerrariumSlotView: View {
                 // Bộ điều khiển
                 ScrollView {
                     VStack(spacing: 12) {
-                        Picker("Loài cây", selection: $plantId) {
+                        Picker("Loài cây".tr, selection: $plantId) {
                             ForEach(plants, id: \.self) { p in
                                 Text(p).tag(p)
                             }
                         }
                         .pickerStyle(.segmented)
 
-                        Picker("Loài chậu", selection: $potId) {
+                        Picker("Loài chậu".tr, selection: $potId) {
                             ForEach(pots, id: \.self) { p in
                                 Text(p).tag(p)
                             }
@@ -294,9 +294,9 @@ public struct TerrariumSlotView: View {
                         .pickerStyle(.menu)
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("itemTypeAttribute (Z-Index Cây/Chậu):")
+                            Text("itemTypeAttribute (Z-Index Cây/Chậu):".tr)
                                 .font(.caption.bold())
-                            Picker("Vị trí Z-Index", selection: $selectedAttribute) {
+                            Picker("Vị trí Z-Index".tr, selection: $selectedAttribute) {
                                 Text("Auto").tag("auto")
                                 Text("none").tag("none")
                                 Text("front").tag("front")
@@ -314,7 +314,7 @@ public struct TerrariumSlotView: View {
                         }
 
                         HStack {
-                            Text("Cấp độ: Lv.\(level)")
+                            Text("Cấp độ: Lv.%d".tr(level))
                             Stepper("", value: $level, in: 1...10)
                             Spacer()
                             Toggle("Treo", isOn: $isHanging)

@@ -21,7 +21,7 @@ struct EventWebScreen: View {
                     if let loadError {
                         VStack(spacing: 16) {
                             Text(loadError).multilineTextAlignment(.center)
-                            Button("Thử lại") {
+                            Button("Thử lại".tr) {
                                 self.loadError = nil
                                 isLoading = true
                                 reloadID = UUID()
@@ -37,7 +37,7 @@ struct EventWebScreen: View {
             }
             .navigationTitle(event.content()?.title ?? "Terrarium")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Đóng") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Đóng".tr) { dismiss() } } }
         }
     }
 }
@@ -103,7 +103,7 @@ struct EventWebView: UIViewRepresentable {
                   let body = message.body as? [String: Any],
                   let handler = body["handler"] as? String, handler == parent.event.handler,
                   let args = body["args"] as? [Any], let argument = args.first else {
-                replyHandler(nil, "Lệnh sự kiện không hợp lệ")
+                replyHandler(nil, "Lệnh sự kiện không hợp lệ".tr)
                 return
             }
             // Trang web gọi các handler huy hiệu với giá trị 'false' đối với người dùng không đủ điều kiện.
@@ -116,29 +116,29 @@ struct EventWebView: UIViewRepresentable {
                 return
             }
             guard !isClaiming, !(handler == "clam-lavender-plant" && Date().timeIntervalSince(lastWheelClaim) < 2) else {
-                replyHandler(nil, "Phần thưởng đang được xử lý. Vui lòng chờ.")
+                replyHandler(nil, "Phần thưởng đang được xử lý. Vui lòng chờ.".tr)
                 return
             }
             let store = FireStoreService.shared
             guard let garden = store.gradenModel,
                   AuthService.shared.currentUser?.uid == garden.user.userID else {
-                replyHandler(nil, "Vui lòng đăng nhập lại")
+                replyHandler(nil, "Vui lòng đăng nhập lại".tr)
                 return
             }
             do {
                 let updated = try EventReward.apply(handler: handler, argument: argument, to: garden)
                 isClaiming = true
-                parent.notice = "Đang lưu phần thưởng…"
+                parent.notice = "Đang lưu phần thưởng…".tr
                 Task {
                     let saved = await store.saveEventReward(gardenModel: updated)
                     isClaiming = false
                     if saved {
                         if handler == "clam-lavender-plant" { lastWheelClaim = Date() }
                         syncWebState(updated)
-                        parent.notice = "Đã nhận và lưu phần thưởng."
+                        parent.notice = "Đã nhận và lưu phần thưởng.".tr
                         replyHandler(NSNull(), nil)
                     } else {
-                        parent.notice = "Chưa lưu được phần thưởng. Vui lòng kiểm tra kết nối rồi thử lại."
+                        parent.notice = "Chưa lưu được phần thưởng. Vui lòng kiểm tra kết nối rồi thử lại.".tr
                         replyHandler(nil, parent.notice)
                     }
                 }
@@ -179,7 +179,7 @@ struct EventWebView: UIViewRepresentable {
         private func failed(_ error: Error) {
             guard (error as NSError).code != NSURLErrorCancelled else { return }
             parent.isLoading = false
-            parent.loadError = "Không tải được trang sự kiện. Vui lòng thử lại."
+            parent.loadError = "Không tải được trang sự kiện. Vui lòng thử lại.".tr
         }
 
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
@@ -204,7 +204,7 @@ struct EventWebView: UIViewRepresentable {
             guard var presenter = webView.window?.rootViewController else { completionHandler(); return }
             while let presented = presenter.presentedViewController { presenter = presented }
             let alert = UIAlertController(title: "Terrarium", message: message, preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "Đóng", style: .default) { _ in completionHandler() })
+            alert.addAction(UIAlertAction(title: "Đóng".tr, style: .default) { _ in completionHandler() })
             presenter.present(alert, animated: true)
         }
     }

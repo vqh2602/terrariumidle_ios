@@ -11,7 +11,7 @@ struct GardenItemPicker: View {
 
     private var results: [ItemData] {
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        let filtered = items.filter { text.isEmpty || $0.name.localizedStandardContains(text) || $0.description.localizedStandardContains(text) }
+        let filtered = items.filter { text.isEmpty || $0.name.tr.localizedStandardContains(text) || $0.description.tr.localizedStandardContains(text) }
         return filtered.filter { $0.id == recommendedItemId } + filtered.filter { $0.id != recommendedItemId }
     }
 
@@ -27,7 +27,7 @@ struct GardenItemPicker: View {
                     Button { query = "" } label: {
                         Image(systemName: "xmark.circle.fill").foregroundStyle(AccountStyle.muted)
                     }
-                    .accessibilityLabel("Xóa tìm kiếm")
+                    .accessibilityLabel("Xóa tìm kiếm".tr)
                 }
             }
             .padding(.horizontal, 12)
@@ -41,10 +41,10 @@ struct GardenItemPicker: View {
                     if results.isEmpty {
                         VStack(spacing: 8) {
                             Image(systemName: "basket").font(.title2).foregroundStyle(AccountStyle.green)
-                            Text(query.isEmpty ? "Kho đồ đang trống" : "Chưa tìm thấy vật phẩm")
+                            Text(query.isEmpty ? "Kho đồ đang trống".tr : "Chưa tìm thấy vật phẩm".tr)
                                 .font(.system(.subheadline, design: .rounded, weight: .bold))
                                 .foregroundStyle(AccountStyle.ink)
-                            Text(query.isEmpty ? "Ghé cửa hàng để thêm đồ cho khu vườn nhé." : "Thử một tên hoặc mô tả khác nhé.")
+                            Text(query.isEmpty ? "Ghé cửa hàng để thêm đồ cho khu vườn nhé.".tr : "Thử một tên hoặc mô tả khác nhé.".tr)
                                 .font(.system(.caption, design: .rounded))
                                 .foregroundStyle(AccountStyle.muted)
                         }
@@ -56,7 +56,7 @@ struct GardenItemPicker: View {
                         GardenInventoryRow(item: item, isSelected: selection == item.id, onSelect: {
                             selection = item.id
                             onSelect(item.id)
-                        }, recommendationText: item.id == recommendedItemId ? "Phù hợp nhất" : nil)
+                        }, recommendationText: item.id == recommendedItemId ? "Phù hợp nhất".tr : nil)
                     }
                 }
                 .padding(.horizontal, 12)
@@ -93,10 +93,10 @@ struct GardenInventoryRow: View {
                             .font(.system(.caption, design: .rounded, weight: .bold))
                             .foregroundStyle(AccountStyle.green)
                     }
-                    Text(item.name)
+                    Text(item.name.tr)
                         .font(.system(.subheadline, design: .rounded, weight: .bold))
                         .foregroundStyle(AccountStyle.ink)
-                    Text(item.description)
+                    Text(item.description.tr)
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(AccountStyle.muted)
                         .lineLimit(2)

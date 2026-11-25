@@ -25,7 +25,7 @@ struct StoreView: View {
                 .padding(.bottom, 16)
             if viewModel.isLoading {
                 Spacer()
-                ProgressView("Đang chăm chút gian hàng…")
+                ProgressView("Đang chăm chút gian hàng…".tr)
                     .tint(AccountStyle.green)
                     .foregroundStyle(AccountStyle.muted)
                 Spacer()
@@ -33,11 +33,11 @@ struct StoreView: View {
                 ScrollView {
                     LazyVStack(spacing: 16) {
                         HStack {
-                            Label(viewModel.selectedTab.rawValue, systemImage: tabIcon(viewModel.selectedTab))
+                            Label(viewModel.selectedTab.rawValue.tr, systemImage: tabIcon(viewModel.selectedTab))
                                 .font(.system(.headline, design: .rounded, weight: .bold))
                                 .foregroundStyle(AccountStyle.ink)
                             Spacer()
-                            Text("\(viewModel.filteredItems.count) vật phẩm")
+                            Text("%d vật phẩm".tr(viewModel.filteredItems.count))
                                 .font(.system(.caption, design: .rounded, weight: .medium))
                                 .foregroundStyle(AccountStyle.muted)
                         }
@@ -81,16 +81,16 @@ struct StoreView: View {
             // Load initial items
             if let initialItemId, let pot = ItemDataManager.shared.getPot(byId: initialItemId) {
                 viewModel.loadItems(for: .pots)
-                viewModel.searchText = pot.name
+                viewModel.searchText = pot.name.tr
             } else if let initialItemId, let plant = ItemDataManager.shared.getPlant(byId: initialItemId) {
                 viewModel.loadItems(for: .plants)
-                viewModel.searchText = plant.name
+                viewModel.searchText = plant.name.tr
             } else {
                 viewModel.loadItems(for: .plants)
             }
         }
-        .alert("Lỗi", isPresented: $viewModel.hasError) {
-            Button("OK", role: .cancel) {
+        .alert("Lỗi".tr, isPresented: $viewModel.hasError) {
+            Button("OK".tr, role: .cancel) {
                 viewModel.hasError = false
             }
         } message: {
@@ -103,10 +103,10 @@ struct StoreView: View {
     private var header: some View {
         ZStack {
             VStack(spacing: 3) {
-                Text("Cửa hàng")
+                Text("Cửa hàng".tr)
                     .font(.system(.title2, design: .rounded, weight: .heavy))
                     .foregroundStyle(AccountStyle.ink)
-                Text("THÊM XANH CHO GÓC VƯỜN")
+                Text("THÊM XANH CHO GÓC VƯỜN".tr)
                     .font(.system(size: 9, weight: .bold, design: .rounded))
                     .tracking(1.5)
                     .foregroundStyle(AccountStyle.green)
@@ -126,7 +126,7 @@ struct StoreView: View {
                         .shadow(color: AccountStyle.border, radius: 0, y: 3)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Quay lại")
+                .accessibilityLabel("Quay lại".tr)
                 Spacer()
             }
         }
@@ -139,10 +139,10 @@ struct StoreView: View {
         // and single-line values keep all five resources inside narrow screens.
         HStack(spacing: 6) {
             StoreResourceBadge(icon: "oxygen", title: "Oxy", value: fireStore.gradenModel?.money.oxygen ?? 0)
-            StoreResourceBadge(icon: "gemstone", title: "Đá quý", value: fireStore.gradenModel?.money.gemstone ?? 0)
-            StoreResourceBadge(icon: "ticket", title: "Vé", value: fireStore.gradenModel?.money.ticket ?? 0)
-            StoreResourceBadge(icon: "shovel", title: "Xẻng", value: fireStore.gradenModel?.item.shovel ?? 0)
-            StoreResourceBadge(icon: "fertilizer", title: "Phân bón", value: fireStore.gradenModel?.item.fertilizer ?? 0)
+            StoreResourceBadge(icon: "gemstone", title: "Đá quý".tr, value: fireStore.gradenModel?.money.gemstone ?? 0)
+            StoreResourceBadge(icon: "ticket", title: "Vé".tr, value: fireStore.gradenModel?.money.ticket ?? 0)
+            StoreResourceBadge(icon: "shovel", title: "Xẻng".tr, value: fireStore.gradenModel?.item.shovel ?? 0)
+            StoreResourceBadge(icon: "fertilizer", title: "Phân bón".tr, value: fireStore.gradenModel?.item.fertilizer ?? 0)
         }
     }
 
@@ -151,7 +151,7 @@ struct StoreView: View {
             HStack(spacing: 10) {
                 ForEach(StoreTab.allCases, id: \.self) { tab in
                     Button { viewModel.loadItems(for: tab) } label: {
-                        Label(tab.rawValue, systemImage: tabIcon(tab))
+                        Label(tab.rawValue.tr, systemImage: tabIcon(tab))
                             .font(.system(.subheadline, design: .rounded, weight: .bold))
                             .foregroundStyle(viewModel.selectedTab == tab ? AccountStyle.cream : AccountStyle.green)
                             .padding(.horizontal, 18)
@@ -172,7 +172,7 @@ struct StoreView: View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(AccountStyle.green)
-            TextField("Tìm vật phẩm cho khu vườn…", text: $viewModel.searchText)
+            TextField("Tìm vật phẩm cho khu vườn…".tr, text: $viewModel.searchText)
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(AccountStyle.ink)
                 .submitLabel(.search)
@@ -182,7 +182,7 @@ struct StoreView: View {
                         .foregroundStyle(AccountStyle.muted)
                         .frame(minWidth: 32, minHeight: 32)
                 }
-                .accessibilityLabel("Xóa tìm kiếm")
+                .accessibilityLabel("Xóa tìm kiếm".tr)
             }
         }
         .padding(.horizontal, 16)
@@ -196,10 +196,10 @@ struct StoreView: View {
             Image(systemName: viewModel.searchText.isEmpty ? "basket" : "magnifyingglass")
                 .font(.system(size: 36, weight: .light))
                 .foregroundStyle(AccountStyle.green)
-            Text(viewModel.searchText.isEmpty ? "Gian hàng đang trống" : "Chưa tìm thấy vật phẩm")
+            Text(viewModel.searchText.isEmpty ? "Gian hàng đang trống".tr : "Chưa tìm thấy vật phẩm".tr)
                 .font(.system(.headline, design: .rounded, weight: .bold))
                 .foregroundStyle(AccountStyle.ink)
-            Text(viewModel.searchText.isEmpty ? "Bạn thử ghé qua danh mục khác nhé!" : "Thử tìm bằng một tên khác nhé!")
+            Text(viewModel.searchText.isEmpty ? "Bạn thử ghé qua danh mục khác nhé!".tr : "Thử tìm bằng một tên khác nhé!".tr)
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(AccountStyle.muted)
                 .multilineTextAlignment(.center)
@@ -267,13 +267,13 @@ struct StoreResourceBadge: View {
     }
 }
 
-#Preview("Ví tài nguyên · 320pt") {
+#Preview("Ví tài nguyên · 320pt".tr) {
     HStack(spacing: 6) {
         StoreResourceBadge(icon: "oxygen", title: "Oxy", value: 272_100_000)
-        StoreResourceBadge(icon: "gemstone", title: "Đá quý", value: 799_900_000)
-        StoreResourceBadge(icon: "ticket", title: "Vé", value: 6_585_800_000)
-        StoreResourceBadge(icon: "shovel", title: "Xẻng", value: 32)
-        StoreResourceBadge(icon: "fertilizer", title: "Phân bón", value: 11_800)
+        StoreResourceBadge(icon: "gemstone", title: "Đá quý".tr, value: 799_900_000)
+        StoreResourceBadge(icon: "ticket", title: "Vé".tr, value: 6_585_800_000)
+        StoreResourceBadge(icon: "shovel", title: "Xẻng".tr, value: 32)
+        StoreResourceBadge(icon: "fertilizer", title: "Phân bón".tr, value: 11_800)
     }
     .padding(.horizontal, 20)
     .frame(width: 320)
