@@ -96,12 +96,12 @@ public var tapEffects: [PotTapEffect] = [SparkleBurstEffect()]
 | Tên Hiệu Ứng | Lớp Triển Khai (`Class`) | Định Danh Type | Mô Tả Thị Giác & Màu Sắc |
 | :--- | :--- | :--- | :--- |
 | **Đá lấp lánh** | `SparkleBurstEffect` | `sparkleBurst` | Chùm sao 4 cánh nhọn phát sáng (Vàng hoàng yến & Hồng phấn), xoay 360° bung toả quanh chậu. |
-| **Vệt ánh vàng** | `GoldGlintEffect` | `goldGlint` | Các đốm ánh sáng vàng hoàng kim rực rỡ bay lượn dọc thân chậu. |
-| **Bụi đá xám** | `StoneDustEffect` | `stoneDust` | Chùm hạt bụi đá xám bạc mộc mạc bay bổng nhẹ nhàng. |
+| **Vệt ánh vàng** | `GoldGlintEffect` | `goldGlint` | Vệt ánh kim quét chéo lướt qua thân chậu kèm tia sao 4 cánh vàng rực nhấp nháy 2 nhịp và mảnh vàng lá. |
+| **Bụi đá xám** | `StoneDustEffect` | `stoneDust` | Làn khói bụi đá xám khoáng mịn tỏa hai bên kết hợp mảnh đá góc cạnh văng theo trọng lực và hạt mica ánh bạc. |
 | **Trái tim bay** | `HeartBurstEffect` | `heartBurst` | Chùm trái tim hồng ngọc và đỏ san hô bay vút lên trời kèm nhịp thở phập phồng. |
-| **Ánh gốm nung** | `ClayGlintEffect` | `clayGlint` | Đốm sáng màu đất nung sữa ấm áp phản chiếu bề mặt men gốm. |
+| **Ánh gốm nung** | `ClayGlintEffect` | `clayGlint` | Vệt bóng men gốm ấm áp phản chiếu trên thân chậu cùng sao men nung cam đào và mảnh gốm hình thoi sắc nét. |
 | **Thạch anh lăng kính**| `QuartzBurstEffect` | `quartzBurst` | Tinh thể kim cương/lăng kính thạch anh tím & hồng xoay lấp lánh. |
-| **Bụi đất mộc** | `EarthenParticlesEffect` | `earthenDust` | Hạt đất sét nung mộc mạc tỏa nhẹ ra xung quanh thân chậu. |
+| **Bụi đất mộc** | `EarthenParticlesEffect` | `earthenDust` | Vụn đất sét góc cạnh nảy parabol theo trọng lực kết hợp làn bụi đất nung ấm áp mộc mạc. |
 | **Bụi phấn gỗ thơm** | `WoodPollenEffect` | `woodPollen` | Chùm hạt phấn gỗ ấm áp màu hổ phách/mật ong (#E0A96D, #EEB76B, #F6D8AC), bay bổng quanh chậu gỗ. |
 | **Ánh ngọc bích băng** | `EmeraldJadeEffect` | `emeraldJade` | Chùm tinh thể ngọc lam ngọc bích phát sáng lung linh (#64DFDF, #48CAE4, #90E0EF), xoay 360° quanh khối ngọc. |
 | **Bọt ngọc san hô** | `CoralBubbleEffect` | `coralBubble` | Chùm bọt ngọc và hoa san hô lấp lánh màu hồng san hô (#F6BDB6, #FF99C8, #FCB7AF) bay phập phồng quanh bình san hô. |
