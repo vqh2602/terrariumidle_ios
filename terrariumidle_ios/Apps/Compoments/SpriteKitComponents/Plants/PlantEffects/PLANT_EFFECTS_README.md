@@ -19,9 +19,9 @@ PlantEffects/
 │   └── ConnectedPlantSwayMotionEffect.swift # Bản mới: Cây liền khối thân cành hoa đung đưa nhịp nhàng
 ├── Tap/                                 # Thư mục chuyên trách hiệu ứng hạt thị giác
 │   ├── PlantTapEffect.swift             # Protocol, Enum, Factory
-│   ├── OxygenBubblesEffect.swift        # Bọt khí Oxy 3D (Emerald, Deep Ocean, Golden Sun, Floral Pink)
-│   ├── SparklePollenEffect.swift        # Bụi phấn hoa lấp lánh
-│   └── FloatingPetalsEffect.swift       # Cánh hoa rơi rụng bồng bềnh
+│   ├── OxygenBubblesEffect.swift        # Bọt khí Oxy 3D (14 bộ màu sắc độ đậm/nhạt)
+│   ├── SparklePollenEffect.swift        # Bụi phấn hoa lấp lánh (7 bộ màu sắc độ)
+│   └── FloatingPetalsEffect.swift       # Cánh hoa / lá rơi rụng bồng bềnh (7 bộ màu sắc độ)
 └── PLANT_EFFECTS_README.md              # Tài liệu kiến trúc & hướng dẫn tra cứu
 ```
 
@@ -125,14 +125,54 @@ public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
 - **Level 2 (Cây con)**: $3 \dots 4$ bọt vừa ($2.2 \dots 3.8\text{pt}$), bay $25 \dots 45\text{pt}$.
 - **Level 3+ (Trưởng thành)**: $8 \dots 12$ bọt dồi dào ($3.5 \dots 7.5\text{pt}$), bay $60 \dots 115\text{pt}$, giãn nở thêm $+30\%$.
 
-### 2.2. Các Bộ Theme Màu Sắc Bọt Khí
+### 2.2. Các Bộ Theme Màu Sắc Bọt Khí (`OxygenBubblesEffect.Theme`)
 
-| Theme | Mã Màu Fill | Phù Hợp Cho Loài Cây |
+Mỗi `Theme` chứa mảng `shadeColors` (3–6 sắc độ đậm/nhạt hài hoà) và cache texture theo từng sắc độ để bọt khí khi bay lên có chiều sâu màu sắc tự nhiên mà vẫn giữ 100% Metal batching.
+
+| Nhóm Tông | Theme | Mã Màu Chính (`fillColor`) | Phù Hợp Cho Loài Cây / Phong Cách |
+| :--- | :--- | :--- | :--- |
+| **Xanh lá** | **`emerald`** (Mặc định) | `rgba(89, 235, 166, 0.85)` | Đa số các loài cây xanh lá (`Plant1` Lưỡi hổ, `Plant2` Trầu bà, `Plant3` Begonia...) |
+| **Xanh lá** | **`mintDew`** | `rgba(158, 247, 214, 0.85)` | Cây lá bạc hà, dương xỉ non, cây không khí thanh mát |
+| **Xanh lá** | **`forestMoss`** | `rgba(92, 194, 112, 0.86)` | Cây rêu rừng, cây tán rậm tông xanh trầm |
+| **Xanh dương** | **`deepOcean`** | `rgba(64, 209, 242, 0.85)` | Cây mọng nước, cây dây leo buông rủ (`Plant15` Chuỗi tim, `Plant21`, `Plant28`, `Plant30`...) |
+| **Xanh dương** | **`iceAqua`** | `rgba(163, 237, 255, 0.85)` | Cây tông lạnh, sen đá băng, lan chuông trắng |
+| **Xanh dương** | **`cobaltIndigo`** | `rgba(87, 138, 245, 0.86)` | Cây lá ánh lam đậm, phong cách đêm / huyền ảo |
+| **Vàng / Cam / Đỏ** | **`goldenSun`** | `rgba(255, 224, 97, 0.88)` | Cây có lá vàng, xương rồng sa mạc ánh sáng (`Plant27`, `Plant29`...) |
+| **Vàng / Cam / Đỏ** | **`coralSunset`** | `rgba(255, 148, 112, 0.86)` | Cây lá cam/đồng, hoa ấm, sen đá ánh hoàng hôn |
+| **Vàng / Cam / Đỏ** | **`crimsonRuby`** | `rgba(242, 92, 122, 0.86)` | Cây lá đỏ/tía, hoa đỏ rực rỡ |
+| **Hồng / Tím** | **`floralPink`** | `rgba(255, 173, 209, 0.88)` | Cây nở hoa hồng, sen đá viền hồng, phong lan, hoa đào (`Plant24`, `Plant25`...) |
+| **Hồng / Tím** | **`lavenderMist`** | `rgba(199, 173, 250, 0.86)` | Hoa oải hương, cây tím pastel nhẹ nhàng |
+| **Hồng / Tím** | **`amethyst`** | `rgba(194, 107, 224, 0.88)` | Cây lá tím đậm như Chuối kiểng / Oxalis (`Plant19`...) |
+| **Trung tính & Đa sắc** | **`pearlWhite`** | `rgba(240, 247, 255, 0.85)` | Hoa trắng tinh khôi, sương mai nhẹ nhàng |
+| **Trung tính & Đa sắc** | **`rainbowPrism`** | 6 sắc độ cầu vồng pastel | Hiệu ứng bọt khí đa sắc rực rỡ (Emerald, Aqua, Gold, Pink, Lavender, Coral) |
+
+### 2.3. Các Bộ Theme Bụi Phấn Hoa (`SparklePollenEffect.Theme`)
+
+Khởi tạo qua `SparklePollenEffect(theme: .<tên>)` (mặc định `.golden`):
+
+| Theme | Mô Tả Sắc Độ (`shadeColors`) | `PlantTapEffectType` |
 | :--- | :--- | :--- |
-| **`emerald`** (Mặc định) | `rgba(89, 235, 166, 0.85)` | Đa số các loài cây xanh lá (`Plant1` Lưỡi hổ, `Plant2` Trầu bà, `Plant3` Begonia...) |
-| **`deepOcean`** | `rgba(64, 209, 242, 0.85)` | Cây mọng nước, cây dây leo buông rủ (`Plant15` Chuỗi tim, `Plant21`, `Plant28`, `Plant30`...) |
-| **`goldenSun`** | `rgba(255, 224, 97, 0.88)` | Cây có lá vàng, xương rồng sa mạc ánh sáng (`Plant27`, `Plant29`...) |
-| **`floralPink`** | `rgba(255, 173, 209, 0.88)` | Cây nở hoa hồng, sen đá viền hồng, phong lan, hoa đào (`Plant24`, `Plant25`...) |
+| **`golden`** (Mặc định) | Vàng kim, hổ phách, kem nắng | `sparklePollen` |
+| **`floralPink`** | Hồng phấn, hồng đào, hồng đậm | `sparklePollenPink` |
+| **`emeraldMint`** | Xanh ngọc, bạc hà, vàng chanh nhạt | `sparklePollenEmerald` |
+| **`aquaFrost`** | Xanh băng, lam ngọc, trắng tuyết | `sparklePollenAqua` |
+| **`lavenderAmethyst`** | Tím thạch anh, oải hương, tím nhạt | `sparklePollenLavender` |
+| **`sunsetCoral`** | Cam san hô, vàng nắng, đỏ hồng | `sparklePollenCoral` |
+| **`multicolor`** | Đa sắc lấp lánh (vàng, hồng, ngọc, lam, tím, ngọc trai) | `sparklePollenMulticolor` |
+
+### 2.4. Các Bộ Theme Cánh Hoa / Lá Rơi (`FloatingPetalsEffect.Theme`)
+
+Khởi tạo qua `FloatingPetalsEffect(theme: .<tên>)` (mặc định `.sakuraPink`):
+
+| Theme | Mô Tả Sắc Độ (`shadeColors`) | `PlantTapEffectType` |
+| :--- | :--- | :--- |
+| **`sakuraPink`** (Mặc định) | Hồng anh đào, hồng phấn, hồng đậm | `floatingPetals` |
+| **`autumnLeaves`** | Cam cháy, vàng hổ phách, đỏ phong | `floatingPetalsAutumn` |
+| **`emeraldLeaves`** | Lá non xanh ngọc, xanh bạc hà, xanh lá | `floatingPetalsEmerald` |
+| **`lavender`** | Tím oải hương, tím thạch anh, tím nhạt | `floatingPetalsLavender` |
+| **`lotusWhite`** | Trắng ngà, hồng phớt, vàng nhụy nhạt | `floatingPetalsLotus` |
+| **`goldenSun`** | Vàng nắng, vàng cúc, cam nhạt | `floatingPetalsGolden` |
+| **`multicolor`** | Đa sắc cánh hoa rơi (anh đào, vàng, tím, bạc hà, san hô, trắng) | `floatingPetalsMulticolor` |
 
 ---
 
