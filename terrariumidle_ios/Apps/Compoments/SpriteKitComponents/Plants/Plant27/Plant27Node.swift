@@ -86,7 +86,7 @@ public final class Plant27Node: SKNode {
     private var isHanging: Bool = false
 
     public var motionEffect: PlantMotionEffect = BroadleafWindMotionEffect(stemNodeNames: ["leaf_3"])
-    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .goldenSun)]
+    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .mintDew)]
 
     private let plantRootNode = SKNode()
     private var leafNodes: [SKSpriteNode] = []

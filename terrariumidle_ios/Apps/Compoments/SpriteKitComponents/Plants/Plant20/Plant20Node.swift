@@ -73,7 +73,7 @@ public final class Plant20Node: SKNode {
     private var isHanging: Bool = false
 
     public var motionEffect: PlantMotionEffect = ElasticPulseMotionEffect(pulseScale: 1.13, durationMultiplier: 1.7, animatesLeaves: false)
-    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
+    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .goldenSun)]
 
     private let plantRootNode = SKNode()
     private var leafNodes: [SKSpriteNode] = []

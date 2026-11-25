@@ -96,11 +96,11 @@ public final class Plant16Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
-    /// Danh sách các hiệu ứng thị giác khi tap vào cây (mặc định Bọt khí Oxy Emerald)
+    /// Danh sách các hiệu ứng thị giác khi tap vào cây (mặc định Bọt khí Oxy rừng rêu)
     /// Hiệu ứng chuyển động rung lắc / nảy cành lá khi tap vào cây (mặc định: WindSwayMotionEffect)
     public var motionEffect: PlantMotionEffect = WindSwayMotionEffect()
 
-    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
+    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .forestMoss)]
 
     private let plantRootNode = SKNode()
     private var leafNodes: [SKSpriteNode] = []

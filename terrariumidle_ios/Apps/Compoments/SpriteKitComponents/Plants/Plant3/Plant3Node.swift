@@ -91,8 +91,8 @@ public final class Plant3Node: SKNode {
     /// Hiệu ứng chuyển động rung lắc / nảy cành lá khi tap vào cây (mặc định: StandardPlantBounce)
     public var motionEffect: PlantMotionEffect = StandardPlantBounceMotionEffect()
 
-    /// Danh sách các hiệu ứng thị giác khi tap vào cây (mặc định Bọt khí Oxy ngọc lục bảo)
-    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .emerald)]
+    /// Danh sách các hiệu ứng thị giác khi tap vào cây (mặc định Bọt khí Oxy rêu rừng)
+    public var tapEffects: [PlantTapEffect] = [OxygenBubblesEffect(theme: .forestMoss)]
 
     private let plantRootNode = SKNode()
     private var leafNodes: [SKSpriteNode] = []

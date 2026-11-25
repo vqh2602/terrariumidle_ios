@@ -100,8 +100,7 @@ public final class Plant25Node: SKNode {
         ]
     )
     public var tapEffects: [PlantTapEffect] = [
-        FloatingPetalsEffect(),
-        OxygenBubblesEffect(theme: .floralPink)
+        OxygenBubblesEffect(theme: .forestMoss)
     ]
 
     private let plantRootNode = SKNode()
