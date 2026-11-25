@@ -8,7 +8,6 @@
         "priceOxygen": 0,
         "currencyUnit": "",
         "type": "music",
-        "effect": "Một ngày thư thái",
         "itemTypeAttribute": "none",
         "levelUnlock": 0
     },
@@ -21,7 +20,6 @@
         "priceOxygen": 0,
         "currencyUnit": "",
         "type": "music",
-        "effect": "Kết thúc mùa xuân",
         "itemTypeAttribute": "none",
         "levelUnlock": 0
     },
@@ -34,7 +32,6 @@
         "priceOxygen": 0,
         "currencyUnit": "",
         "type": "music",
-        "effect": "Mong một ngày mưa",
         "itemTypeAttribute": "none",
         "levelUnlock": 0
     },
@@ -47,7 +44,6 @@
         "priceOxygen": 0,
         "currencyUnit": "",
         "type": "music",
-        "effect": "Đêm dài",
         "itemTypeAttribute": "none",
         "levelUnlock": 0
     },
@@ -60,7 +56,6 @@
         "priceOxygen": 0,
         "currencyUnit": "",
         "type": "music",
-        "effect": "",
         "itemTypeAttribute": "none",
         "levelUnlock": 0
     },
@@ -73,7 +68,6 @@
         "priceOxygen": 0,
         "currencyUnit": "",
         "type": "music",
-        "effect": "",
         "itemTypeAttribute": "none",
         "levelUnlock": 0
     },
@@ -86,7 +80,6 @@
         "priceOxygen": 0,
         "currencyUnit": "",
         "type": "music",
-        "effect": "",
         "itemTypeAttribute": "none",
         "levelUnlock": 0
     }
