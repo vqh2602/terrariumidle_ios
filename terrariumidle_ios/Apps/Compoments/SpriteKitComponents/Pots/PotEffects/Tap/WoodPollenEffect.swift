@@ -12,27 +12,55 @@ import UIKit
 /// - Tung ra chùm hạt phấn gỗ thơm ấm áp màu hổ phách / mật ong, bay bổng nhẹ nhàng quanh chậu gỗ
 public final class WoodPollenEffect: PotTapEffect {
 
+    public enum Theme: CaseIterable, Hashable {
+        case warmAmber     // Hổ phách mật ong, Nâu gỗ ấm, Vàng phấn (mặc định)
+        case forestBlossom // Hồng đào, Vàng phấn, Xanh mạ non
+        case goldenDust    // Vàng kim, Hổ phách, Trắng ấm
+
+        public var shadeColors: [UIColor] {
+            switch self {
+            case .warmAmber:
+                return [
+                    UIColor(red: 0.95, green: 0.75, blue: 0.45, alpha: 0.95), // Hổ phách mật ong
+                    UIColor(red: 0.88, green: 0.58, blue: 0.32, alpha: 0.90), // Nâu gỗ ấm
+                    UIColor(red: 1.00, green: 0.90, blue: 0.65, alpha: 0.95)  // Vàng phấn sáng
+                ]
+            case .forestBlossom:
+                return [
+                    UIColor(red: 1.00, green: 0.72, blue: 0.82, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.90, blue: 0.62, alpha: 0.95),
+                    UIColor(red: 0.64, green: 0.92, blue: 0.68, alpha: 0.95)
+                ]
+            case .goldenDust:
+                return [
+                    UIColor(red: 1.00, green: 0.86, blue: 0.38, alpha: 0.95),
+                    UIColor(red: 0.96, green: 0.72, blue: 0.28, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.97, blue: 0.84, alpha: 0.95)
+                ]
+            }
+        }
+    }
+
     public let name: String = "WoodPollenEffect"
 
+    public var theme: Theme = .warmAmber
     public var burstCountRange: ClosedRange<Int> = 8...12
     public var minRadius: CGFloat = 2.5
     public var maxRadius: CGFloat = 4.5
 
-    public init(burstCountRange: ClosedRange<Int> = 8...12) {
+    public init(theme: Theme = .warmAmber, burstCountRange: ClosedRange<Int> = 8...12) {
+        self.theme = theme
         self.burstCountRange = burstCountRange
     }
 
     public func trigger(on potNode: SKSpriteNode, in containerNode: SKNode, isHanging: Bool) {
         let potFrame = potNode.frame
         let burstCount = Int.random(in: burstCountRange)
+        let shades = theme.shadeColors
 
         for i in 0..<burstCount {
             let radius = CGFloat.random(in: minRadius...maxRadius)
-            let color = (i % 3 == 0)
-                ? UIColor(red: 0.95, green: 0.75, blue: 0.45, alpha: 0.95) // Hổ phách mật ong
-                : (i % 3 == 1)
-                    ? UIColor(red: 0.88, green: 0.58, blue: 0.32, alpha: 0.90) // Nâu gỗ ấm
-                    : UIColor(red: 1.0, green: 0.90, blue: 0.65, alpha: 0.95)  // Vàng phấn sáng
+            let color = shades[i % shades.count]
 
             let particle = Self.createPollenNode(radius: radius, color: color)
 

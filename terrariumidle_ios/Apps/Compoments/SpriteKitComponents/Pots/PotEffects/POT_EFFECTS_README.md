@@ -95,17 +95,31 @@ public var tapEffects: [PotTapEffect] = [SparkleBurstEffect()]
 
 | Tên Hiệu Ứng | Lớp Triển Khai (`Class`) | Định Danh Type | Mô Tả Thị Giác & Màu Sắc |
 | :--- | :--- | :--- | :--- |
-| **Đá lấp lánh** | `SparkleBurstEffect` | `sparkleBurst` | Chùm sao 4 cánh nhọn phát sáng (Vàng hoàng yến & Hồng phấn), xoay 360° bung toả quanh chậu. |
+| **Đá lấp lánh** | `SparkleBurstEffect` | `sparkleBurst` | Chùm sao 4 cánh nhọn phát sáng (mặc định `.classic`: Vàng hoàng yến & Hồng phấn), hỗ trợ thêm `.golden`, `.emeraldJade`, `.sapphireAqua`, `.amethystRose`, `.rainbow`. |
 | **Vệt ánh vàng** | `GoldGlintEffect` | `goldGlint` | Vệt ánh kim quét chéo lướt qua thân chậu kèm tia sao 4 cánh vàng rực nhấp nháy 2 nhịp và mảnh vàng lá. |
 | **Bụi đá xám** | `StoneDustEffect` | `stoneDust` | Làn khói bụi đá xám khoáng mịn tỏa hai bên kết hợp mảnh đá góc cạnh văng theo trọng lực và hạt mica ánh bạc. |
-| **Trái tim bay** | `HeartBurstEffect` | `heartBurst` | Chùm trái tim hồng ngọc và đỏ san hô bay vút lên trời kèm nhịp thở phập phồng. |
+| **Trái tim bay** | `HeartBurstEffect` | `heartBurst` | Chùm trái tim bay vút lên trời kèm nhịp thở phập phồng (mặc định `.classic`), hỗ trợ thêm `.pastel`, `.crimsonPassion`, `.rainbow`. |
 | **Ánh gốm nung** | `ClayGlintEffect` | `clayGlint` | Vệt bóng men gốm ấm áp phản chiếu trên thân chậu cùng sao men nung cam đào và mảnh gốm hình thoi sắc nét. |
-| **Thạch anh lăng kính**| `QuartzBurstEffect` | `quartzBurst` | Tinh thể kim cương/lăng kính thạch anh tím & hồng xoay lấp lánh. |
+| **Thạch anh lăng kính**| `QuartzBurstEffect` | `quartzBurst` | Tinh thể kim cương/lăng kính xoay lấp lánh (mặc định `.roseAmethyst`: Hồng & Tím), hỗ trợ thêm `.citrineGold`, `.aquamarine`, `.prism`. |
 | **Bụi đất mộc** | `EarthenParticlesEffect` | `earthenDust` | Vụn đất sét góc cạnh nảy parabol theo trọng lực kết hợp làn bụi đất nung ấm áp mộc mạc. |
-| **Bụi phấn gỗ thơm** | `WoodPollenEffect` | `woodPollen` | Chùm hạt phấn gỗ ấm áp màu hổ phách/mật ong (#E0A96D, #EEB76B, #F6D8AC), bay bổng quanh chậu gỗ. |
-| **Ánh ngọc bích băng** | `EmeraldJadeEffect` | `emeraldJade` | Chùm tinh thể ngọc lam ngọc bích phát sáng lung linh (#64DFDF, #48CAE4, #90E0EF), xoay 360° quanh khối ngọc. |
-| **Bọt ngọc san hô** | `CoralBubbleEffect` | `coralBubble` | Chùm bọt ngọc và hoa san hô lấp lánh màu hồng san hô (#F6BDB6, #FF99C8, #FCB7AF) bay phập phồng quanh bình san hô. |
-| **Sương mai thiền tịnh** | `BambooMistEffect` | `bambooMist` | Chùm hạt sương mai thanh khiết và đốm sáng xanh mạ thiền tịnh (#A7D7C5, #E4E978, #C9E4DE) quanh ống tre mộc. |
+| **Bụi phấn gỗ thơm** | `WoodPollenEffect` | `woodPollen` | Chùm hạt phấn gỗ ấm áp bay bổng (mặc định `.warmAmber`), hỗ trợ thêm `.forestBlossom`, `.goldenDust`. |
+| **Ánh ngọc bích băng** | `EmeraldJadeEffect` | `emeraldJade` | Chùm tinh thể ngọc phát sáng xoay 360° (mặc định `.iceJade`), hỗ trợ thêm `.imperialGreen`, `.amethystJade`. |
+| **Bọt ngọc san hô** | `CoralBubbleEffect` | `coralBubble` | Chùm bọt ngọc phập phồng (mặc định `.coralPink`), hỗ trợ thêm `.oceanPearl`, `.sunset`, `.multicolor`. |
+| **Sương mai thiền tịnh** | `BambooMistEffect` | `bambooMist` | Chùm hạt sương mai và đốm sáng thanh khiết (mặc định `.zenDew`), hỗ trợ thêm `.morningSky`, `.autumnZen`. |
+
+### 2.2. Các Bộ Theme Màu Sắc Hiệu Ứng Hạt Chậu (`Theme`)
+
+Các hiệu ứng hạt chậu hỗ trợ truyền `theme` trực tiếp khi khởi tạo (ví dụ `SparkleBurstEffect(theme: .rainbow)`) hoặc qua `PotTapEffectType`:
+
+| Hiệu Ứng | Các Bộ Theme (`Theme`) | `PotTapEffectType` Tương Ứng |
+| :--- | :--- | :--- |
+| **`SparkleBurstEffect`** | `.classic` (mặc định), `.golden`, `.emeraldJade`, `.sapphireAqua`, `.amethystRose`, `.rainbow` | `sparkleBurst`, `sparkleGolden`, `sparkleEmerald`, `sparkleSapphire`, `sparkleAmethyst`, `sparkleRainbow` |
+| **`HeartBurstEffect`** | `.classic` (mặc định), `.pastel`, `.crimsonPassion`, `.rainbow` | `heartBurst`, `heartPastel`, `heartCrimson`, `heartRainbow` |
+| **`QuartzBurstEffect`** | `.roseAmethyst` (mặc định), `.citrineGold`, `.aquamarine`, `.prism` | `quartzBurst`, `quartzCitrine`, `quartzAquamarine`, `quartzPrism` |
+| **`WoodPollenEffect`** | `.warmAmber` (mặc định), `.forestBlossom`, `.goldenDust` | `woodPollen`, `woodPollenBlossom`, `woodPollenGolden` |
+| **`EmeraldJadeEffect`** | `.iceJade` (mặc định), `.imperialGreen`, `.amethystJade` | `emeraldJade`, `emeraldImperial`, `emeraldAmethyst` |
+| **`CoralBubbleEffect`** | `.coralPink` (mặc định), `.oceanPearl`, `.sunset`, `.multicolor` | `coralBubble`, `coralOceanPearl`, `coralSunset`, `coralMulticolor` |
+| **`BambooMistEffect`** | `.zenDew` (mặc định), `.morningSky`, `.autumnZen` | `bambooMist`, `bambooMorningSky`, `bambooAutumnZen` |
 
 ---
 

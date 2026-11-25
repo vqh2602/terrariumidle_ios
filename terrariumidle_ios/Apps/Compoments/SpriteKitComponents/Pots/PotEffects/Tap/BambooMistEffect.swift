@@ -13,27 +13,55 @@ import UIKit
 /// - Bay lượn tản mát nhẹ nhàng quanh chậu ống tre mộc nâu sẫm
 public final class BambooMistEffect: PotTapEffect {
 
+    public enum Theme: CaseIterable, Hashable {
+        case zenDew     // Xanh ngọc tre non, Vàng chanh sương sớm, Sương bạc (mặc định)
+        case morningSky // Xanh da trời nhạt, Sương trắng, Bạc hà
+        case autumnZen  // Vàng thu nhạt, Cam sương, Kem ấm
+
+        public var shadeColors: [UIColor] {
+            switch self {
+            case .zenDew:
+                return [
+                    UIColor(red: 0.65, green: 0.84, blue: 0.77, alpha: 0.95), // Xanh ngọc tre non (#A7D7C5)
+                    UIColor(red: 0.89, green: 0.91, blue: 0.47, alpha: 0.95), // Vàng chanh sương sớm (#E4E978)
+                    UIColor(red: 0.79, green: 0.89, blue: 0.87, alpha: 0.95)  // Sương bạc thanh tịnh (#C9E4DE)
+                ]
+            case .morningSky:
+                return [
+                    UIColor(red: 0.68, green: 0.89, blue: 0.98, alpha: 0.95),
+                    UIColor(red: 0.92, green: 0.97, blue: 1.00, alpha: 0.95),
+                    UIColor(red: 0.68, green: 0.94, blue: 0.86, alpha: 0.95)
+                ]
+            case .autumnZen:
+                return [
+                    UIColor(red: 0.96, green: 0.84, blue: 0.56, alpha: 0.95),
+                    UIColor(red: 0.98, green: 0.74, blue: 0.54, alpha: 0.95),
+                    UIColor(red: 0.98, green: 0.94, blue: 0.84, alpha: 0.95)
+                ]
+            }
+        }
+    }
+
     public let name: String = "BambooMistEffect"
 
+    public var theme: Theme = .zenDew
     public var burstCountRange: ClosedRange<Int> = 8...12
     public var minRadius: CGFloat = 2.5
     public var maxRadius: CGFloat = 5.0
 
-    public init(burstCountRange: ClosedRange<Int> = 8...12) {
+    public init(theme: Theme = .zenDew, burstCountRange: ClosedRange<Int> = 8...12) {
+        self.theme = theme
         self.burstCountRange = burstCountRange
     }
 
     public func trigger(on potNode: SKSpriteNode, in containerNode: SKNode, isHanging: Bool) {
         let potFrame = potNode.frame
         let burstCount = Int.random(in: burstCountRange)
+        let shades = theme.shadeColors
 
         for i in 0..<burstCount {
             let radius = CGFloat.random(in: minRadius...maxRadius)
-            let color = (i % 3 == 0)
-                ? UIColor(red: 0.65, green: 0.84, blue: 0.77, alpha: 0.95) // Xanh ngọc tre non (#A7D7C5)
-                : (i % 3 == 1)
-                    ? UIColor(red: 0.89, green: 0.91, blue: 0.47, alpha: 0.95) // Vàng chanh sương sớm (#E4E978)
-                    : UIColor(red: 0.79, green: 0.89, blue: 0.87, alpha: 0.95) // Sương bạc thanh tịnh (#C9E4DE)
+            let color = shades[i % shades.count]
 
             let mist = Self.createDewDropNode(radius: radius, color: color)
 

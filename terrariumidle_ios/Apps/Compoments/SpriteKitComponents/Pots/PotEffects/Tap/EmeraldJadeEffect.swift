@@ -13,27 +13,55 @@ import UIKit
 /// - Xoay 360 độ và tỏa ra xung quanh khối ngọc trong trẻo mát lạnh
 public final class EmeraldJadeEffect: PotTapEffect {
 
+    public enum Theme: CaseIterable, Hashable {
+        case iceJade       // Lam ngọc bích & Băng thanh (mặc định)
+        case imperialGreen // Ngọc lục bảo đậm & Xanh ngọc tươi
+        case amethystJade  // Ngọc tím thạch anh & Oải hương
+
+        public var shadeColors: [UIColor] {
+            switch self {
+            case .iceJade:
+                return [
+                    UIColor(red: 0.39, green: 0.87, blue: 0.87, alpha: 0.95), // Lam ngọc bích sáng (#64DFDF)
+                    UIColor(red: 0.28, green: 0.79, blue: 0.89, alpha: 0.95), // Băng thanh (#48CAE4)
+                    UIColor(red: 0.79, green: 0.94, blue: 0.97, alpha: 0.95)  // Băng tuyết trắng ngọc (#CAF0F8)
+                ]
+            case .imperialGreen:
+                return [
+                    UIColor(red: 0.18, green: 0.80, blue: 0.56, alpha: 0.95),
+                    UIColor(red: 0.36, green: 0.92, blue: 0.68, alpha: 0.95),
+                    UIColor(red: 0.74, green: 0.98, blue: 0.86, alpha: 0.95)
+                ]
+            case .amethystJade:
+                return [
+                    UIColor(red: 0.72, green: 0.44, blue: 0.90, alpha: 0.95),
+                    UIColor(red: 0.84, green: 0.66, blue: 0.98, alpha: 0.95),
+                    UIColor(red: 0.94, green: 0.88, blue: 1.00, alpha: 0.95)
+                ]
+            }
+        }
+    }
+
     public let name: String = "EmeraldJadeEffect"
 
+    public var theme: Theme = .iceJade
     public var burstCountRange: ClosedRange<Int> = 8...12
     public var minRadius: CGFloat = 3.5
     public var maxRadius: CGFloat = 6.0
 
-    public init(burstCountRange: ClosedRange<Int> = 8...12) {
+    public init(theme: Theme = .iceJade, burstCountRange: ClosedRange<Int> = 8...12) {
+        self.theme = theme
         self.burstCountRange = burstCountRange
     }
 
     public func trigger(on potNode: SKSpriteNode, in containerNode: SKNode, isHanging: Bool) {
         let potFrame = potNode.frame
         let burstCount = Int.random(in: burstCountRange)
+        let shades = theme.shadeColors
 
         for i in 0..<burstCount {
             let radius = CGFloat.random(in: minRadius...maxRadius)
-            let color = (i % 3 == 0)
-                ? UIColor(red: 0.39, green: 0.87, blue: 0.87, alpha: 0.95) // Lam ngọc bích sáng (#64DFDF)
-                : (i % 3 == 1)
-                    ? UIColor(red: 0.28, green: 0.79, blue: 0.89, alpha: 0.95) // Băng thanh (#48CAE4)
-                    : UIColor(red: 0.79, green: 0.94, blue: 0.97, alpha: 0.95) // Băng tuyết trắng ngọc (#CAF0F8)
+            let color = shades[i % shades.count]
 
             let crystal = Self.createJadeCrystalNode(radius: radius, color: color)
 

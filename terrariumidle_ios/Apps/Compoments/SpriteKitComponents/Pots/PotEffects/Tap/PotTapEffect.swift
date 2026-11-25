@@ -29,52 +29,112 @@ public protocol PotTapEffect: AnyObject {
 public enum PotTapEffectType: String, CaseIterable {
     /// Chậu 1: Bung tỏa chùm ngôi sao 4 cánh lấp lánh (Sparkle Glitter Burst)
     case sparkleBurst = "sparkleBurst"
+    case sparkleGolden = "sparkleGolden"
+    case sparkleEmerald = "sparkleEmerald"
+    case sparkleSapphire = "sparkleSapphire"
+    case sparkleAmethyst = "sparkleAmethyst"
+    case sparkleRainbow = "sparkleRainbow"
     /// Chậu 2: Vệt ánh vàng kim óng ánh (Gold Glint)
     case goldGlint = "goldGlint"
     /// Chậu 3: Bụi đá xám bạc (Stone Dust)
     case stoneDust = "stoneDust"
     /// Chậu 4: Chùm trái tim hồng ngọc bay bổng (Heart Burst)
     case heartBurst = "heartBurst"
+    case heartPastel = "heartPastel"
+    case heartCrimson = "heartCrimson"
+    case heartRainbow = "heartRainbow"
     /// Chậu 5: Ánh gốm nung sắc nét (Clay Glint)
     case clayGlint = "clayGlint"
     /// Chậu 6: Tinh thể thạch anh hồng lăng kính (Quartz Crystal Burst)
     case quartzBurst = "quartzBurst"
+    case quartzCitrine = "quartzCitrine"
+    case quartzAquamarine = "quartzAquamarine"
+    case quartzPrism = "quartzPrism"
     /// Chậu 7: Bụi đất sét mộc mạc (Earthen Dust)
     case earthenDust = "earthenDust"
     /// Chậu 20: Bụi phấn gỗ thơm ấm áp (Wood Pollen & Amber Glow)
     case woodPollen = "woodPollen"
+    case woodPollenBlossom = "woodPollenBlossom"
+    case woodPollenGolden = "woodPollenGolden"
     /// Chậu 28: Tinh thể ngọc bích băng tuyết (Emerald & Ice Jade Luminescence)
     case emeraldJade = "emeraldJade"
+    case emeraldImperial = "emeraldImperial"
+    case emeraldAmethyst = "emeraldAmethyst"
     /// Chậu 29: Bọt ngọc san hô phập phồng (Coral Luminescent Pearls)
     case coralBubble = "coralBubble"
+    case coralOceanPearl = "coralOceanPearl"
+    case coralSunset = "coralSunset"
+    case coralMulticolor = "coralMulticolor"
     /// Chậu 30: Sương mai thiền tịnh (Zen Bamboo Mist & Dew)
     case bambooMist = "bambooMist"
+    case bambooMorningSky = "bambooMorningSky"
+    case bambooAutumnZen = "bambooAutumnZen"
 
     /// Khởi tạo instance hiệu ứng tương ứng
     public func createEffect() -> PotTapEffect {
         switch self {
         case .sparkleBurst:
-            return SparkleBurstEffect()
+            return SparkleBurstEffect(theme: .classic)
+        case .sparkleGolden:
+            return SparkleBurstEffect(theme: .golden)
+        case .sparkleEmerald:
+            return SparkleBurstEffect(theme: .emeraldJade)
+        case .sparkleSapphire:
+            return SparkleBurstEffect(theme: .sapphireAqua)
+        case .sparkleAmethyst:
+            return SparkleBurstEffect(theme: .amethystRose)
+        case .sparkleRainbow:
+            return SparkleBurstEffect(theme: .rainbow)
         case .goldGlint:
             return GoldGlintEffect()
         case .stoneDust:
             return StoneDustEffect()
         case .heartBurst:
-            return HeartBurstEffect()
+            return HeartBurstEffect(theme: .classic)
+        case .heartPastel:
+            return HeartBurstEffect(theme: .pastel)
+        case .heartCrimson:
+            return HeartBurstEffect(theme: .crimsonPassion)
+        case .heartRainbow:
+            return HeartBurstEffect(theme: .rainbow)
         case .clayGlint:
             return ClayGlintEffect()
         case .quartzBurst:
-            return QuartzBurstEffect()
+            return QuartzBurstEffect(theme: .roseAmethyst)
+        case .quartzCitrine:
+            return QuartzBurstEffect(theme: .citrineGold)
+        case .quartzAquamarine:
+            return QuartzBurstEffect(theme: .aquamarine)
+        case .quartzPrism:
+            return QuartzBurstEffect(theme: .prism)
         case .earthenDust:
             return EarthenParticlesEffect()
         case .woodPollen:
-            return WoodPollenEffect()
+            return WoodPollenEffect(theme: .warmAmber)
+        case .woodPollenBlossom:
+            return WoodPollenEffect(theme: .forestBlossom)
+        case .woodPollenGolden:
+            return WoodPollenEffect(theme: .goldenDust)
         case .emeraldJade:
-            return EmeraldJadeEffect()
+            return EmeraldJadeEffect(theme: .iceJade)
+        case .emeraldImperial:
+            return EmeraldJadeEffect(theme: .imperialGreen)
+        case .emeraldAmethyst:
+            return EmeraldJadeEffect(theme: .amethystJade)
         case .coralBubble:
-            return CoralBubbleEffect()
+            return CoralBubbleEffect(theme: .coralPink)
+        case .coralOceanPearl:
+            return CoralBubbleEffect(theme: .oceanPearl)
+        case .coralSunset:
+            return CoralBubbleEffect(theme: .sunset)
+        case .coralMulticolor:
+            return CoralBubbleEffect(theme: .multicolor)
         case .bambooMist:
-            return BambooMistEffect()
+            return BambooMistEffect(theme: .zenDew)
+        case .bambooMorningSky:
+            return BambooMistEffect(theme: .morningSky)
+        case .bambooAutumnZen:
+            return BambooMistEffect(theme: .autumnZen)
         }
     }
 }
@@ -93,28 +153,79 @@ public struct PotTapEffectFactory {
     public static func create(named nameOrId: String) -> PotTapEffect? {
         let clean = nameOrId.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
 
+        if let exactType = PotTapEffectType.allCases.first(where: { $0.rawValue.lowercased() == clean }) {
+            return exactType.createEffect()
+        }
+
         if clean.contains("đá lấp lánh") || clean.contains("lấp lánh") || clean.contains("sparkle") {
-            return SparkleBurstEffect()
+            if clean.contains("cầu vồng") || clean.contains("đa sắc") || clean.contains("rainbow") {
+                return SparkleBurstEffect(theme: .rainbow)
+            } else if clean.contains("ngọc") || clean.contains("emerald") {
+                return SparkleBurstEffect(theme: .emeraldJade)
+            } else if clean.contains("lam") || clean.contains("sapphire") || clean.contains("aqua") {
+                return SparkleBurstEffect(theme: .sapphireAqua)
+            } else if clean.contains("tím") || clean.contains("amethyst") {
+                return SparkleBurstEffect(theme: .amethystRose)
+            } else if clean.contains("vàng") || clean.contains("gold") {
+                return SparkleBurstEffect(theme: .golden)
+            }
+            return SparkleBurstEffect(theme: .classic)
         } else if clean.contains("vàng") || clean.contains("gold") {
             return GoldGlintEffect()
         } else if clean.contains("bụi đá") || clean.contains("stone") {
             return StoneDustEffect()
         } else if clean.contains("trái tim") || clean.contains("heart") {
-            return HeartBurstEffect()
+            if clean.contains("cầu vồng") || clean.contains("đa sắc") || clean.contains("rainbow") {
+                return HeartBurstEffect(theme: .rainbow)
+            } else if clean.contains("pastel") {
+                return HeartBurstEffect(theme: .pastel)
+            } else if clean.contains("đỏ") || clean.contains("crimson") {
+                return HeartBurstEffect(theme: .crimsonPassion)
+            }
+            return HeartBurstEffect(theme: .classic)
         } else if clean.contains("gốm") || clean.contains("caro") || clean.contains("clay") {
             return ClayGlintEffect()
         } else if clean.contains("thạch anh") || clean.contains("quartz") {
-            return QuartzBurstEffect()
+            if clean.contains("lăng kính") || clean.contains("đa sắc") || clean.contains("prism") {
+                return QuartzBurstEffect(theme: .prism)
+            } else if clean.contains("vàng") || clean.contains("citrine") {
+                return QuartzBurstEffect(theme: .citrineGold)
+            } else if clean.contains("biển") || clean.contains("xanh") || clean.contains("aqua") {
+                return QuartzBurstEffect(theme: .aquamarine)
+            }
+            return QuartzBurstEffect(theme: .roseAmethyst)
         } else if clean.contains("đất sét") || clean.contains("đất") || clean.contains("earthen") {
             return EarthenParticlesEffect()
         } else if clean.contains("gỗ") || clean.contains("pollen") || clean.contains("amber") {
-            return WoodPollenEffect()
+            if clean.contains("hoa") || clean.contains("blossom") {
+                return WoodPollenEffect(theme: .forestBlossom)
+            } else if clean.contains("vàng") || clean.contains("gold") {
+                return WoodPollenEffect(theme: .goldenDust)
+            }
+            return WoodPollenEffect(theme: .warmAmber)
         } else if clean.contains("ngọc bích") || clean.contains("ngọc") || clean.contains("jade") || clean.contains("emerald") {
-            return EmeraldJadeEffect()
+            if clean.contains("lục bảo") || clean.contains("imperial") {
+                return EmeraldJadeEffect(theme: .imperialGreen)
+            } else if clean.contains("tím") || clean.contains("amethyst") {
+                return EmeraldJadeEffect(theme: .amethystJade)
+            }
+            return EmeraldJadeEffect(theme: .iceJade)
         } else if clean.contains("san hô") || clean.contains("coral") {
-            return CoralBubbleEffect()
+            if clean.contains("đa sắc") || clean.contains("multicolor") {
+                return CoralBubbleEffect(theme: .multicolor)
+            } else if clean.contains("ngọc trai") || clean.contains("ocean") || clean.contains("pearl") {
+                return CoralBubbleEffect(theme: .oceanPearl)
+            } else if clean.contains("hoàng hôn") || clean.contains("sunset") {
+                return CoralBubbleEffect(theme: .sunset)
+            }
+            return CoralBubbleEffect(theme: .coralPink)
         } else if clean.contains("tre") || clean.contains("sương") || clean.contains("bamboo") || clean.contains("mist") {
-            return BambooMistEffect()
+            if clean.contains("trời") || clean.contains("sky") {
+                return BambooMistEffect(theme: .morningSky)
+            } else if clean.contains("thu") || clean.contains("autumn") {
+                return BambooMistEffect(theme: .autumnZen)
+            }
+            return BambooMistEffect(theme: .zenDew)
         }
 
         return nil

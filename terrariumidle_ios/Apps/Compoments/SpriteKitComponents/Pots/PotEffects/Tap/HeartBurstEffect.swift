@@ -12,25 +12,66 @@ import UIKit
 /// - Bung toả chùm trái tim màu hồng ngọc bay vút lên trên lượn sóng và mờ dần
 public final class HeartBurstEffect: PotTapEffect {
 
+    public enum Theme: CaseIterable, Hashable {
+        case classic        // Đỏ hồng ngọc & Hồng phấn (mặc định)
+        case pastel         // Hồng kẹo ngọt, Tím oải hương, Vàng kem, Xanh bạc hà
+        case crimsonPassion // Đỏ ruby, Đỏ rượu vang, Hồng đào
+        case rainbow        // Trái tim đa sắc cầu vồng
+
+        public var shadeColors: [UIColor] {
+            switch self {
+            case .classic:
+                return [
+                    UIColor(red: 1.00, green: 0.35, blue: 0.55, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.70, blue: 0.82, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.50, blue: 0.65, alpha: 0.95)
+                ]
+            case .pastel:
+                return [
+                    UIColor(red: 1.00, green: 0.74, blue: 0.86, alpha: 0.95),
+                    UIColor(red: 0.82, green: 0.72, blue: 0.98, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.90, blue: 0.64, alpha: 0.95),
+                    UIColor(red: 0.64, green: 0.95, blue: 0.82, alpha: 0.95)
+                ]
+            case .crimsonPassion:
+                return [
+                    UIColor(red: 0.94, green: 0.22, blue: 0.38, alpha: 0.95),
+                    UIColor(red: 0.78, green: 0.14, blue: 0.30, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.52, blue: 0.58, alpha: 0.95)
+                ]
+            case .rainbow:
+                return [
+                    UIColor(red: 1.00, green: 0.38, blue: 0.52, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.64, blue: 0.44, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.86, blue: 0.42, alpha: 0.95),
+                    UIColor(red: 0.44, green: 0.90, blue: 0.70, alpha: 0.95),
+                    UIColor(red: 0.46, green: 0.82, blue: 1.00, alpha: 0.95),
+                    UIColor(red: 0.78, green: 0.58, blue: 0.96, alpha: 0.95)
+                ]
+            }
+        }
+    }
+
     public let name: String = "HeartBurstEffect"
 
+    public var theme: Theme = .classic
     public var burstCountRange: ClosedRange<Int> = 7...10
     public var minSize: CGFloat = 8.0
     public var maxSize: CGFloat = 14.0
 
-    public init(burstCountRange: ClosedRange<Int> = 7...10) {
+    public init(theme: Theme = .classic, burstCountRange: ClosedRange<Int> = 7...10) {
+        self.theme = theme
         self.burstCountRange = burstCountRange
     }
 
     public func trigger(on potNode: SKSpriteNode, in containerNode: SKNode, isHanging: Bool) {
         let potFrame = potNode.frame
         let burstCount = Int.random(in: burstCountRange)
+        let shades = theme.shadeColors
 
         for i in 0..<burstCount {
             let size = CGFloat.random(in: minSize...maxSize)
-            let heartColor = (i % 2 == 0)
-                ? UIColor(red: 1.0, green: 0.35, blue: 0.55, alpha: 0.95)
-                : UIColor(red: 1.0, green: 0.70, blue: 0.82, alpha: 0.95)
+            let heartColor = shades[i % shades.count]
 
             let heart = Self.createHeartNode(size: CGSize(width: size, height: size * 0.92), color: heartColor)
 

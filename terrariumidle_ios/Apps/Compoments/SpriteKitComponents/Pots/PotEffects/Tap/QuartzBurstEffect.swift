@@ -13,21 +13,70 @@ import UIKit
 /// - Tối ưu 100% Metal Batching bằng bộ đệm SKTexture chung + giới hạn ngân sách hạt tối đa 16
 public final class QuartzBurstEffect: PotTapEffect {
 
+    public enum Theme: CaseIterable, Hashable {
+        case roseAmethyst // Thạch anh hồng & Tím pha lê (mặc định)
+        case citrineGold  // Thạch anh vàng kim & Hổ phách
+        case aquamarine   // Thạch anh xanh biển & Băng thanh
+        case prism        // Lăng kính đa sắc
+
+        public var shadeColors: [UIColor] {
+            switch self {
+            case .roseAmethyst:
+                return [
+                    UIColor(red: 1.00, green: 0.72, blue: 0.88, alpha: 0.95),
+                    UIColor(red: 0.95, green: 0.85, blue: 1.00, alpha: 0.95),
+                    UIColor(red: 0.86, green: 0.60, blue: 0.94, alpha: 0.95)
+                ]
+            case .citrineGold:
+                return [
+                    UIColor(red: 1.00, green: 0.86, blue: 0.44, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.74, blue: 0.34, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.95, blue: 0.76, alpha: 0.95)
+                ]
+            case .aquamarine:
+                return [
+                    UIColor(red: 0.48, green: 0.90, blue: 0.98, alpha: 0.95),
+                    UIColor(red: 0.74, green: 0.96, blue: 1.00, alpha: 0.95),
+                    UIColor(red: 0.44, green: 0.92, blue: 0.80, alpha: 0.95)
+                ]
+            case .prism:
+                return [
+                    UIColor(red: 1.00, green: 0.72, blue: 0.88, alpha: 0.95),
+                    UIColor(red: 0.86, green: 0.68, blue: 1.00, alpha: 0.95),
+                    UIColor(red: 0.52, green: 0.90, blue: 1.00, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.88, blue: 0.48, alpha: 0.95),
+                    UIColor(red: 0.48, green: 0.94, blue: 0.76, alpha: 0.95)
+                ]
+            }
+        }
+    }
+
     public let name: String = "QuartzBurstEffect"
 
+    public var theme: Theme = .roseAmethyst
     public var burstCountRange: ClosedRange<Int> = 6...8
     public var minRadius: CGFloat = 3.5
     public var maxRadius: CGFloat = 6.0
 
-    public init(burstCountRange: ClosedRange<Int> = 6...8) {
+    public init(theme: Theme = .roseAmethyst, burstCountRange: ClosedRange<Int> = 6...8) {
+        self.theme = theme
         self.burstCountRange = burstCountRange
     }
 
     // MARK: - Texture Cache
-    private static var crystalTextureCache: [Bool: SKTexture] = [:] // true: pink, false: purple
+    private struct TextureCacheKey: Hashable {
+        let theme: Theme
+        let shadeIndex: Int
+    }
 
-    private static func getCrystalTexture(isPink: Bool) -> SKTexture {
-        if let cached = crystalTextureCache[isPink] {
+    private static var crystalTextureCache: [TextureCacheKey: SKTexture] = [:]
+
+    private static func getCrystalTexture(theme: Theme, shadeIndex: Int) -> SKTexture {
+        let shades = theme.shadeColors
+        let safeIndex = max(0, min(shadeIndex, shades.count - 1))
+        let key = TextureCacheKey(theme: theme, shadeIndex: safeIndex)
+
+        if let cached = crystalTextureCache[key] {
             return cached
         }
         let w: CGFloat = 36.0
@@ -46,12 +95,8 @@ public final class QuartzBurstEffect: PotTapEffect {
             path.addLine(to: CGPoint(x: center.x - rw, y: center.y))
             path.closeSubpath()
 
-            let color = isPink
-                ? UIColor(red: 1.0, green: 0.72, blue: 0.88, alpha: 0.95)
-                : UIColor(red: 0.95, green: 0.85, blue: 1.0, alpha: 0.95)
-
             cgCtx.addPath(path)
-            cgCtx.setFillColor(color.cgColor)
+            cgCtx.setFillColor(shades[safeIndex].cgColor)
             cgCtx.fillPath()
 
             cgCtx.addPath(path)
@@ -70,7 +115,7 @@ public final class QuartzBurstEffect: PotTapEffect {
             cgCtx.strokePath()
         }
         let texture = SKTexture(image: img)
-        crystalTextureCache[isPink] = texture
+        crystalTextureCache[key] = texture
         return texture
     }
 
@@ -83,11 +128,11 @@ public final class QuartzBurstEffect: PotTapEffect {
 
         let potFrame = potNode.frame
         let burstCount = min(Int.random(in: burstCountRange), 16 - existingCount)
+        let shadeCount = theme.shadeColors.count
 
         for i in 0..<burstCount {
             let radius = CGFloat.random(in: minRadius...maxRadius)
-            let isPink = (i % 2 == 0)
-            let texture = Self.getCrystalTexture(isPink: isPink)
+            let texture = Self.getCrystalTexture(theme: theme, shadeIndex: i % shadeCount)
 
             let crystal = SKSpriteNode(texture: texture, size: CGSize(width: radius * 1.5, height: radius * 2.7))
             crystal.name = "potQuartzCrystal"

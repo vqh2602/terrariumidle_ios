@@ -13,27 +13,64 @@ import UIKit
 /// - Bay bổng phập phồng nhẹ nhàng quanh bình gốm san hô cổ cao
 public final class CoralBubbleEffect: PotTapEffect {
 
+    public enum Theme: CaseIterable, Hashable {
+        case coralPink  // Hồng san hô & Kem san hô (mặc định)
+        case oceanPearl // Ngọc trai trắng, Xanh ngọc biển, Tím nhạt
+        case sunset     // Cam san hô, Vàng nắng, Hồng đào
+        case multicolor // Đa sắc ngọc trai biển
+
+        public var shadeColors: [UIColor] {
+            switch self {
+            case .coralPink:
+                return [
+                    UIColor(red: 0.96, green: 0.74, blue: 0.71, alpha: 0.95), // Hồng san hô (#F6BDB6)
+                    UIColor(red: 1.00, green: 0.60, blue: 0.78, alpha: 0.95), // Hồng phấn rực (#FF99C8)
+                    UIColor(red: 0.99, green: 0.88, blue: 0.86, alpha: 0.95)  // San hô trắng kem (#FDEEE6)
+                ]
+            case .oceanPearl:
+                return [
+                    UIColor(red: 0.96, green: 0.98, blue: 1.00, alpha: 0.95),
+                    UIColor(red: 0.54, green: 0.90, blue: 0.96, alpha: 0.95),
+                    UIColor(red: 0.82, green: 0.78, blue: 0.98, alpha: 0.95)
+                ]
+            case .sunset:
+                return [
+                    UIColor(red: 1.00, green: 0.58, blue: 0.44, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.82, blue: 0.48, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.70, blue: 0.76, alpha: 0.95)
+                ]
+            case .multicolor:
+                return [
+                    UIColor(red: 0.96, green: 0.74, blue: 0.71, alpha: 0.95),
+                    UIColor(red: 0.54, green: 0.90, blue: 0.96, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.86, blue: 0.52, alpha: 0.95),
+                    UIColor(red: 0.84, green: 0.74, blue: 0.98, alpha: 0.95),
+                    UIColor(red: 0.98, green: 0.96, blue: 0.96, alpha: 0.95)
+                ]
+            }
+        }
+    }
+
     public let name: String = "CoralBubbleEffect"
 
+    public var theme: Theme = .coralPink
     public var burstCountRange: ClosedRange<Int> = 8...12
     public var minRadius: CGFloat = 3.0
     public var maxRadius: CGFloat = 5.5
 
-    public init(burstCountRange: ClosedRange<Int> = 8...12) {
+    public init(theme: Theme = .coralPink, burstCountRange: ClosedRange<Int> = 8...12) {
+        self.theme = theme
         self.burstCountRange = burstCountRange
     }
 
     public func trigger(on potNode: SKSpriteNode, in containerNode: SKNode, isHanging: Bool) {
         let potFrame = potNode.frame
         let burstCount = Int.random(in: burstCountRange)
+        let shades = theme.shadeColors
 
         for i in 0..<burstCount {
             let radius = CGFloat.random(in: minRadius...maxRadius)
-            let color = (i % 3 == 0)
-                ? UIColor(red: 0.96, green: 0.74, blue: 0.71, alpha: 0.95) // Hồng san hô (#F6BDB6)
-                : (i % 3 == 1)
-                    ? UIColor(red: 1.0, green: 0.60, blue: 0.78, alpha: 0.95)  // Hồng phấn rực (#FF99C8)
-                    : UIColor(red: 0.99, green: 0.88, blue: 0.86, alpha: 0.95)  // San hô trắng kem (#FDEEE6)
+            let color = shades[i % shades.count]
 
             let pearl = Self.createCoralPearlNode(radius: radius, color: color)
 

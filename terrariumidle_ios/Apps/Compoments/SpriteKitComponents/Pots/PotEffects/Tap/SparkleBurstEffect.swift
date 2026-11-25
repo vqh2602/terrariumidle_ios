@@ -12,21 +12,85 @@ import UIKit
 /// - Tung ra chùm ngôi sao 4 cánh nhọn phát sáng lấp lánh, xoay 360 độ và bung toả quanh chậu
 public final class SparkleBurstEffect: PotTapEffect {
 
+    public enum Theme: CaseIterable, Hashable {
+        case classic      // Vàng hoàng yến & Hồng phấn (mặc định)
+        case golden       // Vàng kim, Hổ phách, Kem nắng
+        case emeraldJade  // Xanh ngọc bích, Bạc hà, Trắng ngọc
+        case sapphireAqua // Xanh lam ngọc, Xanh băng, Tím chàm
+        case amethystRose // Tím thạch anh, Hồng phấn, Oải hương
+        case rainbow      // Đa sắc cầu vồng rực rỡ
+
+        public var shadeColors: [UIColor] {
+            switch self {
+            case .classic:
+                return [
+                    UIColor(red: 1.00, green: 0.92, blue: 0.55, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.65, blue: 0.78, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.97, blue: 0.88, alpha: 0.95)
+                ]
+            case .golden:
+                return [
+                    UIColor(red: 1.00, green: 0.88, blue: 0.38, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.76, blue: 0.24, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.96, blue: 0.68, alpha: 0.95)
+                ]
+            case .emeraldJade:
+                return [
+                    UIColor(red: 0.42, green: 0.94, blue: 0.72, alpha: 0.95),
+                    UIColor(red: 0.66, green: 0.98, blue: 0.86, alpha: 0.95),
+                    UIColor(red: 0.28, green: 0.82, blue: 0.64, alpha: 0.95)
+                ]
+            case .sapphireAqua:
+                return [
+                    UIColor(red: 0.44, green: 0.86, blue: 1.00, alpha: 0.95),
+                    UIColor(red: 0.72, green: 0.94, blue: 1.00, alpha: 0.95),
+                    UIColor(red: 0.46, green: 0.64, blue: 0.98, alpha: 0.95)
+                ]
+            case .amethystRose:
+                return [
+                    UIColor(red: 0.82, green: 0.56, blue: 0.98, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.68, blue: 0.86, alpha: 0.95),
+                    UIColor(red: 0.90, green: 0.82, blue: 1.00, alpha: 0.95)
+                ]
+            case .rainbow:
+                return [
+                    UIColor(red: 1.00, green: 0.90, blue: 0.45, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.64, blue: 0.80, alpha: 0.95),
+                    UIColor(red: 0.44, green: 0.94, blue: 0.72, alpha: 0.95),
+                    UIColor(red: 0.46, green: 0.86, blue: 1.00, alpha: 0.95),
+                    UIColor(red: 0.82, green: 0.62, blue: 1.00, alpha: 0.95),
+                    UIColor(red: 1.00, green: 0.66, blue: 0.46, alpha: 0.95)
+                ]
+            }
+        }
+    }
+
     public let name: String = "SparkleBurstEffect"
 
+    public var theme: Theme = .classic
     public var burstCountRange: ClosedRange<Int> = 7...10
     public var minRadius: CGFloat = 4.0
     public var maxRadius: CGFloat = 6.5
 
-    public init(burstCountRange: ClosedRange<Int> = 7...10) {
+    public init(theme: Theme = .classic, burstCountRange: ClosedRange<Int> = 7...10) {
+        self.theme = theme
         self.burstCountRange = burstCountRange
     }
 
     // MARK: - Texture Cache (Tối ưu Metal Batching)
-    private static var starTextureCache: [Bool: SKTexture] = [:] // true: gold, false: pink
+    private struct TextureCacheKey: Hashable {
+        let theme: Theme
+        let shadeIndex: Int
+    }
 
-    private static func getStarTexture(isGold: Bool) -> SKTexture {
-        if let cached = starTextureCache[isGold] {
+    private static var starTextureCache: [TextureCacheKey: SKTexture] = [:]
+
+    private static func getStarTexture(theme: Theme, shadeIndex: Int) -> SKTexture {
+        let shades = theme.shadeColors
+        let safeIndex = max(0, min(shadeIndex, shades.count - 1))
+        let key = TextureCacheKey(theme: theme, shadeIndex: safeIndex)
+
+        if let cached = starTextureCache[key] {
             return cached
         }
         let dimension: CGFloat = 40.0
@@ -48,12 +112,8 @@ public final class SparkleBurstEffect: PotTapEffect {
             path.addLine(to: CGPoint(x: center.x - innerR, y: center.y - innerR))
             path.closeSubpath()
 
-            let color = isGold
-                ? UIColor(red: 1.0, green: 0.92, blue: 0.55, alpha: 0.95)
-                : UIColor(red: 1.0, green: 0.65, blue: 0.78, alpha: 0.95)
-
             cgCtx.addPath(path)
-            cgCtx.setFillColor(color.cgColor)
+            cgCtx.setFillColor(shades[safeIndex].cgColor)
             cgCtx.fillPath()
 
             cgCtx.addPath(path)
@@ -67,7 +127,7 @@ public final class SparkleBurstEffect: PotTapEffect {
             cgCtx.fillEllipse(in: dotRect)
         }
         let texture = SKTexture(image: img)
-        starTextureCache[isGold] = texture
+        starTextureCache[key] = texture
         return texture
     }
 
@@ -80,11 +140,11 @@ public final class SparkleBurstEffect: PotTapEffect {
 
         let potFrame = potNode.frame
         let burstCount = min(Int.random(in: burstCountRange), 16 - existingCount)
+        let shadeCount = theme.shadeColors.count
 
         for i in 0..<burstCount {
             let radius = CGFloat.random(in: minRadius...maxRadius)
-            let isGold = (i % 2 == 0)
-            let texture = Self.getStarTexture(isGold: isGold)
+            let texture = Self.getStarTexture(theme: theme, shadeIndex: i % shadeCount)
 
             let star = SKSpriteNode(texture: texture, size: CGSize(width: radius * 2, height: radius * 2))
             star.name = "potSparkle"
