@@ -228,11 +228,15 @@ class FireStoreService: ObservableObject {
         let currentLevel = plant.plantLevel
 
         // Lấy tỉ lệ drop và lượng oxy nhận được theo cấp độ
-        let (dropChance, oxygenDrop) = ShareFunc.getDropRate(level: currentLevel)
+        let dropChance = ShareFunc.getDropRate(level: currentLevel).chance
 
         guard Double.random(in: 0...1) <= dropChance else {
             return nil
         }
+
+        let oxygenDrop = ItemDataManager.shared.collectionOxygen(
+            level: currentLevel, plantId: plant.idPlant, potId: plant.idPot
+        )
 
         // 1. Tăng oxy
         garden.money.oxygen += oxygenDrop

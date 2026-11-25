@@ -54,6 +54,7 @@ struct UserInfoCompoment: View {
     }
 
     private func toggleExpanded() {
+        AudioPlayer.shared.playSFX(fileName: "swoosh", ext: "wav")
         withAnimation(reduceMotion ? .easeInOut(duration: 0.15) : .spring(response: 0.38, dampingFraction: 0.86)) {
             isExpanded.toggle()
         }

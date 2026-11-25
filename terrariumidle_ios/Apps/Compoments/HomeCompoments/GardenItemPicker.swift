@@ -56,7 +56,7 @@ struct GardenItemPicker: View {
                         GardenInventoryRow(item: item, isSelected: selection == item.id, onSelect: {
                             selection = item.id
                             onSelect(item.id)
-                        }, recommendationText: item.id == recommendedItemId ? "Phù hợp nhất".tr : nil)
+                        }, recommendationText: item.id == recommendedItemId ? "Gợi ý · Oxygen ×2.5".tr : nil)
                     }
                 }
                 .padding(.horizontal, 12)

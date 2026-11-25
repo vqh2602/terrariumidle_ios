@@ -85,7 +85,7 @@ struct HomeView: View {
             unlockedIds.contains($0.id)
         }
         if !unlockedLandscapes.isEmpty {
-            backgroundRive = unlockedLandscapes.randomElement()?.image ?? "i_sky_sun_day"
+            backgroundRive = unlockedLandscapes.randomElement()?.id ?? "Landscape1"
         }
 
         // Auto-select overlay effect (sử dụng custom SpriteKit cho tất cả các overlay)
@@ -93,7 +93,7 @@ struct HomeView: View {
             unlockedIds.contains($0.id)
         }
         if !unlockedOverlays.isEmpty {
-            overlayRive = unlockedOverlays.randomElement()?.image
+            overlayRive = unlockedOverlays.randomElement()?.id
         }
     }
 

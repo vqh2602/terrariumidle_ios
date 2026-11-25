@@ -425,6 +425,43 @@ class ItemDataManager {
         return allPots.first { $0.id == id }
     }
 
+    // Shared by planting recommendations and collection rewards.
+    func recommendedPot(for plantId: String) -> ItemData? {
+        guard let plant = getPlant(byId: plantId),
+              let id = matchingItemId(plantId, from: "plant", to: "pot"),
+              let pot = getPot(byId: id),
+              plant.itemTypeAttribute.isHanging == pot.itemTypeAttribute.isHanging
+        else { return nil }
+        return pot
+    }
+
+    func recommendedPlant(for potId: String) -> ItemData? {
+        guard let pot = getPot(byId: potId),
+              let id = matchingItemId(potId, from: "pot", to: "plant"),
+              let plant = getPlant(byId: id),
+              plant.itemTypeAttribute.isHanging == pot.itemTypeAttribute.isHanging
+        else { return nil }
+        return plant
+    }
+
+    func isRecommendedPair(plantId: String, potId: String) -> Bool {
+        recommendedPot(for: plantId)?.id == potId
+    }
+
+    /// Oxygen is an integer currency; round half units to the nearest whole unit.
+    func collectionOxygen(level: Int, plantId: String, potId: String) -> Int {
+        let base = ShareFunc.getDropRate(level: level).oxygen
+        return isRecommendedPair(plantId: plantId, potId: potId)
+            ? Int((Double(base) * 2.5).rounded()) : base
+    }
+
+    private func matchingItemId(_ id: String, from prefix: String, to targetPrefix: String) -> String? {
+        guard id.hasPrefix(prefix) else { return nil }
+        let number = id.dropFirst(prefix.count)
+        guard !number.isEmpty, number.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
+        return targetPrefix + number
+    }
+
     func getSticker(byId id: String) -> ItemData? {
         let cleanId = id.lowercased().trimmingCharacters(in: .whitespaces)
         return allDecorations.first { $0.id.lowercased() == cleanId }

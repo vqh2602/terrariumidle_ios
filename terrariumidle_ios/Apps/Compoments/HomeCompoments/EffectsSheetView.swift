@@ -36,15 +36,17 @@ struct EffectsSheetView: View {
 
     private func isItemSelected(_ selectedId: String?, matches item: ItemData) -> Bool {
         guard let selectedId = selectedId, !selectedId.isEmpty else { return false }
-        // Accept values saved before asset names were corrected for letter case.
-        let selected = selectedId.lowercased()
-        let image = item.image.lowercased()
-        if selected == image || selected == item.id.lowercased() {
-            return true
-        }
-        let selectedWithoutPrefix = selected.hasPrefix("i_") ? String(selected.dropFirst(2)) : selected
-        let imageWithoutPrefix = image.hasPrefix("i_") ? String(image.dropFirst(2)) : image
-        return selectedWithoutPrefix == imageWithoutPrefix
+        let selected = selectedId.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        // Resolve one item before drawing checkmarks. IDs take priority over
+        // legacy thumbnail names, which may be shared by multiple items.
+        let selectedItem = categoryItems.first { $0.id.lowercased() == selected }
+            ?? categoryItems.first {
+                let image = $0.image.lowercased()
+                let selectedWithoutPrefix = selected.hasPrefix("i_") ? String(selected.dropFirst(2)) : selected
+                let imageWithoutPrefix = image.hasPrefix("i_") ? String(image.dropFirst(2)) : image
+                return selectedWithoutPrefix == imageWithoutPrefix
+            }
+        return selectedItem?.id == item.id
     }
 
     var body: some View {
@@ -62,9 +64,9 @@ struct EffectsSheetView: View {
                             ) {
                                 guard !locked else { return }
                                 if category == .landscapes {
-                                    backgroundRive = item.image
+                                    backgroundRive = item.id
                                 } else {
-                                    overlayRive = item.image
+                                    overlayRive = item.id
                                 }
                             }
                         }

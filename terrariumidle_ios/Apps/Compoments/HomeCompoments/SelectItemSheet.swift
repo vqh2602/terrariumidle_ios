@@ -111,6 +111,10 @@ struct SelectItemSheet: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
 
+                if selectedTab != .decoration {
+                    oxygenBonusInfo
+                }
+
                 if let item = unownedRecommendation {
                     unownedItemRecommendation(item)
                         .padding(.horizontal, 12)
@@ -119,14 +123,14 @@ struct SelectItemSheet: View {
                     GardenInventoryRow(item: pot, isSelected: false, onSelect: {
                         selectedPotId = pot.id
                         selectedTab = .pot
-                    }, recommendationText: "Chậu phù hợp nhất với cây đã chọn".tr)
+                    }, recommendationText: "Chậu gợi ý · Oxygen ×2.5".tr)
                     .padding(.horizontal, 12)
                     .padding(.bottom, 8)
                 } else if selectedTab == .pot, let plant = recommendedPlant, selectedPlantId != plant.id {
                     GardenInventoryRow(item: plant, isSelected: false, onSelect: {
                         selectedPlantId = plant.id
                         selectedTab = .plant
-                    }, recommendationText: "Cây phù hợp nhất với chậu đã chọn".tr)
+                    }, recommendationText: "Cây gợi ý · Oxygen ×2.5".tr)
                     .padding(.horizontal, 12)
                     .padding(.bottom, 8)
                 }
@@ -260,7 +264,7 @@ struct SelectItemSheet: View {
     private func unownedItemRecommendation(_ item: ItemData) -> some View {
         let isPlant = item.type == "plant"
         return VStack(alignment: .leading, spacing: 8) {
-            Label(isPlant ? "Cây phù hợp nhất với chậu đã chọn".tr : "Chậu phù hợp nhất với cây đã chọn".tr, systemImage: "sparkles")
+            Label(isPlant ? "Cây gợi ý · Oxygen ×2.5".tr : "Chậu gợi ý · Oxygen ×2.5".tr, systemImage: "sparkles")
                 .font(.system(.caption, design: .rounded, weight: .bold))
                 .foregroundStyle(AccountStyle.green)
             HStack(spacing: 10) {
@@ -299,30 +303,35 @@ struct SelectItemSheet: View {
     }
 
     private var recommendedPot: ItemData? {
-        guard let plantId = selectedPlantId,
-              let plant = ItemDataManager.shared.getPlant(byId: plantId),
-              let potId = matchingItemId(plantId, from: "plant", to: "pot"),
-              let pot = ItemDataManager.shared.getPot(byId: potId),
-              plant.itemTypeAttribute.isHanging == pot.itemTypeAttribute.isHanging
-        else { return nil }
-        return pot
+        selectedPlantId.flatMap { ItemDataManager.shared.recommendedPot(for: $0) }
     }
 
     private var recommendedPlant: ItemData? {
-        guard let potId = selectedPotId,
-              let pot = ItemDataManager.shared.getPot(byId: potId),
-              let plantId = matchingItemId(potId, from: "pot", to: "plant"),
-              let plant = ItemDataManager.shared.getPlant(byId: plantId),
-              plant.itemTypeAttribute.isHanging == pot.itemTypeAttribute.isHanging
-        else { return nil }
-        return plant
+        selectedPotId.flatMap { ItemDataManager.shared.recommendedPlant(for: $0) }
     }
 
-    private func matchingItemId(_ id: String, from prefix: String, to targetPrefix: String) -> String? {
-        guard id.hasPrefix(prefix) else { return nil }
-        let number = id.dropFirst(prefix.count)
-        guard !number.isEmpty, number.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
-        return targetPrefix + number
+    private var hasRecommendedPair: Bool {
+        guard let plantId = selectedPlantId, let potId = selectedPotId else { return false }
+        return ItemDataManager.shared.isRecommendedPair(plantId: plantId, potId: potId)
+    }
+
+    private var oxygenBonusInfo: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label(hasRecommendedPair ? "Đã kích hoạt oxygen ×2.5".tr : "Ghép đúng gợi ý để nhận oxygen ×2.5".tr,
+                  systemImage: hasRecommendedPair ? "checkmark.seal.fill" : "sparkles")
+                .font(.system(.subheadline, design: .rounded, weight: .bold))
+            Text(hasRecommendedPair
+                 ? "Mỗi lần thu thập nhận lượng oxygen gấp 2.5 lần.".tr
+                 : "Chọn cả cây và chậu theo gợi ý để tăng lượng oxygen thu thập.".tr)
+                .font(.system(.caption, design: .rounded))
+        }
+        .foregroundStyle(AccountStyle.green)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(AccountStyle.green.opacity(hasRecommendedPair ? 0.14 : 0.06),
+                    in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 12)
+        .padding(.bottom, 8)
     }
 
     // Check if plant and pot types are compatible (both hanging or both non-hanging)

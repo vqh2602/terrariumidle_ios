@@ -355,6 +355,7 @@ struct PlantItemView: View {
                 careAnimation = PlantCareAnimationRequest(action: .water)
             } else {
                 fireStoreService.saveGarden(gardenModel: garden, debounce: false)
+                AudioPlayer.shared.playSFX(fileName: "mixkit-water-surface-hit-1320", ext: "wav")
                 showFloatingText("💧 Tự tap trong 60 giây!".tr)
             }
         case .insufficientDiamonds:
@@ -423,6 +424,7 @@ struct PlantItemView: View {
         // Update model
         gardenModel.plants = updatedPlants
         gardenModel.item = updatedItem
+        AudioPlayer.shared.playSFX(fileName: "mixkit-silly-pop-cluster-2359", ext: "wav")
 
         // Show success message
         showFloatingText("🌟 Level \(updatedPlant.plantLevel)!")

@@ -59,7 +59,7 @@
         "id": "Landscape5",
         "name": "Mưa đêm giông bão",
         "description": "Bầu trời đêm giông bão với gió giật mạnh, mây đen cuồn cuộn và mưa rơi nặng hạt.",
-        "image": "i_sky_rain",
+        "image": "i_sky_moon_star",
         "sksFile": "Landscape5Scene.sks",
         "priceStore": 0,
         "priceOxygen": 0,

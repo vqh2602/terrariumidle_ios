@@ -1,6 +1,251 @@
 {
   "sourceLanguage" : "vi",
   "strings" : {
+  "Đã kích hoạt oxygen ×2.5": {
+    "extractionState": "manual",
+    "localizations": {
+      "vi": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Đã kích hoạt oxygen ×2.5"
+        }
+      },
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Oxygen ×2.5 activated"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "酸素×2.5が有効"
+        }
+      },
+      "ko": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "산소 ×2.5 활성화됨"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已启用氧气×2.5"
+        }
+      }
+    }
+  },
+  "Ghép đúng gợi ý để nhận oxygen ×2.5": {
+    "extractionState": "manual",
+    "localizations": {
+      "vi": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Ghép đúng gợi ý để nhận oxygen ×2.5"
+        }
+      },
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Match the suggested pair for oxygen ×2.5"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "おすすめの組み合わせで酸素×2.5"
+        }
+      },
+      "ko": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "추천 조합으로 산소 ×2.5 받기"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "搭配推荐组合，获得氧气×2.5"
+        }
+      }
+    }
+  },
+  "Mỗi lần thu thập nhận lượng oxygen gấp 2.5 lần.": {
+    "extractionState": "manual",
+    "localizations": {
+      "vi": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Mỗi lần thu thập nhận lượng oxygen gấp 2.5 lần."
+        }
+      },
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Collect 2.5 times the oxygen with each collection."
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "収集するたびに酸素を2.5倍獲得できます。"
+        }
+      },
+      "ko": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "수집할 때마다 산소를 2.5배 받습니다."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "每次收集可获得2.5倍氧气。"
+        }
+      }
+    }
+  },
+  "Chọn cả cây và chậu theo gợi ý để tăng lượng oxygen thu thập.": {
+    "extractionState": "manual",
+    "localizations": {
+      "vi": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Chọn cả cây và chậu theo gợi ý để tăng lượng oxygen thu thập."
+        }
+      },
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Choose both the suggested plant and pot to collect more oxygen."
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "おすすめの植物と鉢を両方選ぶと、収集できる酸素が増えます。"
+        }
+      },
+      "ko": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "추천 식물과 화분을 함께 선택하면 더 많은 산소를 수집할 수 있습니다."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "同时选择推荐的植物和花盆，收集更多氧气。"
+        }
+      }
+    }
+  },
+  "Chậu gợi ý · Oxygen ×2.5": {
+    "extractionState": "manual",
+    "localizations": {
+      "vi": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Chậu gợi ý · Oxygen ×2.5"
+        }
+      },
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Suggested pot · Oxygen ×2.5"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "おすすめの鉢 · 酸素×2.5"
+        }
+      },
+      "ko": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "추천 화분 · 산소 ×2.5"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "推荐花盆 · 氧气×2.5"
+        }
+      }
+    }
+  },
+  "Cây gợi ý · Oxygen ×2.5": {
+    "extractionState": "manual",
+    "localizations": {
+      "vi": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Cây gợi ý · Oxygen ×2.5"
+        }
+      },
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Suggested plant · Oxygen ×2.5"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "おすすめの植物 · 酸素×2.5"
+        }
+      },
+      "ko": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "추천 식물 · 산소 ×2.5"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "推荐植物 · 氧气×2.5"
+        }
+      }
+    }
+  },
+  "Gợi ý · Oxygen ×2.5": {
+    "extractionState": "manual",
+    "localizations": {
+      "vi": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Gợi ý · Oxygen ×2.5"
+        }
+      },
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Suggested · Oxygen ×2.5"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "おすすめ · 酸素×2.5"
+        }
+      },
+      "ko": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "추천 · 산소 ×2.5"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "推荐 · 氧气×2.5"
+        }
+      }
+    }
+  },
     "Số lượng" : {
       "extractionState" : "manual",
       "localizations" : {
