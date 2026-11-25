@@ -21,6 +21,7 @@ struct AccountView: View {
                         )
                     }
                     settingsSection
+                    AccountReminderCard()
                     servicesSection
                     accountSection
                     HStack(spacing: 8) {

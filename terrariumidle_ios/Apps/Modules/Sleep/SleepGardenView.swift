@@ -18,6 +18,7 @@ struct SleepGardenView: View {
     @State private var period: SleepPeriod = .week
     @State private var selectedDate = Date()
     @State private var showHelp = false
+    @State private var showManualEntry = false
 
     private var interval: DateInterval {
         Calendar.current.dateInterval(of: period.component, for: selectedDate)!
@@ -40,22 +41,20 @@ struct SleepGardenView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     SleepGardenHeader()
+                    SleepScheduleCard()
                     if !health.isAvailable {
-                        notice("Thiết bị này chưa hỗ trợ Apple Health.", icon: "heart.slash")
+                        notice("Thiết bị này chưa hỗ trợ Apple Health. Bạn vẫn có thể ghi nhật ký thủ công.", icon: "heart.slash")
                     } else if !health.hasRequestedAccess {
                         connectionCard
-                    } else {
-                        tonightCard
-                        if let message = health.message {
-                            notice(message, icon: "exclamationmark.circle")
-                        }
-                        if health.days.allSatisfy({ $0.seconds == 0 }) && !health.isSyncing {
-                            emptyCard
-                        }
-                        statisticsCard
-                        journeyCard
-                        rewardCard
                     }
+                    tonightCard
+                    actionButton("Ghi giấc ngủ thủ công", icon: "square.and.pencil") { showManualEntry = true }
+                    if let message = health.message { notice(message, icon: "exclamationmark.circle") }
+                    if health.days.allSatisfy({ $0.seconds == 0 }) && !health.isSyncing { emptyCard }
+                    statisticsCard
+                    manualJournalCard
+                    journeyCard
+                    rewardCard
                     privacyNote
                 }
                 .padding(20)
@@ -85,6 +84,7 @@ struct SleepGardenView: View {
             )) { Button("Đã hiểu") { rewards.message = nil } }
             message: { Text(rewards.message ?? "") }
             .sheet(isPresented: $showHelp) { helpSheet }
+            .sheet(isPresented: $showManualEntry) { ManualSleepSheet(health: health) }
         }
         .presentationDragIndicator(.visible)
     }
@@ -94,7 +94,7 @@ struct SleepGardenView: View {
             Label("Nghỉ ngơi cùng khu vườn", systemImage: "heart.text.clipboard.fill")
                 .font(.system(.headline, design: .rounded))
             Text("Cho phép đọc giấc ngủ từ Apple Health. Mỗi lần mở Terrarium, nhật ký sẽ tự cập nhật để bạn nhận quà cho vườn.")
-            Text("Chỉ đọc giấc ngủ • Không ghi dữ liệu sức khỏe")
+            Text("Đọc giấc ngủ • Chỉ ghi nhật ký thủ công khi bạn chọn đồng bộ")
                 .font(.caption).foregroundStyle(AccountStyle.muted)
             actionButton(health.isSyncing ? "Đang kết nối…" : "Kết nối Apple Health", icon: "heart.fill") {
                 Task { await health.connect() }
@@ -123,7 +123,7 @@ struct SleepGardenView: View {
             } else {
                 Text("Đang chờ giấc ngủ mới")
                     .font(.system(.title3, design: .rounded, weight: .bold))
-                Text("Dữ liệu sẽ xuất hiện khi nguồn ghi giấc ngủ cập nhật vào Apple Health.")
+                Text("Ghi lại đêm qua bằng tay hoặc đồng bộ dữ liệu từ Apple Health.")
                     .font(.subheadline).foregroundStyle(AccountStyle.muted)
             }
             if let lastSync = health.lastSync {
@@ -177,12 +177,69 @@ struct SleepGardenView: View {
                 Text("Nét đứt: mục tiêu \(goal.formatted()) giờ • Ngày trống không tính vào trung bình.")
                     .font(.caption).foregroundStyle(AccountStyle.muted)
             }
+            comparisonSummary
             Stepper(value: $goal, in: 6...10, step: 0.5) {
                 Text("Mục tiêu của bạn: \(goal.formatted()) giờ")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
             }
             Text("Mục tiêu dùng cho phần thưởng trong game, không phải đánh giá sức khỏe.")
                 .font(.caption).foregroundStyle(AccountStyle.muted)
+        }.padding(20).modifier(AccountPanel())
+    }
+
+    private var previousDays: [SleepDay] {
+        let previousDate = Calendar.current.date(byAdding: period.component, value: -1, to: selectedDate)!
+        let previous = Calendar.current.dateInterval(of: period.component, for: previousDate)!
+        // Compare the same elapsed portion when the selected period is still in progress.
+        let cutoff: Date
+        if interval.contains(Date()) {
+            let elapsed = Calendar.current.dateComponents([.day], from: interval.start,
+                                                          to: Calendar.current.startOfDay(for: Date())).day! + 1
+            cutoff = min(previous.end, Calendar.current.date(byAdding: .day, value: elapsed, to: previous.start)!)
+        } else { cutoff = previous.end }
+        return health.days.filter { $0.date >= previous.start && $0.date < cutoff }
+    }
+
+    private var comparisonSummary: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("So sánh & đánh giá", systemImage: "chart.line.uptrend.xyaxis").font(.headline)
+            if let current = SleepJournal.average(visibleDays) {
+                if let previous = SleepJournal.average(previousDays) {
+                    let delta = current - previous
+                    Text(abs(delta) < 60 ? "Trung bình tương đương kỳ trước." : "Trung bình \(delta >= 0 ? "tăng" : "giảm") \(SleepSummary.duration(abs(delta))) so với kỳ trước.")
+                } else { Text("Chưa đủ dữ liệu kỳ trước để so sánh.") }
+                Text("\(recordedDays.filter { $0.hours >= goal }.count)/\(recordedDays.count) ngày có dữ liệu đạt mục tiêu \(goal.formatted()) giờ.")
+                Text(current >= goal * 3600 ? "Thời lượng trung bình đạt mục tiêu bạn đặt." : "Thời lượng trung bình còn thiếu \(SleepSummary.duration(goal * 3600 - current)) so với mục tiêu bạn đặt.")
+            } else { Text("Ghi thêm giấc ngủ để xem đánh giá theo mục tiêu cá nhân.") }
+            Text("So sánh trung bình các ngày có dữ liệu; kỳ hiện tại chỉ so với cùng số ngày đã qua ở kỳ trước. Thời lượng không phản ánh đầy đủ chất lượng giấc ngủ.")
+                .font(.caption).foregroundStyle(AccountStyle.muted)
+        }.font(.subheadline)
+    }
+
+    private var manualJournalCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Nhật ký thủ công & cảm nhận", systemImage: "book.closed").font(.headline)
+            if health.manualEntries.isEmpty {
+                Text("Chưa có bản ghi thủ công.").font(.subheadline)
+            }
+            ForEach(health.manualEntries.sorted { $0.end > $1.end }.prefix(7)) { entry in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(entry.start.formatted(date: .abbreviated, time: .shortened)) → \(entry.end.formatted(date: .abbreviated, time: .shortened))")
+                        .font(.subheadline.bold())
+                    Text("\(SleepSummary.duration(entry.interval.duration)) • \(entry.feeling)")
+                    Text(entry.exported ? "Đã ghi sang Apple Health" : "Chỉ trên thiết bị")
+                        .foregroundStyle(AccountStyle.muted)
+                }.font(.caption)
+            }
+            if health.isAvailable {
+                Button("Kết nối / kiểm tra quyền Apple Health") { Task { await health.connect() } }
+                    .disabled(health.isSyncing || health.isSaving)
+                Button("Đồng bộ nhật ký thủ công sang Apple Health") {
+                    Task { await health.syncManualJournal() }
+                }.disabled(!health.hasRequestedAccess || health.isSyncing || health.isSaving)
+                Text("Nút đồng bộ sẽ ghi tất cả bản ghi thủ công còn trên thiết bị sang Apple Health nếu có quyền ghi. Các khoảng trùng nguồn chỉ được tính một lần trong biểu đồ.")
+                    .font(.caption).foregroundStyle(AccountStyle.muted)
+            }
         }.padding(20).modifier(AccountPanel())
     }
 
@@ -251,14 +308,14 @@ struct SleepGardenView: View {
     private var emptyCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             notice("Chưa có dữ liệu giấc ngủ", icon: "moon.zzz")
-            Text("Hãy kiểm tra Apple Health đã có bản ghi giấc ngủ và Terrarium được phép đọc. Nếu bạn chưa cấp quyền, app cũng sẽ chưa thấy dữ liệu.")
+            Text("Bạn có thể ghi thủ công ngay cả khi không có Apple Watch, hoặc kết nối Apple Health để đọc dữ liệu được chia sẻ.")
                 .font(.subheadline).foregroundStyle(AccountStyle.muted)
             Button("Hướng dẫn kết nối") { showHelp = true }.font(.subheadline.bold())
         }.padding(20).modifier(AccountPanel())
     }
 
     private var privacyNote: some View {
-        Text("Giấc ngủ được đọc từ Apple Health và chỉ xử lý trên thiết bị. Tài khoản game lưu dấu ngày đã nhận quà, không lưu thời lượng hay các giai đoạn ngủ. Một ngày thống kê tính từ 12h trưa hôm trước đến 12h trưa ngày đó.")
+        Text("Giấc ngủ từ Apple Health và nhật ký thủ công chỉ được xử lý trên thiết bị. Nhật ký được lưu cục bộ; bản ghi bạn chọn đồng bộ sẽ được ghi sang Apple Health. Tài khoản game lưu dấu ngày đã nhận quà, không lưu thời lượng hay các giai đoạn ngủ. Một ngày thống kê tính từ 12h trưa hôm trước đến 12h trưa ngày đó.")
             .font(.caption).foregroundStyle(AccountStyle.muted)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -268,9 +325,9 @@ struct SleepGardenView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     Text("1. Mở Sức khỏe (Apple Health), tìm Giấc ngủ và kiểm tra đã có dữ liệu từ Apple Watch hoặc ứng dụng ghi giấc ngủ.")
-                    Text("2. Trong Sức khỏe, mở hồ sơ → Ứng dụng / quyền truy cập dữ liệu → Terrarium, cho phép đọc Giấc ngủ. Tên mục có thể khác theo phiên bản iOS.")
+                    Text("2. Trong Sức khỏe, mở hồ sơ → Ứng dụng / quyền truy cập dữ liệu → Terrarium, cho phép đọc và, nếu muốn đồng bộ nhật ký thủ công, cho phép ghi Giấc ngủ. Tên mục có thể khác theo phiên bản iOS.")
                     Text("3. Quay lại Terrarium. App tự đồng bộ khi hoạt động; bạn cũng có thể kéo xuống để thử lại.")
-                    Text("Terrarium chỉ thống kê dữ liệu được chia sẻ, không tự đo giấc ngủ hay chẩn đoán sức khỏe.")
+                    Text("Bạn có thể dùng Lịch trình ngủ để đặt giờ nghỉ ngơi và Ghi giấc ngủ thủ công để bổ sung nhật ký. Terrarium không tự đo giấc ngủ. Đánh giá chỉ dựa trên mục tiêu cá nhân và cảm nhận tự ghi.")
                     actionButton("Kiểm tra quyền Apple Health", icon: "heart.fill") {
                         Task { await health.connect() }
                     }.disabled(health.isSyncing || !health.isAvailable)

@@ -4,12 +4,17 @@ Mở **Góc vườn → Giấc ngủ**. Màn hình dùng `AccountStyle`/`Account
 
 ## Luồng dữ liệu
 
-- Chỉ yêu cầu quyền đọc `sleepAnalysis`, không yêu cầu ghi HealthKit.
+- Yêu cầu quyền đọc và ghi `sleepAnalysis` khi bấm kết nối. Ghi chỉ áp dụng cho bản ghi người dùng chọn xuất; hoàn thành hộp thoại không có nghĩa đã được cấp quyền đọc/ghi.
+- Có thể ghi thủ công không cần kết nối Health: giờ bắt đầu/kết thúc thực tế (không tương lai, tối đa 24h), cảm nhận sau khi thức dậy. Lưu JSON cục bộ với complete file protection, loại khỏi backup, không gửi lên Firebase. Nhật ký thuộc thiết bị, không theo tài khoản game.
+- Mỗi bản ghi có lựa chọn xuất riêng. Khi xuất thất bại, giữ bản ghi và lựa chọn để thử lại khi đồng bộ. Nút “Đồng bộ nhật ký thủ công” chọn xuất tất cả bản ghi hiện có. Bản ghi xuất dùng `asleepUnspecified`, metadata user-entered và sync identifier UUID/version ổn định để thử lại không nhân đôi mẫu HealthKit. Không tự suy đoán stage.
+- Health và nhật ký cục bộ được hợp nhất khoảng thời gian trước khi cộng; cả hai nguồn được dùng cho mục tiêu/phần thưởng theo quy tắc hiện có. Nếu truy vấn Health thất bại, chỉ bỏ dữ liệu Health cũ và giữ nhật ký cục bộ.
+- Lịch ngủ trong app mặc định tắt, có giờ ngủ/thức hằng ngày và tùy chọn thông báo cục bộ. Không thay đổi Sleep Focus/lịch Health, không tự ghi giấc ngủ, không phải báo thức. Chỉ yêu cầu quyền thông báo khi bật nhắc nhở. Tắt lịch/nhắc nhở sẽ gỡ đúng hai thông báo của module.
+- Biểu đồ ngày/tuần/tháng dùng dữ liệu hợp nhất; so sánh trung bình kỳ trước chỉ tính ngày có dữ liệu, kỳ đang diễn ra so cùng số ngày đã qua. Đánh giá dựa mục tiêu cá nhân và cảm nhận, không suy luận chất lượng/y khoa từ thời lượng.
 - Xin quyền khi người dùng bấm kết nối. `hasRequestedAccess` chỉ ghi nhận đã hoàn thành luồng xin quyền; không đại diện cho quyền đọc đã được cấp. HealthKit không tiết lộ trạng thái từ chối đọc.
-- Tự đọc lại khi app hoạt động, khi mở màn hình và khi kéo làm mới. Lấy khoảng một năm gần nhất; không gửi mẫu, thời lượng hay giai đoạn ngủ lên Firebase, không lưu mẫu vào UserDefaults.
+- Tự đọc lại khi app hoạt động, khi mở màn hình và khi kéo làm mới. Lấy khoảng một năm gần nhất; không gửi mẫu, thời lượng hay giai đoạn ngủ lên Firebase, không lưu mẫu HealthKit vào UserDefaults; nhật ký thủ công lưu riêng trên thiết bị.
 - Chỉ tính `asleepUnspecified/core/deep/REM`, bỏ `inBed` và `awake`. Hợp nhất các khoảng chồng nhau trước khi cộng để không cộng trùng nhiều nguồn.
 - Ngày thống kê là cửa sổ 12h trưa hôm trước → 12h trưa ngày ghi nhận, theo lịch/múi giờ thiết bị, giữ đêm qua nửa đêm trong một cột. Khoảng ngủ cắt tại biên trưa; dùng phép cộng ngày của Calendar để hỗ trợ DST.
-- Không có dữ liệu được hiển thị là thiếu dữ liệu, không kết luận người dùng không ngủ hay đã từ chối quyền. Lỗi đọc sẽ xóa các bản ghi đang hiển thị để không nhận quà từ kết quả cũ.
+- Không có dữ liệu được hiển thị là thiếu dữ liệu, không kết luận người dùng không ngủ hay đã từ chối quyền. Lỗi đọc sẽ bỏ dữ liệu Health đang hiển thị để không nhận quà từ kết quả Health cũ; nhật ký thủ công vẫn được giữ.
 
 ## Thưởng
 
@@ -22,7 +27,7 @@ Mở **Góc vườn → Giấc ngủ**. Màn hình dùng `AccountStyle`/`Account
 
 ## Cấu hình và kiểm tra
 
-Đã thêm HealthKit capability/entitlement và `NSHealthShareUsageDescription`. App ID/provisioning profile dùng để ký bản chạy phải hỗ trợ HealthKit. Firebase rules của môi trường triển khai cần cho chủ tài khoản đọc/cập nhật các trường thưởng trên document của chính họ; không mở quyền cho khách.
+Đã thêm HealthKit capability/entitlement và `NSHealthShareUsageDescription`/`NSHealthUpdateUsageDescription`. App ID/provisioning profile dùng để ký bản chạy phải hỗ trợ HealthKit. Firebase rules của môi trường triển khai cần cho chủ tài khoản đọc/cập nhật các trường thưởng trên document của chính họ; không mở quyền cho khách.
 
 `SleepRewardRulesTests.swift` kiểm tra mức thưởng, chuỗi bị ngắt, lặp tuần không chồng, tháng 28/29/30/31 ngày, cộng dồn và mốc hết hạn. `SleepSummaryTests.swift` kiểm tra chồng nguồn, khoảng thức giấc, nhận bù 7 ngày, DST và biên trưa. Có thể chạy riêng phần logic Foundation mà không build app. Parse Swift/plist và kiểm tra diff không thay cho chạy trên iPhone.
 
@@ -32,6 +37,8 @@ Kiểm tra trên thiết bị thật trước phát hành:
 2. Nhận quà, mở lại app, đổi mục tiêu, cập nhật bản ghi: cùng ngày không được nhận lần hai.
 3. Mất mạng khi nhận, bấm thử lại; hai thiết bị cùng tài khoản nhận cùng ngày.
 4. Nhận thưởng trong lúc có cập nhật vườn đang chờ, xác nhận số Oxy sau tải lại.
-5. Biểu đồ/lịch trên màn hình nhỏ và cỡ chữ trợ năng.
+5. Nhập thủ công khi chưa kết nối, tắt lựa chọn xuất rồi kết nối lại (không được tự xuất), từ chối ghi, thử lại sau khi cấp quyền; khoảng chồng Health/thủ công không cộng hai lần.
+6. Bật/tắt lịch và nhắc nhở, đổi giờ, từ chối thông báo; xác nhận các thông báo khác không bị xóa.
+7. Biểu đồ/lịch trên màn hình nhỏ và cỡ chữ trợ năng.
 
 Tham chiếu: [HealthKit authorization](https://developer.apple.com/documentation/healthkit/authorizing-access-to-health-data), [sleep analysis values](https://developer.apple.com/documentation/healthkit/hkcategoryvaluesleepanalysis).

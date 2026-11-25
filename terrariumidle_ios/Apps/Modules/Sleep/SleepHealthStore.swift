@@ -47,7 +47,7 @@ final class SleepHealthStore: ObservableObject {
         isSaving = true
         message = nil
         defer { isSaving = false }
-        let entry = ManualSleepEntry(start: start, end: end, feeling: feeling)
+        let entry = ManualSleepEntry(start: start, end: end, feeling: feeling, wantsExport: export)
         do {
             try persist(manualEntries + [entry])
         } catch {
@@ -58,7 +58,21 @@ final class SleepHealthStore: ObservableObject {
         return true
     }
 
-    func exportPending() async {
+    func syncManualJournal() async {
+        guard !isSyncing, !isSaving else { return }
+        do {
+            var entries = manualEntries
+            for index in entries.indices { entries[index].wantsExport = true }
+            try persist(entries)
+        } catch {
+            message = "Chưa lưu được lựa chọn đồng bộ. Hãy thử lại."
+            return
+        }
+        await sync()
+    }
+
+    private func exportPending() async {
+        guard manualEntries.contains(where: { !$0.exported && $0.wantsExport == true }) else { return }
         guard isAvailable else {
             message = "Đã lưu trên thiết bị; Apple Health chưa khả dụng."
             return
@@ -69,7 +83,7 @@ final class SleepHealthStore: ObservableObject {
             return
         }
         do {
-            for entry in manualEntries where !entry.exported {
+            for entry in manualEntries where !entry.exported && entry.wantsExport == true {
                 let sample = HKCategorySample(type: type,
                     value: HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
                     start: entry.start, end: entry.end,
@@ -90,7 +104,7 @@ final class SleepHealthStore: ObservableObject {
     var isAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
 
     func connect() async {
-        guard isAvailable, !isSyncing else { return }
+        guard isAvailable, !isSyncing, !isSaving else { return }
         isSyncing = true
         message = nil
         do {

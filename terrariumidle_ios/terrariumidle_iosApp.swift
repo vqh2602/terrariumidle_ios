@@ -39,7 +39,10 @@ struct terrariumidle_iosApp: App {
         WindowGroup {
             ContentView()
                 .task(id: scenePhase) {
-                    if scenePhase == .active { await SleepHealthStore.shared.sync() }
+                    if scenePhase == .active {
+                        _ = await GardenReminderScheduler.shared.update(.saved())
+                        await SleepHealthStore.shared.sync()
+                    }
                 }
                 .onAppear {
                     // Tự động phát BGM thư giãn ngay khi mở app

@@ -6,6 +6,7 @@ struct ManualSleepEntry: Codable, Identifiable {
     let end: Date
     let feeling: String
     var exported = false
+    var wantsExport: Bool? = false
     var interval: DateInterval { DateInterval(start: start, end: end) }
 }
 

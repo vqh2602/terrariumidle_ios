@@ -64,4 +64,32 @@ struct SleepSummaryTests {
         let empty = SleepSummary.days(intervals: [], from: noon, through: noon, calendar: calendar)
         #expect(empty[0].seconds == 0)
     }
+    @Test func manualEntryValidationRejectsFutureReversedAndOverlongSleep() {
+        let now = date("2026-11-24T03:00:00Z")
+        #expect(SleepJournal.isValid(start: now.addingTimeInterval(-8 * 3600), end: now, now: now))
+        #expect(!SleepJournal.isValid(start: now, end: now, now: now))
+        #expect(!SleepJournal.isValid(start: now, end: now.addingTimeInterval(60), now: now))
+        #expect(!SleepJournal.isValid(start: now.addingTimeInterval(-25 * 3600), end: now, now: now))
+    }
+
+    @Test func averageExcludesMissingDaysAndScheduleCrossesMidnight() {
+        let now = date("2026-11-24T03:00:00Z")
+        #expect(SleepJournal.average([]) == nil)
+        #expect(SleepJournal.average([SleepDay(date: now, seconds: 0), SleepDay(date: now, seconds: 8 * 3600)]) == 8 * 3600)
+        #expect(SleepJournal.scheduledHours(bedMinutes: 22 * 60, wakeMinutes: 6 * 60) == 8)
+    }
+
+    @Test func journalRoundTripPreservesExportChoiceAndOverlapsHealthOnlyOnce() throws {
+        let end = date("2026-11-24T00:00:00Z")
+        let entry = ManualSleepEntry(start: end.addingTimeInterval(-8 * 3600), end: end,
+                                     feeling: "Sảng khoái", wantsExport: false)
+        let restored = try JSONDecoder().decode(ManualSleepEntry.self, from: JSONEncoder().encode(entry))
+        #expect(restored.id == entry.id)
+        #expect(restored.wantsExport == false)
+        #expect(!restored.exported)
+        let days = SleepSummary.days(intervals: [restored.interval, restored.interval], from: end,
+                                     through: end, calendar: calendar)
+        #expect(days[0].hours == 8)
+    }
+
 }
