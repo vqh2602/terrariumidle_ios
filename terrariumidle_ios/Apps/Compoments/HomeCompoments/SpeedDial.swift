@@ -70,6 +70,7 @@ struct SpeedDial: View {
 
     private var launcher: some View {
         Button {
+            AudioPlayer.shared.playTap()
             isIdle = false
             withAnimation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.85)) {
                 isOpen.toggle()
@@ -113,6 +114,7 @@ struct SpeedDial: View {
     }
 
     private func close() {
+        AudioPlayer.shared.playTap()
         withAnimation(reduceMotion ? nil : .easeOut(duration: 0.18)) { isOpen = false }
     }
 }

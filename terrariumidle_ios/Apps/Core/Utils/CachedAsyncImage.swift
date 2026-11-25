@@ -42,6 +42,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
     @ViewBuilder let placeholder: () -> Placeholder
 
     @State private var uiImage: UIImage?
+    @State private var loadedSource: String?
 
     init(
         url: URL?,
@@ -54,6 +55,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         self.content = content
         self.placeholder = placeholder
         _uiImage = State(initialValue: Self.resolveLocalImage(from: raw))
+        _loadedSource = State(initialValue: raw)
     }
 
     init(
@@ -66,16 +68,19 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         self.content = content
         self.placeholder = placeholder
         _uiImage = State(initialValue: Self.resolveLocalImage(from: nameOrUrl))
+        _loadedSource = State(initialValue: nameOrUrl)
     }
 
     var body: some View {
         Group {
-            if let uiImage {
+            if loadedSource == rawNameOrUrl, let uiImage {
                 content(Image(uiImage: uiImage))
             } else {
                 placeholder()
-                    .onAppear { load() }
             }
+        }
+        .task(id: rawNameOrUrl) {
+            await load()
         }
     }
 
@@ -140,10 +145,14 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         return nil
     }
 
-    private func load() {
-        if uiImage != nil { return }
+    @MainActor
+    private func load() async {
+        guard !Task.isCancelled else { return }
 
-        let rawString = rawNameOrUrl ?? url?.absoluteString
+        let rawString = rawNameOrUrl
+        // SwiftUI preserves State when the source changes on the same view.
+        loadedSource = rawString
+        uiImage = nil
 
         // 1. Kiểm tra lại local asset
         if let local = Self.resolveLocalImage(from: rawString) {
@@ -164,27 +173,29 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
             return
         }
 
-        Task {
-            do {
-                var request = URLRequest(url: url)
-                request.cachePolicy = .returnCacheDataElseLoad
+        do {
+            var request = URLRequest(url: url)
+            request.cachePolicy = .returnCacheDataElseLoad
 
-                let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(for: request)
 
-                if let httpResponse = response as? HTTPURLResponse,
-                   httpResponse.statusCode == 200
-                {
-                    let cachedResponse = CachedURLResponse(response: httpResponse, data: data)
-                    URLCache.shared.storeCachedResponse(cachedResponse, for: request)
-                }
-
-                if let image = UIImage(data: data) {
-                    ImageCache.shared.set(image, for: url as NSURL)
-                    await MainActor.run { uiImage = image }
-                }
-            } catch {
-                print("❌ Load image error for \(url.absoluteString):", error)
+            if let httpResponse = response as? HTTPURLResponse,
+               httpResponse.statusCode == 200
+            {
+                let cachedResponse = CachedURLResponse(response: httpResponse, data: data)
+                URLCache.shared.storeCachedResponse(cachedResponse, for: request)
             }
+
+            // A replaced source cancels its task; never publish its old image.
+            guard !Task.isCancelled else { return }
+
+            if let image = UIImage(data: data) {
+                ImageCache.shared.set(image, for: url as NSURL)
+                uiImage = image
+            }
+        } catch {
+            guard !Task.isCancelled else { return }
+            print("❌ Load image error for \(url.absoluteString):", error)
         }
     }
 }

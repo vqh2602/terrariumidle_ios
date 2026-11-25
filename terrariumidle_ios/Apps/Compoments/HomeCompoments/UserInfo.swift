@@ -22,6 +22,10 @@ struct UserInfoCompoment: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onChange(of: fireStore.gradenModel?.user.userLevel) { oldLevel, newLevel in
+            guard let oldLevel, let newLevel, newLevel > oldLevel else { return }
+            AudioPlayer.shared.playSFX(fileName: "level_up")
+        }
     }
 
     private var levelButton: some View {

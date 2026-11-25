@@ -78,9 +78,9 @@ struct PlantItemView: View {
         )
     }
 
-    private func handleDetailTap(isAutomatic: Bool = false) {
+    private func handleDetailTap() {
         guard !isEditing && careAnimation == nil && plantData != nil && !hasEmptyIds && !isSticker else { return }
-        handlePlantTap(playsSound: !isAutomatic)
+        handlePlantTap()
     }
 
     var body: some View {
@@ -164,7 +164,7 @@ struct PlantItemView: View {
                     },
                     autoTapTrigger: autoTapTrigger,
                     weatherTapTrigger: weatherTapTrigger,
-                    onAutoTap: { handleDetailTap(isAutomatic: true) },
+                    onAutoTap: { handleDetailTap() },
                     careAnimation: careAnimation,
                     onCareAnimationCompleted: finishCareAnimation
                 )
@@ -304,7 +304,7 @@ struct PlantItemView: View {
     // MARK: - Tap Mechanics Helper Functions
 
     /// Handle plant tap with probability-based oxygen drop (Atomic & Race-free)
-    private func handlePlantTap(playsSound: Bool = true) {
+    private func handlePlantTap() {
         guard let displayedPlant = plantData else { return }
 
         guard let result = fireStoreService.recordPlantTap(
@@ -317,9 +317,6 @@ struct PlantItemView: View {
         }
 
         if result.didUserLevelUp {
-            if playsSound {
-                AudioPlayer.shared.playSFX(fileName: "level_up")
-            }
             showFloatingText("⭐ Level \(result.newUserLevel)!")
         }
 
