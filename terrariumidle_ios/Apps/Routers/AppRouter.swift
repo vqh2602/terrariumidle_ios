@@ -12,6 +12,7 @@ import SwiftUI
 enum AppRoute: Hashable {
     case loginView(id: String)
     case splashView
+    case onboardingView
     case homeView
     case storeView
     case storeItem(itemId: String)
@@ -64,6 +65,8 @@ struct AppRouterView: View {
                         LoginView()
                     case .splashView:
                         EmptyView()
+                    case .onboardingView:
+                        OnboardingView()
                     case .homeView:
                         HomeView()
                     case .storeView:

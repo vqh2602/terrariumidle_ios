@@ -62,13 +62,10 @@ final class SplashViewModel: ObservableObject {
             await group.waitForAll()
         }
 
-        if currentUser?.uid != nil {
-            isAuthenticated = true
-            router.replaceRoot(.homeView)
-        } else {
-            isAuthenticated = false
-            router.replaceRoot(.loginView(id: ""))
-        }
-        print("isAuthenticated: \(isAuthenticated)")
+        let hasSession = currentUser?.uid != nil
+        isAuthenticated = hasSession
+        let nextRoute = OnboardingStorage.postSplashRoute(isAuthenticated: hasSession)
+        router.replaceRoot(nextRoute)
+        print("isAuthenticated: \(isAuthenticated), nextRoute: \(nextRoute)")
     }
 }

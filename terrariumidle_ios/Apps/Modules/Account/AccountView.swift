@@ -4,6 +4,7 @@ struct AccountView: View {
     @EnvironmentObject var router: AppRouter
     @StateObject private var viewModel = AccountViewModel()
     @StateObject private var fireStore: FireStoreService = .shared
+    @State private var showOnboardingGuide = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -75,6 +76,12 @@ struct AccountView: View {
         } message: {
             Text("Hành động này không thể hoàn tác. Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn.")
         }
+        .fullScreenCover(isPresented: $showOnboardingGuide) {
+            OnboardingView(isReplay: true) {
+                showOnboardingGuide = false
+            }
+            .environmentObject(router)
+        }
     }
 
     private var header: some View {
@@ -140,6 +147,10 @@ struct AccountView: View {
 
     private var servicesSection: some View {
         section(title: "Đồng hành cùng bạn", icon: "sparkles") {
+            SettingsRow(title: "Hướng dẫn khu vườn", icon: "sparkles.rectangle.stack.fill") {
+                showOnboardingGuide = true
+            }
+            rowDivider
             SettingsRow(title: "Đánh giá ứng dụng", icon: "star.fill") { viewModel.openRateApp() }
             rowDivider
             SettingsRow(title: "Cẩm nang khu vườn · Wiki", icon: "book.closed.fill") { viewModel.openWiki() }
