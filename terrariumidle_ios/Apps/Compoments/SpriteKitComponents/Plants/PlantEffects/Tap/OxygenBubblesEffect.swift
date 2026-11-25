@@ -19,25 +19,121 @@ public final class OxygenBubblesEffect: PlantTapEffect {
 
     // MARK: - Themes
 
-    public enum Theme {
-        case emerald    // Xanh ngọc lục bảo tươi mát (mặc định cho cây lá)
-        case deepOcean  // Xanh lam ngọc đại dương sâu thẳm
-        case goldenSun  // Vàng ấm áp rạng ngời
-        case floralPink // Hồng phấn dịu dàng
-        case amethyst   // Tím thạch anh huyền bí (dành cho cây lá tím như Oxalis)
+    public enum Theme: CaseIterable, Hashable {
+        // Sắc độ Xanh lá
+        case emerald       // Xanh ngọc lục bảo tươi mát (mặc định cho cây lá)
+        case mintDew       // Xanh bạc hà sương mai dịu nhẹ
+        case forestMoss    // Xanh rêu rừng sâu thẳm
+        // Sắc độ Xanh dương / Lam
+        case deepOcean     // Xanh lam ngọc đại dương sâu thẳm
+        case iceAqua       // Xanh băng tuyết / ngọc lam nhạt
+        case cobaltIndigo  // Xanh chàm đậm huyền ảo
+        // Sắc độ Vàng / Cam / Đỏ
+        case goldenSun     // Vàng nắng ấm áp rạng ngời
+        case coralSunset   // Cam san hô rực rỡ
+        case crimsonRuby   // Đỏ hồng ngọc ấm áp
+        // Sắc độ Hồng / Tím
+        case floralPink    // Hồng phấn dịu dàng
+        case lavenderMist  // Tím oải hương nhạt thanh thoát
+        case amethyst      // Tím thạch anh huyền bí (dành cho cây lá tím như Oxalis)
+        // Sắc độ Trung tính & Đa sắc
+        case pearlWhite    // Trắng ngọc trai tinh khôi
+        case rainbowPrism  // Đa sắc cầu vồng pastel
 
         public var fillColor: UIColor {
+            return shadeColors[0]
+        }
+
+        /// Danh sách các sắc độ đậm/nhạt hài hoà trong cùng tông màu để bọt khí sinh ra có chiều sâu tự nhiên
+        public var shadeColors: [UIColor] {
             switch self {
             case .emerald:
-                return UIColor(red: 0.35, green: 0.92, blue: 0.65, alpha: 0.85)
+                return [
+                    UIColor(red: 0.35, green: 0.92, blue: 0.65, alpha: 0.85),
+                    UIColor(red: 0.50, green: 0.96, blue: 0.74, alpha: 0.82),
+                    UIColor(red: 0.22, green: 0.82, blue: 0.56, alpha: 0.88)
+                ]
+            case .mintDew:
+                return [
+                    UIColor(red: 0.62, green: 0.97, blue: 0.84, alpha: 0.85),
+                    UIColor(red: 0.74, green: 0.99, blue: 0.90, alpha: 0.82),
+                    UIColor(red: 0.48, green: 0.90, blue: 0.76, alpha: 0.86)
+                ]
+            case .forestMoss:
+                return [
+                    UIColor(red: 0.36, green: 0.76, blue: 0.44, alpha: 0.86),
+                    UIColor(red: 0.48, green: 0.84, blue: 0.52, alpha: 0.84),
+                    UIColor(red: 0.26, green: 0.65, blue: 0.38, alpha: 0.88)
+                ]
             case .deepOcean:
-                return UIColor(red: 0.25, green: 0.82, blue: 0.95, alpha: 0.85)
+                return [
+                    UIColor(red: 0.25, green: 0.82, blue: 0.95, alpha: 0.85),
+                    UIColor(red: 0.42, green: 0.89, blue: 0.98, alpha: 0.82),
+                    UIColor(red: 0.16, green: 0.68, blue: 0.88, alpha: 0.88)
+                ]
+            case .iceAqua:
+                return [
+                    UIColor(red: 0.64, green: 0.93, blue: 1.00, alpha: 0.85),
+                    UIColor(red: 0.78, green: 0.96, blue: 1.00, alpha: 0.82),
+                    UIColor(red: 0.48, green: 0.85, blue: 0.96, alpha: 0.86)
+                ]
+            case .cobaltIndigo:
+                return [
+                    UIColor(red: 0.34, green: 0.54, blue: 0.96, alpha: 0.86),
+                    UIColor(red: 0.48, green: 0.66, blue: 0.99, alpha: 0.84),
+                    UIColor(red: 0.25, green: 0.42, blue: 0.86, alpha: 0.88)
+                ]
             case .goldenSun:
-                return UIColor(red: 1.0, green: 0.88, blue: 0.38, alpha: 0.88)
+                return [
+                    UIColor(red: 1.00, green: 0.88, blue: 0.38, alpha: 0.88),
+                    UIColor(red: 1.00, green: 0.93, blue: 0.56, alpha: 0.84),
+                    UIColor(red: 0.96, green: 0.76, blue: 0.24, alpha: 0.88)
+                ]
+            case .coralSunset:
+                return [
+                    UIColor(red: 1.00, green: 0.58, blue: 0.44, alpha: 0.86),
+                    UIColor(red: 1.00, green: 0.70, blue: 0.54, alpha: 0.84),
+                    UIColor(red: 0.96, green: 0.46, blue: 0.38, alpha: 0.88)
+                ]
+            case .crimsonRuby:
+                return [
+                    UIColor(red: 0.95, green: 0.36, blue: 0.48, alpha: 0.86),
+                    UIColor(red: 0.98, green: 0.50, blue: 0.60, alpha: 0.84),
+                    UIColor(red: 0.84, green: 0.24, blue: 0.38, alpha: 0.88)
+                ]
             case .floralPink:
-                return UIColor(red: 1.0, green: 0.68, blue: 0.82, alpha: 0.88)
+                return [
+                    UIColor(red: 1.00, green: 0.68, blue: 0.82, alpha: 0.88),
+                    UIColor(red: 1.00, green: 0.80, blue: 0.90, alpha: 0.84),
+                    UIColor(red: 0.96, green: 0.54, blue: 0.72, alpha: 0.88)
+                ]
+            case .lavenderMist:
+                return [
+                    UIColor(red: 0.78, green: 0.68, blue: 0.98, alpha: 0.86),
+                    UIColor(red: 0.86, green: 0.78, blue: 1.00, alpha: 0.82),
+                    UIColor(red: 0.66, green: 0.54, blue: 0.92, alpha: 0.88)
+                ]
             case .amethyst:
-                return UIColor(red: 0.76, green: 0.42, blue: 0.88, alpha: 0.88)
+                return [
+                    UIColor(red: 0.76, green: 0.42, blue: 0.88, alpha: 0.88),
+                    UIColor(red: 0.84, green: 0.56, blue: 0.94, alpha: 0.84),
+                    UIColor(red: 0.64, green: 0.30, blue: 0.78, alpha: 0.88)
+                ]
+            case .pearlWhite:
+                return [
+                    UIColor(red: 0.94, green: 0.97, blue: 1.00, alpha: 0.85),
+                    UIColor(red: 0.98, green: 0.95, blue: 0.98, alpha: 0.82),
+                    UIColor(red: 0.86, green: 0.92, blue: 0.96, alpha: 0.86)
+                ]
+            case .rainbowPrism:
+                return [
+                    UIColor(red: 0.40, green: 0.92, blue: 0.68, alpha: 0.86), // Emerald
+                    UIColor(red: 0.35, green: 0.85, blue: 0.98, alpha: 0.86), // Aqua
+                    UIColor(red: 1.00, green: 0.86, blue: 0.42, alpha: 0.86), // Gold
+                    UIColor(red: 1.00, green: 0.66, blue: 0.80, alpha: 0.86), // Pink
+                    UIColor(red: 0.76, green: 0.56, blue: 0.96, alpha: 0.86), // Lavender
+                    UIColor(red: 1.00, green: 0.60, blue: 0.46, alpha: 0.86)  // Coral
+                ]
             }
         }
 
@@ -47,10 +143,19 @@ public final class OxygenBubblesEffect: PlantTapEffect {
     }
 
     // MARK: - Texture Cache (Tối ưu SpriteKit Metal Batching)
-    private static var textureCache: [Theme: SKTexture] = [:]
+    private struct TextureCacheKey: Hashable {
+        let theme: Theme
+        let shadeIndex: Int
+    }
 
-    private static func getBubbleTexture(theme: Theme) -> SKTexture {
-        if let cached = textureCache[theme] {
+    private static var textureCache: [TextureCacheKey: SKTexture] = [:]
+
+    private static func getBubbleTexture(theme: Theme, shadeIndex: Int) -> SKTexture {
+        let shades = theme.shadeColors
+        let safeIndex = max(0, min(shadeIndex, shades.count - 1))
+        let key = TextureCacheKey(theme: theme, shadeIndex: safeIndex)
+
+        if let cached = textureCache[key] {
             return cached
         }
 
@@ -61,7 +166,7 @@ public final class OxygenBubblesEffect: PlantTapEffect {
             let rect = CGRect(x: 2, y: 2, width: dimension - 4, height: dimension - 4)
 
             // Vỏ bọt khí 3D căng bóng
-            cgCtx.setFillColor(theme.fillColor.cgColor)
+            cgCtx.setFillColor(shades[safeIndex].cgColor)
             cgCtx.fillEllipse(in: rect)
 
             cgCtx.setStrokeColor(theme.strokeColor.cgColor)
@@ -81,7 +186,7 @@ public final class OxygenBubblesEffect: PlantTapEffect {
         }
 
         let texture = SKTexture(image: img)
-        textureCache[theme] = texture
+        textureCache[key] = texture
         return texture
     }
 
@@ -116,9 +221,10 @@ public final class OxygenBubblesEffect: PlantTapEffect {
         }
 
         let allowedCount = min(bubbleCount, 16 - existingBubbleCount)
-        let texture = Self.getBubbleTexture(theme: theme)
+        let shadeCount = theme.shadeColors.count
 
         for i in 0..<allowedCount {
+            let texture = Self.getBubbleTexture(theme: theme, shadeIndex: Int.random(in: 0..<shadeCount))
             let radius: CGFloat
             let spawnX: CGFloat
             let spawnY: CGFloat
