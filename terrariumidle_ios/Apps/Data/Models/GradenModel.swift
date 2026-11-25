@@ -107,6 +107,12 @@ extension GardenModel {
         var id: Self { self }
         var title: String { self == .rain ? "Mưa" : "Gió" }
         var icon: String { self == .rain ? "cloud.rain.fill" : "wind" }
+        var soundFileName: String {
+            switch self {
+            case .rain: return "mixkit-light-rain-loop-2393"
+            case .wind: return "mixkit-wind-in-the-forest-loop-1233"
+            }
+        }
     }
 
     enum WeatherResult {

@@ -67,6 +67,23 @@ struct GardenWeatherOverlay: View {
                 isActive = false
             } catch { }
         }
+        .onChange(of: isActive) { _, active in
+            syncWeatherAudio(active: active)
+        }
+        .onChange(of: kind) { _, _ in
+            syncWeatherAudio(active: isActive)
+        }
+        .onDisappear {
+            BackgroundAudioManager.shared.stopWeatherSound()
+        }
+    }
+
+    private func syncWeatherAudio(active: Bool) {
+        if active {
+            BackgroundAudioManager.shared.startWeatherSound(fileName: kind.soundFileName, ext: "wav")
+        } else {
+            BackgroundAudioManager.shared.stopWeatherSound()
+        }
     }
 
     // MARK: - Ambient Atmospheres

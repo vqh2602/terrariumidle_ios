@@ -45,6 +45,8 @@ final class BackgroundAudioManager: ObservableObject {
 
     private var playbackGeneration = 0
     private var sfxGenerations: [String: Int] = [:]
+    private var weatherGeneration = 0
+    private var activeWeatherFileName: String?
 
     func ensureAudioSession() {
         AudioSessionController.activate()
@@ -399,6 +401,64 @@ final class BackgroundAudioManager: ObservableObject {
             for (id, player) in playback.sfxPlayers {
                 player.volume = (volumes[id] ?? 1.0) * volume
             }
+            playback.weatherPlayer?.volume = volume
+        }
+    }
+
+    // MARK: - Weather Ambient Sound
+
+    func startWeatherSound(fileName: String, ext: String = "wav") {
+        let key = "\(fileName).\(ext)"
+        guard activeWeatherFileName != key else { return }
+
+        weatherGeneration += 1
+        guard AudioSessionController.isActive else {
+            let generation = weatherGeneration
+            AudioSessionController.activate { [weak self] in
+                guard let self, self.weatherGeneration == generation else { return }
+                self.startWeatherSound(fileName: fileName, ext: ext)
+            }
+            return
+        }
+
+        guard let url = findAudioURL(fileName: fileName, ext: ext) else {
+            activeWeatherFileName = nil
+            print("❌ Missing weather audio: \(fileName).\(ext)")
+            return
+        }
+
+        activeWeatherFileName = key
+        let generation = weatherGeneration
+        let volume = sfxVolume
+        playback.perform { [weak self] playback in
+            let played: Bool
+            do {
+                playback.weatherPlayer?.stop()
+                playback.weatherPlayer = nil
+                let player = try AVAudioPlayer(contentsOf: url)
+                player.numberOfLoops = -1
+                player.volume = volume
+                played = player.prepareToPlay() && player.play()
+                if played { playback.weatherPlayer = player }
+            } catch {
+                print("❌ Weather audio error:", error)
+                played = false
+            }
+            Task { @MainActor [weak self] in
+                guard let self, self.weatherGeneration == generation else { return }
+                if !played {
+                    self.activeWeatherFileName = nil
+                }
+            }
+        }
+    }
+
+    func stopWeatherSound() {
+        weatherGeneration += 1
+        activeWeatherFileName = nil
+        playback.perform { playback in
+            playback.weatherPlayer?.stop()
+            playback.weatherPlayer = nil
         }
     }
 
@@ -575,6 +635,7 @@ nonisolated private final class BackgroundAudioPlayback: @unchecked Sendable {
     private let queue = DispatchQueue(label: "terrarium.background-audio", qos: .userInitiated)
     var player: AVAudioPlayer?
     var sfxPlayers: [String: AVAudioPlayer] = [:]
+    var weatherPlayer: AVAudioPlayer?
 
     func perform(_ operation: @escaping @Sendable (BackgroundAudioPlayback) -> Void) {
         queue.async {
