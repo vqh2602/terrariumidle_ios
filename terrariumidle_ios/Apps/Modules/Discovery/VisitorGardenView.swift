@@ -191,7 +191,6 @@ private struct VisitorShelvesView: View {
     let garden: VisitorGarden
     let atmosphere: VisitorAtmosphere?
     @StateObject private var beeCoordinator = GardenBeeSwarmCoordinator()
-    @State private var shelfOffset: CGFloat = 0
 
     var body: some View {
         GeometryReader { geometry in
@@ -201,7 +200,6 @@ private struct VisitorShelvesView: View {
                 beeCoordinator.layout.viewportSize = geometry.size
                 beeCoordinator.layout.slotSize = CGSize(width: width, height: slotHeight)
                 beeCoordinator.layout.userFloors = garden.topFloor
-                beeCoordinator.layout.shelfOffset = shelfOffset
             }()
 
             ZStack {
@@ -222,6 +220,7 @@ private struct VisitorShelvesView: View {
                                         }
                                     }
                                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("visitorViewport")) } action: { rect in
+                                        guard beeCoordinator.hivePositionKey != nil else { return }
                                         beeCoordinator.layout.calibrate(row: row, viewportMinY: rect.minY)
                                     }
                                     Image("r2").resizable().frame(height: 16)
@@ -233,7 +232,6 @@ private struct VisitorShelvesView: View {
                     .contentMargins(.bottom, 24, for: .scrollContent)
                     .defaultScrollAnchor(.bottom)
                     .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, newOffset in
-                        shelfOffset = newOffset
                         beeCoordinator.layout.shelfOffset = newOffset
                     }
                     Image("r1").resizable().frame(width: 16).scaleEffect(x: -1, y: 1)

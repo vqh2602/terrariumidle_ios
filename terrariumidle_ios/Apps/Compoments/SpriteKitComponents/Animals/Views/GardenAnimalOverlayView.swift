@@ -34,7 +34,8 @@ public struct GardenAnimalOverlayView: UIViewRepresentable {
         skView.isOpaque = false
         skView.allowsTransparency = true
         skView.ignoresSiblingOrder = true
-        skView.preferredFramesPerSecond = 60
+        skView.shouldCullNonVisibleNodes = true
+        skView.preferredFramesPerSecond = UIScreen.main.maximumFramesPerSecond
 
         let scene = GardenBeeOverlayScene(size: viewportSize)
         scene.coordinator = coordinator
@@ -49,10 +50,19 @@ public struct GardenAnimalOverlayView: UIViewRepresentable {
             uiView.scene?.size = viewportSize
         }
         if let scene = uiView.scene as? GardenBeeOverlayScene {
-            scene.coordinator = coordinator
-            coordinator.overlayScene = scene
-            scene.isEditing = coordinator.isEditing
-            scene.isScenePausedByLifecycle = !coordinator.isSceneActive
+            if scene.coordinator !== coordinator {
+                scene.coordinator = coordinator
+            }
+            if coordinator.overlayScene !== scene {
+                coordinator.overlayScene = scene
+            }
+            if scene.isEditing != coordinator.isEditing {
+                scene.isEditing = coordinator.isEditing
+            }
+            let shouldPause = !coordinator.isSceneActive
+            if scene.isScenePausedByLifecycle != shouldPause {
+                scene.isScenePausedByLifecycle = shouldPause
+            }
         }
     }
 }

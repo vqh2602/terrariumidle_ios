@@ -47,6 +47,7 @@ public final class GardenSlotLayoutTracker {
     public var shelfSpacing: CGFloat = 16.0
     public var columnSpacing: CGFloat = 4.0
     public var shelfOffset: CGFloat = 0.0
+    public var shelfMaxOffset: CGFloat = 0.0
     public var userFloors: Int = 1 {
         didSet {
             if oldValue != userFloors {
@@ -73,6 +74,9 @@ public final class GardenSlotLayoutTracker {
     public func calibrate(row: Int, viewportMinY: CGFloat) {
         guard viewportSize.width > 0, slotSize.height > 0 else { return }
         let contentTopY = viewportMinY + shelfOffset
+        if let existing = calibratedRowContentTopY[row], abs(existing - contentTopY) < 0.5 {
+            return
+        }
         calibratedRowContentTopY[row] = contentTopY
         referenceCalibration = (row: row, contentTopY: contentTopY)
     }
@@ -177,20 +181,30 @@ public final class GardenBeeOverlayScene: SKScene {
     private let worldNode = SKNode()
     private var bees: [BeeAgentNode] = []
     private var lastSingleVariantIndex: Int?
-    private var lastAutoDispatchTime: TimeInterval = 0
-    private var nextAutoDelay: TimeInterval = 3.0
+    private var autoDispatchWorkItem: DispatchWorkItem?
     private var pendingDispatchCount: Int = 0
 
     var isEditing: Bool = false {
         didSet {
-            worldNode.isHidden = isEditing
-            self.isPaused = isEditing || isScenePausedByLifecycle
+            guard oldValue != isEditing else { return }
+            refreshActiveRenderingState()
+            if !isEditing && !isScenePausedByLifecycle && activeBeeCount == 0 && coordinator?.hivePositionKey != nil {
+                scheduleAutoDispatch(delay: Double.random(in: 2.0...4.0))
+            } else if isEditing {
+                cancelAutoDispatch()
+            }
         }
     }
 
     var isScenePausedByLifecycle: Bool = false {
         didSet {
-            self.isPaused = isEditing || isScenePausedByLifecycle
+            guard oldValue != isScenePausedByLifecycle else { return }
+            refreshActiveRenderingState()
+            if !isEditing && !isScenePausedByLifecycle && activeBeeCount == 0 && coordinator?.hivePositionKey != nil {
+                scheduleAutoDispatch(delay: Double.random(in: 2.0...4.0))
+            } else if isScenePausedByLifecycle {
+                cancelAutoDispatch()
+            }
         }
     }
 
@@ -225,7 +239,9 @@ public final class GardenBeeOverlayScene: SKScene {
         guard let coordinator else { return }
 
         guard coordinator.hivePositionKey != nil else {
+            cancelAutoDispatch()
             removeAllBees()
+            refreshActiveRenderingState()
             return
         }
 
@@ -242,16 +258,16 @@ public final class GardenBeeOverlayScene: SKScene {
                 worldNode.addChild(bee)
                 bees.append(bee)
             }
-            lastAutoDispatchTime = CACurrentMediaTime()
-            nextAutoDelay = Double.random(in: 2.2...4.0)
+            refreshActiveRenderingState()
+            scheduleAutoDispatch(delay: Double.random(in: 2.2...4.0))
         } else if hiveChanged {
             for bee in bees {
                 bee.removeAction(forKey: "bee_flight_mission")
                 bee.setState(.idleInHive)
             }
             pendingDispatchCount = 0
-            lastAutoDispatchTime = CACurrentMediaTime()
-            nextAutoDelay = Double.random(in: 2.2...4.0)
+            refreshActiveRenderingState()
+            scheduleAutoDispatch(delay: Double.random(in: 2.2...4.0))
         }
     }
 
@@ -269,11 +285,41 @@ public final class GardenBeeOverlayScene: SKScene {
         bees.filter { $0.flightState != .idleInHive }.count + pendingDispatchCount
     }
 
+    private func refreshActiveRenderingState() {
+        let hasHive = coordinator?.hivePositionKey != nil
+        let shouldRun = !isEditing && !isScenePausedByLifecycle && hasHive && activeBeeCount > 0
+        worldNode.isHidden = !shouldRun
+        self.isPaused = !shouldRun
+        if shouldRun, let coordinator {
+            let y = coordinator.layout.shelfOffset
+            if abs(worldNode.position.y - y) > 0.1 {
+                worldNode.position = CGPoint(x: 0, y: y)
+            }
+        }
+    }
+
+    private func cancelAutoDispatch() {
+        autoDispatchWorkItem?.cancel()
+        autoDispatchWorkItem = nil
+    }
+
+    private func scheduleAutoDispatch(delay: TimeInterval) {
+        cancelAutoDispatch()
+        guard !isEditing, !isScenePausedByLifecycle, coordinator?.hivePositionKey != nil else { return }
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.autoDispatchWorkItem = nil
+            self.dispatchRandomSwarm()
+        }
+        autoDispatchWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
     private func scheduleCooldownIfAllIdle() {
         if activeBeeCount == 0 {
-            lastAutoDispatchTime = CACurrentMediaTime()
+            refreshActiveRenderingState()
             // Thỉnh thoảng mới bay ra để tránh spam
-            nextAutoDelay = Double.random(in: 12.0...22.0)
+            scheduleAutoDispatch(delay: Double.random(in: 12.0...22.0))
         }
     }
 
@@ -282,24 +328,19 @@ public final class GardenBeeOverlayScene: SKScene {
     public override func update(_ currentTime: TimeInterval) {
         guard let coordinator else { return }
 
-        // Đồng bộ vị trí scroll của vườn theo từng frame
-        worldNode.position = CGPoint(x: 0, y: coordinator.layout.shelfOffset)
+        // Đồng bộ vị trí scroll của vườn theo từng frame khi có ong đang bay
+        let targetY = coordinator.layout.shelfOffset
+        if abs(worldNode.position.y - targetY) > 0.1 {
+            worldNode.position = CGPoint(x: 0, y: targetY)
+        }
 
         guard !isEditing,
               coordinator.hivePositionKey != nil,
               coordinator.layout.isCalibrated,
               !bees.isEmpty else { return }
 
-        for bee in bees {
+        for bee in bees where bee.flightState == .flyingToPlant || bee.flightState == .returning {
             bee.syncFacingToHorizontalMotion()
-        }
-
-        // Tự động cho 1..4 ong thỉnh thoảng bay ra lấy mật
-        if activeBeeCount == 0 {
-            let now = CACurrentMediaTime()
-            if now - lastAutoDispatchTime >= nextAutoDelay {
-                dispatchRandomSwarm()
-            }
         }
     }
 
@@ -308,16 +349,25 @@ public final class GardenBeeOverlayScene: SKScene {
     /// Thả 1..4 chú ong (lần lượt hoặc hàng loạt) bay đến cây bất kỳ trên chậu lấy mật
     private func dispatchRandomSwarm() {
         guard let coordinator,
+              !isEditing,
+              !isScenePausedByLifecycle,
               coordinator.hivePositionKey != nil,
-              coordinator.layout.isCalibrated else { return }
+              coordinator.layout.isCalibrated else {
+            if !isEditing && !isScenePausedByLifecycle && coordinator?.hivePositionKey != nil && activeBeeCount == 0 {
+                scheduleAutoDispatch(delay: 1.5)
+            }
+            return
+        }
 
         let count = Int.random(in: 1...4)
         let chosen = Array(bees.filter { $0.flightState == .idleInHive }.shuffled().prefix(count))
         guard !chosen.isEmpty else { return }
 
+        cancelAutoDispatch()
         removeAction(forKey: "bee_batch_dispatch")
         let isBurst = Bool.random()
         pendingDispatchCount = chosen.count
+        refreshActiveRenderingState()
 
         var actions: [SKAction] = []
         for (index, bee) in chosen.enumerated() {
@@ -350,7 +400,9 @@ public final class GardenBeeOverlayScene: SKScene {
         let candidates = idleBees.filter { $0.variant.rawValue != lastSingleVariantIndex }
         let chosen = (candidates.isEmpty ? idleBees : candidates).randomElement()!
         lastSingleVariantIndex = chosen.variant.rawValue
+        cancelAutoDispatch()
         launchSingleBee(chosen)
+        refreshActiveRenderingState()
     }
 
     private func launchSingleBee(_ bee: BeeAgentNode) {

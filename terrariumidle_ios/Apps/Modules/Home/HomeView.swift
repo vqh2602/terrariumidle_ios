@@ -63,8 +63,6 @@ struct HomeView: View {
     @State private var loadFailed = false
     @State private var reloadID = 0
     @State private var shelfPosition = ScrollPosition(edge: .bottom)
-    @State private var shelfOffset: CGFloat = 0
-    @State private var shelfMaxOffset: CGFloat = 0
     @State private var scrollDirection = 0
     @State private var topSafeInset: CGFloat = 0
     @State private var hudHeight: CGFloat = 56
@@ -90,7 +88,6 @@ struct HomeView: View {
                     beeCoordinator.layout.viewportSize = geometry.size
                     beeCoordinator.layout.slotSize = CGSize(width: itemWidth, height: slotHeight)
                     beeCoordinator.layout.userFloors = userFloors
-                    beeCoordinator.layout.shelfOffset = shelfOffset
                     beeCoordinator.isEditing = isEdit
                     beeCoordinator.isSceneActive = (scenePhase == .active)
                 }()
@@ -186,6 +183,7 @@ struct HomeView: View {
                                         }
                                         .frame(maxWidth: .infinity, alignment: .center)
                                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("gardenViewport")) } action: { rect in
+                                            guard beeCoordinator.hivePositionKey != nil else { return }
                                             beeCoordinator.layout.calibrate(row: rowIndex, viewportMinY: rect.minY)
                                         }
                                         // SpriteKit particle zPositions cannot cross SwiftUI siblings.
@@ -212,9 +210,8 @@ struct HomeView: View {
                             ShelfScrollMetrics(offset: value.contentOffset.y,
                                                maximum: max(0, value.contentSize.height - value.containerSize.height + value.contentInsets.bottom))
                         } action: { _, value in
-                            shelfOffset = value.offset
-                            shelfMaxOffset = value.maximum
                             beeCoordinator.layout.shelfOffset = value.offset
+                            beeCoordinator.layout.shelfMaxOffset = value.maximum
                         }
                         .overlay {
                             if isEdit && draggedPlant != nil {
@@ -300,7 +297,7 @@ struct HomeView: View {
                 while !Task.isCancelled {
                     try await Task.sleep(for: .milliseconds(30))
                     try Task.checkCancellation()
-                    let target = min(max(shelfOffset + CGFloat(scrollDirection) * 10, 0), shelfMaxOffset)
+                    let target = min(max(beeCoordinator.layout.shelfOffset + CGFloat(scrollDirection) * 10, 0), beeCoordinator.layout.shelfMaxOffset)
                     shelfPosition.scrollTo(y: target)
                 }
             } catch { }

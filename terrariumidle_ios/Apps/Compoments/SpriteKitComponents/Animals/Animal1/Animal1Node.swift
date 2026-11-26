@@ -103,8 +103,8 @@ public final class Animal1Node: SKNode, AnimalInteractiveNode {
         hiveRigNode.zPosition = 10
 
         if let scene = loadSceneTemplate() {
-            if let branch = scene.childNode(withName: "branchNode") as? SKSpriteNode {
-                branch.removeFromParent()
+            if let templateBranch = scene.childNode(withName: "branchNode") as? SKSpriteNode,
+               let branch = templateBranch.copy() as? SKSpriteNode {
                 branch.isHidden = false
                 branch.isPaused = false
                 branch.anchorPoint = CGPoint(x: 0.5, y: 1.0)
@@ -119,8 +119,8 @@ public final class Animal1Node: SKNode, AnimalInteractiveNode {
                 self.branchNode = branch
             }
 
-            if let hive = scene.childNode(withName: "hiveNode") as? SKSpriteNode {
-                hive.removeFromParent()
+            if let templateHive = scene.childNode(withName: "hiveNode") as? SKSpriteNode,
+               let hive = templateHive.copy() as? SKSpriteNode {
                 hive.isHidden = false
                 hive.isPaused = false
                 hive.anchorPoint = CGPoint(x: 0.48, y: 1.0)
@@ -134,8 +134,8 @@ public final class Animal1Node: SKNode, AnimalInteractiveNode {
                 self.hiveNode = hive
             }
 
-            if let socket = scene.childNode(withName: "entranceSocket") {
-                socket.removeFromParent()
+            if let templateSocket = scene.childNode(withName: "entranceSocket"),
+               let socket = templateSocket.copy() as? SKNode {
                 socket.position = CGPoint(x: 3.0 * scale, y: -195.0 * scale)
                 socket.zPosition = 15
                 hiveRigNode.addChild(socket)
@@ -153,8 +153,15 @@ public final class Animal1Node: SKNode, AnimalInteractiveNode {
         startIdleAnimation()
     }
 
+    private static var cachedTemplateScene: SKScene?
+    private static var didAttemptLoadTemplate = false
+
     private func loadSceneTemplate() -> SKScene? {
-        return SKScene(fileNamed: "Animal1Scene")
+        if !Self.didAttemptLoadTemplate {
+            Self.didAttemptLoadTemplate = true
+            Self.cachedTemplateScene = SKScene(fileNamed: "Animal1Scene")
+        }
+        return Self.cachedTemplateScene
     }
 
     private func buildProceduralMissing(scale: CGFloat, topOffsetY: CGFloat) {

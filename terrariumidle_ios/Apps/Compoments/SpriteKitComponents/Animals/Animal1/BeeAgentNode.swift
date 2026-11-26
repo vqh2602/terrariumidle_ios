@@ -172,25 +172,16 @@ public final class BeeAgentNode: SKNode {
             }
         }
 
-        // Hạt mật vàng nhỏ mang theo khi bay về tổ
-        let glow = SKNode()
+        // Hạt mật vàng nhỏ mang theo khi bay về tổ (dùng SKSpriteNode + shared texture thay SKShapeNode để batch GPU)
+        let glowSize = max(11.0, displayWidth * 0.50)
+        let glow = SKSpriteNode(texture: BeeTextureCache.shared.honeyGlowTexture)
+        glow.size = CGSize(width: glowSize, height: glowSize)
         glow.position = CGPoint(
             x: (variant.facesRightByDefault ? 1 : -1) * displayWidth * 0.16,
             y: -displayWidth * 0.18
         )
         glow.zPosition = 22
         glow.alpha = 0.0
-
-        let drop = SKShapeNode(circleOfRadius: max(3.2, displayWidth * 0.09))
-        drop.fillColor = UIColor(red: 1.0, green: 0.78, blue: 0.12, alpha: 0.95)
-        drop.strokeColor = UIColor(red: 0.95, green: 0.52, blue: 0.0, alpha: 0.9)
-        drop.lineWidth = 0.9
-        glow.addChild(drop)
-
-        let halo = SKShapeNode(circleOfRadius: max(5.5, displayWidth * 0.15))
-        halo.fillColor = UIColor(red: 1.0, green: 0.88, blue: 0.35, alpha: 0.32)
-        halo.strokeColor = .clear
-        glow.addChild(halo)
 
         bodyRigNode.addChild(glow)
         self.honeyCarryGlow = glow
@@ -425,6 +416,7 @@ public final class BeeAgentNode: SKNode {
     // MARK: - Sub-Animations (Strict rotate(toAngle:) around restZRotation)
 
     private func stopPartAnimations() {
+        removeAction(forKey: "bee_collect_sparkles")
         bodyRigNode.removeAllActions()
         for node in backWings + frontWings + antennae + arms + legs + eyes {
             node.removeAllActions()
@@ -563,41 +555,48 @@ public final class BeeAgentNode: SKNode {
     }
 
     private func startCollectingSparkles(in worldNode: SKNode, duration: TimeInterval) {
+        removeAction(forKey: "bee_collect_sparkles")
         let sparkCount = max(3, Int(duration / 0.55))
-        for i in 0..<sparkCount {
-            let delay = Double(i) * (duration / Double(sparkCount))
-            let spawn = SKAction.sequence([
-                SKAction.wait(forDuration: delay),
-                SKAction.run { [weak self, weak worldNode] in
-                    guard let self, let worldNode, self.flightState == .collecting else { return }
-                    let dot = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.8...3.2))
-                    dot.fillColor = [
-                        UIColor(red: 1.0, green: 0.86, blue: 0.22, alpha: 0.95),
-                        UIColor(red: 1.0, green: 0.96, blue: 0.62, alpha: 0.95),
-                        UIColor(red: 1.0, green: 0.68, blue: 0.18, alpha: 0.90)
-                    ].randomElement()!
-                    dot.strokeColor = .clear
-                    dot.position = CGPoint(
-                        x: self.position.x + CGFloat.random(in: -12...12),
-                        y: self.position.y + CGFloat.random(in: -8...8)
-                    )
-                    dot.zPosition = self.zPosition - 1
-                    worldNode.addChild(dot)
+        let interval = duration / Double(sparkCount)
+        let sparkTex = BeeTextureCache.shared.honeySparkleTexture
+        let palette: [UIColor] = [
+            UIColor(red: 1.0, green: 0.86, blue: 0.22, alpha: 0.95),
+            UIColor(red: 1.0, green: 0.96, blue: 0.62, alpha: 0.95),
+            UIColor(red: 1.0, green: 0.68, blue: 0.18, alpha: 0.90)
+        ]
 
-                    let floatUp = SKAction.moveBy(
-                        x: CGFloat.random(in: -10...10),
-                        y: CGFloat.random(in: 14...28),
-                        duration: 0.65
-                    )
-                    floatUp.timingMode = .easeOut
-                    dot.run(SKAction.sequence([
-                        SKAction.group([floatUp, SKAction.fadeOut(withDuration: 0.65)]),
-                        SKAction.removeFromParent()
-                    ]))
-                }
-            ])
-            run(spawn)
+        var actions: [SKAction] = []
+        for i in 0..<sparkCount {
+            if i > 0 {
+                actions.append(SKAction.wait(forDuration: interval))
+            }
+            actions.append(SKAction.run { [weak self, weak worldNode] in
+                guard let self, let worldNode, self.flightState == .collecting else { return }
+                let diameter = CGFloat.random(in: 3.6...6.4)
+                let dot = SKSpriteNode(texture: sparkTex)
+                dot.size = CGSize(width: diameter, height: diameter)
+                dot.color = palette.randomElement()!
+                dot.colorBlendFactor = 1.0
+                dot.position = CGPoint(
+                    x: self.position.x + CGFloat.random(in: -12...12),
+                    y: self.position.y + CGFloat.random(in: -8...8)
+                )
+                dot.zPosition = self.zPosition - 1
+                worldNode.addChild(dot)
+
+                let floatUp = SKAction.moveBy(
+                    x: CGFloat.random(in: -10...10),
+                    y: CGFloat.random(in: 14...28),
+                    duration: 0.65
+                )
+                floatUp.timingMode = .easeOut
+                dot.run(SKAction.sequence([
+                    SKAction.group([floatUp, SKAction.fadeOut(withDuration: 0.65)]),
+                    SKAction.removeFromParent()
+                ]))
+            })
         }
+        run(SKAction.sequence(actions), withKey: "bee_collect_sparkles")
     }
 
     // MARK: - Exact SVG Assembly Specs (bee1..bee4)
