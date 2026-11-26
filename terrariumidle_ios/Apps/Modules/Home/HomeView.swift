@@ -373,6 +373,14 @@ struct HomeView: View {
                 backgroundReady = true
             }
         }
+
+        // Wait for both garden unlocks and StoreKit VIP before choosing the startup track.
+        await SubscriptionManager.shared.refreshEntitlements()
+        guard !Task.isCancelled,
+              authService.currentUser?.uid == userId,
+              let garden = fireStoreService.gradenModel,
+              garden.user.userID == userId else { return }
+        BackgroundAudioManager.shared.startInitialBGMIfNeeded(gardenModel: garden)
     }
 
     private func dragScrollEdge(_ direction: Int) -> some View {

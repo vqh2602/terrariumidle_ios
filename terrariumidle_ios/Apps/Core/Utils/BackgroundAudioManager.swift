@@ -207,11 +207,27 @@ final class BackgroundAudioManager: ObservableObject {
         startBGM(fileName: fileName, title: title, image: image ?? id, id: id)
     }
 
-    /// Khởi tạo BGM mặc định đúng 1 lần khi vào app; không tự phát lại khi chuyển màn hình.
-    func startInitialBGMIfNeeded() {
+    /// Chọn ngẫu nhiên BGM đã mở khóa sau khi tải vườn và quyền VIP, đúng 1 lần khi vào app.
+    func startInitialBGMIfNeeded(gardenModel: GardenModel) {
         guard !hasStartedInitialBGM else { return }
         hasStartedInitialBGM = true
-        startDefaultBGM()
+        // Preserve any track the user has already selected, including a paused one.
+        guard currentBGMId == nil, !isPlaying, !isStartingBGM else { return }
+
+        let unlockedIds = MusicUnlockHelper.getUnlockedMusicIds(from: gardenModel)
+        let playlist = ItemDataManager.shared.getAllMusics().filter {
+            unlockedIds.contains($0.id) && hasAudioResource(fileName: $0.sound ?? $0.id)
+        }
+        guard let track = playlist.randomElement() else {
+            startDefaultBGM()
+            return
+        }
+        switchBGM(
+            id: track.id,
+            fileName: track.sound ?? track.id,
+            title: track.name,
+            image: track.image
+        )
     }
 
     /// Phát bản nhạc BGM mặc định ("m0" - "Relax...") nếu chưa có nhạc đang phát

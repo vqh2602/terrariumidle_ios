@@ -55,10 +55,6 @@ struct terrariumidle_iosApp: App {
                         await SubscriptionManager.shared.refreshEntitlements()
                     }
                 }
-                .onAppear {
-                    // Tự động phát BGM thư giãn ngay khi mở app (chỉ khởi tạo 1 lần xuyên suốt)
-                    BackgroundAudioManager.shared.startInitialBGMIfNeeded()
-                }
                 .task(id: "\(scenePhase == .active)-\(atmosphere.hasInitialized)-\(atmosphere.timerGeneration)") {
                     guard scenePhase == .active, atmosphere.hasInitialized else { return }
                     do {
