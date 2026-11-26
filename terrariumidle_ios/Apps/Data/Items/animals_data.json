@@ -1,0 +1,14 @@
+[
+    {
+        "id": "animal1",
+        "name": "bee",
+        "description": "Búp bê cầu nắng treo đung đưa theo gió, mang lại ngày nắng đẹp trời.",
+        "image": "sticker1-1@4.167x",
+        "priceStore": 0,
+        "priceOxygen": 225000,
+        "currencyUnit": "oxygen",
+        "type": "animal",
+        "effect": "",
+        "itemTypeAttribute": "hanging,front"
+    }
+]
