@@ -1,0 +1,4 @@
+# Build & IPA artifacts
+build/
+ipa_fix/
+*.ipa
