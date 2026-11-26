@@ -137,6 +137,30 @@ final class LoginViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Guest Sign-In
+
+    /// Đăng nhập với tư cách khách (Anonymous Auth)
+    func loginAsGuest() async -> User? {
+        hasError = false
+        errorMessage = nil
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let user = try await auth.signInAsGuest()
+            currentUser = user
+            isAuthenticated = true
+            fetchUserToken()
+            fetchCurrentUser()
+            return user
+        } catch {
+            hasError = true
+            errorMessage = error.localizedDescription
+            isAuthenticated = false
+            return nil
+        }
+    }
+
     // MARK: - Email/Password Login & Register
 
     /// Đăng nhập bằng email và password
@@ -206,6 +230,30 @@ final class LoginViewModel: ObservableObject {
             hasError = true
             isAuthenticated = false
             return nil
+        }
+    }
+
+    /// Gửi email đặt lại mật khẩu
+    func sendPasswordReset(email: String) async -> Bool {
+        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            errorMessage = "Vui lòng nhập email".tr
+            hasError = true
+            return false
+        }
+
+        hasError = false
+        errorMessage = nil
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            try await auth.sendPasswordReset(email: trimmed)
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            hasError = true
+            return false
         }
     }
 

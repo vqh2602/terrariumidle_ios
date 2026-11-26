@@ -102,6 +102,15 @@ class AuthService: NSObject {
     }
   }
 
+  /// Gửi email đặt lại mật khẩu cho tài khoản email/password
+  func sendPasswordReset(email: String) async throws {
+    do {
+      try await Auth.auth().sendPasswordReset(withEmail: email)
+    } catch {
+      throw AuthError.firebaseAuthFailed(error.localizedDescription)
+    }
+  }
+
   // MARK: - Google Sign-In
 
   /// Đăng nhập bằng Google qua Firebase OAuthProvider
@@ -112,6 +121,18 @@ class AuthService: NSObject {
     provider.scopes = ["profile", "email"]
     let authResult = try await Auth.auth().signIn(with: provider, uiDelegate: nil)
     return authResult.user
+  }
+
+  // MARK: - Guest Sign-In (Anonymous)
+
+  /// Đăng nhập nhanh bằng tài khoản khách (Firebase Anonymous Auth)
+  func signInAsGuest() async throws -> User {
+    do {
+      let authResult = try await Auth.auth().signInAnonymously()
+      return authResult.user
+    } catch {
+      throw AuthError.firebaseAuthFailed(error.localizedDescription)
+    }
   }
 
   // MARK: - Logout
@@ -126,6 +147,11 @@ class AuthService: NSObject {
   func logout() throws {
     do {
       try Auth.auth().signOut()
+      Task { @MainActor in
+        SubscriptionManager.shared.clearVIPCache()
+        FireStoreService.shared.resetSession()
+        GardenAtmosphereManager.shared.reset()
+      }
     } catch {
       throw AuthError.firebaseAuthFailed(error.localizedDescription)
     }

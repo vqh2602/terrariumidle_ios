@@ -109,6 +109,9 @@ final class AccountViewModel: ObservableObject {
         print("Signing out...")
         do {
             try auth.logout()
+            SubscriptionManager.shared.clearVIPCache()
+            FireStoreService.shared.resetSession()
+            GardenAtmosphereManager.shared.reset()
         } catch {
          
         }

@@ -33,6 +33,7 @@ struct GardenModel {
         var willAutoRenew: Bool = false
         var welcomeBonusClaimed: Bool = false
         var source: String? = nil
+        var originalTransactionId: String? = nil
         var updatedAt: TimeInterval = 0
 
         var isCurrentlyActive: Bool {
@@ -213,6 +214,7 @@ extension GardenModel.VIPStatus {
         willAutoRenew = (dict["willAutoRenew"] as? Bool) ?? ((dict["willAutoRenew"] as? NSNumber)?.boolValue ?? false)
         welcomeBonusClaimed = (dict["welcomeBonusClaimed"] as? Bool) ?? ((dict["welcomeBonusClaimed"] as? NSNumber)?.boolValue ?? false)
         source = dict.optionalStringOrNull("source")
+        originalTransactionId = dict.optionalStringOrNull("originalTransactionId")
         updatedAt = (dict["updatedAt"] as? NSNumber)?.doubleValue ?? 0
     }
 
@@ -224,6 +226,7 @@ extension GardenModel.VIPStatus {
             "willAutoRenew": willAutoRenew,
             "welcomeBonusClaimed": welcomeBonusClaimed,
             "source": source ?? NSNull(),
+            "originalTransactionId": originalTransactionId ?? NSNull(),
             "updatedAt": updatedAt,
         ]
     }

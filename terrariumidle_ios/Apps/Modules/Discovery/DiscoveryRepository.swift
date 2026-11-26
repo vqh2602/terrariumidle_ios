@@ -15,23 +15,78 @@ final class DiscoveryRepository: DiscoveryReading {
 
     func profiles(category: DiscoveryCategory, after cursor: String?) async throws -> DiscoveryPage {
         if category == .world { return try await randomWorldPage(after: cursor) }
+        if category == .oxygen { return try await oxygenRankingPage(limit: 10) }
         let limit = 10
-        let collection = category == .oxygen ? "rankings" : "users"
-        var query: Query = db.collection(collection)
+        var query: Query = db.collection("users")
         switch category {
-        case .world: break
+        case .world, .oxygen: break
         case .likes: query = query.order(by: "user.userTotalLike", descending: true)
         case .level: query = query.order(by: "user.userLevel", descending: true)
-        case .oxygen: query = query.order(by: "oxygenCollect", descending: true)
         }
         let snapshot = try await query.limit(to: limit).getDocuments()
         try Task.checkCancellation()
         let profiles = snapshot.documents.compactMap { document -> DiscoveredProfile? in
-            let data = document.data()
-            return DiscoveredProfile(documentID: document.documentID, data: data,
-                                     oxygenCollected: category == .oxygen ? DiscoveryValue.int(data["oxygenCollect"]) : nil)
+            DiscoveredProfile(documentID: document.documentID, data: document.data())
         }
         return DiscoveryPage(profiles: profiles, nextCursor: nil)
+    }
+
+    private func oxygenRankingPage(limit: Int) async throws -> DiscoveryPage {
+        do {
+            let snapshot = try await db.collection("user-event")
+                .order(by: "oxygenCollected", descending: true)
+                .limit(to: limit)
+                .getDocuments()
+            try Task.checkCancellation()
+
+            let entries: [(uid: String, oxygen: Int)] = snapshot.documents.compactMap { doc in
+                let data = doc.data()
+                let rawUID = (data["userId"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+                let uid = (rawUID?.isEmpty == false ? rawUID! : doc.documentID)
+                guard !uid.isEmpty, !uid.contains("/") else { return nil }
+                return (uid, max(0, DiscoveryValue.int(data["oxygenCollected"])))
+            }
+
+            let firestore = db
+            let userDocs = await withTaskGroup(of: (String, [String: Any]?).self) { group in
+                for entry in entries {
+                    group.addTask {
+                        let doc = try? await firestore.collection("users").document(entry.uid).getDocument()
+                        return (entry.uid, doc?.data())
+                    }
+                }
+                var map: [String: [String: Any]] = [:]
+                for await (uid, data) in group {
+                    if let data { map[uid] = data }
+                }
+                return map
+            }
+            try Task.checkCancellation()
+
+            let profiles = entries.compactMap { entry -> DiscoveredProfile? in
+                guard let userData = userDocs[entry.uid] else { return nil }
+                return DiscoveredProfile(documentID: entry.uid, data: userData, oxygenCollected: entry.oxygen)
+            }
+            #if DEBUG
+            print("📊 user-event oxygen: \(snapshot.documents.count) docs, \(entries.count) entries, \(profiles.count) matched users")
+            #endif
+            return DiscoveryPage(profiles: profiles, nextCursor: nil)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            print("⚠️ user-event oxygen query failed, falling back to rankings:", error.localizedDescription)
+            let snapshot = try await db.collection("rankings")
+                .order(by: "oxygenCollect", descending: true)
+                .limit(to: limit)
+                .getDocuments()
+            try Task.checkCancellation()
+            let profiles = snapshot.documents.compactMap { document -> DiscoveredProfile? in
+                let data = document.data()
+                return DiscoveredProfile(documentID: document.documentID, data: data,
+                                         oxygenCollected: DiscoveryValue.int(data["oxygenCollect"]))
+            }
+            return DiscoveryPage(profiles: profiles, nextCursor: nil)
+        }
     }
 
     private struct WorldCursor: Codable {

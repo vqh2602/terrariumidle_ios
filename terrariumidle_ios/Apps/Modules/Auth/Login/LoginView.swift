@@ -59,6 +59,11 @@ struct LoginView: View {
                     ButtonLogin(title: "Đăng nhập bằng email".tr, icon: "shield-user-fill", action: {
                         showEmailSheet = true
                     })
+                    ButtonLogin(title: "Đăng nhập với tư cách khách".tr, systemIcon: "person.crop.circle", action: {
+                        if await loginViewModel.loginAsGuest() != nil {
+                            router.replaceRoot(.homeView)
+                        }
+                    })
                     Spacer().frame(height: 40)
                     Text("Khi bạn đăng nhập sẽ đồng ý với các điều khoản của chúng tôi".tr).textStyle(.caption1).foregroundColor(.gray).multilineTextAlignment(.center)
                 }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -81,6 +86,7 @@ struct LoginView: View {
 struct ButtonLogin: View {
     var title: String
     var icon: String? = nil
+    var systemIcon: String? = nil
     var action: () async -> Void
     var body: some View {
         Button {
@@ -91,6 +97,11 @@ struct ButtonLogin: View {
             HStack(spacing: 8) {
                 if let icon {
                     Image(icon).resizable().scaledToFit().frame(width: 20, height: 20)
+                } else if let systemIcon {
+                    Image(systemName: systemIcon)
+                        .font(.system(size: 18, weight: .regular))
+                        .foregroundColor(.black)
+                        .frame(width: 20, height: 20)
                 }
                 Text(title).font(.system(size: 16, weight: .light)).foregroundColor(.black)
             }
@@ -115,6 +126,9 @@ struct EmailAuthSheet: View {
     @State private var password = ""
     @State private var confirmPassword = ""
     @State private var validationError: String?
+    @State private var showForgotPasswordAlert = false
+    @State private var resetEmail = ""
+    @State private var resetSuccessMessage: String?
 
     var body: some View {
         NavigationView {
@@ -132,6 +146,7 @@ struct EmailAuthSheet: View {
                         .padding(.top, 10)
                         .onChange(of: isRegisterMode) { _ in
                             validationError = nil
+                            resetSuccessMessage = nil
                             viewModel.errorMessage = nil
                             viewModel.hasError = false
                         }
@@ -181,7 +196,29 @@ struct EmailAuthSheet: View {
                                                 .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                                         )
                                 }
+                            } else {
+                                HStack {
+                                    Spacer()
+                                    Button("Quên mật khẩu?".tr) {
+                                        validationError = nil
+                                        resetSuccessMessage = nil
+                                        viewModel.errorMessage = nil
+                                        viewModel.hasError = false
+                                        resetEmail = email
+                                        showForgotPasswordAlert = true
+                                    }
+                                    .font(.footnote.weight(.medium))
+                                    .foregroundColor(AppColors.primary)
+                                }
                             }
+                        }
+
+                        if let resetSuccessMessage {
+                            Text(resetSuccessMessage)
+                                .font(.footnote)
+                                .foregroundColor(.green)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
                         }
 
                         if let error = validationError ?? viewModel.errorMessage {
@@ -229,6 +266,21 @@ struct EmailAuthSheet: View {
                     }
                     .foregroundColor(AppColors.primary)
                 }
+            }
+            .alert("Quên mật khẩu".tr, isPresented: $showForgotPasswordAlert) {
+                TextField("example@gmail.com", text: $resetEmail)
+                    .textInputAutocapitalization(.never)
+                    .keyboardType(.emailAddress)
+                Button("Gửi email đặt lại".tr) {
+                    Task {
+                        if await viewModel.sendPasswordReset(email: resetEmail) {
+                            resetSuccessMessage = "Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư của bạn.".tr
+                        }
+                    }
+                }
+                Button("Hủy".tr, role: .cancel) { }
+            } message: {
+                Text("Nhập email đã đăng ký để nhận liên kết đặt lại mật khẩu.".tr)
             }
         }
     }

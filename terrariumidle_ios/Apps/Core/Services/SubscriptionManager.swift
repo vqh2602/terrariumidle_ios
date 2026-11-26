@@ -1,4 +1,5 @@
 import Combine
+import CryptoKit
 import FirebaseAuth
 import Foundation
 import StoreKit
@@ -75,8 +76,14 @@ final class SubscriptionManager: ObservableObject {
     @Published var statusMessage: String?
     @Published var errorMessage: String?
 
+    private static let vipBoundUserDefaultsKey = "terrarium_vip_bound_uid"
+
     private var updatesTask: Task<Void, Never>?
     private var hasStarted = false
+    private var entitledUserId: String? {
+        get { UserDefaults.standard.string(forKey: Self.vipBoundUserDefaultsKey) }
+        set { UserDefaults.standard.set(newValue, forKey: Self.vipBoundUserDefaultsKey) }
+    }
 
     private init() {}
 
@@ -85,12 +92,27 @@ final class SubscriptionManager: ObservableObject {
     }
 
     /// Checks whether the user currently has VIP access from either verified StoreKit entitlements
-    /// or a valid persisted VIP status in Firestore.
+    /// bound to the current account or a valid persisted VIP status in Firestore.
     static func isVIP(gardenModel: GardenModel?) -> Bool {
         if shared.isVIP {
-            return true
+            let currentUID = AuthService.shared.currentUser?.uid
+            if let boundUID = shared.entitledUserId, let currentUID, boundUID == currentUID {
+                return true
+            }
+            if shared.entitledUserId == nil && currentUID == nil {
+                return true
+            }
         }
         return gardenModel?.vipStatus.isCurrentlyActive == true
+    }
+
+    /// Clears cached in-memory and bound StoreKit VIP state on sign-out without mutating Firestore.
+    /// The user can restore purchases after signing in again to re-verify entitlements.
+    func clearVIPCache() {
+        entitledUserId = nil
+        statusMessage = nil
+        errorMessage = nil
+        applyEntitlement(isActive: false, productId: nil, expirationDate: nil, willAutoRenew: false)
     }
 
     func start() {
@@ -167,12 +189,16 @@ final class SubscriptionManager: ObservableObject {
         }
 
         do {
-            let result = try await product.purchase()
+            var purchaseOptions: Set<Product.PurchaseOption> = []
+            if let uid = AuthService.shared.currentUser?.uid, !uid.isEmpty {
+                purchaseOptions.insert(.appAccountToken(Self.appAccountToken(for: uid)))
+            }
+            let result = try await product.purchase(options: purchaseOptions)
             switch result {
             case .success(let verification):
                 let transaction = try checkVerified(verification)
                 await transaction.finish()
-                await refreshEntitlements()
+                await refreshEntitlements(forceBindToCurrentUser: true)
                 statusMessage = "Chào mừng bạn gia nhập Terrarium VIP!".tr
                 return true
             case .userCancelled:
@@ -199,10 +225,12 @@ final class SubscriptionManager: ObservableObject {
 
         do {
             try await AppStore.sync()
-            await refreshEntitlements()
+            await refreshEntitlements(forceBindToCurrentUser: true)
             if isVIP {
                 statusMessage = "Đã khôi phục quyền lợi Terrarium VIP thành công!".tr
                 return true
+            } else if errorMessage != nil {
+                return false
             } else {
                 statusMessage = "Không tìm thấy gói VIP đang hoạt động trên Apple ID này.".tr
                 return false
@@ -224,7 +252,20 @@ final class SubscriptionManager: ObservableObject {
         }
     }
 
-    func refreshEntitlements() async {
+    func refreshEntitlements(forceBindToCurrentUser: Bool = false) async {
+        let currentUID = AuthService.shared.currentUser?.uid
+        if forceBindToCurrentUser, let currentUID {
+            entitledUserId = currentUID
+        }
+
+        // Do not auto-grant Apple ID StoreKit entitlements to a different or newly signed-in account
+        // until the user explicitly purchases or taps Restore Purchases.
+        let isBoundToCurrentUser = currentUID != nil && entitledUserId == currentUID
+        guard isBoundToCurrentUser else {
+            applyEntitlement(isActive: false, productId: nil, expirationDate: nil, willAutoRenew: false)
+            return
+        }
+
         var latestTransaction: StoreKit.Transaction?
 
         for await verificationResult in Transaction.currentEntitlements {
@@ -247,7 +288,38 @@ final class SubscriptionManager: ObservableObject {
             }
         }
 
-        if let transaction = latestTransaction {
+        if let transaction = latestTransaction, let currentUID {
+            if let token = transaction.appAccountToken, token != Self.appAccountToken(for: currentUID) {
+                applyEntitlement(isActive: false, productId: nil, expirationDate: nil, willAutoRenew: false)
+                entitledUserId = nil
+                if forceBindToCurrentUser {
+                    errorMessage = "Gói VIP này đã được liên kết với một tài khoản khác.".tr
+                }
+                return
+            }
+
+            let originalTxId = String(transaction.originalID)
+            do {
+                if try await FireStoreService.shared.isVIPTransactionOwnedByAnotherUser(
+                    originalTransactionId: originalTxId,
+                    currentUID: currentUID
+                ) {
+                    applyEntitlement(isActive: false, productId: nil, expirationDate: nil, willAutoRenew: false)
+                    entitledUserId = nil
+                    if forceBindToCurrentUser {
+                        errorMessage = "Gói VIP này đã được liên kết với một tài khoản khác.".tr
+                    }
+                    return
+                }
+            } catch {
+                if forceBindToCurrentUser {
+                    applyEntitlement(isActive: false, productId: nil, expirationDate: nil, willAutoRenew: false)
+                    entitledUserId = nil
+                    errorMessage = "Không thể xác minh chủ sở hữu gói VIP. Vui lòng thử lại.".tr
+                    return
+                }
+            }
+
             let willRenew = await checkAutoRenewStatus(for: transaction.productID)
             applyEntitlement(
                 isActive: true,
@@ -259,7 +331,8 @@ final class SubscriptionManager: ObservableObject {
                 isActive: true,
                 productId: transaction.productID,
                 expiresAt: transaction.expirationDate?.timeIntervalSince1970 ?? 0,
-                willAutoRenew: willRenew
+                willAutoRenew: willRenew,
+                originalTransactionId: originalTxId
             )
         } else {
             let previousStoreKitVIP = isVIP
@@ -312,7 +385,8 @@ final class SubscriptionManager: ObservableObject {
         isActive: Bool,
         productId: String?,
         expiresAt: TimeInterval,
-        willAutoRenew: Bool
+        willAutoRenew: Bool,
+        originalTransactionId: String? = nil
     ) async {
         guard AuthService.shared.currentUser?.uid != nil else { return }
         await FireStoreService.shared.syncVIPStatus(
@@ -320,8 +394,23 @@ final class SubscriptionManager: ObservableObject {
             productId: productId,
             expiresAt: expiresAt,
             willAutoRenew: willAutoRenew,
-            source: "appstore"
+            source: "appstore",
+            originalTransactionId: originalTransactionId
         )
+    }
+
+    static func appAccountToken(for uid: String) -> UUID {
+        let digest = SHA256.hash(data: Data("terrarium_vip_uid:\(uid)".utf8))
+        var bytes = Array(digest.prefix(16))
+        bytes[6] = (bytes[6] & 0x0F) | 0x40
+        bytes[8] = (bytes[8] & 0x3F) | 0x80
+        let tuple: uuid_t = (
+            bytes[0], bytes[1], bytes[2], bytes[3],
+            bytes[4], bytes[5], bytes[6], bytes[7],
+            bytes[8], bytes[9], bytes[10], bytes[11],
+            bytes[12], bytes[13], bytes[14], bytes[15]
+        )
+        return UUID(uuid: tuple)
     }
 
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {

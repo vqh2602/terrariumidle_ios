@@ -40,6 +40,17 @@ class FireStoreService: ObservableObject {
         return delta
     }
 
+    /// Clears in-memory garden state and pending saves when signing out so nothing leaks across accounts.
+    func resetSession() {
+        debounceTask?.cancel()
+        debounceTask = nil
+        pendingGardenModel = nil
+        gradenModel = nil
+        dataGraden = nil
+        currentUser = nil
+        _ = consumePendingEventOxygen()
+    }
+
     // MARK: - Dependencies
 
     private let auth: AuthService = AuthService.shared
@@ -543,13 +554,22 @@ class FireStoreService: ObservableObject {
 
     // MARK: - VIP Subscription Sync
 
+    func isVIPTransactionOwnedByAnotherUser(originalTransactionId: String, currentUID: String) async throws -> Bool {
+        let snapshot = try await db.collection("users")
+            .whereField("vip.originalTransactionId", isEqualTo: originalTransactionId)
+            .limit(to: 1)
+            .getDocuments()
+        return snapshot.documents.contains { $0.documentID != currentUID }
+    }
+
     @MainActor
     func syncVIPStatus(
         isActive: Bool,
         productId: String?,
         expiresAt: TimeInterval,
         willAutoRenew: Bool,
-        source: String
+        source: String,
+        originalTransactionId: String? = nil
     ) async {
         guard let uid = auth.currentUser?.uid, !uid.isEmpty else { return }
         let docRef = db.collection("users").document(uid)
@@ -573,6 +593,7 @@ class FireStoreService: ObservableObject {
                             "willAutoRenew": willAutoRenew,
                             "welcomeBonusClaimed": alreadyClaimedWelcome || grantWelcome,
                             "source": source,
+                            "originalTransactionId": originalTransactionId ?? existingVIP["originalTransactionId"] ?? NSNull(),
                             "updatedAt": now,
                         ]
 
@@ -612,6 +633,7 @@ class FireStoreService: ObservableObject {
                     willAutoRenew: willAutoRenew,
                     welcomeBonusClaimed: claimed,
                     source: source,
+                    originalTransactionId: originalTransactionId ?? garden.vipStatus.originalTransactionId,
                     updatedAt: now
                 )
                 if grantedWelcome {

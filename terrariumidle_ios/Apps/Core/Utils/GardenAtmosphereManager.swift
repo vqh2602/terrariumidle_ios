@@ -66,4 +66,11 @@ final class GardenAtmosphereManager: ObservableObject {
             backgroundRive = next.id
         }
     }
+
+    func reset() {
+        hasInitialized = false
+        backgroundRive = "i_sky_sun_day"
+        overlayRive = nil
+        timerGeneration += 1
+    }
 }

@@ -67,6 +67,7 @@ final class DiscoveryViewModel: ObservableObject {
             loadedRequestKey = loadingKey
         } catch {
             guard generation == token, !Task.isCancelled else { return }
+            print("❌ Discovery load failed (\(category.rawValue)):", error)
             self.error = (error as? DiscoveryError)?.localizedDescription ?? "Không tải được danh sách khu vườn. Vui lòng kiểm tra kết nối và thử lại.".tr
         }
     }
