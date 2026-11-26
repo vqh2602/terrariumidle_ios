@@ -1,7 +1,7 @@
 [
     {
         "id": "animal1",
-        "name": "bee",
+        "name": "Bee",
         "description": "Tổ ong mật treo cành cây, đàn ong chăm chỉ bay ra thu thập mật hoa khắp khu vườn.",
         "image": "Beehive-1@4.167x",
         "priceStore": 20000000000,
@@ -16,6 +16,30 @@
         "tapSound": "mixkit-clinking-coins-1993",
         "tapSoundChild": {
             "bee": "mixkit-clinking-coins-1993"
+        },
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
+    },  {
+        "id": "animal2",
+        "name": "Lazybug",
+        "description": "Tổ ong mật treo cành cây, đàn ong chăm chỉ bay ra thu thập mật hoa khắp khu vườn.",
+        "image": "Beehive-1@4.167x",
+        "priceStore": 20000000000,
+        "priceOxygen": 225000,
+        "currencyUnit": "oxygen",
+        "levelUnlock": 17,
+        "type": "animal",
+        "effect": "",
+        "effectDescription": "Mật ong bắn tỏa & Đàn 4 chú ong bay lấy mật",
+        "itemTypeAttribute": "hanging,front",
+        "maximum": 1,
+        "tapSound": "mixkit-clinking-coins-1993",
+        "tapSoundChild": {
+            "lazybug": "mixkit-clinking-coins-1993"
         },
         "music": "",
         "musicDescription": "",
