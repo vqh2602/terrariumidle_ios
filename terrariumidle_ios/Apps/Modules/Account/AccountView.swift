@@ -4,9 +4,14 @@ struct AccountView: View {
     @EnvironmentObject var router: AppRouter
     @StateObject private var viewModel = AccountViewModel()
     @StateObject private var fireStore: FireStoreService = .shared
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
     @ObservedObject private var localization = LocalizationManager.shared
     @State private var showOnboardingGuide = false
     @State private var showWatchSettings = false
+
+    private var isVIP: Bool {
+        SubscriptionManager.isVIP(gardenModel: fireStore.gradenModel)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,8 +25,17 @@ struct AccountView: View {
                             userID: user.userID,
                             userLevel: user.userLevel,
                             userLikes: user.userTotalLike,
-                            userAvatar: user.userAvatar
+                            userAvatar: user.userAvatar,
+                            isVIP: isVIP
                         )
+                    }
+                    VIPPromoBanner(
+                        title: isVIP ? "Hội viên Terrarium VIP đang bật".tr : "Nâng cấp Terrarium VIP".tr,
+                        subtitle: isVIP
+                            ? "Quản lý gói tháng/năm & xem đặc quyền của bạn →".tr
+                            : "Mở khóa toàn bộ nhạc, hiệu ứng hình ảnh không cần trồng cây + ×2 quà tháng →".tr
+                    ) {
+                        router.push(.subscriptionView)
                     }
                     settingsSection
                     AccountReminderCard()

@@ -24,6 +24,21 @@ struct GardenModel {
     var sleepRewardTickets: Int = 0
     var weatherUntil: TimeInterval = 0
     var weatherKind: WeatherKind = .rain
+    var vipStatus: VIPStatus = VIPStatus()
+
+    struct VIPStatus: Equatable {
+        var isActive: Bool = false
+        var productId: String? = nil
+        var expiresAt: TimeInterval = 0
+        var willAutoRenew: Bool = false
+        var welcomeBonusClaimed: Bool = false
+        var source: String? = nil
+        var updatedAt: TimeInterval = 0
+
+        var isCurrentlyActive: Bool {
+            isActive && (expiresAt <= 0 || expiresAt > Date().timeIntervalSince1970)
+        }
+    }
 
     struct Item {
         var fertilizer: Int
@@ -170,6 +185,9 @@ extension GardenModel {
         sleepRewardOxygen = dict.int("sleepRewardOxygen")
         sleepRewardGems = dict.int("sleepRewardGems")
         sleepRewardTickets = dict.int("sleepRewardTickets")
+        if let vipDict = dict["vip"] as? [String: Any] {
+            vipStatus = VIPStatus(dict: vipDict)
+        }
         user = try UserProfile(dict: dict.dict("user"))
 
         let plantsAny = dict.array("plants")
@@ -184,6 +202,30 @@ extension GardenModel.Item {
     init(dict: [String: Any]) throws {
         fertilizer = dict.int("fertilizer")
         shovel = dict.int("shovel")
+    }
+}
+
+extension GardenModel.VIPStatus {
+    init(dict: [String: Any]) {
+        isActive = (dict["isActive"] as? Bool) ?? ((dict["isActive"] as? NSNumber)?.boolValue ?? false)
+        productId = dict.optionalStringOrNull("productId")
+        expiresAt = (dict["expiresAt"] as? NSNumber)?.doubleValue ?? 0
+        willAutoRenew = (dict["willAutoRenew"] as? Bool) ?? ((dict["willAutoRenew"] as? NSNumber)?.boolValue ?? false)
+        welcomeBonusClaimed = (dict["welcomeBonusClaimed"] as? Bool) ?? ((dict["welcomeBonusClaimed"] as? NSNumber)?.boolValue ?? false)
+        source = dict.optionalStringOrNull("source")
+        updatedAt = (dict["updatedAt"] as? NSNumber)?.doubleValue ?? 0
+    }
+
+    func toDictionary() -> [String: Any] {
+        return [
+            "isActive": isActive,
+            "productId": productId ?? NSNull(),
+            "expiresAt": expiresAt,
+            "willAutoRenew": willAutoRenew,
+            "welcomeBonusClaimed": welcomeBonusClaimed,
+            "source": source ?? NSNull(),
+            "updatedAt": updatedAt,
+        ]
     }
 }
 
@@ -320,6 +362,7 @@ extension GardenModel {
             "money": money.toDictionary(),
             "user": user.toDictionary(),
             "plants": plants.map { $0.toDictionary() },
+            "vip": vipStatus.toDictionary(),
         ]
     }
 }

@@ -8,10 +8,15 @@
 import Foundation
 
 enum MusicUnlockHelper {
-    /// Extract all unlocked music/SFX/landscape/overlay IDs from planted items
-    /// Hỗ trợ cả định dạng JSON mới (music, effect, effectLandscape, effectSfx)
-    /// và định dạng legacy ("Tiếng bão - sfx7", "Relax - m0")
-    static func getUnlockedMusicIds(from gardenModel: GardenModel?) -> Set<String> {
+    /// Extract all unlocked music/SFX/landscape/overlay IDs from planted items.
+    /// When VIP is active, all music, SFX, landscapes, and visual overlay effects are unlocked
+    /// without requiring any plants to be planted.
+    static func getUnlockedMusicIds(from gardenModel: GardenModel?, isVIPOverride: Bool? = nil) -> Set<String> {
+        let isVIP = isVIPOverride ?? SubscriptionManager.isVIP(gardenModel: gardenModel)
+        if isVIP {
+            return allCatalogAudioAndVisualIds()
+        }
+
         guard let plants = gardenModel?.plants else { return ["m0", "music1"] }
 
         var unlockedIds: Set<String> = []
@@ -42,6 +47,31 @@ enum MusicUnlockHelper {
             }
         }
         return unlockedIds
+    }
+
+    static func allCatalogAudioAndVisualIds() -> Set<String> {
+        var ids: Set<String> = ["m0", "music1"]
+        for track in ItemDataManager.shared.getAllMusics() {
+            ids.insert(track.id)
+            ids.insert(track.image)
+            if let sound = track.sound, !sound.isEmpty {
+                ids.insert(sound)
+            }
+        }
+        for sfx in ItemDataManager.shared.getAllMusicsSFX() {
+            ids.insert(sfx.id)
+            ids.insert(sfx.image)
+            if let sound = sfx.sound, !sound.isEmpty {
+                ids.insert(sound)
+            }
+        }
+        for effect in ItemDataManager.shared.getAllEffects() {
+            ids.insert(effect.id)
+        }
+        for landscape in ItemDataManager.shared.getAllLandscapes() {
+            ids.insert(landscape.id)
+        }
+        return ids
     }
 
     /// Trích xuất toàn bộ ID từ item (hỗ trợ phân tách dấu phẩy)

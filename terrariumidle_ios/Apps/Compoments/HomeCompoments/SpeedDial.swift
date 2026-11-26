@@ -110,6 +110,7 @@ struct SpeedDial: View {
         case .layout: isEditing = true
         case .events: router.push(.eventView)
         case .discovery: router.push(.discoveryView)
+        case .vip: router.push(.subscriptionView)
         }
     }
 
@@ -128,6 +129,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
     case events = "Sự kiện"
     case discovery = "Khám phá"
     case layout = "Bố cục"
+    case vip = "Gói VIP"
     case account = "Tài khoản"
 
     var id: Self { self }
@@ -140,6 +142,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
         case .store: return "basket.fill"
         case .events: return "gift.fill"
         case .discovery: return "globe.asia.australia.fill"
+        case .vip: return "crown.fill"
         case .account: return "person.crop.circle.fill"
         case .layout: return "square.grid.3x3.fill"
         }
@@ -153,6 +156,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
         case .store, .layout: return AccountStyle.green
         case .events: return Color(hex: "9A8A71")
         case .discovery: return Color(hex: "648C86")
+        case .vip: return Color(hex: "D79922")
         case .account: return Color(hex: "648C86")
         }
     }

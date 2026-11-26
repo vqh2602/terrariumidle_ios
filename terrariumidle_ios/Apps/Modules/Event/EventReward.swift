@@ -32,14 +32,32 @@ enum EventReward {
     }
 
     static func applyV2Reward(rewardId: String, to garden: GardenModel) throws -> (garden: GardenModel, quantity: Int) {
+        return try applyV2Reward(rewardId: rewardId, quantityOverride: nil, to: garden)
+    }
+
+    static func applyV2Reward(rewardId: String, quantityOverride: Int?, to garden: GardenModel) throws -> (garden: GardenModel, quantity: Int) {
         var updated = garden
         switch rewardId {
         case "oxygen":
-            updated.money.oxygen += 300
-            return (updated, 300)
+            let qty = max(1, quantityOverride ?? 300)
+            updated.money.oxygen += qty
+            return (updated, qty)
+        case "gemstone":
+            let qty = max(1, quantityOverride ?? 10)
+            updated.money.gemstone += qty
+            return (updated, qty)
+        case "ticket":
+            let qty = max(1, quantityOverride ?? 1)
+            updated.money.ticket += qty
+            return (updated, qty)
         case "fertilizer":
-            updated.item.fertilizer += 1
-            return (updated, 1)
+            let qty = max(1, quantityOverride ?? 1)
+            updated.item.fertilizer += qty
+            return (updated, qty)
+        case "shovel":
+            let qty = max(1, quantityOverride ?? 1)
+            updated.item.shovel += qty
+            return (updated, qty)
         case let id where id.hasPrefix("plant"):
             if !garden.cart.cartPlants.contains(id) {
                 updated.cart = GardenModel.Cart(

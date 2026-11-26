@@ -10,7 +10,10 @@ import SwiftUI
 struct MusicSheetView: View {
     @ObservedObject private var audioManager = BackgroundAudioManager.shared
     @ObservedObject private var fireStore = FireStoreService.shared
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
     @Environment(\.dismiss) private var dismiss
+    @State private var vipContextMessage: String?
+    @State private var showVIPSheet = false
 
     private let musics = ItemDataManager.shared.getAllMusics()
     private let sfxItems = ItemDataManager.shared.getAllMusicsSFX()
@@ -20,6 +23,10 @@ struct MusicSheetView: View {
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12),
     ]
+
+    private var isVIP: Bool {
+        SubscriptionManager.isVIP(gardenModel: fireStore.gradenModel)
+    }
 
     private var unlockedIds: Set<String> {
         MusicUnlockHelper.getUnlockedMusicIds(from: fireStore.gradenModel)
@@ -35,6 +42,17 @@ struct MusicSheetView: View {
                 VStack(spacing: 0) {
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 22) {
+                            if !isVIP {
+                                VIPPromoBanner(
+                                    title: "Mở khóa toàn bộ %d nhạc & %d SFX".tr(musics.count, sfxItems.count),
+                                    subtitle: "Đăng ký Terrarium VIP để nghe ngay không cần trồng cây →".tr,
+                                    darkTheme: true
+                                ) {
+                                    vipContextMessage = "Mở khóa ngay toàn bộ kho nhạc thư giãn và bộ phối âm thanh thiên nhiên không cần trồng cây.".tr
+                                    showVIPSheet = true
+                                }
+                            }
+
                             // MARK: - Section 1: Music (single select)
 
                             SectionHeader(icon: "⭐", title: "Âm nhạc".tr)
@@ -48,7 +66,11 @@ struct MusicSheetView: View {
                                         isPlaying: audioManager.currentBGMId == item.id && audioManager.isPlaying,
                                         isLocked: isLocked,
                                         onTap: {
-                                            guard !isLocked else { return }
+                                            if isLocked {
+                                                vipContextMessage = "Đăng ký Terrarium VIP để phát ngay bản nhạc \"%@\" không cần trồng cây!".tr(item.name.tr)
+                                                showVIPSheet = true
+                                                return
+                                            }
                                             audioManager.switchBGM(
                                                 id: item.id,
                                                 fileName: item.sound ?? item.id,
@@ -89,7 +111,11 @@ struct MusicSheetView: View {
                                         isPlaying: isSelected,
                                         isLocked: isLocked,
                                         onTap: {
-                                            guard !isLocked else { return }
+                                            if isLocked {
+                                                vipContextMessage = "Đăng ký Terrarium VIP để phối ngay âm thanh \"%@\" mà không cần trồng cây!".tr(item.name.tr)
+                                                showVIPSheet = true
+                                                return
+                                            }
                                             audioManager.toggleSFX(
                                                 id: item.id,
                                                 fileName: item.sound ?? item.id
@@ -120,6 +146,9 @@ struct MusicSheetView: View {
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbarBackground(Color(red: 0.10, green: 0.12, blue: 0.18), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+        }
+        .sheet(isPresented: $showVIPSheet) {
+            SubscriptionView(isSheet: true, highlightContext: vipContextMessage)
         }
     }
 }
@@ -334,11 +363,14 @@ private struct SoundCardView: View {
                 // Lock overlay
                 if isLocked {
                     ZStack {
-                        Color.black.opacity(0.6)
+                        Color.black.opacity(0.58)
 
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 28))
-                            .foregroundColor(.white.opacity(0.8))
+                        VStack(spacing: 6) {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.white.opacity(0.9))
+                            VIPCrownBadge(compact: true)
+                        }
                     }
                 }
             }
@@ -352,10 +384,9 @@ private struct SoundCardView: View {
                     )
             )
             .shadow(color: isSelected && !isLocked ? Color.blue.opacity(0.4) : .clear, radius: 6)
-            .opacity(isLocked ? 0.6 : 1.0)
+            .opacity(isLocked ? 0.85 : 1.0)
         }
         .buttonStyle(.plain)
-        .disabled(isLocked)
     }
 }
 

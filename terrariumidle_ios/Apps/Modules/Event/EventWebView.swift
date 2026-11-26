@@ -10,12 +10,15 @@ struct EventWebScreen: View {
     @State private var loadError: String?
     @State private var notice: String?
     @State private var reloadID = UUID()
+    @State private var showVIPSheet = false
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 ZStack {
-                    EventWebView(event: event, url: url, isLoading: $isLoading, loadError: $loadError, notice: $notice)
+                    EventWebView(event: event, url: url, isLoading: $isLoading, loadError: $loadError, notice: $notice) {
+                        showVIPSheet = true
+                    }
                         .id(reloadID)
                     if isLoading { ProgressView().padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12)) }
                     if let loadError {
@@ -39,6 +42,9 @@ struct EventWebScreen: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Đóng".tr) { dismiss() } } }
         }
+        .sheet(isPresented: $showVIPSheet) {
+            SubscriptionView(isSheet: true, highlightContext: "Nâng cấp VIP để tự động nhân đôi (×2) toàn bộ 30 phần thưởng điểm danh tháng!".tr)
+        }
     }
 }
 
@@ -48,6 +54,7 @@ struct EventWebView: UIViewRepresentable {
     @Binding var isLoading: Bool
     @Binding var loadError: String?
     @Binding var notice: String?
+    var onOpenVIP: (() -> Void)? = nil
 
     // Cung cấp API web cho iOS với phản hồi dạng Promise từ WKWebView.
     static let bridgeScript = """
@@ -96,8 +103,27 @@ struct EventWebView: UIViewRepresentable {
         private var isClaiming = false
         weak var webView: WKWebView?
         private var lastWheelClaim = Date.distantPast
+        private var vipObserver: NSObjectProtocol?
 
-        init(_ parent: EventWebView) { self.parent = parent }
+        init(_ parent: EventWebView) {
+            self.parent = parent
+            super.init()
+            vipObserver = NotificationCenter.default.addObserver(
+                forName: .terrariumVIPDidChange,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.webView?.evaluateJavaScript("window.dispatchEvent(new Event('terrariumEventUpdated'));", completionHandler: nil)
+                }
+            }
+        }
+
+        deinit {
+            if let vipObserver {
+                NotificationCenter.default.removeObserver(vipObserver)
+            }
+        }
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
             if message.name == "terrariumEventV2" {
@@ -169,6 +195,11 @@ struct EventWebView: UIViewRepresentable {
                 return
             }
             let payload = body["payload"] as? [String: Any] ?? [:]
+            if action == "openVIP" {
+                parent.onOpenVIP?()
+                replyHandler(["ok": true], nil)
+                return
+            }
             guard parent.event.unavailableReason() == nil || action == "getContext" || action == "resolveAssets" else {
                 replyHandler(nil, parent.event.unavailableReason())
                 return

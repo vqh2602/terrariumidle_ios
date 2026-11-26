@@ -21,7 +21,8 @@ final class EventV2Service {
         "match": EventSpec(rewardIds: ["plant2", "pot1", "fertilizer", "oxygen"], milestones: nil),
         "oxygen": EventSpec(rewardIds: ["fertilizer", "pot1", "plant20"], milestones: [1000, 5000, 10000]),
         "level": EventSpec(rewardIds: ["oxygen", "pot1", "plant20"], milestones: [5, 10, 20]),
-        "daily": EventSpec(rewardIds: ["oxygen", "fertilizer", "oxygen", "pot1", "oxygen", "fertilizer", "plant20"], milestones: nil)
+        "daily": EventSpec(rewardIds: ["oxygen", "fertilizer", "oxygen", "pot1", "oxygen", "fertilizer", "plant20"], milestones: nil),
+        "monthly": EventSpec(rewardIds: ["oxygen", "fertilizer", "shovel", "gemstone", "ticket"], milestones: nil)
     ]
 
     private init() {}
@@ -169,6 +170,10 @@ final class EventV2Service {
             guard eventId == "daily" else { throw EventReward.failure("Sự kiện không hợp lệ.".tr) }
             return try await handleCheckIn(uid: uid, garden: garden, requestId: requestId)
 
+        case "monthlyCheckIn":
+            guard eventId == "monthly" else { throw EventReward.failure("Sự kiện không hợp lệ.".tr) }
+            return try await handleMonthlyCheckIn(uid: uid, garden: garden, requestId: requestId)
+
         default:
             throw EventReward.failure("Lệnh chưa hỗ trợ.".tr)
         }
@@ -300,28 +305,89 @@ final class EventV2Service {
         }
     }
 
+    private func handleMonthlyCheckIn(uid: String, garden: GardenModel, requestId: String?) async throws -> [String: Any] {
+        let isVIP = SubscriptionManager.isVIP(gardenModel: garden)
+        let preState = try await fetchOrInitState(uid: uid, level: garden.user.userLevel, isVIP: isVIP)
+        if let requestId, let receipts = preState["receipts"] as? [String: Any], let cached = receipts[requestId] as? [String: Any] {
+            return cached
+        }
+
+        let checkedToday = preState["monthlyCheckedToday"] as? Bool ?? false
+        let dayIndex = (preState["monthlyDay"] as? NSNumber)?.intValue ?? 0
+        let monthKey = (preState["monthlyMonthKey"] as? String) ?? currentVietnamMonthString()
+        let rawRewards = preState["monthlyRewards"] as? [[String: Any]] ?? []
+        let rewards = rawRewards.compactMap(MonthlyRewardItem.init(dict:))
+
+        guard !checkedToday, dayIndex >= 0, dayIndex < min(30, rewards.count) else {
+            throw EventReward.failure("Bạn đã điểm danh hôm nay hoặc đã hoàn thành đủ 30 ngày tháng này.".tr)
+        }
+
+        let targetReward = rewards[dayIndex]
+        let multiplier = isVIP ? 2 : 1
+        let expectedQty = targetReward.quantity * multiplier
+        let claimKey = "monthly-\(monthKey)-\(dayIndex + 1)"
+
+        let (updatedGarden, qty) = try EventReward.applyV2Reward(
+            rewardId: targetReward.rewardId,
+            quantityOverride: expectedQty,
+            to: garden
+        )
+        let saved = await FireStoreService.shared.saveEventReward(gardenModel: updatedGarden)
+        guard saved else {
+            throw EventReward.failure("Chưa lưu được phần thưởng. Vui lòng kiểm tra kết nối rồi thử lại.".tr)
+        }
+
+        return try await runDocumentTransaction(uid: uid, level: updatedGarden.user.userLevel, isVIP: isVIP, requestId: requestId) { state in
+            let isChecked = state["monthlyCheckedToday"] as? Bool ?? false
+            let currentDay = (state["monthlyDay"] as? NSNumber)?.intValue ?? 0
+            let currentMonth = (state["monthlyMonthKey"] as? String) ?? monthKey
+            guard currentMonth == monthKey, !isChecked, currentDay == dayIndex, currentDay < 30 else {
+                throw EventReward.failure("Bạn đã điểm danh hôm nay hoặc đã hoàn thành đủ 30 ngày tháng này.".tr)
+            }
+
+            var currentClaims = state["claims"] as? [String] ?? []
+            if !currentClaims.contains(claimKey) {
+                currentClaims.append(claimKey)
+                state["claims"] = currentClaims
+            }
+            state["monthlyDay"] = currentDay + 1
+            state["monthlyCheckedToday"] = true
+
+            var wallet = state["wallet"] as? [[String: Any]] ?? []
+            wallet.append([
+                "id": targetReward.rewardId,
+                "name": self.displayName(for: targetReward.rewardId),
+                "quantity": qty
+            ])
+            state["wallet"] = wallet
+        }
+    }
+
     // MARK: - Firestore Transaction Core
 
-    private func fetchOrInitState(uid: String, level: Int) async throws -> [String: Any] {
-        return try await runDocumentTransaction(uid: uid, level: level, requestId: nil, includeReceiptsInReturn: true) { _ in }
+    private func fetchOrInitState(uid: String, level: Int, isVIP: Bool = false) async throws -> [String: Any] {
+        return try await runDocumentTransaction(uid: uid, level: level, isVIP: isVIP, requestId: nil, includeReceiptsInReturn: true) { _ in }
     }
 
     private func runDocumentTransaction(
         uid: String,
         level: Int,
+        isVIP: Bool? = nil,
         requestId: String?,
         includeReceiptsInReturn: Bool = false,
         mutation: @escaping (inout [String: Any]) throws -> Void
     ) async throws -> [String: Any] {
         let docRef = db.collection(collectionName).document(uid)
         let today = currentVietnamDateString()
+        let currentMonth = currentVietnamMonthString()
+        let resolvedVIP = isVIP ?? SubscriptionManager.isVIP(gardenModel: FireStoreService.shared.gradenModel)
         let oxygenDelta = FireStoreService.shared.consumePendingEventOxygen()
 
         do {
             let result = try await db.runTransaction { transaction, errorPointer -> Any? in
                 do {
                     let snapshot = try transaction.getDocument(docRef)
-                    var state = snapshot.data() ?? self.defaultState(uid: uid, today: today)
+                    var state = snapshot.data() ?? self.defaultState(uid: uid, today: today, monthKey: currentMonth)
                     let isNew = !snapshot.exists
 
                     if oxygenDelta > 0 {
@@ -329,22 +395,39 @@ final class EventV2Service {
                         state["oxygenCollected"] = currentOxy + oxygenDelta
                     }
 
+                    var didMonthlyReset = false
+                    let storedMonth = state["monthlyMonthKey"] as? String
+                    let existingRewards = (state["monthlyRewards"] as? [[String: Any]] ?? []).compactMap(MonthlyRewardItem.init(dict:))
+                    if storedMonth != currentMonth || existingRewards.count != 30 {
+                        let generated = MonthlyRewardGenerator.generate(
+                            monthKey: currentMonth,
+                            seedSalt: "\(uid)-\(UUID().uuidString.prefix(8))"
+                        )
+                        state["monthlyMonthKey"] = currentMonth
+                        state["monthlyDay"] = 0
+                        state["monthlyCheckedToday"] = false
+                        state["monthlyRewards"] = generated.map { $0.toDictionary() }
+                        didMonthlyReset = true
+                    }
+
                     var didDailyReset = false
                     if (state["lastResetDate"] as? String) != today {
                         state["spins"] = 3
                         state["matchAvailable"] = true
                         state["checkedToday"] = false
+                        state["monthlyCheckedToday"] = false
                         state["lastResetDate"] = today
                         didDailyReset = true
                     }
 
                     state["userId"] = uid
                     state["level"] = level
+                    state["isVIP"] = resolvedVIP
 
                     if let requestId,
                        let receipts = state["receipts"] as? [String: Any],
                        let existingReceipt = receipts[requestId] as? [String: Any] {
-                        if isNew || didDailyReset || oxygenDelta > 0 {
+                        if isNew || didDailyReset || didMonthlyReset || oxygenDelta > 0 {
                             transaction.setData(state, forDocument: docRef, merge: true)
                         }
                         return includeReceiptsInReturn ? state : existingReceipt
@@ -352,7 +435,7 @@ final class EventV2Service {
 
                     try mutation(&state)
 
-                    let sanitized = self.sanitizedSnapshot(from: state, level: level)
+                    let sanitized = self.sanitizedSnapshot(from: state, level: level, isVIP: resolvedVIP)
 
                     if let requestId, !requestId.isEmpty {
                         var receipts = state["receipts"] as? [String: Any] ?? [:]
@@ -386,8 +469,9 @@ final class EventV2Service {
         }
     }
 
-    private func defaultState(uid: String, today: String) -> [String: Any] {
-        [
+    private func defaultState(uid: String, today: String, monthKey: String) -> [String: Any] {
+        let monthlyRewards = MonthlyRewardGenerator.generate(monthKey: monthKey, seedSalt: uid)
+        return [
             "userId": uid,
             "oxygenCollected": 0,
             "spins": 3,
@@ -397,6 +481,10 @@ final class EventV2Service {
             "claims": [String](),
             "day": 0,
             "checkedToday": false,
+            "monthlyMonthKey": monthKey,
+            "monthlyDay": 0,
+            "monthlyCheckedToday": false,
+            "monthlyRewards": monthlyRewards.map { $0.toDictionary() },
             "pending": [[String: Any]](),
             "wallet": [[String: Any]](),
             "lastResetDate": today,
@@ -405,16 +493,21 @@ final class EventV2Service {
         ]
     }
 
-    private func sanitizedSnapshot(from state: [String: Any], level: Int) -> [String: Any] {
+    private func sanitizedSnapshot(from state: [String: Any], level: Int, isVIP: Bool) -> [String: Any] {
         var result: [String: Any] = [
             "oxygenCollected": (state["oxygenCollected"] as? NSNumber)?.intValue ?? 0,
             "level": level,
+            "isVIP": isVIP,
             "spins": (state["spins"] as? NSNumber)?.intValue ?? 0,
             "matchAvailable": state["matchAvailable"] as? Bool ?? false,
             "rounds": (state["rounds"] as? NSNumber)?.intValue ?? 0,
             "claims": state["claims"] as? [String] ?? [],
             "day": (state["day"] as? NSNumber)?.intValue ?? 0,
             "checkedToday": state["checkedToday"] as? Bool ?? false,
+            "monthlyMonthKey": state["monthlyMonthKey"] as? String ?? currentVietnamMonthString(),
+            "monthlyDay": (state["monthlyDay"] as? NSNumber)?.intValue ?? 0,
+            "monthlyCheckedToday": state["monthlyCheckedToday"] as? Bool ?? false,
+            "monthlyRewards": state["monthlyRewards"] as? [[String: Any]] ?? [],
             "pending": state["pending"] as? [[String: Any]] ?? [],
             "wallet": state["wallet"] as? [[String: Any]] ?? []
         ]
@@ -442,6 +535,15 @@ final class EventV2Service {
         return formatter.string(from: Date())
     }
 
+    private func currentVietnamMonthString() -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "Asia/Ho_Chi_Minh")
+        formatter.dateFormat = "yyyy-MM"
+        return formatter.string(from: Date())
+    }
+
     // MARK: - Asset Resolution
 
     private func resolveAssets(itemIds: [String]) -> [String: [String: Any]] {
@@ -463,14 +565,19 @@ final class EventV2Service {
         }
         switch id {
         case "oxygen": return "Oxygen"
+        case "gemstone": return "Đá quý".tr
+        case "ticket": return "Vé thời tiết".tr
         case "fertilizer": return "Phân bón".tr
+        case "shovel": return "Xẻng".tr
         default: return id
         }
     }
 
     private func thumbnailDataURL(for id: String) -> String? {
-        guard let item = ItemDataManager.shared.getItem(byId: id),
-              let source = UIImage(named: item.image) else {
+        let imageName: String? = ItemDataManager.shared.getItem(byId: id)?.image
+            ?? (["oxygen", "gemstone", "ticket", "fertilizer", "shovel"].contains(id) ? id : nil)
+        guard let imageName,
+              let source = UIImage(named: imageName) else {
             return nil
         }
         let maxSide: CGFloat = 192

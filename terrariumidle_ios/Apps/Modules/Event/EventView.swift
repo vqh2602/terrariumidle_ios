@@ -30,8 +30,10 @@ struct EventView: View {
     @EnvironmentObject private var router: AppRouter
     @StateObject private var model = EventViewModel()
     @StateObject private var store = FireStoreService.shared
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
     @State private var selectedEvent: TerrariumEvent?
     @State private var message: String?
+    @State private var showVIPSheet = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -56,6 +58,14 @@ struct EventView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: 18) {
+                        if !SubscriptionManager.isVIP(gardenModel: store.gradenModel) {
+                            VIPPromoBanner(
+                                title: "Terrarium VIP · ×2 quà Điểm danh 30 ngày".tr,
+                                subtitle: "Nhận gấp đôi Oxygen, Đá quý, Vé, Phân bón, Xẻng & mở khóa toàn bộ âm thanh, hiệu ứng →".tr
+                            ) {
+                                showVIPSheet = true
+                            }
+                        }
                         if let error = model.error { Text(error).foregroundStyle(.secondary) }
                         if model.events.isEmpty { Text("Chưa có sự kiện mới".tr).padding(40) }
                         ForEach(model.events) { event in
@@ -73,6 +83,9 @@ struct EventView: View {
             if let url = event.webURL(garden: store.gradenModel) {
                 EventWebScreen(event: event, url: url)
             }
+        }
+        .sheet(isPresented: $showVIPSheet) {
+            SubscriptionView(isSheet: true, highlightContext: "Nâng cấp VIP để nhân đôi phần thưởng điểm danh 30 ngày hàng tháng!".tr)
         }
         .alert("Sự kiện".tr, isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
             Button("Đóng".tr, role: .cancel) { message = nil }

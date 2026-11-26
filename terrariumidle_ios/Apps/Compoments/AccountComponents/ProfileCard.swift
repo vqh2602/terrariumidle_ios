@@ -7,6 +7,7 @@ struct ProfileCard: View {
     let userLevel: Int
     let userLikes: Int
     let userAvatar: String?
+    var isVIP: Bool = false
 
     var body: some View {
         VStack(spacing: 16) {
@@ -14,6 +15,9 @@ struct ProfileCard: View {
                 Image(systemName: "leaf.fill")
                 Text("NGƯỜI LÀM VƯỜN".tr)
                     .tracking(2)
+                if isVIP {
+                    VIPCrownBadge(compact: true)
+                }
             }
             .font(.system(size: 10, weight: .heavy, design: .rounded))
             .foregroundStyle(AccountStyle.green)

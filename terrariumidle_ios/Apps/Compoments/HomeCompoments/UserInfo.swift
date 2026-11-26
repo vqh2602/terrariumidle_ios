@@ -3,6 +3,7 @@ import SwiftUI
 struct UserInfoCompoment: View {
     @State private var isExpanded: Bool = false
     @StateObject var fireStore: FireStoreService = .shared
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
     @EnvironmentObject var router: AppRouter
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -10,6 +11,7 @@ struct UserInfoCompoment: View {
     private var userExp: Int { fireStore.gradenModel?.user.userLevelEXP ?? 0 }
     private var maxExp: Int { max(1, ShareFunc.calculateUserMaxExp(level: userLevel)) }
     private var progress: Double { min(max(Double(userExp) / Double(maxExp), 0), 1) }
+    private var isVIP: Bool { SubscriptionManager.isVIP(gardenModel: fireStore.gradenModel) }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -30,7 +32,7 @@ struct UserInfoCompoment: View {
 
     private var levelButton: some View {
         Button { toggleExpanded() } label: {
-            LevelCircularBadge(level: userLevel, progress: progress)
+            LevelCircularBadge(level: userLevel, progress: progress, isVIP: isVIP)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Cấp %d, mở thanh tài nguyên".tr(userLevel))
@@ -48,6 +50,7 @@ struct UserInfoCompoment: View {
             fertilizer: fireStore.gradenModel?.item.fertilizer ?? 0,
             shovels: fireStore.gradenModel?.item.shovel ?? 0,
             tickets: fireStore.gradenModel?.money.ticket ?? 0,
+            isVIP: isVIP,
             onCollapse: toggleExpanded,
             onAccount: { router.push(.accountView) }
         )
@@ -70,6 +73,7 @@ struct GardenStatusBar: View {
     let fertilizer: Int
     let shovels: Int
     let tickets: Int
+    var isVIP: Bool = false
     let onCollapse: () -> Void
     let onAccount: () -> Void
 
@@ -81,7 +85,7 @@ struct GardenStatusBar: View {
         VStack(spacing: 9) {
             HStack(spacing: 8) {
                 Button(action: onCollapse) {
-                    LevelCircularBadge(level: level, progress: progress, size: 48)
+                    LevelCircularBadge(level: level, progress: progress, size: 48, isVIP: isVIP)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Cấp %d, thu gọn thanh tài nguyên".tr(level))
@@ -131,11 +135,12 @@ struct LevelCircularBadge: View {
     let level: Int
     let progress: Double
     var size: CGFloat = 50
+    var isVIP: Bool = false
 
     var body: some View {
         ZStack {
             Circle().fill(AccountStyle.cream)
-            Circle().strokeBorder(AccountStyle.border, lineWidth: 2)
+            Circle().strokeBorder(isVIP ? VIPPalette.gold : AccountStyle.border, lineWidth: 2)
             Circle()
                 .inset(by: 4)
                 .stroke(AccountStyle.green.opacity(0.15), lineWidth: 3)
@@ -145,9 +150,9 @@ struct LevelCircularBadge: View {
                 .stroke(AccountStyle.green, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             VStack(spacing: 0) {
-                Image(systemName: "leaf.fill")
+                Image(systemName: isVIP ? "crown.fill" : "leaf.fill")
                     .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(AccountStyle.green)
+                    .foregroundStyle(isVIP ? VIPPalette.gold : AccountStyle.green)
                 Text("\(level)")
                     .font(.system(size: 17, weight: .heavy, design: .rounded))
                     .foregroundStyle(AccountStyle.ink)

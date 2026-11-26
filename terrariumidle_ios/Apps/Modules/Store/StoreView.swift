@@ -33,6 +33,14 @@ struct StoreView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: 16) {
+                        if !SubscriptionManager.isVIP(gardenModel: fireStore.gradenModel) {
+                            VIPPromoBanner(
+                                title: "Terrarium VIP · Mở khóa toàn bộ nhạc & hiệu ứng".tr,
+                                subtitle: "Không cần trồng đủ cây vẫn mở 100% âm thanh, phong cảnh + ×2 quà 30 ngày →".tr
+                            ) {
+                                router.push(.subscriptionView)
+                            }
+                        }
                         HStack {
                             Label(viewModel.selectedTab.rawValue.tr, systemImage: tabIcon(viewModel.selectedTab))
                                 .font(.system(.headline, design: .rounded, weight: .bold))

@@ -81,6 +81,7 @@ struct TerrariumEvent: Decodable, Identifiable, Hashable {
         case "oxygen.html": return "oxygen"
         case "level.html": return "level"
         case "daily.html": return "daily"
+        case "monthly.html": return "monthly"
         default: return nil
         }
     }

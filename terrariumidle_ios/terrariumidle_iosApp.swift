@@ -22,6 +22,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Kích hoạt nhận sự kiện điều khiển từ xa (Lock Screen, Notification Center, Control Center)
         application.beginReceivingRemoteControlEvents()
 
+        Task { @MainActor in
+            SubscriptionManager.shared.start()
+        }
+
         return true
     }
 
@@ -47,6 +51,7 @@ struct terrariumidle_iosApp: App {
                     if scenePhase == .active {
                         _ = await GardenReminderScheduler.shared.update(.saved())
                         await SleepHealthStore.shared.sync()
+                        await SubscriptionManager.shared.refreshEntitlements()
                     }
                 }
                 .onAppear {

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct EffectsSheetView: View {
     @ObservedObject private var fireStore = FireStoreService.shared
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Binding var backgroundRive: String
@@ -11,11 +12,17 @@ struct EffectsSheetView: View {
     private let effects = ItemDataManager.shared.getAllEffects()
     @State private var category: Category = .landscapes
     @State private var searchText = ""
-    @State private var unlockedOnly = true
+    @State private var unlockedOnly = false
+    @State private var showVIPSheet = false
+    @State private var vipContextMessage: String?
 
     private enum Category: String, CaseIterable {
         case landscapes = "Phong cảnh"
         case effects = "Hiệu ứng"
+    }
+
+    private var isVIP: Bool {
+        SubscriptionManager.isVIP(gardenModel: fireStore.gradenModel)
     }
 
     private var unlockedIds: Set<String> {
@@ -55,6 +62,17 @@ struct EffectsSheetView: View {
                 controls
                 ScrollView {
                     LazyVStack(spacing: 8) {
+                        if !isVIP {
+                            VIPPromoBanner(
+                                title: "Mở khóa toàn bộ %d phong cảnh & %d hiệu ứng".tr(landscapes.count, effects.count),
+                                subtitle: "Đăng ký Terrarium VIP để dùng ngay không cần trồng cây →".tr
+                            ) {
+                                vipContextMessage = "Mở khóa ngay toàn bộ phong cảnh bầu trời và hiệu ứng đom đóm, hoa đào, lá rơi mà không cần trồng cây!".tr
+                                showVIPSheet = true
+                            }
+                            .padding(.bottom, 4)
+                        }
+
                         ForEach(visibleItems) { item in
                             let locked = !unlockedIds.contains(item.id)
                             EffectCardView(
@@ -62,7 +80,11 @@ struct EffectsSheetView: View {
                                 isSelected: isItemSelected(category == .landscapes ? backgroundRive : overlayRive, matches: item),
                                 isLocked: locked
                             ) {
-                                guard !locked else { return }
+                                if locked {
+                                    vipContextMessage = "Đăng ký Terrarium VIP để mở khóa ngay \"%@\" mà không cần trồng cây!".tr(item.name.tr)
+                                    showVIPSheet = true
+                                    return
+                                }
                                 if category == .landscapes {
                                     backgroundRive = item.id
                                 } else {
@@ -99,6 +121,9 @@ struct EffectsSheetView: View {
             .toolbarColorScheme(.light, for: .navigationBar)
             .toolbarBackground(AccountStyle.cream, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+        }
+        .sheet(isPresented: $showVIPSheet) {
+            SubscriptionView(isSheet: true, highlightContext: vipContextMessage)
         }
     }
 
@@ -220,10 +245,12 @@ private struct EffectCardView: View {
                         .lineLimit(2)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                if isSelected && !isLocked {
+                    if isSelected && !isLocked {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(AccountStyle.green)
+                } else if isLocked {
+                    VIPCrownBadge(compact: true)
                 }
             }
             .padding(10)
@@ -236,8 +263,7 @@ private struct EffectCardView: View {
             .contentShape(RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
-        .disabled(isLocked)
-        .accessibilityLabel("\(item.name.tr). \(item.description.tr). \(isLocked ? "Chưa mở khóa".tr : (isSelected ? "Đang dùng".tr : "Chạm để chọn".tr))")
+        .accessibilityLabel("\(item.name.tr). \(item.description.tr). \(isLocked ? "Mở khóa bằng VIP".tr : (isSelected ? "Đang dùng".tr : "Chạm để chọn".tr))")
         .accessibilityAddTraits(isSelected && !isLocked ? [.isSelected] : [])
     }
 }

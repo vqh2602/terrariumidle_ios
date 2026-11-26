@@ -251,9 +251,12 @@ class FireStoreService: ObservableObject {
             return nil
         }
 
-        let oxygenDrop = ItemDataManager.shared.collectionOxygen(
+        let baseOxygenDrop = ItemDataManager.shared.collectionOxygen(
             level: currentLevel, plantId: plant.idPlant, potId: plant.idPot
         )
+        let oxygenDrop = SubscriptionManager.isVIP(gardenModel: garden)
+            ? Int((Double(baseOxygenDrop) * 1.5).rounded())
+            : baseOxygenDrop
 
         // 1. Tăng oxy
         garden.money.oxygen += oxygenDrop
@@ -536,6 +539,92 @@ class FireStoreService: ObservableObject {
         }
 
         return await performFirestoreUpdate(gardenModel: gardenModel)
+    }
+
+    // MARK: - VIP Subscription Sync
+
+    @MainActor
+    func syncVIPStatus(
+        isActive: Bool,
+        productId: String?,
+        expiresAt: TimeInterval,
+        willAutoRenew: Bool,
+        source: String
+    ) async {
+        guard let uid = auth.currentUser?.uid, !uid.isEmpty else { return }
+        let docRef = db.collection("users").document(uid)
+        let now = Date().timeIntervalSince1970
+
+        do {
+            let outcome = try await GardenWriteQueue.shared.perform {
+                let result = try await self.db.runTransaction { transaction, errorPointer -> Any? in
+                    do {
+                        let snapshot = try transaction.getDocument(docRef)
+                        let data = snapshot.data() ?? [:]
+                        let existingVIP = data["vip"] as? [String: Any] ?? [:]
+                        let alreadyClaimedWelcome = (existingVIP["welcomeBonusClaimed"] as? Bool)
+                            ?? ((existingVIP["welcomeBonusClaimed"] as? NSNumber)?.boolValue ?? false)
+                        let grantWelcome = isActive && !alreadyClaimedWelcome
+
+                        let vipPayload: [String: Any] = [
+                            "isActive": isActive,
+                            "productId": productId ?? NSNull(),
+                            "expiresAt": expiresAt,
+                            "willAutoRenew": willAutoRenew,
+                            "welcomeBonusClaimed": alreadyClaimedWelcome || grantWelcome,
+                            "source": source,
+                            "updatedAt": now,
+                        ]
+
+                        var updates: [String: Any] = ["vip": vipPayload]
+                        if grantWelcome {
+                            updates["money.gemstone"] = FieldValue.increment(Int64(VIPWelcomeBonus.gemstone))
+                            updates["money.ticket"] = FieldValue.increment(Int64(VIPWelcomeBonus.ticket))
+                            updates["item.fertilizer"] = FieldValue.increment(Int64(VIPWelcomeBonus.fertilizer))
+                            updates["item.shovel"] = FieldValue.increment(Int64(VIPWelcomeBonus.shovel))
+                        }
+
+                        if snapshot.exists {
+                            transaction.updateData(updates, forDocument: docRef)
+                        } else {
+                            transaction.setData(["vip": vipPayload], forDocument: docRef, merge: true)
+                        }
+
+                        return [
+                            "grantedWelcome": grantWelcome,
+                            "welcomeBonusClaimed": alreadyClaimedWelcome || grantWelcome
+                        ]
+                    } catch {
+                        errorPointer?.pointee = error as NSError
+                        return nil
+                    }
+                }
+                return result as? [String: Bool] ?? [:]
+            }
+
+            if var garden = self.gradenModel, garden.user.userID == uid {
+                let grantedWelcome = outcome["grantedWelcome"] ?? false
+                let claimed = outcome["welcomeBonusClaimed"] ?? garden.vipStatus.welcomeBonusClaimed
+                garden.vipStatus = GardenModel.VIPStatus(
+                    isActive: isActive,
+                    productId: productId,
+                    expiresAt: expiresAt,
+                    willAutoRenew: willAutoRenew,
+                    welcomeBonusClaimed: claimed,
+                    source: source,
+                    updatedAt: now
+                )
+                if grantedWelcome {
+                    garden.money.gemstone += VIPWelcomeBonus.gemstone
+                    garden.money.ticket += VIPWelcomeBonus.ticket
+                    garden.item.fertilizer += VIPWelcomeBonus.fertilizer
+                    garden.item.shovel += VIPWelcomeBonus.shovel
+                }
+                self.gradenModel = garden
+            }
+        } catch {
+            print("❌ VIP sync error: \(error.localizedDescription)")
+        }
     }
 }
 
