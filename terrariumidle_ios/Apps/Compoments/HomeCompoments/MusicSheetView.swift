@@ -42,6 +42,8 @@ struct MusicSheetView: View {
                 VStack(spacing: 0) {
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 22) {
+                            SleepTimerSection(audioManager: audioManager)
+
                             if !isVIP {
                                 VIPPromoBanner(
                                     title: "Mở khóa toàn bộ %d nhạc & %d SFX".tr(musics.count, sfxItems.count),
@@ -149,6 +151,68 @@ struct MusicSheetView: View {
         }
         .sheet(isPresented: $showVIPSheet) {
             SubscriptionView(isSheet: true, highlightContext: vipContextMessage)
+        }
+    }
+}
+
+private struct SleepTimerSection: View {
+    @ObservedObject var audioManager: BackgroundAudioManager
+    private let durations = [15, 30, 45, 60, 90, 120]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Hẹn giờ tắt nhạc".tr, systemImage: "moon.zzz.fill")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(.white)
+
+            Text("Tự tắt nhạc và mọi âm thanh khi hết giờ, kể cả khi khóa màn hình.".tr)
+                .font(.system(size: 12))
+                .foregroundStyle(.white.opacity(0.65))
+
+            ViewThatFits(in: .horizontal) {
+                durationButtons
+                VStack(spacing: 8) {
+                    durationRow(Array(durations.prefix(3)))
+                    durationRow(Array(durations.suffix(3)))
+                }
+            }
+
+            if let deadline = audioManager.sleepTimerDeadline {
+                HStack {
+                    Text("Tắt sau".tr)
+                    Text(timerInterval: Date()...max(Date(), deadline), countsDown: true)
+                        .monospacedDigit()
+                        .accessibilityLabel("Thời gian còn lại".tr)
+                    Spacer()
+                    Button("Hủy".tr) { audioManager.cancelSleepTimer() }
+                        .foregroundStyle(.orange)
+                }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white)
+            }
+        }
+        .padding(14)
+        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var durationButtons: some View { durationRow(durations) }
+
+    private func durationRow(_ values: [Int]) -> some View {
+        HStack(spacing: 8) {
+            ForEach(values, id: \.self) { minutes in
+                Button {
+                    audioManager.setSleepTimer(minutes: minutes)
+                } label: {
+                    Text("%d phút".tr(minutes))
+                        .font(.system(size: 12, weight: .semibold))
+                        .fixedSize()
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .padding(.horizontal, 4)
+                        .foregroundStyle(.white)
+                        .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 }

@@ -37,3 +37,43 @@ struct AudioCatalogTests {
         #expect(items.first { $0.id == "sfx9" }?.sound == "cat_purring")
     }
 }
+
+@Suite(.serialized)
+@MainActor
+struct AudioSleepTimerTests {
+    @Test func replacingAndCancellingTimerDoesNotStopPlayback() throws {
+        let audio = BackgroundAudioManager.shared
+        defer { audio.cancelSleepTimer() }
+        let generation = audio.captureAudioSnapshot().sleepStopGeneration
+        audio.setSleepTimer(minutes: 15)
+        let oldDeadline = try #require(audio.sleepTimerDeadline)
+        audio.setSleepTimer(minutes: 60)
+        let newDeadline = try #require(audio.sleepTimerDeadline)
+        #expect(newDeadline.timeIntervalSince(oldDeadline) > 44 * 60)
+        audio.expireSleepTimerIfNeeded(now: oldDeadline)
+        #expect(audio.sleepTimerDeadline == newDeadline)
+        audio.cancelSleepTimer()
+        audio.expireSleepTimerIfNeeded(now: newDeadline)
+        #expect(audio.sleepTimerDeadline == nil)
+        #expect(audio.captureAudioSnapshot().sleepStopGeneration == generation)
+    }
+
+    @Test func deadlineStopsAudioOnlyOnceAndInvalidatesOldSnapshots() throws {
+        let audio = BackgroundAudioManager.shared
+        defer { audio.cancelSleepTimer() }
+        let snapshot = audio.captureAudioSnapshot()
+        audio.setSleepTimer(minutes: 15)
+        let deadline = try #require(audio.sleepTimerDeadline)
+        audio.expireSleepTimerIfNeeded(now: deadline.addingTimeInterval(-1))
+        #expect(audio.sleepTimerDeadline == deadline)
+        audio.expireSleepTimerIfNeeded(now: deadline)
+        #expect(audio.sleepTimerDeadline == nil)
+        #expect(!audio.isPlaying)
+        #expect(audio.activeSFXIds.isEmpty)
+        #expect(audio.captureAudioSnapshot().sleepStopGeneration == snapshot.sleepStopGeneration + 1)
+        audio.restoreAudioSnapshot(snapshot)
+        audio.expireSleepTimerIfNeeded(now: deadline.addingTimeInterval(60))
+        #expect(!audio.isPlaying)
+        #expect(audio.captureAudioSnapshot().sleepStopGeneration == snapshot.sleepStopGeneration + 1)
+    }
+}

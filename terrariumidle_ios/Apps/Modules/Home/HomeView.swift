@@ -174,7 +174,8 @@ struct HomeView: View {
                                                         draggedPlant: $draggedPlant,
                                                         onDrop: handleDrop,
                                                         onAnimalTap: {
-                                                            beeCoordinator.notifyHiveTapped()
+                                                            let tappedId = plantData?.idPot ?? plantData?.idPlant ?? "animal1"
+                                                            beeCoordinator.notifyAnimalTapped(animalId: tappedId)
                                                         }
                                                     )
                                                     .id("\(rowIndex)-\(columnIndex)-\(plantData?.idPlant ?? "empty")-\(plantData?.idPot ?? "empty")")
@@ -183,7 +184,7 @@ struct HomeView: View {
                                         }
                                         .frame(maxWidth: .infinity, alignment: .center)
                                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("gardenViewport")) } action: { rect in
-                                            guard beeCoordinator.hivePositionKey != nil else { return }
+                                            guard beeCoordinator.hivePositionKey != nil || beeCoordinator.ladybugHomePositionKey != nil else { return }
                                             beeCoordinator.layout.calibrate(row: rowIndex, viewportMinY: rect.minY)
                                         }
                                         // SpriteKit particle zPositions cannot cross SwiftUI siblings.
@@ -413,9 +414,10 @@ struct HomeView: View {
             latestByPos[p.position] = p
         }
         let hive = latestByPos.values.first(where: {
-            ($0.idPlant.hasPrefix("animal") || ItemDataManager.shared.getAnimal(byId: $0.idPlant) != nil) &&
-            $0.idPlant == $0.idPot &&
-            AnimalAvailability.isAvailable(animalId: $0.idPlant)
+            $0.idPlant == "animal1" && $0.idPlant == $0.idPot && AnimalAvailability.isAvailable(animalId: $0.idPlant)
+        })
+        let ladybugHome = latestByPos.values.first(where: {
+            $0.idPlant == "animal2" && $0.idPlant == $0.idPot && AnimalAvailability.isAvailable(animalId: $0.idPlant)
         })
         let targets: [BeePlantTarget] = latestByPos.values.compactMap { plant in
             guard plant.idPlant.hasPrefix("plant"), !plant.idPot.isEmpty,
@@ -425,9 +427,10 @@ struct HomeView: View {
         }
         beeCoordinator.syncGarden(
             hivePosition: hive?.position,
+            ladybugHomePosition: ladybugHome?.position,
             plantTargets: targets,
             userFloors: garden.user.userFloor,
-            animalId: hive?.idPlant ?? "animal1"
+            animalId: hive?.idPlant ?? ladybugHome?.idPlant ?? "animal1"
         )
     }
 

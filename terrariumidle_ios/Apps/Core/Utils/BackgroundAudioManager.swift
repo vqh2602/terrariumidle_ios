@@ -30,6 +30,11 @@ final class BackgroundAudioManager: ObservableObject {
     /// Âm lượng riêng cho từng SFX (0.0 ... 1.0)
     @Published var sfxVolumes: [String: Float] = [:]
 
+    @Published private(set) var sleepTimerDeadline: Date?
+    private var sleepTimer: DispatchSourceTimer?
+    private var sleepTimerDidExpire = false
+    private var sleepStopGeneration = 0
+
     // MARK: - Private Players
 
     private let playback = BackgroundAudioPlayback()
@@ -43,6 +48,11 @@ final class BackgroundAudioManager: ObservableObject {
     private init() {
         setupRemoteCommands()
         setupInterruptionObserver()
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.expireSleepTimerIfNeeded() }
+        }
         ensureAudioSession()
     }
 
@@ -63,6 +73,7 @@ final class BackgroundAudioManager: ObservableObject {
         let bgmTitle: String
         let bgmImage: String?
         let activeSFXIds: Set<String>
+        let sleepStopGeneration: Int
     }
 
     func hasAudioResource(fileName: String, ext: String = "mp3") -> Bool {
@@ -77,11 +88,14 @@ final class BackgroundAudioManager: ObservableObject {
             bgmExtension: currentBGMExtension,
             bgmTitle: currentBGMTitle,
             bgmImage: currentBGMImage,
-            activeSFXIds: activeSFXIds
+            activeSFXIds: activeSFXIds,
+            sleepStopGeneration: sleepStopGeneration
         )
     }
 
     func restoreAudioSnapshot(_ snapshot: AudioSnapshot) {
+        expireSleepTimerIfNeeded()
+        guard !sleepTimerDidExpire, snapshot.sleepStopGeneration == sleepStopGeneration else { return }
         stopAllSFX()
         if snapshot.wasPlaying {
             if let fileName = snapshot.bgmFileName {
@@ -131,6 +145,41 @@ final class BackgroundAudioManager: ObservableObject {
 
     // MARK: - BGM Controls
 
+    /// Owned by the audio manager, so closing the sheet or backgrounding the app keeps it armed.
+    func setSleepTimer(minutes: Int) {
+        guard (1...120).contains(minutes) else { return }
+        cancelSleepTimer()
+        let interval = TimeInterval(minutes * 60)
+        let deadline = Date().addingTimeInterval(interval)
+        sleepTimerDeadline = deadline
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        timer.schedule(wallDeadline: .now() + interval, leeway: .milliseconds(100))
+        timer.setEventHandler { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self, self.sleepTimerDeadline == deadline else { return }
+                self.expireSleepTimerIfNeeded()
+            }
+        }
+        sleepTimer = timer
+        timer.resume()
+    }
+
+    func cancelSleepTimer() {
+        sleepTimer?.cancel()
+        sleepTimer = nil
+        sleepTimerDeadline = nil
+    }
+
+    func expireSleepTimerIfNeeded(now: Date = Date()) {
+        guard let deadline = sleepTimerDeadline, deadline <= now else { return }
+        cancelSleepTimer()
+        sleepTimerDidExpire = true
+        sleepStopGeneration += 1
+        pause()
+        stopAllSFX()
+        stopWeatherSound()
+    }
+
     func startBGM(
         fileName: String,
         ext: String = "mp3",
@@ -138,11 +187,15 @@ final class BackgroundAudioManager: ObservableObject {
         image: String? = nil,
         id: String? = nil
     ) {
+        expireSleepTimerIfNeeded()
+        sleepTimerDidExpire = false // An explicit playback request may start a new listening session.
         playbackGeneration += 1
         guard AudioSessionController.isActive else {
             let generation = playbackGeneration
             AudioSessionController.activate { [weak self] in
-                guard let self, self.playbackGeneration == generation else { return }
+                guard let self else { return }
+                self.expireSleepTimerIfNeeded()
+                guard self.playbackGeneration == generation else { return }
                 self.startBGM(fileName: fileName, ext: ext, title: title, image: image, id: id)
             }
             return
@@ -176,7 +229,9 @@ final class BackgroundAudioManager: ObservableObject {
                 played = false
             }
             Task { @MainActor [weak self] in
-                guard let self, self.playbackGeneration == generation else { return }
+                guard let self else { return }
+                self.expireSleepTimerIfNeeded()
+                guard self.playbackGeneration == generation else { return }
                 self.isStartingBGM = false
                 guard played else {
                     self.updateNowPlaying()
@@ -256,11 +311,15 @@ final class BackgroundAudioManager: ObservableObject {
     }
 
     func resume() {
+        expireSleepTimerIfNeeded()
+        sleepTimerDidExpire = false
         playbackGeneration += 1
         guard AudioSessionController.isActive else {
             let generation = playbackGeneration
             AudioSessionController.activate { [weak self] in
-                guard let self, self.playbackGeneration == generation else { return }
+                guard let self else { return }
+                self.expireSleepTimerIfNeeded()
+                guard self.playbackGeneration == generation else { return }
                 self.resume()
             }
             return
@@ -274,7 +333,9 @@ final class BackgroundAudioManager: ObservableObject {
                 playback.sfxPlayers.values.forEach { $0.play() }
             }
             Task { @MainActor [weak self] in
-                guard let self, self.playbackGeneration == generation else { return }
+                guard let self else { return }
+                self.expireSleepTimerIfNeeded()
+                guard self.playbackGeneration == generation else { return }
                 self.isStartingBGM = false
                 if !played {
                     let trackId = self.currentBGMId ?? "music1"
@@ -396,12 +457,16 @@ final class BackgroundAudioManager: ObservableObject {
     }
 
     func startSFX(id: String, fileName: String, ext: String = "mp3") {
+        expireSleepTimerIfNeeded()
+        sleepTimerDidExpire = false
         sfxGenerations[id, default: 0] += 1
         pendingSFXIds.insert(id)
         guard AudioSessionController.isActive else {
             let generation = sfxGenerations[id]
             AudioSessionController.activate { [weak self] in
-                guard let self, self.sfxGenerations[id] == generation else { return }
+                guard let self else { return }
+                self.expireSleepTimerIfNeeded()
+                guard self.sfxGenerations[id] == generation else { return }
                 self.startSFX(id: id, fileName: fileName, ext: ext)
             }
             return
@@ -487,6 +552,8 @@ final class BackgroundAudioManager: ObservableObject {
     // MARK: - Weather Ambient Sound
 
     func startWeatherSound(fileName: String, ext: String = "wav") {
+        expireSleepTimerIfNeeded()
+        guard !sleepTimerDidExpire else { return }
         let key = "\(fileName).\(ext)"
         guard activeWeatherFileName != key else { return }
 
@@ -494,7 +561,9 @@ final class BackgroundAudioManager: ObservableObject {
         guard AudioSessionController.isActive else {
             let generation = weatherGeneration
             AudioSessionController.activate { [weak self] in
-                guard let self, self.weatherGeneration == generation else { return }
+                guard let self else { return }
+                self.expireSleepTimerIfNeeded()
+                guard self.weatherGeneration == generation else { return }
                 self.startWeatherSound(fileName: fileName, ext: ext)
             }
             return
@@ -699,7 +768,10 @@ final class BackgroundAudioManager: ObservableObject {
                     let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
                     if options.contains(.shouldResume) {
                         Task { @MainActor [weak self] in
-                            self?.resume()
+                            guard let self else { return }
+                            self.expireSleepTimerIfNeeded()
+                            guard !self.sleepTimerDidExpire else { return }
+                            self.resume()
                         }
                     }
                 }

@@ -212,15 +212,18 @@ private struct VisitorShelvesView: View {
                                 VStack(spacing: 0) {
                                     HStack(spacing: 4) {
                                         ForEach(1...3, id: \.self) { column in
+                                            let slot = garden.slot(row: row, column: column)
                                             VisitorSlotView(
-                                                slot: garden.slot(row: row, column: column),
+                                                slot: slot,
                                                 width: width,
-                                                onAnimalTap: { beeCoordinator.notifyHiveTapped() }
+                                                onAnimalTap: {
+                                                    beeCoordinator.notifyAnimalTapped(animalId: slot?.plantID ?? "animal1")
+                                                }
                                             )
                                         }
                                     }
                                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("visitorViewport")) } action: { rect in
-                                        guard beeCoordinator.hivePositionKey != nil else { return }
+                                        guard beeCoordinator.hivePositionKey != nil || beeCoordinator.ladybugHomePositionKey != nil else { return }
                                         beeCoordinator.layout.calibrate(row: row, viewportMinY: rect.minY)
                                     }
                                     Image("r2").resizable().frame(height: 16)
@@ -252,15 +255,17 @@ private struct VisitorShelvesView: View {
     }
 
     private func syncVisitorSwarm() {
-        let hive = garden.slots.values.first(where: { $0.isAnimal && AnimalAvailability.isAvailable(animalId: $0.plantID) })
+        let hive = garden.slots.values.first(where: { $0.isAnimal && $0.plantID == "animal1" && AnimalAvailability.isAvailable(animalId: $0.plantID) })
+        let ladybugHome = garden.slots.values.first(where: { $0.isAnimal && $0.plantID == "animal2" && AnimalAvailability.isAvailable(animalId: $0.plantID) })
         let targets = garden.slots.values
             .filter { !$0.isSticker && !$0.isAnimal && !$0.plantID.isEmpty && !$0.potID.isEmpty }
             .map { BeePlantTarget(positionKey: $0.id, row: $0.row, column: $0.column, isHanging: $0.isHanging) }
         beeCoordinator.syncGarden(
             hivePosition: hive?.id,
+            ladybugHomePosition: ladybugHome?.id,
             plantTargets: targets,
             userFloors: garden.topFloor,
-            animalId: hive?.plantID ?? "animal1"
+            animalId: hive?.plantID ?? ladybugHome?.plantID ?? "animal1"
         )
     }
 }

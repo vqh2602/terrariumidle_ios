@@ -12,7 +12,7 @@ struct SubscriptionView: View {
     @State private var selectedPlan: VIPPlanKind = .yearly
     @State private var previewAudioItem: ItemData?
     @State private var previewAudioTimer: Task<Void, Never>?
-    @State private var previousAudioSnapshot: (id: String?, title: String, image: String?, wasPlaying: Bool)?
+    @State private var previousAudioSnapshot: BackgroundAudioManager.AudioSnapshot?
     @State private var previewEffectIndex = 0
     @State private var showSuccessAlert = false
 
@@ -698,13 +698,7 @@ struct SubscriptionView: View {
         }
 
         if previousAudioSnapshot == nil {
-            let manager = BackgroundAudioManager.shared
-            previousAudioSnapshot = (
-                id: manager.currentBGMId,
-                title: manager.currentBGMTitle,
-                image: manager.currentBGMImage,
-                wasPlaying: manager.isPlaying
-            )
+            previousAudioSnapshot = BackgroundAudioManager.shared.captureAudioSnapshot()
         }
 
         previewAudioTimer?.cancel()
@@ -732,20 +726,7 @@ struct SubscriptionView: View {
         guard let prev = previousAudioSnapshot else { return }
         previousAudioSnapshot = nil
         if !isVIPActive {
-            if let prevId = prev.id,
-               let prevItem = allMusics.first(where: { $0.id == prevId }) {
-                BackgroundAudioManager.shared.switchBGM(
-                    id: prevItem.id,
-                    fileName: prevItem.sound ?? prevItem.id,
-                    title: prev.title,
-                    image: prev.image
-                )
-                if !prev.wasPlaying {
-                    BackgroundAudioManager.shared.pause()
-                }
-            } else {
-                BackgroundAudioManager.shared.startDefaultBGM()
-            }
+            BackgroundAudioManager.shared.restoreAudioSnapshot(prev)
         }
     }
 }

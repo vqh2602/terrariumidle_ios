@@ -111,6 +111,16 @@ public final class GardenSlotLayoutTracker {
         return worldPoint(contentX: cx, contentTopDownY: cy)
     }
 
+    /// Điểm nghỉ trên mặt gốc gỗ mục `animal2` trong `worldNode`
+    public func ladybugHomeWorldPoint(for positionKey: String) -> CGPoint? {
+        guard let (row, col) = Self.parsePosition(positionKey),
+              let rowTopY = contentTopY(forRow: row) else { return nil }
+        let offset = Animal2Node.logRestOffsetFromSlotBottom(slotSize: slotSize)
+        let cx = contentX(forColumn: col) + offset.x
+        let cy = rowTopY + slotSize.height - offset.y
+        return worldPoint(contentX: cx, contentTopDownY: cy)
+    }
+
     /// Điểm tán hoa/cây để ong đáp xuống lấy mật trong `worldNode`
     public func plantNectarWorldPoint(for target: BeePlantTarget) -> CGPoint? {
         guard let rowTopY = contentTopY(forRow: target.row) else { return nil }
@@ -146,6 +156,7 @@ public final class GardenBeeSwarmCoordinator: ObservableObject {
 
     public private(set) var animalId: String = "animal1"
     public private(set) var hivePositionKey: String?
+    public private(set) var ladybugHomePositionKey: String?
     public private(set) var plantTargets: [BeePlantTarget] = []
 
     weak var overlayScene: GardenBeeOverlayScene?
@@ -154,21 +165,37 @@ public final class GardenBeeSwarmCoordinator: ObservableObject {
 
     public func syncGarden(
         hivePosition: String?,
+        ladybugHomePosition: String? = nil,
         plantTargets: [BeePlantTarget],
         userFloors: Int,
         animalId: String = "animal1"
     ) {
-        let changedHive = (self.hivePositionKey != hivePosition) || (self.animalId != animalId)
+        let resolvedHive = (animalId == "animal2" && ladybugHomePosition == nil) ? nil : hivePosition
+        let resolvedLadybug = ladybugHomePosition ?? (animalId == "animal2" ? hivePosition : nil)
+
+        let changedHive = (self.hivePositionKey != resolvedHive) || (self.animalId != animalId)
+        let changedLadybug = (self.ladybugHomePositionKey != resolvedLadybug)
         self.animalId = animalId
-        self.hivePositionKey = hivePosition
+        self.hivePositionKey = resolvedHive
+        self.ladybugHomePositionKey = resolvedLadybug
         self.plantTargets = plantTargets
         self.layout.userFloors = userFloors
-        overlayScene?.syncSwarmConfiguration(hiveChanged: changedHive)
+        overlayScene?.syncSwarmConfiguration(hiveChanged: changedHive, ladybugChanged: changedLadybug)
     }
 
     /// Khi người dùng click vào tổ ong: nếu hiện không có chú ong nào ngoài vườn thì thả ra 1 chú ong đi lấy mật
     public func notifyHiveTapped() {
         overlayScene?.releaseOneBeeIfIdle()
+    }
+
+    /// Khi người dùng click vào tổ động vật theo ID (`animal1` hoặc `animal2`)
+    public func notifyAnimalTapped(animalId: String) {
+        let cleanId = animalId.lowercased().trimmingCharacters(in: .whitespaces)
+        if cleanId == "animal2" {
+            overlayScene?.handleLadybugLogTapped()
+        } else {
+            overlayScene?.releaseOneBeeIfIdle()
+        }
     }
 }
 
@@ -184,14 +211,25 @@ public final class GardenBeeOverlayScene: SKScene {
     private var autoDispatchWorkItem: DispatchWorkItem?
     private var pendingDispatchCount: Int = 0
 
+    private var ladybug: LazybugAgentNode?
+    private var ladybugNeedsInitialPlacement: Bool = false
+    private var ladybugTimerWorkItem: DispatchWorkItem?
+
     var isEditing: Bool = false {
         didSet {
             guard oldValue != isEditing else { return }
             refreshActiveRenderingState()
-            if !isEditing && !isScenePausedByLifecycle && activeBeeCount == 0 && coordinator?.hivePositionKey != nil {
-                scheduleAutoDispatch(delay: Double.random(in: 2.0...4.0))
+            if !isEditing && !isScenePausedByLifecycle {
+                if activeBeeCount == 0 && coordinator?.hivePositionKey != nil {
+                    scheduleAutoDispatch(delay: Double.random(in: 2.0...4.0))
+                }
+                if coordinator?.ladybugHomePositionKey != nil, ladybugTimerWorkItem == nil,
+                   let bug = ladybug, bug.behaviorState == .idleAtHome || bug.behaviorState == .sleepingAtHome {
+                    scheduleNextLadybugAction(delay: Double.random(in: 3.0...6.0))
+                }
             } else if isEditing {
                 cancelAutoDispatch()
+                cancelLadybugTimer()
             }
         }
     }
@@ -200,10 +238,17 @@ public final class GardenBeeOverlayScene: SKScene {
         didSet {
             guard oldValue != isScenePausedByLifecycle else { return }
             refreshActiveRenderingState()
-            if !isEditing && !isScenePausedByLifecycle && activeBeeCount == 0 && coordinator?.hivePositionKey != nil {
-                scheduleAutoDispatch(delay: Double.random(in: 2.0...4.0))
+            if !isEditing && !isScenePausedByLifecycle {
+                if activeBeeCount == 0 && coordinator?.hivePositionKey != nil {
+                    scheduleAutoDispatch(delay: Double.random(in: 2.0...4.0))
+                }
+                if coordinator?.ladybugHomePositionKey != nil, ladybugTimerWorkItem == nil,
+                   let bug = ladybug, bug.behaviorState == .idleAtHome || bug.behaviorState == .sleepingAtHome {
+                    scheduleNextLadybugAction(delay: Double.random(in: 3.0...6.0))
+                }
             } else if isScenePausedByLifecycle {
                 cancelAutoDispatch()
+                cancelLadybugTimer()
             }
         }
     }
@@ -230,22 +275,18 @@ public final class GardenBeeOverlayScene: SKScene {
     public override func didMove(to view: SKView) {
         super.didMove(to: view)
         view.allowsTransparency = true
-        syncSwarmConfiguration(hiveChanged: true)
+        syncSwarmConfiguration(hiveChanged: true, ladybugChanged: true)
     }
 
     // MARK: - Configuration & Pool
 
-    func syncSwarmConfiguration(hiveChanged: Bool) {
+    func syncSwarmConfiguration(hiveChanged: Bool, ladybugChanged: Bool = false) {
         guard let coordinator else { return }
 
-        guard coordinator.hivePositionKey != nil else {
+        if coordinator.hivePositionKey == nil {
             cancelAutoDispatch()
             removeAllBees()
-            refreshActiveRenderingState()
-            return
-        }
-
-        if bees.isEmpty {
+        } else if bees.isEmpty {
             let slotW = coordinator.layout.slotSize.width > 0 ? coordinator.layout.slotSize.width : 110.0
             let beeWidth = max(18.0, min(25.0, slotW * 0.20))
             for variant in BeeVariant.allCases {
@@ -258,7 +299,6 @@ public final class GardenBeeOverlayScene: SKScene {
                 worldNode.addChild(bee)
                 bees.append(bee)
             }
-            refreshActiveRenderingState()
             scheduleAutoDispatch(delay: Double.random(in: 2.2...4.0))
         } else if hiveChanged {
             for bee in bees {
@@ -266,8 +306,51 @@ public final class GardenBeeOverlayScene: SKScene {
                 bee.setState(.idleInHive)
             }
             pendingDispatchCount = 0
-            refreshActiveRenderingState()
             scheduleAutoDispatch(delay: Double.random(in: 2.2...4.0))
+        }
+
+        // Cấu hình chú bọ rùa duy nhất (`animal2`)
+        if coordinator.ladybugHomePositionKey == nil {
+            cancelLadybugTimer()
+            removeLadybug()
+        } else if ladybug == nil {
+            let slotW = coordinator.layout.slotSize.width > 0 ? coordinator.layout.slotSize.width : 110.0
+            let bugWidth = max(22.0, min(28.0, slotW * 0.23))
+            let bug = LazybugAgentNode(displayWidth: bugWidth)
+            bug.zPosition = 310
+            bug.onReturnedHome = { [weak self] in
+                self?.scheduleNextLadybugAction(delay: Double.random(in: 3.5...7.0))
+            }
+            worldNode.addChild(bug)
+            ladybug = bug
+            placeLadybugAtHomeIfPossible()
+            scheduleNextLadybugAction(delay: Double.random(in: 2.5...5.0))
+        } else if ladybugChanged {
+            placeLadybugAtHomeIfPossible()
+            scheduleNextLadybugAction(delay: Double.random(in: 2.5...5.0))
+        }
+
+        refreshActiveRenderingState()
+    }
+
+    private func removeLadybug() {
+        ladybug?.removeAllActions()
+        ladybug?.removeFromParent()
+        ladybug = nil
+        ladybugNeedsInitialPlacement = false
+    }
+
+    private func placeLadybugAtHomeIfPossible() {
+        guard let bug = ladybug,
+              let coordinator,
+              let key = coordinator.ladybugHomePositionKey else { return }
+        if coordinator.layout.isCalibrated,
+           let homePt = coordinator.layout.ladybugHomeWorldPoint(for: key) {
+            bug.settleAtHome(at: homePt, sleep: Bool.random())
+            ladybugNeedsInitialPlacement = false
+        } else {
+            bug.isHidden = true
+            ladybugNeedsInitialPlacement = true
         }
     }
 
@@ -287,7 +370,8 @@ public final class GardenBeeOverlayScene: SKScene {
 
     private func refreshActiveRenderingState() {
         let hasHive = coordinator?.hivePositionKey != nil
-        let shouldRun = !isEditing && !isScenePausedByLifecycle && hasHive && activeBeeCount > 0
+        let hasLadybug = coordinator?.ladybugHomePositionKey != nil
+        let shouldRun = !isEditing && !isScenePausedByLifecycle && ((hasHive && activeBeeCount > 0) || hasLadybug)
         worldNode.isHidden = !shouldRun
         self.isPaused = !shouldRun
         if shouldRun, let coordinator {
@@ -335,12 +419,27 @@ public final class GardenBeeOverlayScene: SKScene {
         }
 
         guard !isEditing,
-              coordinator.hivePositionKey != nil,
-              coordinator.layout.isCalibrated,
-              !bees.isEmpty else { return }
+              coordinator.layout.isCalibrated else { return }
 
-        for bee in bees where bee.flightState == .flyingToPlant || bee.flightState == .returning {
-            bee.syncFacingToHorizontalMotion()
+        if coordinator.hivePositionKey != nil, !bees.isEmpty {
+            for bee in bees where bee.flightState == .flyingToPlant || bee.flightState == .returning {
+                bee.syncFacingToHorizontalMotion()
+            }
+        }
+
+        if let bug = ladybug, let homeKey = coordinator.ladybugHomePositionKey {
+            if ladybugNeedsInitialPlacement, let homePt = coordinator.layout.ladybugHomeWorldPoint(for: homeKey) {
+                bug.settleAtHome(at: homePt, sleep: Bool.random())
+                ladybugNeedsInitialPlacement = false
+            } else if bug.behaviorState == .idleAtHome || bug.behaviorState == .sleepingAtHome {
+                if let homePt = coordinator.layout.ladybugHomeWorldPoint(for: homeKey) {
+                    if hypot(bug.position.x - homePt.x, bug.position.y - homePt.y) > 0.5 {
+                        bug.position = homePt
+                    }
+                }
+            } else if bug.behaviorState == .flyingToPlant || bug.behaviorState == .flyingBetweenPlants || bug.behaviorState == .flyingHome {
+                bug.syncFacingToHorizontalMotion()
+            }
         }
     }
 
@@ -442,12 +541,125 @@ public final class GardenBeeOverlayScene: SKScene {
         )
     }
 
+    // MARK: - Ladybug Orchestration
+
+    private func cancelLadybugTimer() {
+        ladybugTimerWorkItem?.cancel()
+        ladybugTimerWorkItem = nil
+    }
+
+    private func scheduleNextLadybugAction(delay: TimeInterval) {
+        cancelLadybugTimer()
+        guard !isEditing, !isScenePausedByLifecycle, coordinator?.ladybugHomePositionKey != nil else { return }
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.ladybugTimerWorkItem = nil
+            self.performNextLadybugStep()
+        }
+        ladybugTimerWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
+    private func performNextLadybugStep() {
+        guard let coordinator,
+              let bug = ladybug,
+              let homeKey = coordinator.ladybugHomePositionKey,
+              !isEditing,
+              !isScenePausedByLifecycle else { return }
+
+        guard coordinator.layout.isCalibrated,
+              let homePt = coordinator.layout.ladybugHomeWorldPoint(for: homeKey) else {
+            scheduleNextLadybugAction(delay: 1.5)
+            return
+        }
+
+        guard bug.behaviorState == .idleAtHome || bug.behaviorState == .sleepingAtHome else { return }
+
+        // Nếu đang ở nhà: có thể chuyển qua lại idle <-> sleep hoặc bay ra cây
+        if !coordinator.plantTargets.isEmpty && Double.random(in: 0...1) < 0.65 {
+            launchLadybugRoam(from: homePt)
+        } else {
+            let nextSleep = (bug.behaviorState == .idleAtHome)
+            bug.settleAtHome(at: homePt, sleep: nextSleep)
+            scheduleNextLadybugAction(delay: Double.random(in: 4.5...8.0))
+        }
+    }
+
+    private func launchLadybugRoam(from startPoint: CGPoint) {
+        guard let bug = ladybug, let coordinator else { return }
+        bug.launchRoamMission(
+            from: startPoint,
+            plantTargetProvider: { [weak coordinator] in
+                guard let coordinator,
+                      let target = coordinator.plantTargets.randomElement(),
+                      let pt = coordinator.layout.plantNectarWorldPoint(for: target) else { return nil }
+                return (key: target.positionKey, point: pt)
+            },
+            leafCrawlOffsetProvider: { [weak coordinator] in
+                let slotW = coordinator?.layout.slotSize.width ?? 110.0
+                let dx = (Bool.random() ? 1.0 : -1.0) * CGFloat.random(in: slotW * 0.08...slotW * 0.22)
+                let dy = CGFloat.random(in: -8.0...10.0)
+                return CGVector(dx: dx, dy: dy)
+            },
+            homePointProvider: { [weak coordinator] in
+                guard let coordinator,
+                      let key = coordinator.ladybugHomePositionKey,
+                      let pt = coordinator.layout.ladybugHomeWorldPoint(for: key) else {
+                    return startPoint
+                }
+                return pt
+            },
+            onFinishedHome: {}
+        )
+    }
+
+    /// Khi người dùng click vào gốc cây gỗ mục (`animal2`):
+    /// - Nếu bọ rùa đang ở bên ngoài -> bay về nhà
+    /// - Nếu bọ rùa đã ở nhà -> không làm gì thêm (chỉ phát hiệu ứng rơi mảnh gỗ trên Animal2Node)
+    func handleLadybugLogTapped() {
+        guard let coordinator,
+              let bug = ladybug,
+              let homeKey = coordinator.ladybugHomePositionKey,
+              !isEditing else { return }
+
+        switch bug.behaviorState {
+        case .flyingToPlant, .crawlingOnLeaf, .flyingBetweenPlants:
+            cancelLadybugTimer()
+            let fallback = bug.position
+            bug.flyBackHome(
+                homePointProvider: { [weak coordinator] in
+                    guard let coordinator,
+                          let pt = coordinator.layout.ladybugHomeWorldPoint(for: homeKey) else {
+                        return fallback
+                    }
+                    return pt
+                },
+                onFinishedHome: {}
+            )
+        case .idleAtHome, .sleepingAtHome, .flyingHome, .startledHiding:
+            break
+        }
+    }
+
     // MARK: - Hit Testing & Tap-to-Startle
 
     func hasTappableBee(atViewPoint viewPoint: CGPoint) -> Bool {
         guard !isEditing, !isScenePausedByLifecycle else { return false }
         let scenePoint = convertPoint(fromView: viewPoint)
-        return findTappableBee(atScenePoint: scenePoint) != nil
+        return findTappableBee(atScenePoint: scenePoint) != nil || findTappableLadybug(atScenePoint: scenePoint) != nil
+    }
+
+    private func findTappableLadybug(atScenePoint scenePoint: CGPoint) -> LazybugAgentNode? {
+        guard let bug = ladybug, !bug.isHidden else { return nil }
+        switch bug.behaviorState {
+        case .flyingToPlant, .crawlingOnLeaf, .flyingBetweenPlants, .flyingHome:
+            let worldPoint = convert(scenePoint, to: worldNode)
+            let hitRadius = max(26.0, bug.displayWidth * 1.25)
+            let d = hypot(worldPoint.x - bug.position.x, worldPoint.y - bug.position.y)
+            return d <= hitRadius ? bug : nil
+        case .idleAtHome, .sleepingAtHome, .startledHiding:
+            return nil
+        }
     }
 
     private func findTappableBee(atScenePoint scenePoint: CGPoint) -> BeeAgentNode? {
@@ -470,6 +682,43 @@ public final class GardenBeeOverlayScene: SKScene {
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first, let coordinator else { return }
         let scenePoint = touch.location(in: self)
+
+        if let bug = findTappableLadybug(atScenePoint: scenePoint) {
+            cancelLadybugTimer()
+            let soundName = ItemDataManager.shared.getAnimal(byId: "animal2")?.childClickSound(for: "lazybug") ?? "mixkit-clinking-coins-1993"
+            AudioPlayer.shared.playClickSound(named: soundName)
+
+            let fallbackHome = bug.position
+            let worldSz = coordinator.layout.viewportSize.width > 0 ? coordinator.layout.viewportSize : self.size
+            bug.triggerStartledAndHide(
+                hideDuration: Double.random(in: 4.6...5.4),
+                worldSize: worldSz,
+                plantTargetProvider: { [weak coordinator] in
+                    guard let coordinator,
+                          let target = coordinator.plantTargets.randomElement(),
+                          let pt = coordinator.layout.plantNectarWorldPoint(for: target) else { return nil }
+                    return (key: target.positionKey, point: pt)
+                },
+                leafCrawlOffsetProvider: { [weak coordinator] in
+                    let slotW = coordinator?.layout.slotSize.width ?? 110.0
+                    let dx = (Bool.random() ? 1.0 : -1.0) * CGFloat.random(in: slotW * 0.08...slotW * 0.22)
+                    let dy = CGFloat.random(in: -8.0...10.0)
+                    return CGVector(dx: dx, dy: dy)
+                },
+                homePointProvider: { [weak coordinator] in
+                    guard let coordinator,
+                          let key = coordinator.ladybugHomePositionKey,
+                          let pt = coordinator.layout.ladybugHomeWorldPoint(for: key) else {
+                        return fallbackHome
+                    }
+                    return pt
+                },
+                in: worldNode,
+                onFinishedHome: {}
+            )
+            return
+        }
+
         guard let bee = findTappableBee(atScenePoint: scenePoint) else { return }
 
         // Âm thanh khi click vào con ong từ tapSoundChild["bee"]

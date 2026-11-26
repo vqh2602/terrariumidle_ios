@@ -15,7 +15,8 @@ public typealias AnimalView = SpriteKitAnimalView
 
 public enum AnimalAvailability {
     public static let supportedAnimalIds: Set<String> = [
-        "animal1"
+        "animal1",
+        "animal2"
     ]
 
     public static func isAvailable(animalId: String) -> Bool {
@@ -30,6 +31,7 @@ public enum AnimalRegistry {
         let cleanId = animalId.lowercased().trimmingCharacters(in: .whitespaces)
         switch cleanId {
         case "animal1": return Animal1View.defaultFitRatio
+        case "animal2": return Animal2View.defaultFitRatio
         default: return 0.62
         }
     }

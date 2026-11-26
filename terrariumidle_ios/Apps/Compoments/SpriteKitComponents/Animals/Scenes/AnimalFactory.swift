@@ -19,6 +19,8 @@ public enum AnimalFactory {
         switch cleanId {
         case "animal1":
             return Animal1Node(containerSize: containerSize, isHanging: isHanging)
+        case "animal2":
+            return Animal2Node(containerSize: containerSize, isHanging: isHanging)
         default:
             return Animal1Node(containerSize: containerSize, isHanging: isHanging)
         }
