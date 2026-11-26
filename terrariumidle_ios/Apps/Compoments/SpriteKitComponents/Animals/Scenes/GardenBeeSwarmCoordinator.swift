@@ -121,6 +121,16 @@ public final class GardenSlotLayoutTracker {
         return worldPoint(contentX: cx, contentTopDownY: cy)
     }
 
+    /// Điểm tán lá cây để bọ rùa đáp xuống và bò trên lá trong `worldNode`
+    public func plantLeafWorldPoint(for target: BeePlantTarget) -> CGPoint? {
+        guard let rowTopY = contentTopY(forRow: target.row) else { return nil }
+        let jitterX = CGFloat.random(in: -0.14...0.14) * slotSize.width
+        let fracY: CGFloat = target.isHanging ? CGFloat.random(in: 0.48...0.68) : CGFloat.random(in: 0.58...0.74)
+        let cx = contentX(forColumn: target.column) + jitterX
+        let cy = rowTopY + slotSize.height * fracY
+        return worldPoint(contentX: cx, contentTopDownY: cy)
+    }
+
     /// Điểm tán hoa/cây để ong đáp xuống lấy mật trong `worldNode`
     public func plantNectarWorldPoint(for target: BeePlantTarget) -> CGPoint? {
         guard let rowTopY = contentTopY(forRow: target.row) else { return nil }
@@ -319,15 +329,15 @@ public final class GardenBeeOverlayScene: SKScene {
             let bug = LazybugAgentNode(displayWidth: bugWidth)
             bug.zPosition = 310
             bug.onReturnedHome = { [weak self] in
-                self?.scheduleNextLadybugAction(delay: Double.random(in: 3.5...7.0))
+                self?.scheduleNextLadybugAction(delay: Double.random(in: 10.0...16.0))
             }
             worldNode.addChild(bug)
             ladybug = bug
             placeLadybugAtHomeIfPossible()
-            scheduleNextLadybugAction(delay: Double.random(in: 2.5...5.0))
+            scheduleNextLadybugAction(delay: Double.random(in: 5.0...9.0))
         } else if ladybugChanged {
             placeLadybugAtHomeIfPossible()
-            scheduleNextLadybugAction(delay: Double.random(in: 2.5...5.0))
+            scheduleNextLadybugAction(delay: Double.random(in: 5.0...9.0))
         }
 
         refreshActiveRenderingState()
@@ -433,8 +443,10 @@ public final class GardenBeeOverlayScene: SKScene {
                 ladybugNeedsInitialPlacement = false
             } else if bug.behaviorState == .idleAtHome || bug.behaviorState == .sleepingAtHome {
                 if let homePt = coordinator.layout.ladybugHomeWorldPoint(for: homeKey) {
-                    if hypot(bug.position.x - homePt.x, bug.position.y - homePt.y) > 0.5 {
-                        bug.position = homePt
+                    let restYOffset = (bug.behaviorState == .sleepingAtHome) ? (bug.displayWidth * 0.24) : (bug.displayWidth * 0.36)
+                    let adjustedHome = CGPoint(x: homePt.x, y: homePt.y + restYOffset)
+                    if hypot(bug.position.x - adjustedHome.x, bug.position.y - adjustedHome.y) > 0.5 {
+                        bug.position = adjustedHome
                     }
                 }
             } else if bug.behaviorState == .flyingToPlant || bug.behaviorState == .flyingBetweenPlants || bug.behaviorState == .flyingHome {
@@ -575,13 +587,13 @@ public final class GardenBeeOverlayScene: SKScene {
 
         guard bug.behaviorState == .idleAtHome || bug.behaviorState == .sleepingAtHome else { return }
 
-        // Nếu đang ở nhà: có thể chuyển qua lại idle <-> sleep hoặc bay ra cây
-        if !coordinator.plantTargets.isEmpty && Double.random(in: 0...1) < 0.65 {
+        // Nếu đang ở nhà: có thể chuyển qua lại idle <-> sleep lâu hơn hoặc bay ra cây
+        if !coordinator.plantTargets.isEmpty && Double.random(in: 0...1) < 0.55 {
             launchLadybugRoam(from: homePt)
         } else {
             let nextSleep = (bug.behaviorState == .idleAtHome)
             bug.settleAtHome(at: homePt, sleep: nextSleep)
-            scheduleNextLadybugAction(delay: Double.random(in: 4.5...8.0))
+            scheduleNextLadybugAction(delay: Double.random(in: 9.0...15.0))
         }
     }
 
@@ -592,13 +604,13 @@ public final class GardenBeeOverlayScene: SKScene {
             plantTargetProvider: { [weak coordinator] in
                 guard let coordinator,
                       let target = coordinator.plantTargets.randomElement(),
-                      let pt = coordinator.layout.plantNectarWorldPoint(for: target) else { return nil }
+                      let pt = coordinator.layout.plantLeafWorldPoint(for: target) else { return nil }
                 return (key: target.positionKey, point: pt)
             },
             leafCrawlOffsetProvider: { [weak coordinator] in
                 let slotW = coordinator?.layout.slotSize.width ?? 110.0
-                let dx = (Bool.random() ? 1.0 : -1.0) * CGFloat.random(in: slotW * 0.08...slotW * 0.22)
-                let dy = CGFloat.random(in: -8.0...10.0)
+                let dx = (Bool.random() ? 1.0 : -1.0) * CGFloat.random(in: slotW * 0.05...slotW * 0.12)
+                let dy = CGFloat.random(in: -5.0...6.0)
                 return CGVector(dx: dx, dy: dy)
             },
             homePointProvider: { [weak coordinator] in
@@ -696,13 +708,13 @@ public final class GardenBeeOverlayScene: SKScene {
                 plantTargetProvider: { [weak coordinator] in
                     guard let coordinator,
                           let target = coordinator.plantTargets.randomElement(),
-                          let pt = coordinator.layout.plantNectarWorldPoint(for: target) else { return nil }
+                          let pt = coordinator.layout.plantLeafWorldPoint(for: target) else { return nil }
                     return (key: target.positionKey, point: pt)
                 },
                 leafCrawlOffsetProvider: { [weak coordinator] in
                     let slotW = coordinator?.layout.slotSize.width ?? 110.0
-                    let dx = (Bool.random() ? 1.0 : -1.0) * CGFloat.random(in: slotW * 0.08...slotW * 0.22)
-                    let dy = CGFloat.random(in: -8.0...10.0)
+                    let dx = (Bool.random() ? 1.0 : -1.0) * CGFloat.random(in: slotW * 0.05...slotW * 0.12)
+                    let dy = CGFloat.random(in: -5.0...6.0)
                     return CGVector(dx: dx, dy: dy)
                 },
                 homePointProvider: { [weak coordinator] in

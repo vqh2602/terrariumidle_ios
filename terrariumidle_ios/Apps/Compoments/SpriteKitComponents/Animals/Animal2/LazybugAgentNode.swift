@@ -183,7 +183,8 @@ public final class LazybugAgentNode: SKNode {
         bodyRigNode.yScale = 1.0
 
         let canvas = Self.svgCanvasSize(for: pose)
-        let scale = displayWidth / canvas.width
+        let refWidth = Self.normalizedReferenceWidth(for: pose)
+        let scale = displayWidth / refWidth
         let specs = Self.specs(for: pose)
 
         // Đối với trạng thái bay, gom cánh đỏ ngoài + đốm đen vào cùng wing rig để xoay đồng bộ
@@ -212,7 +213,7 @@ public final class LazybugAgentNode: SKNode {
         }
 
         for spec in specs {
-            let tex = LazybugTextureCache.shared.texture(named: spec.imageName)
+            let tex = LazybugTextureCache.shared.texture(named: "\(spec.imageName)@2.083x")
             let sprite = SKSpriteNode(texture: tex)
             sprite.size = CGSize(width: spec.svgW * scale, height: spec.svgH * scale)
             sprite.anchorPoint = CGPoint(x: spec.anchorX, y: spec.anchorY)
@@ -458,7 +459,7 @@ public final class LazybugAgentNode: SKNode {
 
     // MARK: - Behavior Orchestration
 
-    /// Đặt bọ rùa về trạng thái nghỉ hoặc ngủ trên gốc cây gỗ mục
+    /// Đặt bọ rùa về trạng thái nghỉ hoặc ngủ trên mặt phẳng trên cùng của gốc cây gỗ mục
     public func settleAtHome(at homePoint: CGPoint, sleep: Bool) {
         activeSequenceId = UUID()
         removeAction(forKey: "lazybug_mission")
@@ -466,8 +467,11 @@ public final class LazybugAgentNode: SKNode {
         isHidden = false
         alpha = 1.0
         setScale(1.0)
-        position = homePoint
-        lastSampledX = homePoint.x
+        // Đặt phần chân/bụng bọ rùa chạm đúng mặt gỗ phẳng (vì tâm node nằm giữa thân)
+        let restYOffset = sleep ? (displayWidth * 0.24) : (displayWidth * 0.36)
+        let adjustedPoint = CGPoint(x: homePoint.x, y: homePoint.y + restYOffset)
+        position = adjustedPoint
+        lastSampledX = adjustedPoint.x
         behaviorState = sleep ? .sleepingAtHome : .idleAtHome
         setFacingRight(Bool.random(), animated: false)
         setPose(sleep ? .sleep : .idle)
@@ -481,6 +485,14 @@ public final class LazybugAgentNode: SKNode {
         homePointProvider: @escaping () -> CGPoint,
         onFinishedHome: @escaping () -> Void
     ) {
+        guard let firstDest = plantTargetProvider() else {
+            let homePt = homePointProvider()
+            settleAtHome(at: homePt, sleep: Bool.random())
+            onReturnedHome?()
+            onFinishedHome()
+            return
+        }
+
         activeSequenceId = UUID()
         let seqId = activeSequenceId
         removeAction(forKey: "lazybug_mission")
@@ -491,20 +503,19 @@ public final class LazybugAgentNode: SKNode {
         position = startPoint
         lastSampledX = startPoint.x
 
-        let firstDest = plantTargetProvider() ?? (key: nil, point: CGPoint(x: startPoint.x + 60, y: startPoint.y + 40))
         currentTargetPlantKey = firstDest.key
         behaviorState = .flyingToPlant
         face(toward: firstDest.point.x, from: startPoint.x)
         setPose(.fly)
 
-        // Bọ rùa bay chậm hơn ong (ong ~62 pt/s -> bọ rùa ~36 pt/s)
+        // Bọ rùa bay chậm hơn ong (ong ~62 pt/s -> bọ rùa ~32 pt/s)
         let dist1 = hypot(firstDest.point.x - startPoint.x, firstDest.point.y - startPoint.y)
-        let dur1 = max(2.8, min(7.2, TimeInterval(dist1 / 36.0)))
+        let dur1 = max(3.2, min(8.0, TimeInterval(dist1 / 32.0)))
         let flyToFirst = makeCurvedFlightAction(from: startPoint, to: firstDest.point, duration: dur1, arcLift: 22.0)
 
         var sequence: [SKAction] = [flyToFirst]
 
-        // Đậu lên lá & bò qua lại trên cây 1
+        // Đậu lên lá & bò qua lại thư giãn trên cây 1
         sequence.append(contentsOf: makeLeafCrawlActions(seqId: seqId, offsetProvider: leafCrawlOffsetProvider))
 
         // 50% cơ hội bay sang 1 cây khác trước khi về nhà
@@ -517,7 +528,7 @@ public final class LazybugAgentNode: SKNode {
                 self.setPose(.fly)
                 let curPos = self.position
                 let d2 = hypot(secondDest.point.x - curPos.x, secondDest.point.y - curPos.y)
-                let dur2 = max(2.6, min(6.8, TimeInterval(d2 / 36.0)))
+                let dur2 = max(3.0, min(7.5, TimeInterval(d2 / 32.0)))
                 let flight2 = self.makeCurvedFlightAction(from: curPos, to: secondDest.point, duration: dur2, arcLift: 20.0)
                 var restSeq: [SKAction] = [flight2]
                 restSeq.append(contentsOf: self.makeLeafCrawlActions(seqId: seqId, offsetProvider: leafCrawlOffsetProvider))
@@ -556,11 +567,13 @@ public final class LazybugAgentNode: SKNode {
 
         let start = position
         let home = homePointProvider()
-        face(toward: home.x, from: start.x)
+        let homeRestingY = home.y + (displayWidth * 0.30)
+        let targetHome = CGPoint(x: home.x, y: homeRestingY)
+        face(toward: targetHome.x, from: start.x)
 
-        let dist = hypot(home.x - start.x, home.y - start.y)
+        let dist = hypot(targetHome.x - start.x, targetHome.y - start.y)
         let dur = max(2.0, min(6.5, TimeInterval(dist / 38.0)))
-        let flyHome = makeCurvedFlightAction(from: start, to: home, duration: dur, arcLift: 20.0)
+        let flyHome = makeCurvedFlightAction(from: start, to: targetHome, duration: dur, arcLift: 20.0)
 
         let land = SKAction.run { [weak self] in
             guard let self, self.activeSequenceId == seqId else { return }
@@ -686,14 +699,14 @@ public final class LazybugAgentNode: SKNode {
 
     private func makeLeafCrawlActions(seqId: UUID, offsetProvider: @escaping () -> CGVector) -> [SKAction] {
         var actions: [SKAction] = []
-        let steps = Int.random(in: 2...3)
+        let steps = Int.random(in: 3...5)
         for _ in 0..<steps {
             let pause = SKAction.run { [weak self] in
                 guard let self, self.activeSequenceId == seqId else { return }
                 self.behaviorState = .crawlingOnLeaf
                 self.setPose(.idle)
             }
-            let waitIdle = SKAction.wait(forDuration: Double.random(in: 1.1...2.0))
+            let waitIdle = SKAction.wait(forDuration: Double.random(in: 2.2...3.8))
 
             let crawl = SKAction.run { [weak self] in
                 guard let self, self.activeSequenceId == seqId else { return }
@@ -701,14 +714,21 @@ public final class LazybugAgentNode: SKNode {
                 self.face(toward: self.position.x + delta.dx, from: self.position.x)
                 self.setPose(.move)
                 let dist = hypot(delta.dx, delta.dy)
-                let dur = max(0.85, min(1.85, TimeInterval(dist / 16.0)))
+                let dur = max(1.4, min(2.4, TimeInterval(dist / 12.0)))
                 let move = SKAction.move(by: delta, duration: dur)
                 move.timingMode = .easeInEaseOut
                 self.run(move, withKey: "lazybug_leaf_step")
             }
-            let waitCrawl = SKAction.wait(forDuration: 1.55)
+            let waitCrawl = SKAction.wait(forDuration: 2.5)
             actions.append(contentsOf: [pause, waitIdle, crawl, waitCrawl])
         }
+        // Nghỉ thêm một nhịp trên lá trước khi bay đi
+        let finalRest = SKAction.run { [weak self] in
+            guard let self, self.activeSequenceId == seqId else { return }
+            self.setPose(.idle)
+        }
+        actions.append(finalRest)
+        actions.append(SKAction.wait(forDuration: Double.random(in: 1.8...3.0)))
         return actions
     }
 
@@ -756,6 +776,16 @@ public final class LazybugAgentNode: SKNode {
         case .sleep: return CGSize(width: 1443.003, height: 1011.071)
         case .fly:   return CGSize(width: 1460.815, height: 1165.700)
         case .move:  return CGSize(width: 1342.585, height: 1037.205)
+        }
+    }
+
+    /// Chuẩn hóa tỉ lệ thân giữa cả 4 trạng thái để kích thước bọ rùa đồng đều nhau
+    private static func normalizedReferenceWidth(for pose: LazybugPoseState) -> CGFloat {
+        switch pose {
+        case .idle:  return 1375.0
+        case .sleep: return 1380.0
+        case .fly:   return 1275.0
+        case .move:  return 1420.0
         }
     }
 

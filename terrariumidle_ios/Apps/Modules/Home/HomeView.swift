@@ -410,16 +410,17 @@ struct HomeView: View {
             return
         }
         var latestByPos: [String: GardenModel.Plant] = [:]
-        for p in garden.plants where !p.idPlant.isEmpty && !p.idPot.isEmpty {
+        for p in garden.plants {
             latestByPos[p.position] = p
         }
-        let hive = latestByPos.values.first(where: {
+        let validSlots = latestByPos.values.filter { !$0.idPlant.isEmpty && !$0.idPot.isEmpty }
+        let hive = validSlots.first(where: {
             $0.idPlant == "animal1" && $0.idPlant == $0.idPot && AnimalAvailability.isAvailable(animalId: $0.idPlant)
         })
-        let ladybugHome = latestByPos.values.first(where: {
+        let ladybugHome = validSlots.first(where: {
             $0.idPlant == "animal2" && $0.idPlant == $0.idPot && AnimalAvailability.isAvailable(animalId: $0.idPlant)
         })
-        let targets: [BeePlantTarget] = latestByPos.values.compactMap { plant in
+        let targets: [BeePlantTarget] = validSlots.compactMap { plant in
             guard plant.idPlant.hasPrefix("plant"), !plant.idPot.isEmpty,
                   let pos = PlantPosition(from: plant.position) else { return nil }
             let hanging = ItemDataManager.shared.getPlant(byId: plant.idPlant)?.itemTypeAttribute.isHanging ?? plant.isHanging
