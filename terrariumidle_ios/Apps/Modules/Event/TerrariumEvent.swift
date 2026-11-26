@@ -12,7 +12,7 @@ struct TerrariumEvent: Decodable, Identifiable, Hashable {
         let data: [TerrariumEvent]
     }
 
-    static let feedURL = URL(string: "https://vqh2602.github.io/dailycoccoli_data.github.io/event/event_terrarium.json")!
+    static let feedURL = URL(string: "https://vqh2602.github.io/terrarium_data.github.io/event_terrarium.json")!
     static let webBase = "https://vqh2602.github.io/dailycoccoli_data.github.io/event/"
 
     let eventdata: [Content]
