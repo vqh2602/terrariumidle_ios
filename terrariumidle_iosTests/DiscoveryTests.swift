@@ -114,6 +114,28 @@ struct DiscoveryTests {
         #expect(model.error == nil)
         #expect(!model.isLoading)
     }
+
+    @Test func visitorVIPAndPlantAtmosphereUnlocking() throws {
+        var vipData = data(plants: [plant("0,1", id: "plant1", pot: "pot1")])
+        vipData["vip"] = ["isActive": true, "expiresAt": Date().timeIntervalSince1970 + 3600]
+        let vipGarden = try VisitorGarden(documentID: "vip-owner", data: vipData)
+        #expect(vipGarden.profile.isVIP == true)
+
+        var expiredData = data()
+        expiredData["vip"] = ["isActive": true, "expiresAt": 1000]
+        let expiredGarden = try VisitorGarden(documentID: "expired-owner", data: expiredData)
+        #expect(expiredGarden.profile.isVIP == false)
+
+        let vipAtmosphere = MusicUnlockHelper.randomAtmosphere(itemIds: [], isVIP: true)
+        #expect(!vipAtmosphere.backgroundId.isEmpty)
+        #expect(vipAtmosphere.overlayId != nil)
+        #expect(vipAtmosphere.music != nil)
+        #expect(vipAtmosphere.sfx != nil)
+
+        let defaultUnlocked = MusicUnlockHelper.getUnlockedIds(itemIds: [], isVIP: false)
+        #expect(defaultUnlocked.contains("music1"))
+        #expect(defaultUnlocked.contains("m0"))
+    }
 }
 
 @MainActor

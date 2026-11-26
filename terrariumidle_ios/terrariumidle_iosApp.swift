@@ -39,6 +39,7 @@ struct terrariumidle_iosApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @Environment(\.scenePhase) private var scenePhase
     @ObservedObject private var localization = LocalizationManager.shared
+    @ObservedObject private var atmosphere = GardenAtmosphereManager.shared
 
     var body: some Scene {
         WindowGroup {
@@ -55,9 +56,17 @@ struct terrariumidle_iosApp: App {
                     }
                 }
                 .onAppear {
-                    // Tự động phát BGM thư giãn ngay khi mở app
-                    if !BackgroundAudioManager.shared.isPlaying {
-                        BackgroundAudioManager.shared.startDefaultBGM()
+                    // Tự động phát BGM thư giãn ngay khi mở app (chỉ khởi tạo 1 lần xuyên suốt)
+                    BackgroundAudioManager.shared.startInitialBGMIfNeeded()
+                }
+                .task(id: "\(scenePhase == .active)-\(atmosphere.hasInitialized)-\(atmosphere.timerGeneration)") {
+                    guard scenePhase == .active, atmosphere.hasInitialized else { return }
+                    do {
+                        try await Task.sleep(for: .seconds(GardenAtmosphereManager.landscapeRotationInterval))
+                        try Task.checkCancellation()
+                        atmosphere.randomizeLandscape(gardenModel: FireStoreService.shared.gradenModel)
+                    } catch {
+                        // Cancelled when leaving active phase or reset when landscape changes.
                     }
                 }
                 .onOpenURL { url in

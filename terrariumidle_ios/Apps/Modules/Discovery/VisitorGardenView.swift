@@ -7,6 +7,8 @@ struct VisitorGardenView: View {
     @StateObject private var model: VisitorGardenViewModel
     @State private var reloadID = 0
     @State private var showLikeNotice = false
+    @State private var atmosphere: VisitorAtmosphere?
+    @State private var savedAudioSnapshot: BackgroundAudioManager.AudioSnapshot?
 
     init(profile: DiscoveredProfile, repository: any DiscoveryReading,
          onLike: ((String, Int) -> Void)? = nil) {
@@ -19,7 +21,7 @@ struct VisitorGardenView: View {
     var body: some View {
         ZStack {
             if let garden = model.garden {
-                VisitorShelvesView(garden: garden)
+                VisitorShelvesView(garden: garden, atmosphere: atmosphere)
                     .id(garden.profile.id)
                     .ignoresSafeArea()
             } else if model.isLoading {
@@ -52,6 +54,16 @@ struct VisitorGardenView: View {
             }
         }
         .task(id: reloadID) { await model.load(id: profile.id) }
+        .task(id: "\(model.garden?.profile.id ?? "")-\(reloadID)") {
+            guard let garden = model.garden else { return }
+            applyVisitorAtmosphere(for: garden)
+        }
+        .onDisappear {
+            if let snapshot = savedAudioSnapshot {
+                BackgroundAudioManager.shared.restoreAudioSnapshot(snapshot)
+                savedAudioSnapshot = nil
+            }
+        }
         .task(id: model.likeMessage) {
             showLikeNotice = model.likeMessage != nil
             guard showLikeNotice else { return }
@@ -73,9 +85,16 @@ struct VisitorGardenView: View {
             .accessibilityLabel("Rời khu vườn".tr)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(model.garden?.profile.name ?? profile.name)
-                    .font(.system(.subheadline, design: .rounded, weight: .bold))
-                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    if model.garden?.profile.isVIP ?? profile.isVIP {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(VIPPalette.gold)
+                    }
+                    Text(model.garden?.profile.name ?? profile.name)
+                        .font(.system(.subheadline, design: .rounded, weight: .bold))
+                        .lineLimit(1)
+                }
                 Text("Đang ghé thăm".tr)
                     .font(.system(size: 10, weight: .medium, design: .rounded))
                     .foregroundStyle(AccountStyle.ink.opacity(0.65))
@@ -117,6 +136,35 @@ struct VisitorGardenView: View {
     }
 
     private var displayedLikes: Int { model.garden == nil ? profile.likes : model.likeCount }
+
+    private func applyVisitorAtmosphere(for garden: VisitorGarden) {
+        let audio = BackgroundAudioManager.shared
+        if savedAudioSnapshot == nil {
+            savedAudioSnapshot = audio.captureAudioSnapshot()
+        }
+
+        let itemIds = garden.slots.values.flatMap { [$0.plantID, $0.potID] }
+        let selected = MusicUnlockHelper.randomAtmosphere(
+            itemIds: itemIds,
+            isVIP: garden.profile.isVIP,
+            hasAudioFile: { audio.hasAudioResource(fileName: $0) }
+        )
+        atmosphere = selected
+
+        guard savedAudioSnapshot?.wasPlaying == true else { return }
+        if let music = selected.music {
+            audio.switchBGM(
+                id: music.id,
+                fileName: music.sound ?? music.id,
+                title: music.name.tr,
+                image: music.image
+            )
+        }
+        audio.stopAllSFX()
+        if let sfx = selected.sfx {
+            audio.startSFX(id: sfx.id, fileName: sfx.sound ?? sfx.id)
+        }
+    }
 }
 
 private struct VisitorGlassSurface: ViewModifier {
@@ -141,19 +189,13 @@ private struct VisitorGlassSurface: ViewModifier {
 
 private struct VisitorShelvesView: View {
     let garden: VisitorGarden
-
-    private var backgroundID: String {
-        let unlocked = Set(garden.slots.values.flatMap { slot in
-            [slot.plantID, slot.potID].flatMap { ItemDataManager.shared.getItem(byId: $0)?.unlockedLandscapeIds ?? [] }
-        })
-        return ItemDataManager.shared.getAllLandscapes().first { unlocked.contains($0.id) }?.image ?? "i_sky_sun_day"
-    }
+    let atmosphere: VisitorAtmosphere?
 
     var body: some View {
         GeometryReader { geometry in
             let width = max(1, (geometry.size.width - 40) / 3)
             ZStack {
-                SpriteKitBackgroundView(backgroundId: backgroundID)
+                SpriteKitBackgroundView(backgroundId: atmosphere?.backgroundId ?? "i_sky_sun_day")
                 HStack(spacing: 0) {
                     Image("r1").resizable().frame(width: 16)
                     ScrollView {
@@ -175,6 +217,10 @@ private struct VisitorShelvesView: View {
                     .defaultScrollAnchor(.bottom)
                     Image("r1").resizable().frame(width: 16).scaleEffect(x: -1, y: 1)
                 }
+                OverlayEffectView(overlayId: atmosphere?.overlayId)
+                    .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
+                    .ignoresSafeArea(.all)
+                    .allowsHitTesting(false)
             }
         }
     }

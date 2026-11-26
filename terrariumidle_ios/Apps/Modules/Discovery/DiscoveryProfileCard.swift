@@ -9,10 +9,17 @@ struct DiscoveryProfileCard: View {
             HStack(spacing: 14) {
                 avatar
                 VStack(alignment: .leading, spacing: 9) {
-                    Text(profile.name)
-                        .font(.system(.headline, design: .rounded, weight: .heavy))
-                        .foregroundStyle(AccountStyle.ink)
-                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 5) {
+                        if profile.isVIP {
+                            Image(systemName: "crown.fill")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(VIPPalette.gold)
+                        }
+                        Text(profile.name)
+                            .font(.system(.headline, design: .rounded, weight: .heavy))
+                            .foregroundStyle(AccountStyle.ink)
+                            .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    }
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: 7) { statistics }
                         VStack(alignment: .leading, spacing: 5) { statistics }

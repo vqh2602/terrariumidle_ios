@@ -7,46 +7,85 @@
 
 import Foundation
 
+struct VisitorAtmosphere {
+    let backgroundId: String
+    let overlayId: String?
+    let music: ItemData?
+    let sfx: ItemData?
+}
+
 enum MusicUnlockHelper {
     /// Extract all unlocked music/SFX/landscape/overlay IDs from planted items.
     /// When VIP is active, all music, SFX, landscapes, and visual overlay effects are unlocked
     /// without requiring any plants to be planted.
     static func getUnlockedMusicIds(from gardenModel: GardenModel?, isVIPOverride: Bool? = nil) -> Set<String> {
         let isVIP = isVIPOverride ?? SubscriptionManager.isVIP(gardenModel: gardenModel)
+        let itemIds = gardenModel?.plants.flatMap { [$0.idPlant, $0.idPot] } ?? []
+        return getUnlockedIds(itemIds: itemIds, isVIP: isVIP)
+    }
+
+    /// Extract all unlocked music/SFX/landscape/overlay IDs from a list of plant/pot IDs and VIP status.
+    static func getUnlockedIds(itemIds: [String], isVIP: Bool) -> Set<String> {
         if isVIP {
             return allCatalogAudioAndVisualIds()
         }
 
-        guard let plants = gardenModel?.plants else { return ["m0", "music1"] }
-
-        var unlockedIds: Set<String> = []
-
         // Always unlock default track
-        unlockedIds.formUnion(["m0", "music1"])
+        var unlockedIds: Set<String> = ["m0", "music1"]
 
-        for plant in plants {
-            // Check plant item
-            if !plant.idPlant.isEmpty,
-               let plantItem = ItemDataManager.shared.getItem(byId: plant.idPlant)
-            {
-                extractAllUnlockedIds(from: plantItem, into: &unlockedIds)
-            }
-
-            // Check pot item
-            if !plant.idPot.isEmpty,
-               let potItem = ItemDataManager.shared.getItem(byId: plant.idPot)
-            {
-                extractAllUnlockedIds(from: potItem, into: &unlockedIds)
+        for itemId in itemIds where !itemId.isEmpty {
+            if let item = ItemDataManager.shared.getItem(byId: itemId) {
+                extractAllUnlockedIds(from: item, into: &unlockedIds)
             }
         }
 
+        mapLegacyTrackIds(into: &unlockedIds)
+        return unlockedIds
+    }
+
+    /// Pick a random landscape, overlay effect, music track, and SFX unlocked by a garden's items or VIP status.
+    static func randomAtmosphere(
+        itemIds: [String],
+        isVIP: Bool,
+        hasAudioFile: (String) -> Bool = { _ in true }
+    ) -> VisitorAtmosphere {
+        let unlockedIds = getUnlockedIds(itemIds: itemIds, isVIP: isVIP)
+
+        let landscapes = ItemDataManager.shared.getAllLandscapes().filter {
+            unlockedIds.contains($0.id)
+        }
+        let backgroundId = landscapes.randomElement()?.id ?? "i_sky_sun_day"
+
+        let overlays = ItemDataManager.shared.getAllEffects().filter {
+            unlockedIds.contains($0.id)
+        }
+        let overlayId = overlays.randomElement()?.id
+
+        let musics = ItemDataManager.shared.getAllMusics().filter {
+            unlockedIds.contains($0.id) && hasAudioFile($0.sound ?? $0.id)
+        }
+        let music = musics.randomElement()
+
+        let sfxList = ItemDataManager.shared.getAllMusicsSFX().filter {
+            unlockedIds.contains($0.id) && hasAudioFile($0.sound ?? $0.id)
+        }
+        let sfx = sfxList.randomElement()
+
+        return VisitorAtmosphere(
+            backgroundId: backgroundId,
+            overlayId: overlayId,
+            music: music,
+            sfx: sfx
+        )
+    }
+
+    private static func mapLegacyTrackIds(into unlockedIds: inout Set<String>) {
         // Legacy gardens store audio names (m0, m1); the catalog uses music1, music2.
         for track in ItemDataManager.shared.getAllMusics() {
             if unlockedIds.contains(track.sound ?? track.id) || unlockedIds.contains(track.image) {
                 unlockedIds.insert(track.id)
             }
         }
-        return unlockedIds
     }
 
     static func allCatalogAudioAndVisualIds() -> Set<String> {

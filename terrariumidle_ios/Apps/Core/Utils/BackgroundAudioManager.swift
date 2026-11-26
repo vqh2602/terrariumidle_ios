@@ -36,6 +36,7 @@ final class BackgroundAudioManager: ObservableObject {
     private var currentBGMFileName: String?
     private var currentBGMExtension = "mp3"
     private var isStartingBGM = false
+    private var hasStartedInitialBGM = false
     private var pendingSFXIds: Set<String> = []
     private var nowPlayingGeneration = 0
 
@@ -52,6 +53,56 @@ final class BackgroundAudioManager: ObservableObject {
 
     func ensureAudioSession() {
         AudioSessionController.activate()
+    }
+
+    struct AudioSnapshot {
+        let wasPlaying: Bool
+        let bgmId: String?
+        let bgmFileName: String?
+        let bgmExtension: String
+        let bgmTitle: String
+        let bgmImage: String?
+        let activeSFXIds: Set<String>
+    }
+
+    func hasAudioResource(fileName: String, ext: String = "mp3") -> Bool {
+        findAudioURL(fileName: fileName, ext: ext) != nil
+    }
+
+    func captureAudioSnapshot() -> AudioSnapshot {
+        AudioSnapshot(
+            wasPlaying: isPlaying || isStartingBGM,
+            bgmId: currentBGMId,
+            bgmFileName: currentBGMFileName,
+            bgmExtension: currentBGMExtension,
+            bgmTitle: currentBGMTitle,
+            bgmImage: currentBGMImage,
+            activeSFXIds: activeSFXIds
+        )
+    }
+
+    func restoreAudioSnapshot(_ snapshot: AudioSnapshot) {
+        stopAllSFX()
+        if snapshot.wasPlaying {
+            if let fileName = snapshot.bgmFileName {
+                startBGM(
+                    fileName: fileName,
+                    ext: snapshot.bgmExtension,
+                    title: snapshot.bgmTitle,
+                    image: snapshot.bgmImage,
+                    id: snapshot.bgmId
+                )
+            } else {
+                startDefaultBGM()
+            }
+            let sfxCatalog = Dictionary(uniqueKeysWithValues: ItemDataManager.shared.getAllMusicsSFX().map { ($0.id, $0) })
+            for sfxId in snapshot.activeSFXIds {
+                let fileName = sfxCatalog[sfxId]?.sound ?? sfxId
+                startSFX(id: sfxId, fileName: fileName)
+            }
+        } else {
+            pause()
+        }
     }
 
     // MARK: - Audio File Resolution Helper
@@ -154,6 +205,13 @@ final class BackgroundAudioManager: ObservableObject {
         image: String? = nil
     ) {
         startBGM(fileName: fileName, title: title, image: image ?? id, id: id)
+    }
+
+    /// Khởi tạo BGM mặc định đúng 1 lần khi vào app; không tự phát lại khi chuyển màn hình.
+    func startInitialBGMIfNeeded() {
+        guard !hasStartedInitialBGM else { return }
+        hasStartedInitialBGM = true
+        startDefaultBGM()
     }
 
     /// Phát bản nhạc BGM mặc định ("m0" - "Relax...") nếu chưa có nhạc đang phát

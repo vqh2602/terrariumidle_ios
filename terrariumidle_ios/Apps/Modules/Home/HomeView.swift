@@ -70,31 +70,10 @@ struct HomeView: View {
     @State private var hudHeight: CGFloat = 56
     @State private var isEdit: Bool = false
     @State private var draggedPlant: DraggedPlantData? = nil
-    @State var backgroundRive: String = "i_sky_sun_day"
-    @State var overlayRive: String? = nil
+    @ObservedObject private var atmosphere = GardenAtmosphereManager.shared
 
     init() {
-        // BGM được tự động phát trong onAppear nếu chưa phát, không gọi switchBGM trong init() để tránh reset nhạc khi re-render
-    }
-
-    private func autoSelectOverlay() {
-        let unlockedIds = MusicUnlockHelper.getUnlockedMusicIds(from: fireStoreService.gradenModel)
-
-        // Auto-select background landscape
-        let unlockedLandscapes = ItemDataManager.shared.getAllLandscapes().filter {
-            unlockedIds.contains($0.id)
-        }
-        if !unlockedLandscapes.isEmpty {
-            backgroundRive = unlockedLandscapes.randomElement()?.id ?? "Landscape1"
-        }
-
-        // Auto-select overlay effect (sử dụng custom SpriteKit cho tất cả các overlay)
-        let unlockedOverlays = ItemDataManager.shared.getAllEffects().filter {
-            unlockedIds.contains($0.id)
-        }
-        if !unlockedOverlays.isEmpty {
-            overlayRive = unlockedOverlays.randomElement()?.id
-        }
+        // BGM và landscape được khởi tạo xuyên suốt 1 lần khi vào app, không reset khi chuyển màn hình hoặc re-render.
     }
 
     var body: some View {
@@ -120,7 +99,7 @@ struct HomeView: View {
                     }
                     */
                     // 100% SpriteKit Background
-                    SpriteKitBackgroundView(backgroundId: backgroundRive, onReady: {
+                    SpriteKitBackgroundView(backgroundId: atmosphere.backgroundRive, onReady: {
                         backgroundReady = true
                     })
                         .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
@@ -236,7 +215,7 @@ struct HomeView: View {
                             ).scaleEffect(x: -1, y: 1) // 👈 lật ngang
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     //                    .background(AppColors.backgroundLogin)
-                    OverlayEffectView(overlayId: overlayRive)
+                    OverlayEffectView(overlayId: atmosphere.overlayRive)
                         .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
                         .ignoresSafeArea(.all)
                         .allowsHitTesting(false)
@@ -260,7 +239,7 @@ struct HomeView: View {
 
             }
             if dataReady && backgroundReady && !isEdit {
-                SpeedDial(isEditing: $isEdit, backgroundRive: $backgroundRive, overlayRive: $overlayRive)
+                SpeedDial(isEditing: $isEdit, backgroundRive: $atmosphere.backgroundRive, overlayRive: $atmosphere.overlayRive)
             }
         } // Full màn hình, bao gồm status bar
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -319,11 +298,6 @@ struct HomeView: View {
             }
         }
         .onDisappear { scrollDirection = 0; draggedPlant = nil }
-        .onAppear {
-            if !BackgroundAudioManager.shared.isPlaying {
-                BackgroundAudioManager.shared.startDefaultBGM()
-            }
-        }
     }
 
     @MainActor
@@ -366,7 +340,7 @@ struct HomeView: View {
             return
         }
 
-        autoSelectOverlay()
+        atmosphere.initializeIfNeeded(gardenModel: fireStoreService.gradenModel)
         fireStoreService.realtimeChangeDataGraden(userId: userId)
         dataReady = true
 

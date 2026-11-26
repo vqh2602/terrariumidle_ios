@@ -9,6 +9,7 @@ struct DiscoveredProfile: Identifiable, Equatable {
     let floors: Int
     private(set) var likes: Int
     let oxygenCollected: Int?
+    let isVIP: Bool
 
     init?(documentID: String, data: [String: Any], oxygenCollected: Int? = nil) {
         guard !documentID.isEmpty, !documentID.contains("/"),
@@ -23,6 +24,11 @@ struct DiscoveredProfile: Identifiable, Equatable {
         floors = max(0, DiscoveryValue.int(user["userFloor"]))
         likes = max(0, DiscoveryValue.int(user["userTotalLike"]))
         self.oxygenCollected = oxygenCollected.map { max(0, $0) }
+        if let vipDict = data["vip"] as? [String: Any] {
+            isVIP = GardenModel.VIPStatus(dict: vipDict).isCurrentlyActive
+        } else {
+            isVIP = false
+        }
     }
 
     func updatingLikes(_ total: Int) -> DiscoveredProfile {
