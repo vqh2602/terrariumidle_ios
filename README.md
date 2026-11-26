@@ -12,7 +12,8 @@ Dự án game mô phỏng thư giãn **Terrarium Idle** trên nền tảng iOS, 
 4. [Hệ thống đồ họa SpriteKit](#-hệ-thống-đồ-họa-spritekit)
 5. [Cơ chế cấu hình Data-Driven JSON](#-cơ-chế-cấu-hình-data-driven-json)
 6. [Hệ thống Xác thực & Dữ liệu đám mây](#-hệ-thống-xác-thực--dữ-liệu-đám-mây)
-7. [Hướng dẫn cài đặt & Biên dịch](#-hướng-dẫn-cài-đặt--biên-dịch)
+7. [Hệ thống Gói Đăng Ký Terrarium VIP & Sự kiện 30 Ngày](#-hệ-thống-gói-đăng-ký-terrarium-vip--sự-kiện-30-ngày)
+8. [Hướng dẫn cài đặt & Biên dịch](#-hướng-dẫn-cài-đặt--biên-dịch)
 
 ---
 
@@ -126,14 +127,15 @@ terrariumidle_ios/
 │   │   ├── Services/
 │   │   │   ├── AuthService.swift            # Xác thực Google, Apple, Email/Password
 │   │   │   ├── AuthSession.swift            # Quản lý phiên đăng nhập
-│   │   │   └── FireStoreService.swift       # Đồng bộ dữ liệu người dùng & khu vườn
+│   │   │   ├── FireStoreService.swift       # Đồng bộ dữ liệu người dùng & khu vườn
+│   │   │   └── SubscriptionManager.swift    # Quản lý gói VIP StoreKit 2 (Tháng / Năm)
 │   │   ├── ViewModels/
 │   │   │   ├── LoginViewModel.swift
 │   │   │   └── AccountViewModel.swift
 │   │   └── Utils/
 │   │       ├── AudioPlayer.swift            # Phát âm thanh SFX
 │   │       ├── BackgroundAudioManager.swift # Quản lý nhạc nền BGM luân chuyển
-│   │       ├── MusicUnlockHelper.swift      # Kiểm tra mở khóa hiệu ứng/nhạc
+│   │       ├── MusicUnlockHelper.swift      # Kiểm tra mở khóa hiệu ứng/nhạc (hỗ trợ VIP)
 │   │       └── FormatNumber.swift           # Định dạng số hiển thị tiền tệ
 │   │
 │   ├── Data/
@@ -172,12 +174,17 @@ terrariumidle_ios/
 │   │   │   ├── RivePlantCompoment.swift
 │   │   │   ├── RivePotCompoment.swift
 │   │   │   └── RiveModel.swift
+│   │   ├── SubscriptionComponents/          # Huy hiệu & Banner quảng bá Terrarium VIP
 │   │   └── HomeCompoments/                  # Các giao diện con trang Home (SpeedDial, Sheets...)
 │   │
 │   └── Modules/
 │       ├── Home/                            # Màn hình chính nuôi dưỡng Terrarium
 │       ├── Auth/                            # Màn hình đăng nhập & Splash
-│       └── Store/                           # Cửa hàng vật phẩm & trao đổi
+│       ├── Store/                           # Cửa hàng vật phẩm & trao đổi
+│       ├── Event/                           # Sự kiện WebView v2 & Điểm danh 30 ngày
+│       └── Subscription/                    # Trang đăng ký gói VIP Tháng / Năm
+│
+├── TerrariumVIP.storekit                    # Cấu hình StoreKit 2 test nội bộ (Tháng / Năm)
 │
 └── Resources/
     ├── Rives/                               # File tài nguyên .riv cho background, cây, chậu
@@ -595,6 +602,37 @@ sequenceDiagram
 - **Apple Sign-In**: Tích hợp chuẩn Apple Authorization Services.
 - **Email/Password**: Tích hợp sheet đăng nhập/đăng ký với đầy đủ validation và hiển thị lỗi thân thiện.
 - **Cloud Firestore**: Tự động khôi phục vị trí cây, chậu, nhạc nền và cảnh quan khi đổi thiết bị.
+
+---
+
+## 👑 Hệ thống Gói Đăng Ký Terrarium VIP & Sự kiện 30 Ngày
+
+### 1. Gói đăng ký VIP (StoreKit 2 · Tháng & Năm)
+- **Product IDs**:
+  - Gói Tháng: `vqhapp.terrariumidle_ios.vip.monthly` (dùng thử 3 ngày miễn phí trong `TerrariumVIP.storekit`).
+  - Gói Năm: `vqhapp.terrariumidle_ios.vip.yearly` (dùng thử 7 ngày miễn phí, tiết kiệm ~32% trong `TerrariumVIP.storekit`).
+- **Dịch vụ `SubscriptionManager.swift`**:
+  - Tự động lắng nghe `Transaction.updates`, kiểm tra `Transaction.currentEntitlements`, hỗ trợ khôi phục giao dịch (`AppStore.sync()`) và mở trang quản lý gói (`AppStore.showManageSubscriptions`).
+  - Đồng bộ trạng thái VIP lên Firestore (`users/{uid}.vip`) qua transaction trong `FireStoreService.syncVIPStatus(...)` kèm quà chào mừng nhận 1 lần (`50 Đá quý + 3 Vé + 10 Phân bón + 5 Xẻng`).
+- **Quyền lợi Hội viên VIP**:
+  - **Mở khóa toàn bộ Âm thanh & Hình ảnh không cần trồng cây**: `MusicUnlockHelper.getUnlockedMusicIds(from:)` tự động mở 100% danh mục `music_data.json`, `music_sfx_data.json`, `landscapes_data.json` và `effects_data.json`.
+  - **+50% Oxygen khi chăm cây**: Nhân `1.5x` lượng Oxygen nhận được trong `FireStoreService.recordPlantTap`.
+  - **×2 Quà Điểm danh 30 ngày hàng tháng** trong sự kiện `monthly`.
+  - **Huy hiệu Hoàng gia VIP** hiển thị trên `ProfileCard` và `LevelCircularBadge`.
+- **Trang đăng ký & Điểm chạm chuyển đổi (`SubscriptionView.swift`)**:
+  - Cho phép nghe thử nhạc VIP 12 giây và xem trước hiệu ứng thị giác ngay trên màn hình đăng ký.
+  - Tích hợp banner/nút mở khóa VIP tại `MusicSheetView`, `EffectsSheetView` (khi chạm mục đang khóa), `SpeedDial`, `AccountView`, `StoreView` và `EventView`.
+
+### 2. Sự kiện Điểm danh 30 ngày hàng tháng (`terrarium-events-web`)
+- **Trang web mới**: `terrarium-events-web/events/monthly.html` (`shared/games/monthly.js`, `shared/monthlyRewards.js`).
+- **Tạo ngẫu nhiên theo tháng (`MonthlyRewardGenerator.swift`)**:
+  - Mỗi đầu tháng theo múi giờ `Asia/Ho_Chi_Minh` (`yyyy-MM`), hệ thống sinh ngẫu nhiên 30 phần thưởng gồm đủ 5 loại vật phẩm với số lượng theo độ quý hiếm:
+    - `oxygen` (*Thường*): `250 – 1.200`
+    - `fertilizer` (*Ít gặp*): `2 – 8`
+    - `shovel` (*Hiếm*): `1 – 4`
+    - `gemstone` (*Sử thi*): `5 – 25`
+    - `ticket` (*Huyền thoại*): `1 – 3`
+  - Giao dịch điểm danh (`action: "monthlyCheckIn"`) được xử lý nguyên tử trên Firestore (`EventV2Service.swift`), tự động nhân đôi số lượng khi tài khoản có VIP.
 
 ---
 
