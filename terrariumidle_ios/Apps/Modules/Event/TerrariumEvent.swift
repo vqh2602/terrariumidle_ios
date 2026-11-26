@@ -68,6 +68,23 @@ struct TerrariumEvent: Decodable, Identifiable, Hashable {
         }
     }
 
+    var v2EventId: String? {
+        guard let url = URL(string: link),
+              url.scheme == "https",
+              url.host == "vqh2602.github.io",
+              url.path.hasPrefix("/terrarium_data.github.io/terrarium-events-web/events/") else {
+            return nil
+        }
+        switch url.lastPathComponent {
+        case "slot.html": return "slot"
+        case "match.html": return "match"
+        case "oxygen.html": return "oxygen"
+        case "level.html": return "level"
+        case "daily.html": return "daily"
+        default: return nil
+        }
+    }
+
     func webURL(garden: GardenModel?) -> URL? {
         let path: String
         switch link {

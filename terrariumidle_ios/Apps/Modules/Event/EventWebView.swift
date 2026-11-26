@@ -67,6 +67,9 @@ struct EventWebView: UIViewRepresentable {
             controller.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "terrariumEvent")
             controller.addUserScript(WKUserScript(source: Self.bridgeScript, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
+        if event.v2EventId != nil {
+            controller.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "terrariumEventV2")
+        }
         let configuration = WKWebViewConfiguration()
         configuration.userContentController = controller
         let webView = WKWebView(frame: .zero, configuration: configuration)
@@ -84,6 +87,7 @@ struct EventWebView: UIViewRepresentable {
         uiView.navigationDelegate = nil
         uiView.uiDelegate = nil
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "terrariumEvent", contentWorld: .page)
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: "terrariumEventV2", contentWorld: .page)
     }
 
     @MainActor
@@ -96,6 +100,10 @@ struct EventWebView: UIViewRepresentable {
         init(_ parent: EventWebView) { self.parent = parent }
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
+            if message.name == "terrariumEventV2" {
+                handleV2Message(message, replyHandler: replyHandler)
+                return
+            }
             guard message.frameInfo.isMainFrame,
                   message.frameInfo.securityOrigin.protocol == "https",
                   message.frameInfo.securityOrigin.host == parent.url.host,
@@ -145,6 +153,33 @@ struct EventWebView: UIViewRepresentable {
             } catch {
                 parent.notice = error.localizedDescription
                 replyHandler(nil, error.localizedDescription)
+            }
+        }
+
+        private func handleV2Message(_ message: WKScriptMessage, replyHandler: @escaping (Any?, String?) -> Void) {
+            guard let expectedEventId = parent.event.v2EventId,
+                  message.frameInfo.isMainFrame,
+                  message.frameInfo.securityOrigin.protocol == "https",
+                  message.frameInfo.securityOrigin.host == parent.url.host,
+                  message.frameInfo.request.url?.path == parent.url.path,
+                  let body = message.body as? [String: Any],
+                  (body["version"] as? NSNumber)?.intValue == 2,
+                  let action = body["action"] as? String else {
+                replyHandler(nil, "Lệnh sự kiện không hợp lệ".tr)
+                return
+            }
+            let payload = body["payload"] as? [String: Any] ?? [:]
+            guard parent.event.unavailableReason() == nil || action == "getContext" || action == "resolveAssets" else {
+                replyHandler(nil, parent.event.unavailableReason())
+                return
+            }
+            Task { @MainActor in
+                do {
+                    let result = try await EventV2Service.shared.handle(action: action, payload: payload, expectedEventId: expectedEventId)
+                    replyHandler(result, nil)
+                } catch {
+                    replyHandler(nil, error.localizedDescription)
+                }
             }
         }
 

@@ -31,6 +31,42 @@ enum EventReward {
         return updated
     }
 
+    static func applyV2Reward(rewardId: String, to garden: GardenModel) throws -> (garden: GardenModel, quantity: Int) {
+        var updated = garden
+        switch rewardId {
+        case "oxygen":
+            updated.money.oxygen += 300
+            return (updated, 300)
+        case "fertilizer":
+            updated.item.fertilizer += 1
+            return (updated, 1)
+        case let id where id.hasPrefix("plant"):
+            if !garden.cart.cartPlants.contains(id) {
+                updated.cart = GardenModel.Cart(
+                    cartPlants: garden.cart.cartPlants + [id],
+                    cartPots: garden.cart.cartPots,
+                    cartStickers: garden.cart.cartStickers
+                )
+            } else {
+                updated.money.oxygen += 300
+            }
+            return (updated, 1)
+        case let id where id.hasPrefix("pot"):
+            if !garden.cart.cartPots.contains(id) {
+                updated.cart = GardenModel.Cart(
+                    cartPlants: garden.cart.cartPlants,
+                    cartPots: garden.cart.cartPots + [id],
+                    cartStickers: garden.cart.cartStickers
+                )
+            } else {
+                updated.money.oxygen += 300
+            }
+            return (updated, 1)
+        default:
+            throw failure("Mã phần thưởng chưa được hỗ trợ".tr)
+        }
+    }
+
     private static func addBadge(_ id: String, to garden: inout GardenModel) throws {
         guard !garden.user.bag.contains(where: { $0.idBag == id }) else { throw failure("Bạn đã nhận huy hiệu này".tr) }
         let badge: GardenModel.UserProfile.BagItem

@@ -22,6 +22,23 @@ class FireStoreService: ObservableObject {
     private var debounceTask: Task<Void, Never>?
     private var pendingGardenModel: GardenModel?
     private var isClaimingSleepReward = false
+    private let eventOxygenLock = NSLock()
+    private var pendingEventOxygen: Int = 0
+
+    func recordEventOxygen(_ amount: Int) {
+        guard amount > 0 else { return }
+        eventOxygenLock.lock()
+        pendingEventOxygen += amount
+        eventOxygenLock.unlock()
+    }
+
+    func consumePendingEventOxygen() -> Int {
+        eventOxygenLock.lock()
+        let delta = pendingEventOxygen
+        pendingEventOxygen = 0
+        eventOxygenLock.unlock()
+        return delta
+    }
 
     // MARK: - Dependencies
 
@@ -240,6 +257,7 @@ class FireStoreService: ObservableObject {
 
         // 1. Tăng oxy
         garden.money.oxygen += oxygenDrop
+        recordEventOxygen(oxygenDrop)
 
         // 2. Tăng EXP cho cây
         plant.platLevelExp += 100
@@ -391,7 +409,9 @@ class FireStoreService: ObservableObject {
                 let oxygen = outcome["oxygen"] ?? latest.sleepRewardOxygen
                 let gems = outcome["gems"] ?? latest.sleepRewardGems
                 let tickets = outcome["tickets"] ?? latest.sleepRewardTickets
-                latest.money.oxygen += max(0, oxygen - latest.sleepRewardOxygen)
+                let oxygenDelta = max(0, oxygen - latest.sleepRewardOxygen)
+                latest.money.oxygen += oxygenDelta
+                recordEventOxygen(oxygenDelta)
                 latest.money.gemstone += max(0, gems - latest.sleepRewardGems)
                 latest.money.ticket += max(0, tickets - latest.sleepRewardTickets)
                 latest.sleepRewardOxygen = max(latest.sleepRewardOxygen, oxygen)
@@ -486,6 +506,13 @@ class FireStoreService: ObservableObject {
                 }
             }
             print("✅ Update Firestore thành công cho user: \(gardenModel.user.userName)")
+            let eventOxygenDelta = consumePendingEventOxygen()
+            if eventOxygenDelta > 0 {
+                try? await db.collection("user-event").document(userId).setData([
+                    "userId": userId,
+                    "oxygenCollected": FieldValue.increment(Int64(eventOxygenDelta))
+                ], merge: true)
+            }
             return gardenModel
         } catch {
             print("❌ Lỗi khi update Firestore: \(error.localizedDescription)")
