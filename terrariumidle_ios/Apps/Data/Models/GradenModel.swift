@@ -50,6 +50,14 @@ struct GardenModel {
         let cartPlants: [String]
         let cartPots: [String]
         let cartStickers: [String]
+        let cartAnimals: [String]
+
+        init(cartPlants: [String], cartPots: [String], cartStickers: [String], cartAnimals: [String] = []) {
+            self.cartPlants = cartPlants
+            self.cartPots = cartPots
+            self.cartStickers = cartStickers
+            self.cartAnimals = cartAnimals
+        }
     }
 
     struct Money {
@@ -155,6 +163,30 @@ extension GardenModel {
     }
 }
 
+// MARK: - Maximum Placement Limits
+
+extension GardenModel {
+    /// Count active unique slot positions currently occupied by the given item ID.
+    func plantedCount(forItemId itemId: String, excludingPosition: String? = nil) -> Int {
+        let cleanId = itemId.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanId.isEmpty else { return 0 }
+        var latestByPos: [String: Plant] = [:]
+        for plant in plants where !plant.idPlant.isEmpty && !plant.idPot.isEmpty {
+            latestByPos[plant.position] = plant
+        }
+        return latestByPos.values.filter { slot in
+            if let excludingPosition, slot.position == excludingPosition { return false }
+            return slot.idPlant.lowercased() == cleanId || slot.idPot.lowercased() == cleanId
+        }.count
+    }
+
+    /// Check whether an item can still be placed in the garden under its `maximum` limit.
+    func canPlantItem(_ item: ItemData, at position: String? = nil) -> Bool {
+        guard let maxLimit = item.maximum, maxLimit > 0 else { return true }
+        return plantedCount(forItemId: item.id, excludingPosition: position) < maxLimit
+    }
+}
+
 // MARK: - Parse Error
 
 enum ParseError: Error, CustomStringConvertible {
@@ -237,6 +269,7 @@ extension GardenModel.Cart {
         cartPlants = dict.stringArray("cartPlants")
         cartPots = dict.stringArray("cartPots")
         cartStickers = dict.stringArray("cartStickers")
+        cartAnimals = dict.stringArray("cartAnimals")
     }
 }
 
@@ -385,6 +418,7 @@ extension GardenModel.Cart {
             "cartPlants": cartPlants,
             "cartPots": cartPots,
             "cartStickers": cartStickers,
+            "cartAnimals": cartAnimals,
         ]
     }
 }

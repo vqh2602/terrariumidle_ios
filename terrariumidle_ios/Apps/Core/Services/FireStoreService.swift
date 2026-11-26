@@ -164,6 +164,7 @@ class FireStoreService: ObservableObject {
                 "cartPlants": [],
                 "cartPots": [],
                 "cartStickers": [],
+                "cartAnimals": [],
             ],
             "item": [
                 "fertilizer": 40,

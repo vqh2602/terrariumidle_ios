@@ -71,6 +71,7 @@ struct HomeView: View {
     @State private var isEdit: Bool = false
     @State private var draggedPlant: DraggedPlantData? = nil
     @ObservedObject private var atmosphere = GardenAtmosphereManager.shared
+    @StateObject private var beeCoordinator = GardenBeeSwarmCoordinator()
 
     init() {
         // BGM và landscape được khởi tạo xuyên suốt 1 lần khi vào app, không reset khi chuyển màn hình hoặc re-render.
@@ -83,6 +84,16 @@ struct HomeView: View {
             if dataReady {
             GeometryReader { geometry in
                 let itemWidth = (geometry.size.width - 32) / 3.0
+                let slotHeight = itemWidth * 1.95
+                let userFloors: Int = (fireStoreService.gradenModel?.user.userFloor) ?? 1
+                let _ = {
+                    beeCoordinator.layout.viewportSize = geometry.size
+                    beeCoordinator.layout.slotSize = CGSize(width: itemWidth, height: slotHeight)
+                    beeCoordinator.layout.userFloors = userFloors
+                    beeCoordinator.layout.shelfOffset = shelfOffset
+                    beeCoordinator.isEditing = isEdit
+                    beeCoordinator.isSceneActive = (scenePhase == .active)
+                }()
                 ZStack {
                     // [RIVE_DEPRECATED] Đã chuyển 100% sang SpriteKit, không dùng RiveViewModel nữa
                     /*
@@ -114,8 +125,6 @@ struct HomeView: View {
 
                         ScrollView {
                             LazyVStack(spacing: 0) {
-                                let userFloors: Int = (fireStoreService.gradenModel?.user.userFloor) ?? 1
-
                                 Color.clear.frame(height: topSafeInset + hudHeight + 20)
 
                                 // MARK: - Unlock Floor Button (Edit Mode Only)
@@ -163,15 +172,22 @@ struct HomeView: View {
                                                         cartPlants: fireStoreService.gradenModel?.cart.cartPlants ?? [],
                                                         cartPots: fireStoreService.gradenModel?.cart.cartPots ?? [],
                                                         cartStickers: fireStoreService.gradenModel?.cart.cartStickers ?? [],
+                                                        cartAnimals: fireStoreService.gradenModel?.cart.cartAnimals ?? [],
                                                         isEditing: $isEdit,
                                                         draggedPlant: $draggedPlant,
-                                                        onDrop: handleDrop
+                                                        onDrop: handleDrop,
+                                                        onAnimalTap: {
+                                                            beeCoordinator.notifyHiveTapped()
+                                                        }
                                                     )
                                                     .id("\(rowIndex)-\(columnIndex)-\(plantData?.idPlant ?? "empty")-\(plantData?.idPot ?? "empty")")
                                                 }
                                             }
                                         }
                                         .frame(maxWidth: .infinity, alignment: .center)
+                                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("gardenViewport")) } action: { rect in
+                                            beeCoordinator.layout.calibrate(row: rowIndex, viewportMinY: rect.minY)
+                                        }
                                         // SpriteKit particle zPositions cannot cross SwiftUI siblings.
                                         // Let the padded slot surface draw over its own wooden shelf.
                                         .zIndex(1)
@@ -198,6 +214,7 @@ struct HomeView: View {
                         } action: { _, value in
                             shelfOffset = value.offset
                             shelfMaxOffset = value.maximum
+                            beeCoordinator.layout.shelfOffset = value.offset
                         }
                         .overlay {
                             if isEdit && draggedPlant != nil {
@@ -214,7 +231,9 @@ struct HomeView: View {
                                 height: geometry.size.height // 30% chiều rộng màn hình
                             ).scaleEffect(x: -1, y: 1) // 👈 lật ngang
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    //                    .background(AppColors.backgroundLogin)
+
+                    GardenAnimalOverlayView(coordinator: beeCoordinator, viewportSize: geometry.size)
+
                     OverlayEffectView(overlayId: atmosphere.overlayRive)
                         .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
                         .ignoresSafeArea(.all)
@@ -226,6 +245,9 @@ struct HomeView: View {
                         .allowsHitTesting(false)
 
                 }.frame(alignment: .leading)
+                .coordinateSpace(name: "gardenViewport")
+                .onAppear { syncGardenBees() }
+                .onChange(of: gardenBeeSyncKey) { _, _ in syncGardenBees() }
             }
 
             .navigationBarHidden(true) // Ẩn thanh navigation
@@ -366,6 +388,43 @@ struct HomeView: View {
     }
 
     // MARK: - Helper Function
+
+    private var gardenBeeSyncKey: String {
+        let floor = fireStoreService.gradenModel?.user.userFloor ?? 1
+        let items = (fireStoreService.gradenModel?.plants ?? [])
+            .map { "\($0.position):\($0.idPlant):\($0.idPot):\($0.isHanging)" }
+            .sorted()
+            .joined(separator: "|")
+        return "\(floor)#\(items)"
+    }
+
+    private func syncGardenBees() {
+        guard let garden = fireStoreService.gradenModel else {
+            beeCoordinator.syncGarden(hivePosition: nil, plantTargets: [], userFloors: 1)
+            return
+        }
+        var latestByPos: [String: GardenModel.Plant] = [:]
+        for p in garden.plants where !p.idPlant.isEmpty && !p.idPot.isEmpty {
+            latestByPos[p.position] = p
+        }
+        let hive = latestByPos.values.first(where: {
+            ($0.idPlant.hasPrefix("animal") || ItemDataManager.shared.getAnimal(byId: $0.idPlant) != nil) &&
+            $0.idPlant == $0.idPot &&
+            AnimalAvailability.isAvailable(animalId: $0.idPlant)
+        })
+        let targets: [BeePlantTarget] = latestByPos.values.compactMap { plant in
+            guard plant.idPlant.hasPrefix("plant"), !plant.idPot.isEmpty,
+                  let pos = PlantPosition(from: plant.position) else { return nil }
+            let hanging = ItemDataManager.shared.getPlant(byId: plant.idPlant)?.itemTypeAttribute.isHanging ?? plant.isHanging
+            return BeePlantTarget(positionKey: plant.position, row: pos.row, column: pos.column, isHanging: hanging)
+        }
+        beeCoordinator.syncGarden(
+            hivePosition: hive?.position,
+            plantTargets: targets,
+            userFloors: garden.user.userFloor,
+            animalId: hive?.idPlant ?? "animal1"
+        )
+    }
 
     /// Hàm lấy dữ liệu plant tại vị trí cụ thể (row, column)
     /// - Parameters:

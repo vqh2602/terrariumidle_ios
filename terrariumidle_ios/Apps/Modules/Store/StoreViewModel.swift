@@ -13,6 +13,7 @@ enum StoreTab: String, CaseIterable {
     case pots = "Chậu"
     case plants = "Cây"
     case decorations = "Trang trí"
+    case animals = "Động vật"
     case gemstones = "Đá quý"
     case tools = "Dụng cụ"
 }
@@ -84,6 +85,8 @@ final class StoreViewModel: ObservableObject {
             availableItems = itemManager.getAllPlants()
         case .decorations:
             availableItems = itemManager.getAllDecorations()
+        case .animals:
+            availableItems = itemManager.getAllAnimals()
         case .gemstones:
             // TODO: Load gemstone packages
             availableItems = []
@@ -168,6 +171,7 @@ final class StoreViewModel: ObservableObject {
             var plants = updatedModel.cart.cartPlants
             var pots = updatedModel.cart.cartPots
             var stickers = updatedModel.cart.cartStickers
+            var animals = updatedModel.cart.cartAnimals
             switch item.type {
             case "plant":
                 guard !plants.contains(item.id) else { return }
@@ -178,12 +182,15 @@ final class StoreViewModel: ObservableObject {
             case "sticker", "decoration":
                 guard !stickers.contains(item.id) else { return }
                 stickers.append(item.id)
+            case "animal":
+                guard !animals.contains(item.id) else { return }
+                animals.append(item.id)
             default:
                 showError("Không thể mua vật phẩm này".tr)
                 return
             }
             updatedModel.cart = GardenModel.Cart(
-                cartPlants: plants, cartPots: pots, cartStickers: stickers
+                cartPlants: plants, cartPots: pots, cartStickers: stickers, cartAnimals: animals
             )
         }
 
@@ -221,6 +228,8 @@ final class StoreViewModel: ObservableObject {
             return gardenModel.cart.cartPots
         case .decorations:
             return gardenModel.cart.cartStickers
+        case .animals:
+            return gardenModel.cart.cartAnimals
         case .tools, .gemstones:
             return []
         }

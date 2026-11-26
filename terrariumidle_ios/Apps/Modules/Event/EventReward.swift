@@ -22,7 +22,7 @@ enum EventReward {
             case "bag4": try addBadge(code, to: &updated)
             case "plant20", "plant24", "plant26":
                 guard !garden.cart.cartPlants.contains(code) else { throw failure("Bạn đã sở hữu cây này".tr) }
-                updated.cart = GardenModel.Cart(cartPlants: garden.cart.cartPlants + [code], cartPots: garden.cart.cartPots, cartStickers: garden.cart.cartStickers)
+                updated.cart = GardenModel.Cart(cartPlants: garden.cart.cartPlants + [code], cartPots: garden.cart.cartPots, cartStickers: garden.cart.cartStickers, cartAnimals: garden.cart.cartAnimals)
             default: throw failure("Mã phần thưởng chưa được hỗ trợ".tr)
             }
             updated.money.oxygen -= 100
@@ -63,7 +63,8 @@ enum EventReward {
                 updated.cart = GardenModel.Cart(
                     cartPlants: garden.cart.cartPlants + [id],
                     cartPots: garden.cart.cartPots,
-                    cartStickers: garden.cart.cartStickers
+                    cartStickers: garden.cart.cartStickers,
+                    cartAnimals: garden.cart.cartAnimals
                 )
             } else {
                 updated.money.oxygen += 300
@@ -74,7 +75,8 @@ enum EventReward {
                 updated.cart = GardenModel.Cart(
                     cartPlants: garden.cart.cartPlants,
                     cartPots: garden.cart.cartPots + [id],
-                    cartStickers: garden.cart.cartStickers
+                    cartStickers: garden.cart.cartStickers,
+                    cartAnimals: garden.cart.cartAnimals
                 )
             } else {
                 updated.money.oxygen += 300

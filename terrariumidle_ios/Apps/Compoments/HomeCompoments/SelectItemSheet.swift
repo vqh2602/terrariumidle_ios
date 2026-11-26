@@ -11,11 +11,13 @@ enum SelectionTab: String, CaseIterable {
     case pot = "Chọn chậu"
     case plant = "Chọn cây"
     case decoration = "Trang trí"
+    case animal = "Động vật"
 }
 
 enum SelectionMode {
     case plantCombo // Requires plant + pot
     case decorationOnly // Standalone decoration
+    case animalOnly // Standalone animal
 }
 
 struct SelectItemSheet: View {
@@ -24,6 +26,7 @@ struct SelectItemSheet: View {
     let cartPlants: [String]
     let cartPots: [String]
     let cartStickers: [String]
+    var cartAnimals: [String] = []
     let rowIndex: Int
     let columnIndex: Int
     var onOpenStore: (String) -> Void = { _ in }
@@ -32,11 +35,16 @@ struct SelectItemSheet: View {
     @State private var selectedPlantId: String? = nil
     @State private var selectedPotId: String? = nil
     @State private var selectedDecorationId: String? = nil
+    @State private var selectedAnimalId: String? = nil
 
     @StateObject private var fireStore = FireStoreService.shared
 
     var selectionMode: SelectionMode {
-        selectedTab == .decoration ? .decorationOnly : .plantCombo
+        switch selectedTab {
+        case .decoration: return .decorationOnly
+        case .animal: return .animalOnly
+        case .pot, .plant: return .plantCombo
+        }
     }
 
     var body: some View {
@@ -44,7 +52,7 @@ struct SelectItemSheet: View {
             VStack(spacing: 0) {
                 // MARK: - Selection Preview
 
-                if selectedPlantId != nil || selectedPotId != nil || selectedDecorationId != nil {
+                if selectedPlantId != nil || selectedPotId != nil || selectedDecorationId != nil || selectedAnimalId != nil {
                     VStack(spacing: 8) {
                         if let plantId = selectedPlantId,
                            let plant = ItemDataManager.shared.getPlant(byId: plantId)
@@ -79,6 +87,17 @@ struct SelectItemSheet: View {
                             .padding(.horizontal)
                         }
 
+                        if let animalId = selectedAnimalId,
+                           let animal = ItemDataManager.shared.getAnimal(byId: animalId)
+                        {
+                            SelectedItemPreview(
+                                item: animal,
+                                type: "Động vật".tr,
+                                onRemove: { selectedAnimalId = nil }
+                            )
+                            .padding(.horizontal)
+                        }
+
                         // Type mismatch warning
                         if !areTypesCompatible {
                             HStack {
@@ -106,12 +125,13 @@ struct SelectItemSheet: View {
                     Text("Chậu".tr).tag(SelectionTab.pot)
                     Text("Cây".tr).tag(SelectionTab.plant)
                     Text("Trang trí".tr).tag(SelectionTab.decoration)
+                    Text("Động vật".tr).tag(SelectionTab.animal)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
 
-                if selectedTab != .decoration {
+                if selectedTab != .decoration && selectedTab != .animal {
                     oxygenBonusInfo
                 }
 
@@ -167,6 +187,16 @@ struct SelectItemSheet: View {
                             },
                             selectedDecorationId: $selectedDecorationId
                         )
+                    case .animal:
+                        AnimalSelectionView(
+                            cartAnimals: cartAnimals,
+                            gardenModel: fireStore.gradenModel,
+                            currentPosition: "\(rowIndex),\(columnIndex)",
+                            onSelect: { animalId in
+                                print("Selected animal: \(animalId)")
+                            },
+                            selectedAnimalId: $selectedAnimalId
+                        )
                     }
                 }
 
@@ -198,16 +228,18 @@ struct SelectItemSheet: View {
                 }
             }
             .onChange(of: selectedTab) { oldTab, newTab in
-//                print("Old:", oldValue)
-//                print("New:", newValue)
                 // Clear incompatible selections when switching modes
                 if newTab == .decoration {
-                    // Switching to decoration mode → clear plant/pot
                     selectedPlantId = nil
                     selectedPotId = nil
-                } else {
-                    // Switching to plant/pot mode → clear decoration
+                    selectedAnimalId = nil
+                } else if newTab == .animal {
+                    selectedPlantId = nil
+                    selectedPotId = nil
                     selectedDecorationId = nil
+                } else {
+                    selectedDecorationId = nil
+                    selectedAnimalId = nil
                 }
             }
         }
@@ -219,6 +251,13 @@ struct SelectItemSheet: View {
         let totalCost = calculateTotalCost()
         let currentOxygen = fireStore.gradenModel?.money.oxygen ?? 0
         let hasEnoughOxygen = currentOxygen >= totalCost
+        let actionTitle: String = {
+            switch selectionMode {
+            case .plantCombo: return "Trồng cây".tr
+            case .decorationOnly: return "Đặt trang trí".tr
+            case .animalOnly: return "Đặt động vật".tr
+            }
+        }()
 
         return Button(action: {
             if hasEnoughOxygen {
@@ -236,7 +275,7 @@ struct SelectItemSheet: View {
                     Text("\(totalCost)")
                         .fontWeight(.bold)
                     Spacer()
-                    Text(selectionMode == .plantCombo ? "Trồng cây".tr : "Đặt trang trí".tr)
+                    Text(actionTitle)
                         .fontWeight(.semibold)
                 } else {
                     Text("Không đủ oxygen".tr)
@@ -255,7 +294,7 @@ struct SelectItemSheet: View {
     // MARK: - Helper Methods
 
     private var unownedRecommendation: ItemData? {
-        guard selectedTab != .decoration else { return nil }
+        guard selectedTab != .decoration && selectedTab != .animal else { return nil }
         let pot = recommendedPot.flatMap { cartPots.contains($0.id) ? nil : $0 }
         let plant = recommendedPlant.flatMap { cartPlants.contains($0.id) ? nil : $0 }
         return selectedTab == .pot ? (plant ?? pot) : (pot ?? plant)
@@ -351,11 +390,18 @@ struct SelectItemSheet: View {
     }
 
     private func canBuildSelection() -> Bool {
+        let position = "\(rowIndex),\(columnIndex)"
         switch selectionMode {
         case .plantCombo:
             return selectedPlantId != nil && selectedPotId != nil && areTypesCompatible
         case .decorationOnly:
-            return selectedDecorationId != nil
+            guard let id = selectedDecorationId,
+                  let item = ItemDataManager.shared.getItem(byId: id) else { return false }
+            return fireStore.gradenModel?.canPlantItem(item, at: position) ?? true
+        case .animalOnly:
+            guard let id = selectedAnimalId,
+                  let item = ItemDataManager.shared.getAnimal(byId: id) else { return false }
+            return fireStore.gradenModel?.canPlantItem(item, at: position) ?? true
         }
     }
 
@@ -378,6 +424,12 @@ struct SelectItemSheet: View {
            let decoration = ItemDataManager.shared.getItem(byId: decorationId)
         {
             total += decoration.priceOxygen
+        }
+
+        if let animalId = selectedAnimalId,
+           let animal = ItemDataManager.shared.getAnimal(byId: animalId)
+        {
+            total += animal.priceOxygen
         }
 
         return total
@@ -451,18 +503,33 @@ struct SelectItemSheet: View {
             newPlants.removeAll { $0.position == position }
             newPlants.append(newDecoration)
             print("✅ Created decoration: \(decorationId) at position: \(position)")
+        } else if selectionMode == .animalOnly,
+                  let animalId = selectedAnimalId,
+                  let animal = ItemDataManager.shared.getAnimal(byId: animalId),
+                  gardenModel.canPlantItem(animal, at: position)
+        {
+            let isHanging = animal.itemTypeAttribute.isHanging
+            let newAnimal = GardenModel.Plant(
+                harvestTime: currentTime,
+                idPlant: animalId,
+                idPot: animalId,
+                isHanging: isHanging,
+                plantLevel: 1,
+                platLevelExp: 0,
+                position: position
+            )
+            newPlants.removeAll { $0.position == position }
+            newPlants.append(newAnimal)
+            print("✅ Created animal: \(animalId) at position: \(position)")
+        } else {
+            isPresented = false
+            return
         }
 
-        // Create updated garden model
-        let updatedModel = GardenModel(
-            isBan: gardenModel.isBan,
-            isServerUpdate: gardenModel.isServerUpdate,
-            item: gardenModel.item,
-            cart: gardenModel.cart,
-            money: newMoney,
-            user: gardenModel.user,
-            plants: newPlants
-        )
+        // Create updated garden model preserving VIP, weather, and sleep state
+        var updatedModel = gardenModel
+        updatedModel.money = newMoney
+        updatedModel.plants = newPlants
 
         // Update Firestore asynchronously
         fireStore.saveGarden(gardenModel: updatedModel, debounce: false)

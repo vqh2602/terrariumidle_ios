@@ -26,6 +26,8 @@ struct ItemData: Codable, Identifiable {
     // MARK: - Cấu hình âm thanh khi tap
     let sound: String? // Âm thanh click vào (mặc định "tap", chỉ áp dụng với plant)
     let tapSound: String?
+    let tapSoundChild: [String: String]?
+    let maximum: Int?
 
     var clickSound: String {
         if let s = sound, !s.trimmingCharacters(in: .whitespaces).isEmpty {
@@ -35,6 +37,13 @@ struct ItemData: Codable, Identifiable {
             return ts.trimmingCharacters(in: .whitespaces)
         }
         return "tap"
+    }
+
+    func childClickSound(for key: String) -> String {
+        if let child = tapSoundChild?[key]?.trimmingCharacters(in: .whitespaces), !child.isEmpty {
+            return child
+        }
+        return clickSound
     }
 
     // MARK: - Mở khóa Âm nhạc, Phong cảnh, SFX khi trồng cây/chậu
@@ -116,7 +125,7 @@ struct ItemData: Codable, Identifiable {
         case id, name, description, image, priceStore, priceOxygen, currencyUnit, type, effect
         case effectDescription, effectdescription
         case itemTypeAttribute, levelUnlock
-        case sound, tapSound
+        case sound, tapSound, tapSoundChild, maximum
         case music, musicDescription, musicdescription
         case effectLandscape, effectlandscape, effectLancape, effectlancape
         case effectLandscapeDescription, effectlandscapedescription, effectLancapedescription
@@ -145,6 +154,8 @@ struct ItemData: Codable, Identifiable {
 
         sound = try? container.decode(String.self, forKey: .sound)
         tapSound = try? container.decode(String.self, forKey: .tapSound)
+        tapSoundChild = try? container.decode([String: String].self, forKey: .tapSoundChild)
+        maximum = try? container.decode(Int.self, forKey: .maximum)
 
         music = try? container.decode(String.self, forKey: .music)
         musicDescription = (try? container.decode(String.self, forKey: .musicDescription))
@@ -194,6 +205,8 @@ struct ItemData: Codable, Identifiable {
         try container.encode(levelUnlock, forKey: .levelUnlock)
         try container.encodeIfPresent(sound, forKey: .sound)
         try container.encodeIfPresent(tapSound, forKey: .tapSound)
+        try container.encodeIfPresent(tapSoundChild, forKey: .tapSoundChild)
+        try container.encodeIfPresent(maximum, forKey: .maximum)
         try container.encodeIfPresent(music, forKey: .music)
         try container.encodeIfPresent(musicDescription, forKey: .musicDescription)
         try container.encodeIfPresent(effectLandscape, forKey: .effectLandscape)
@@ -314,6 +327,7 @@ class ItemDataManager {
     private var allPlants: [ItemData] = []
     private var allPots: [ItemData] = []
     private var allDecorations: [ItemData] = []
+    private var allAnimals: [ItemData] = []
     private var allEffects: [ItemData] = []
     private var allShopItems: [ItemData] = []
     private var allLandscapes: [ItemData] = []
@@ -329,13 +343,14 @@ class ItemDataManager {
         allPlants = loadItemsFromFile(named: "plants_data",)
         allPots = loadItemsFromFile(named: "pots_data",)
         allDecorations = loadItemsFromFile(named: "stickers_data",)
+        allAnimals = loadItemsFromFile(named: "animals_data",)
         allEffects = loadItemsFromFile(named: "effects_data",)
         allShopItems = loadItemsFromFile(named: "shop_items_data",)
         allLandscapes = loadItemsFromFile(named: "landscapes_data",)
         allMusics = loadItemsFromFile(named: "music_data",)
         allMusicsSFX = loadItemsFromFile(named: "music_sfx_data",)
 
-        print("✅ Đã load \(allPlants.count) plants, \(allPots.count) pots, \(allDecorations.count) stickers, \(allEffects.count) effects, \(allShopItems.count) shop items, \(allLandscapes.count) landscapes")
+        print("✅ Đã load \(allPlants.count) plants, \(allPots.count) pots, \(allDecorations.count) stickers, \(allAnimals.count) animals, \(allEffects.count) effects, \(allShopItems.count) shop items, \(allLandscapes.count) landscapes")
     }
 
     /// Helper function để load items từ file
@@ -377,6 +392,10 @@ class ItemDataManager {
         return allDecorations
     }
 
+    func getAllAnimals() -> [ItemData] {
+        return allAnimals
+    }
+
     func getAllEffects() -> [ItemData] {
         return allEffects
     }
@@ -414,7 +433,7 @@ class ItemDataManager {
     // MARK: - Get Item by ID
 
     func getItem(byId id: String) -> ItemData? {
-        return (allPlants + allPots + allDecorations + allEffects + allShopItems + allLandscapes + allMusics + allMusicsSFX).first { $0.id == id }
+        return (allPlants + allPots + allDecorations + allAnimals + allEffects + allShopItems + allLandscapes + allMusics + allMusicsSFX).first { $0.id == id }
     }
 
     func getPlant(byId id: String) -> ItemData? {
@@ -465,6 +484,11 @@ class ItemDataManager {
     func getSticker(byId id: String) -> ItemData? {
         let cleanId = id.lowercased().trimmingCharacters(in: .whitespaces)
         return allDecorations.first { $0.id.lowercased() == cleanId }
+    }
+
+    func getAnimal(byId id: String) -> ItemData? {
+        let cleanId = id.lowercased().trimmingCharacters(in: .whitespaces)
+        return allAnimals.first { $0.id.lowercased() == cleanId }
     }
 
     // MARK: - Filter by Level

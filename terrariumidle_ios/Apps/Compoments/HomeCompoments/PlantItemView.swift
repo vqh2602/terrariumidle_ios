@@ -23,9 +23,11 @@ struct PlantItemView: View {
     let cartPlants: [String]
     let cartPots: [String]
     let cartStickers: [String]
+    var cartAnimals: [String] = []
     @Binding var isEditing: Bool
     @Binding var draggedPlant: DraggedPlantData?
     let onDrop: (Int, Int) -> Void
+    var onAnimalTap: (() -> Void)? = nil
 
     @State private var showSheet = false
     @State private var pendingStoreItemId: String?
@@ -44,10 +46,21 @@ struct PlantItemView: View {
         plantData?.idPlant.contains("sticker") == true && plantData?.idPlant == plantData?.idPot
     }
 
+    private var isAnimal: Bool {
+        guard let plantData else { return false }
+        let looksLikeAnimal = plantData.idPlant.hasPrefix("animal") ||
+            ItemDataManager.shared.getAnimal(byId: plantData.idPlant) != nil
+        return looksLikeAnimal && plantData.idPlant == plantData.idPot
+    }
+
+    private var isStandaloneItem: Bool {
+        isSticker || isAnimal
+    }
+
     private var isHanging: Bool {
-        if isSticker {
-            let stickerId = plantData?.idPot ?? plantData?.idPlant ?? ""
-            if let item = ItemDataManager.shared.getItem(byId: stickerId) {
+        if isStandaloneItem {
+            let itemId = plantData?.idPot ?? plantData?.idPlant ?? ""
+            if let item = ItemDataManager.shared.getItem(byId: itemId) {
                 return item.itemTypeAttribute.isHanging
             }
         }
@@ -70,7 +83,7 @@ struct PlantItemView: View {
     }
 
     private var hasEmptyIds: Bool {
-        !isSticker && (
+        !isStandaloneItem && (
             plantData?.idPlant.isEmpty == true ||
             plantData?.idPot.isEmpty == true ||
             plantData?.idPlant == nil ||
@@ -79,7 +92,7 @@ struct PlantItemView: View {
     }
 
     private func handleDetailTap() {
-        guard !isEditing && careAnimation == nil && plantData != nil && !hasEmptyIds && !isSticker else { return }
+        guard !isEditing && careAnimation == nil && plantData != nil && !hasEmptyIds && !isStandaloneItem else { return }
         handlePlantTap()
     }
 
@@ -146,6 +159,33 @@ struct PlantItemView: View {
                     .id("\(stickerId)-\(isHanging)-\(itemWidth)-\(slotHeight)")
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isHanging ? .top : .bottom)
                 }
+            } else if isAnimal {
+                let animalId = plantData?.idPot ?? plantData?.idPlant ?? "animal1"
+                if AnimalAvailability.isAvailable(animalId: animalId) {
+                    SpriteKitAnimalView(
+                        animalId: animalId,
+                        isHanging: isHanging,
+                        width: itemWidth,
+                        height: slotHeight,
+                        onTap: {
+                            onAnimalTap?()
+                        }
+                    )
+                    .id("\(animalId)-\(isHanging)-\(itemWidth)-\(slotHeight)")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isHanging ? .top : .bottom)
+                } else {
+                    SpriteKitPotView(
+                        potId: animalId,
+                        isHanging: isHanging,
+                        width: itemWidth,
+                        height: slotHeight,
+                        onTap: {
+                            onAnimalTap?()
+                        }
+                    )
+                    .id("\(animalId)-\(isHanging)-\(itemWidth)-\(slotHeight)")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isHanging ? .top : .bottom)
+                }
             } else {
                 // UNIFIED PLANT & POT LAYOUT (TerrariumSlotView)
                 // Hợp nhất Cây và Chậu vào chung 1 Scene SpriteKit:
@@ -175,7 +215,7 @@ struct PlantItemView: View {
             .customContextMenu(menuItems: {
                         if isEditing || careAnimation != nil || hasEmptyIds { return [] }
                         var items: [MenuItem] = []
-                        if !isSticker {
+                        if !isStandaloneItem {
                             if !hasEmptyIds {
                                 items.append(MenuItem(title: "Tưới cây".tr, assetIcon: "water-can",
                                                       subtitle: "10 diamond · Tự tap 60 giây".tr) {
@@ -208,7 +248,7 @@ struct PlantItemView: View {
             finishCareAnimation(request.id)
         }
         .overlay(alignment: .top) {
-            if !isSticker, !hasEmptyIds, wateringDeadline > Date().timeIntervalSince1970 {
+            if !isStandaloneItem, !hasEmptyIds, wateringDeadline > Date().timeIntervalSince1970 {
                 let end = wateringDeadline
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     let seconds = max(0, Int(ceil(end - context.date.timeIntervalSince1970)))
@@ -233,6 +273,7 @@ struct PlantItemView: View {
                 cartPlants: cartPlants,
                 cartPots: cartPots,
                 cartStickers: cartStickers,
+                cartAnimals: cartAnimals,
                 rowIndex: rowIndex,
                 columnIndex: columnIndex,
                 onOpenStore: { pendingStoreItemId = $0 }
@@ -345,7 +386,7 @@ struct PlantItemView: View {
     // MARK: - Plant Action Functions
 
     private func handleWaterPlant(animate: Bool = true) {
-        guard careAnimation == nil, !isEditing, !isSticker, !hasEmptyIds,
+        guard careAnimation == nil, !isEditing, !isStandaloneItem, !hasEmptyIds,
               let plant = plantData,
               var garden = fireStoreService.gradenModel else { return }
         switch garden.waterPlant(at: "\(rowIndex),\(columnIndex)", plantId: plant.idPlant,
@@ -369,7 +410,7 @@ struct PlantItemView: View {
 
     @MainActor
     private func runWateringAutoTap() async {
-        guard let plant = plantData, !isSticker, !hasEmptyIds,
+        guard let plant = plantData, !isStandaloneItem, !hasEmptyIds,
               scenePhase == .active, !isEditing else { return }
         let deadline = plant.wateringUntil
         while !Task.isCancelled, Date().timeIntervalSince1970 < deadline {
@@ -444,7 +485,7 @@ struct PlantItemView: View {
             showFloatingText("❌ Không đủ xẻng!".tr)
             return
         }
-        if isSticker {
+        if isStandaloneItem {
             commitRemovePlant()
         } else {
             careAnimation = PlantCareAnimationRequest(action: .remove)

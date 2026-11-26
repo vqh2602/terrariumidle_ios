@@ -49,6 +49,9 @@ struct VisitorGarden {
         let isHanging: Bool
         var id: String { "\(row),\(column)" }
         var isSticker: Bool { plantID.hasPrefix("sticker") && plantID == potID }
+        var isAnimal: Bool {
+            (plantID.hasPrefix("animal") || ItemDataManager.shared.getAnimal(byId: plantID) != nil) && plantID == potID
+        }
     }
 
     static let maximumFloor = 500

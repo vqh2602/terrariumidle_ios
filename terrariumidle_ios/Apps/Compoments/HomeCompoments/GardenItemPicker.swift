@@ -7,6 +7,7 @@ struct GardenItemPicker: View {
     @Binding var selection: String?
     let onSelect: (String) -> Void
     var recommendedItemId: String? = nil
+    var disabledMessages: [String: String] = [:]
     @State private var query = ""
 
     private var results: [ItemData] {
@@ -53,10 +54,12 @@ struct GardenItemPicker: View {
                         .frame(maxWidth: .infinity)
                     }
                     ForEach(results) { item in
+                        let disabledMsg = disabledMessages[item.id]
                         GardenInventoryRow(item: item, isSelected: selection == item.id, onSelect: {
+                            guard disabledMsg == nil else { return }
                             selection = item.id
                             onSelect(item.id)
-                        }, recommendationText: item.id == recommendedItemId ? "Gợi ý · Oxygen ×2.5".tr : nil)
+                        }, recommendationText: item.id == recommendedItemId ? "Gợi ý · Oxygen ×2.5".tr : nil, disabledText: disabledMsg)
                     }
                 }
                 .padding(.horizontal, 12)
@@ -74,6 +77,7 @@ struct GardenInventoryRow: View {
     let isSelected: Bool
     let onSelect: () -> Void
     var recommendationText: String? = nil
+    var disabledText: String? = nil
 
     var body: some View {
         Button(action: onSelect) {
@@ -100,7 +104,11 @@ struct GardenInventoryRow: View {
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(AccountStyle.muted)
                         .lineLimit(2)
-                    if !item.displayEffect.isEmpty && item.displayEffect != "N.A" {
+                    if let disabledText {
+                        Label(disabledText, systemImage: "exclamationmark.circle.fill")
+                            .font(.system(.caption2, design: .rounded, weight: .bold))
+                            .foregroundStyle(AccountStyle.danger)
+                    } else if !item.displayEffect.isEmpty && item.displayEffect != "N.A" {
                         Label(item.displayEffect, systemImage: "sparkles")
                             .font(.system(.caption2, design: .rounded, weight: .medium))
                             .foregroundStyle(AccountStyle.green)
@@ -109,9 +117,9 @@ struct GardenInventoryRow: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 VStack(spacing: 8) {
-                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    Image(systemName: disabledText != nil ? "lock.fill" : (isSelected ? "checkmark.circle.fill" : "circle"))
                         .font(.system(size: 20))
-                        .foregroundStyle(isSelected ? AccountStyle.green : AccountStyle.border)
+                        .foregroundStyle(disabledText != nil ? AccountStyle.muted : (isSelected ? AccountStyle.green : AccountStyle.border))
                     HStack(spacing: 3) {
                         Image("oxygen").resizable().scaledToFit().frame(width: 14, height: 14)
                         Text(item.priceOxygen.formatted())
@@ -123,6 +131,7 @@ struct GardenInventoryRow: View {
                 }
             }
             .padding(10)
+            .opacity(disabledText != nil ? 0.65 : 1.0)
             .background(isSelected ? Color(hex: "F1F4DF") : AccountStyle.cream, in: RoundedRectangle(cornerRadius: 16))
             .overlay {
                 RoundedRectangle(cornerRadius: 16)
@@ -131,6 +140,7 @@ struct GardenInventoryRow: View {
             .contentShape(RoundedRectangle(cornerRadius: 16))
         }
         .buttonStyle(.plain)
+        .disabled(disabledText != nil)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }

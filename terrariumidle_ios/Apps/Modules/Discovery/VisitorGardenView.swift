@@ -190,10 +190,20 @@ private struct VisitorGlassSurface: ViewModifier {
 private struct VisitorShelvesView: View {
     let garden: VisitorGarden
     let atmosphere: VisitorAtmosphere?
+    @StateObject private var beeCoordinator = GardenBeeSwarmCoordinator()
+    @State private var shelfOffset: CGFloat = 0
 
     var body: some View {
         GeometryReader { geometry in
             let width = max(1, (geometry.size.width - 40) / 3)
+            let slotHeight = width * 1.95
+            let _ = {
+                beeCoordinator.layout.viewportSize = geometry.size
+                beeCoordinator.layout.slotSize = CGSize(width: width, height: slotHeight)
+                beeCoordinator.layout.userFloors = garden.topFloor
+                beeCoordinator.layout.shelfOffset = shelfOffset
+            }()
+
             ZStack {
                 SpriteKitBackgroundView(backgroundId: atmosphere?.backgroundId ?? "i_sky_sun_day")
                 HStack(spacing: 0) {
@@ -204,8 +214,15 @@ private struct VisitorShelvesView: View {
                                 VStack(spacing: 0) {
                                     HStack(spacing: 4) {
                                         ForEach(1...3, id: \.self) { column in
-                                            VisitorSlotView(slot: garden.slot(row: row, column: column), width: width)
+                                            VisitorSlotView(
+                                                slot: garden.slot(row: row, column: column),
+                                                width: width,
+                                                onAnimalTap: { beeCoordinator.notifyHiveTapped() }
+                                            )
                                         }
+                                    }
+                                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("visitorViewport")) } action: { rect in
+                                        beeCoordinator.layout.calibrate(row: row, viewportMinY: rect.minY)
                                     }
                                     Image("r2").resizable().frame(height: 16)
                                 }
@@ -215,20 +232,45 @@ private struct VisitorShelvesView: View {
                     .contentMargins(.top, 76, for: .scrollContent)
                     .contentMargins(.bottom, 24, for: .scrollContent)
                     .defaultScrollAnchor(.bottom)
+                    .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, newOffset in
+                        shelfOffset = newOffset
+                        beeCoordinator.layout.shelfOffset = newOffset
+                    }
                     Image("r1").resizable().frame(width: 16).scaleEffect(x: -1, y: 1)
                 }
+
+                GardenAnimalOverlayView(coordinator: beeCoordinator, viewportSize: geometry.size)
+
                 OverlayEffectView(overlayId: atmosphere?.overlayId)
                     .frame(maxWidth: geometry.size.width, maxHeight: geometry.size.height)
                     .ignoresSafeArea(.all)
                     .allowsHitTesting(false)
             }
+            .coordinateSpace(name: "visitorViewport")
+            .onAppear {
+                syncVisitorSwarm()
+            }
         }
+    }
+
+    private func syncVisitorSwarm() {
+        let hive = garden.slots.values.first(where: { $0.isAnimal && AnimalAvailability.isAvailable(animalId: $0.plantID) })
+        let targets = garden.slots.values
+            .filter { !$0.isSticker && !$0.isAnimal && !$0.plantID.isEmpty && !$0.potID.isEmpty }
+            .map { BeePlantTarget(positionKey: $0.id, row: $0.row, column: $0.column, isHanging: $0.isHanging) }
+        beeCoordinator.syncGarden(
+            hivePosition: hive?.id,
+            plantTargets: targets,
+            userFloors: garden.topFloor,
+            animalId: hive?.plantID ?? "animal1"
+        )
     }
 }
 
 private struct VisitorSlotView: View {
     let slot: VisitorGarden.Slot?
     let width: CGFloat
+    var onAnimalTap: (() -> Void)? = nil
     private var height: CGFloat { width * 1.95 }
 
     var body: some View {
@@ -236,7 +278,9 @@ private struct VisitorSlotView: View {
             if let slot {
                 if slot.isSticker && StickerAvailability.isAvailable(stickerId: slot.plantID) {
                     SpriteKitStickerView(stickerId: slot.plantID, isHanging: slot.isHanging, width: width, height: height)
-                } else if !slot.isSticker && supported(slot) {
+                } else if slot.isAnimal && AnimalAvailability.isAvailable(animalId: slot.plantID) {
+                    SpriteKitAnimalView(animalId: slot.plantID, isHanging: slot.isHanging, width: width, height: height, onTap: onAnimalTap)
+                } else if !slot.isSticker && !slot.isAnimal && supported(slot) {
                     // Không gắn onTap: scene chỉ phát hiệu ứng thị giác và không thể thu thập oxy.
                     TerrariumSlotView(potId: slot.potID, plantId: slot.plantID, plantLevel: slot.level,
                                       isHanging: slot.isHanging, width: width, height: height)

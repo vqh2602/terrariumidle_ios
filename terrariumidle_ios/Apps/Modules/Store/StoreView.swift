@@ -98,6 +98,9 @@ struct StoreView: View {
             } else if let initialItemId, let plant = ItemDataManager.shared.getPlant(byId: initialItemId) {
                 viewModel.loadItems(for: .plants)
                 viewModel.searchText = plant.name.tr
+            } else if let initialItemId, let animal = ItemDataManager.shared.getAnimal(byId: initialItemId) {
+                viewModel.loadItems(for: .animals)
+                viewModel.searchText = animal.name.tr
             } else {
                 viewModel.loadItems(for: .plants)
             }
@@ -234,6 +237,7 @@ struct StoreView: View {
         case .plants: return "leaf.fill"
         case .pots: return "archivebox.fill"
         case .decorations: return "sparkles"
+        case .animals: return "hare.fill"
         case .gemstones: return "diamond.fill"
         case .tools: return "wrench.and.screwdriver.fill"
         }
