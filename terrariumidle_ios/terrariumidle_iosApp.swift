@@ -39,6 +39,7 @@ struct terrariumidle_iosApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .modifier(WatchCompanionLifecycle())
                 .preferredColorScheme(.light)
                 .environmentObject(localization)
                 .environment(\.locale, localization.currentLanguage.locale)

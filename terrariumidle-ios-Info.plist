@@ -2,8 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Terrarium dùng vị trí khi bạn mở app để lấy thời tiết và UV cho widget Apple Watch. Tọa độ không được gửi sang Watch.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Terrarium đọc giấc ngủ để hiển thị nhật ký ngày, tuần, tháng và tặng Oxy cho khu vườn khi bạn đạt mục tiêu nghỉ ngơi. Dữ liệu giấc ngủ chỉ được xử lý trên thiết bị.</string>
+	<string>Terrarium đọc giấc ngủ để hiển thị nhật ký và tính phần thưởng nghỉ ngơi. Nếu bạn bật kết nối Apple Watch, thời lượng ngủ tổng hợp được gửi tới Watch đã ghép đôi.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

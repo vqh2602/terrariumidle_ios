@@ -1,0 +1,123 @@
+{
+  "sourceLanguage" : "vi",
+  "strings" : {
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "terrariumidle_ios"
+          }
+        }
+      }
+    },
+    "NSHealthShareUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terrarium reads sleep data to show your journal and calculate rest rewards. If you enable the Apple Watch connection, aggregated sleep duration is sent to your paired Watch."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terrariumは睡眠データを読み取り、日記の表示と休息の報酬計算に使用します。Apple Watchとの接続を有効にすると、集計した睡眠時間をペアリング済みのWatchに送信します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terrarium은 수면 데이터를 읽어 일지를 표시하고 휴식 보상을 계산합니다. Apple Watch 연결을 켜면 집계된 수면 시간이 페어링된 Watch로 전송됩니다."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terrarium đọc giấc ngủ để hiển thị nhật ký và tính phần thưởng nghỉ ngơi. Nếu bạn bật kết nối Apple Watch, thời lượng ngủ tổng hợp được gửi tới Watch đã ghép đôi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terrarium 读取睡眠数据以显示日记并计算休息奖励。如果启用 Apple Watch 连接，汇总的睡眠时长会发送到已配对的 Watch。"
+          }
+        }
+      }
+    },
+    "NSHealthUpdateUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Terrarium to save manually entered sleep records to Apple Health when you choose to sync."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同期を選択したときに、手動入力した睡眠記録をAppleヘルスケアに保存することをTerrariumに許可します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "동기화를 선택하면 Terrarium이 직접 입력한 수면 기록을 Apple 건강에 저장하도록 허용합니다."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cho phép Terrarium ghi các giấc ngủ bạn nhập thủ công vào Apple Health khi bạn chọn đồng bộ."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许 Terrarium 在你选择同步时，将手动输入的睡眠记录写入 Apple 健康。"
+          }
+        }
+      }
+    },
+    "NSLocationWhenInUseUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terrarium uses your location when you open the app to get weather and UV for Apple Watch widgets. Coordinates are not sent to Watch."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terrariumはアプリを開いたときに位置情報を使い、Apple Watchのウィジェット用の天気と紫外線情報を取得します。座標はWatchに送信されません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terrarium은 앱을 열 때 위치를 사용해 Apple Watch 위젯의 날씨와 자외선 정보를 가져옵니다. 좌표는 Watch로 전송되지 않습니다."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terrarium dùng vị trí khi bạn mở app để lấy thời tiết và UV cho widget Apple Watch. Tọa độ không được gửi sang Watch."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terrarium 在你打开应用时使用位置，为 Apple Watch 小组件获取天气和紫外线数据。坐标不会发送到 Watch。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

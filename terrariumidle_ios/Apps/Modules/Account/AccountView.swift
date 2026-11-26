@@ -6,6 +6,7 @@ struct AccountView: View {
     @StateObject private var fireStore: FireStoreService = .shared
     @ObservedObject private var localization = LocalizationManager.shared
     @State private var showOnboardingGuide = false
+    @State private var showWatchSettings = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -83,6 +84,7 @@ struct AccountView: View {
             }
             .environmentObject(router)
         }
+        .sheet(isPresented: $showWatchSettings) { WatchCompanionSettingsView() }
     }
 
     private var header: some View {
@@ -121,6 +123,8 @@ struct AccountView: View {
     private var settingsSection: some View {
         section(title: "Thiết lập khu vườn".tr, icon: "slider.horizontal.3") {
             languagePickerRow
+            rowDivider
+            SettingsRow(title: "Apple Watch", icon: "applewatch") { showWatchSettings = true }
             rowDivider
             SettingsRow(title: "Đồng bộ dữ liệu".tr, icon: "arrow.triangle.2.circlepath") {
                 viewModel.syncData()
