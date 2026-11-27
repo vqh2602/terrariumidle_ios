@@ -34,6 +34,10 @@ final class DiscoveryViewModel: ObservableObject {
         await load()
     }
 
+    func isOwn(_ profile: DiscoveredProfile) -> Bool {
+        profile.id == ownID
+    }
+
     func updateLikes(gardenID: String, total: Int) {
         guard let index = profiles.firstIndex(where: { $0.id == gardenID }) else { return }
         profiles[index] = profiles[index].updatingLikes(total)
@@ -62,7 +66,8 @@ final class DiscoveryViewModel: ObservableObject {
             try Task.checkCancellation()
             guard generation == token else { return }
             var ids = Set(profiles.map(\.id))
-            profiles += page.profiles.filter { $0.id != ownID && ids.insert($0.id).inserted }
+            let excludeOwn = category == .world
+            profiles += page.profiles.filter { (!excludeOwn || $0.id != ownID) && ids.insert($0.id).inserted }
             nextCursor = page.nextCursor
             loadedRequestKey = loadingKey
         } catch {

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DiscoveryProfileCard: View {
     let profile: DiscoveredProfile
+    var isOwnProfile: Bool = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
@@ -25,7 +26,7 @@ struct DiscoveryProfileCard: View {
                         VStack(alignment: .leading, spacing: 5) { statistics }
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading)
-                if !dynamicTypeSize.isAccessibilitySize { visitBadge }
+                if !dynamicTypeSize.isAccessibilitySize && !isOwnProfile { visitBadge }
             }
             if let oxygen = profile.oxygenCollected {
                 Label("%@ oxygen đã thu thập".tr(oxygen.formatted()), systemImage: "wind")
@@ -34,7 +35,7 @@ struct DiscoveryProfileCard: View {
                     .padding(.horizontal, 10).padding(.vertical, 7)
                     .background(Color(hex: "E6EEEA"), in: RoundedRectangle(cornerRadius: 10))
             }
-            if dynamicTypeSize.isAccessibilitySize { visitBadge.frame(maxWidth: .infinity, alignment: .trailing) }
+            if dynamicTypeSize.isAccessibilitySize && !isOwnProfile { visitBadge.frame(maxWidth: .infinity, alignment: .trailing) }
         }
         .padding(16)
         .background {

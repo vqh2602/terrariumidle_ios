@@ -159,11 +159,16 @@ struct DiscoveryView: View {
                                     detail: "Thử ID khác hoặc khám phá thêm những góc xanh mới nhé.".tr)
                     }
                     ForEach(model.profiles) { profile in
-                        Button { selected = profile } label: {
-                            DiscoveryProfileCard(profile: profile)
+                        let isOwn = model.isOwn(profile)
+                        if isOwn {
+                            DiscoveryProfileCard(profile: profile, isOwnProfile: true)
+                        } else {
+                            Button { selected = profile } label: {
+                                DiscoveryProfileCard(profile: profile)
+                            }
+                            .buttonStyle(DiscoveryPressStyle())
+                            .accessibilityHint("Ghé thăm khu vườn này".tr)
                         }
-                        .buttonStyle(DiscoveryPressStyle())
-                        .accessibilityHint("Ghé thăm khu vườn này".tr)
                     }
                     if model.isLoading {
                         ProgressView("Đang tìm những góc xanh…".tr)

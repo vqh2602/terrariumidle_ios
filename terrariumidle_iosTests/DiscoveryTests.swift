@@ -65,6 +65,22 @@ struct DiscoveryTests {
         #expect(!model.isLoading)
     }
 
+    @Test func rankingsIncludeOwnerWhileWorldExcludesOwner() async throws {
+        let repository = FakeDiscoveryRepository()
+        let owner = try #require(DiscoveredProfile(documentID: "owner", data: data(), oxygenCollected: 500))
+        let other = try #require(DiscoveredProfile(documentID: "other", data: data(), oxygenCollected: 300))
+
+        for category in [DiscoveryCategory.likes, .level, .oxygen] {
+            repository.pages = [DiscoveryPage(profiles: [owner, other], nextCursor: nil)]
+            let model = DiscoveryViewModel(repository: repository, ownID: "owner")
+            model.category = category
+            await model.load()
+            #expect(model.profiles.map(\.id) == ["owner", "other"])
+            #expect(model.isOwn(owner))
+            #expect(!model.isOwn(other))
+        }
+    }
+
     @Test func searchAndFailuresStayLocalToDiscovery() async throws {
         let repository = FakeDiscoveryRepository()
         repository.snapshot = try VisitorGarden(documentID: "visitor", data: data())
