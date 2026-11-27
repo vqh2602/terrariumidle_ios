@@ -53,7 +53,7 @@ enum MonthlyRewardGenerator {
     ]
 
     static let milestoneDays: Set<Int> = [7, 14, 21, 28, 30]
-    static let nonVIPDisallowedRarities: Set<String> = ["rare", "legendary"]
+    static let nonVIPDisallowedRarities: Set<String> = ["rare", "epic", "legendary"]
 
     static func rarity(for rewardId: String) -> String {
         specs.first(where: { $0.id == rewardId })?.rarity ?? "common"
@@ -79,7 +79,7 @@ enum MonthlyRewardGenerator {
                     let roll = rng.nextUnit()
                     spec = roll < 0.55 ? specFor("ticket") : specFor("gemstone")
                 } else {
-                    spec = specFor("gemstone")
+                    spec = specFor("oxygen")
                 }
             } else if isMilestone {
                 spec = pickWeighted(from: milestonePool, using: &rng)
