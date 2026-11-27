@@ -78,12 +78,13 @@ struct EventWebView: UIViewRepresentable {
             controller.addScriptMessageHandler(context.coordinator, contentWorld: .page, name: "terrariumEventV2")
         }
         let configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = .nonPersistent()
         configuration.userContentController = controller
         let webView = WKWebView(frame: .zero, configuration: configuration)
         context.coordinator.webView = webView
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
-        webView.load(URLRequest(url: url, timeoutInterval: 30))
+        webView.load(URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30))
         return webView
     }
 
