@@ -77,7 +77,7 @@ final class AudioPlayer {
             : [explicitExt, explicitExt.uppercased()]
 
         for ext in candidateExts {
-            if Bundle.main.url(forResource: baseName, withExtension: ext) != nil {
+            if EncryptedResourceLoader.shared.hasResource(name: baseName, ext: ext) {
                 playTap(fileName: baseName, ext: ext, volume: volume)
                 return
             }
@@ -124,10 +124,10 @@ nonisolated private final class AudioPlaybackQueue: @unchecked Sendable {
     private func preloadCommonSounds() {
         dispatchPrecondition(condition: .onQueue(queue))
         let key = "tap.mp3"
-        guard let url = Bundle.main.url(forResource: "tap", withExtension: "mp3") else { return }
+        guard EncryptedResourceLoader.shared.hasResource(name: "tap", ext: "mp3") else { return }
         var list: [AVAudioPlayer] = []
         for _ in 0..<maxPlayersPerSound {
-            if let p = try? AVAudioPlayer(contentsOf: url) {
+            if let p = EncryptedResourceLoader.shared.audioPlayer(fileName: "tap", ext: "mp3") {
                 p.prepareToPlay()
                 list.append(p)
             }
@@ -144,8 +144,7 @@ nonisolated private final class AudioPlaybackQueue: @unchecked Sendable {
                 return idle
             }
             if list.count < maxPlayersPerSound,
-               let url = Bundle.main.url(forResource: fileName, withExtension: ext),
-               let newPlayer = try? AVAudioPlayer(contentsOf: url) {
+               let newPlayer = EncryptedResourceLoader.shared.audioPlayer(fileName: fileName, ext: ext) {
                 newPlayer.prepareToPlay()
                 list.append(newPlayer)
                 soundPool[key] = list
@@ -154,8 +153,7 @@ nonisolated private final class AudioPlaybackQueue: @unchecked Sendable {
             return list.first
         }
 
-        guard let url = Bundle.main.url(forResource: fileName, withExtension: ext),
-              let player = try? AVAudioPlayer(contentsOf: url) else {
+        guard let player = EncryptedResourceLoader.shared.audioPlayer(fileName: fileName, ext: ext) else {
             return nil
         }
         player.prepareToPlay()
@@ -166,21 +164,17 @@ nonisolated private final class AudioPlaybackQueue: @unchecked Sendable {
     func playBGM(fileName: String, ext: String, volume: Float, loop: Bool) {
         queue.async {
             dispatchPrecondition(condition: .onQueue(self.queue))
-            guard let url = Bundle.main.url(forResource: fileName, withExtension: ext) else {
+            guard let player = EncryptedResourceLoader.shared.audioPlayer(fileName: fileName, ext: ext) else {
                 print("❌ Không tìm thấy BGM: \(fileName).\(ext)")
                 return
             }
 
-            do {
-                self.bgmPlayer = try AVAudioPlayer(contentsOf: url)
-                self.bgmPlayer?.volume = volume
-                self.bgmPlayer?.numberOfLoops = loop ? -1 : 0
-                self.bgmPlayer?.prepareToPlay()
-                self.bgmPlayer?.play()
-                print("🎵 BGM playing: \(fileName).\(ext)")
-            } catch {
-                print("❌ Lỗi play BGM:", error)
-            }
+            self.bgmPlayer = player
+            self.bgmPlayer?.volume = volume
+            self.bgmPlayer?.numberOfLoops = loop ? -1 : 0
+            self.bgmPlayer?.prepareToPlay()
+            self.bgmPlayer?.play()
+            print("🎵 BGM playing: \(fileName).\(ext)")
         }
     }
 
@@ -201,26 +195,20 @@ nonisolated private final class AudioPlaybackQueue: @unchecked Sendable {
     func playSFX(fileName: String, ext: String, volume: Float) {
         queue.async {
             dispatchPrecondition(condition: .onQueue(self.queue))
-            guard let url = Bundle.main.url(forResource: fileName, withExtension: ext) else {
+            guard let p = EncryptedResourceLoader.shared.audioPlayer(fileName: fileName, ext: ext) else {
                 print("❌ Không tìm thấy SFX: \(fileName).\(ext)")
                 return
             }
 
-            do {
-                let p = try AVAudioPlayer(contentsOf: url)
-                p.volume = volume
-                p.prepareToPlay()
-                p.play()
+            p.volume = volume
+            p.prepareToPlay()
+            p.play()
 
-                // giữ reference để không bị dealloc
-                self.sfxPlayers.append(p)
+            // giữ reference để không bị dealloc
+            self.sfxPlayers.append(p)
 
-                // dọn những player đã phát xong
-                self.sfxPlayers.removeAll { !$0.isPlaying }
-
-            } catch {
-                print("❌ Lỗi play SFX:", error)
-            }
+            // dọn những player đã phát xong
+            self.sfxPlayers.removeAll { !$0.isPlaying }
         }
     }
 

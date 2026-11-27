@@ -19,12 +19,27 @@ EXPORT_DIR="$BUILD_DIR/export"
 EXPORT_OPTIONS_PLIST="$BUILD_DIR/ExportOptions.plist"
 IPA_NAME="terrariumidle_ios.ipa"
 FIXED_IPA_NAME="terrariumidle_fixed.ipa"
+ENCRYPT_TOOL="$BUILD_DIR/encrypt_vault"
 
-echo "==> [1/4] Cleaning previous build artifacts..."
+restore_assets() {
+    if [[ -x "$ENCRYPT_TOOL" ]]; then
+        "$ENCRYPT_TOOL" --restore "$SCRIPT_DIR" || true
+    elif [[ -d "$BUILD_DIR/.asset_staging" ]]; then
+        swift "$SCRIPT_DIR/scripts/encrypt_vault.swift" --restore "$SCRIPT_DIR" || true
+    fi
+}
+trap restore_assets EXIT INT TERM
+
+echo "==> [1/5] Cleaning previous build artifacts..."
+restore_assets
 rm -rf "$ARCHIVE_PATH" "$EXPORT_DIR" "$SCRIPT_DIR/ipa_fix" "$SCRIPT_DIR/$IPA_NAME" "$SCRIPT_DIR/$FIXED_IPA_NAME"
 mkdir -p "$BUILD_DIR" "$EXPORT_DIR"
 
-echo "==> [2/4] Generating ExportOptions.plist (method: $EXPORT_METHOD)..."
+echo "==> [2/5] Encrypting assets (AES-256-GCM) & stripping design SVGs..."
+swiftc -O "$SCRIPT_DIR/scripts/encrypt_vault.swift" -o "$ENCRYPT_TOOL"
+"$ENCRYPT_TOOL" --encrypt "$SCRIPT_DIR"
+
+echo "==> [3/5] Generating ExportOptions.plist (method: $EXPORT_METHOD)..."
 cat > "$EXPORT_OPTIONS_PLIST" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -42,7 +57,7 @@ cat > "$EXPORT_OPTIONS_PLIST" <<EOF
 </plist>
 EOF
 
-echo "==> [3/4] Archiving $SCHEME ($CONFIGURATION)..."
+echo "==> [4/5] Archiving $SCHEME ($CONFIGURATION)..."
 xcodebuild archive \
     -project "$PROJECT" \
     -scheme "$SCHEME" \
@@ -67,7 +82,7 @@ fi
 cp "$EXPORTED_IPA" "$SCRIPT_DIR/$IPA_NAME"
 echo "    Exported: $SCRIPT_DIR/$IPA_NAME"
 
-echo "==> [4/4] Fixing IPA (removing Watch app)..."
+echo "==> [5/5] Fixing IPA (removing Watch app)..."
 mkdir -p ipa_fix
 unzip -q "$IPA_NAME" -d ipa_fix
 rm -rf ipa_fix/Payload/terrariumidle_ios.app/Watch

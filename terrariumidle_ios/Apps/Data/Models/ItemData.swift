@@ -355,21 +355,12 @@ class ItemDataManager {
 
     /// Helper function để load items từ file
     private func loadItemsFromFile(named fileName: String, folder: String? = nil) -> [ItemData] {
-        var url: URL?
-
-        if let folder = folder {
-            url = Bundle.main.url(forResource: fileName, withExtension: "json", subdirectory: folder)
-        } else {
-            url = Bundle.main.url(forResource: fileName, withExtension: "json")
-        }
-
-        guard let url = url else {
+        guard let data = EncryptedResourceLoader.shared.data(forResource: fileName, ext: "json", subdirectory: folder) else {
             print("❌ Không tìm thấy file \(fileName).json")
             return []
         }
 
         do {
-            let data = try Data(contentsOf: url)
             let items = try JSONDecoder().decode([ItemData].self, from: data)
             return items
         } catch {

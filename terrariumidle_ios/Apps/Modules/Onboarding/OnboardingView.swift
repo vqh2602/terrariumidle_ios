@@ -42,7 +42,7 @@ struct OnboardingView: View {
             )
             .ignoresSafeArea()
             .overlay(alignment: .topTrailing) {
-                Image("leaf_emerald_1")
+                Image.bundle("leaf_emerald_1")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 140, height: 140)

@@ -224,7 +224,7 @@ private struct EffectCardView: View {
                 Color.clear
                     .frame(width: 96, height: 58)
                     .overlay {
-                        Image(thumbnailImageName).resizable().scaledToFill()
+                        Image.bundle(thumbnailImageName).resizable().scaledToFill()
                     }
                     .clipped()
                     .overlay {

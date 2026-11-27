@@ -61,10 +61,10 @@ private struct LocalHTMLWebView: UIViewRepresentable {
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 
     private func loadContent(into webView: WKWebView) {
-        let url = Bundle.main.url(forResource: resourceName, withExtension: "html")
-            ?? Bundle.main.url(forResource: resourceName, withExtension: "html", subdirectory: "HTML")
+        let html = EncryptedResourceLoader.shared.string(forResource: resourceName, ext: "html", subdirectory: "HTML")
+            ?? EncryptedResourceLoader.shared.string(forResource: resourceName, ext: "html")
 
-        guard let url, let html = try? String(contentsOf: url, encoding: .utf8) else {
+        guard let html else {
             let fallback = """
             <html><body style="font-family:-apple-system,sans-serif;padding:24px;color:#2C3527;background:#F7EEDB;">
             <p>Không tìm thấy nội dung.</p>
@@ -79,6 +79,6 @@ private struct LocalHTMLWebView: UIViewRepresentable {
             of: "var lang = params.get(\"lang\") || \"vi\";",
             with: "var lang = params.get(\"lang\") || \"\(escapedLang)\";"
         )
-        webView.loadHTMLString(injectedHTML, baseURL: url.deletingLastPathComponent())
+        webView.loadHTMLString(injectedHTML, baseURL: Bundle.main.resourceURL)
     }
 }

@@ -77,7 +77,7 @@ final class BackgroundAudioManager: ObservableObject {
     }
 
     func hasAudioResource(fileName: String, ext: String = "mp3") -> Bool {
-        findAudioURL(fileName: fileName, ext: ext) != nil
+        hasAudioFile(fileName: fileName, ext: ext)
     }
 
     func captureAudioSnapshot() -> AudioSnapshot {
@@ -120,6 +120,32 @@ final class BackgroundAudioManager: ObservableObject {
     }
 
     // MARK: - Audio File Resolution Helper
+
+    private func hasAudioFile(fileName: String, ext: String = "mp3") -> Bool {
+        if EncryptedResourceLoader.shared.hasResource(name: fileName, ext: ext) { return true }
+        if EncryptedResourceLoader.shared.hasResource(name: fileName, ext: ext.uppercased()) { return true }
+        if fileName == "m0" {
+            return EncryptedResourceLoader.shared.hasResource(name: "peacefulgarden", ext: "mp3")
+        } else if fileName == "peacefulgarden" {
+            return EncryptedResourceLoader.shared.hasResource(name: "m0", ext: "mp3")
+        }
+        return false
+    }
+
+    nonisolated private func loadAudioPlayer(fileName: String, ext: String = "mp3") -> AVAudioPlayer? {
+        if let player = EncryptedResourceLoader.shared.audioPlayer(fileName: fileName, ext: ext) {
+            return player
+        }
+        if let player = EncryptedResourceLoader.shared.audioPlayer(fileName: fileName, ext: ext.uppercased()) {
+            return player
+        }
+        if fileName == "m0" {
+            return EncryptedResourceLoader.shared.audioPlayer(fileName: "peacefulgarden", ext: "mp3")
+        } else if fileName == "peacefulgarden" {
+            return EncryptedResourceLoader.shared.audioPlayer(fileName: "m0", ext: "mp3")
+        }
+        return nil
+    }
 
     private func findAudioURL(fileName: String, ext: String = "mp3") -> URL? {
         // 1. Tìm chính xác
@@ -211,7 +237,7 @@ final class BackgroundAudioManager: ObservableObject {
             return
         }
 
-        guard let url = findAudioURL(fileName: fileName, ext: ext) else {
+        guard hasAudioFile(fileName: fileName, ext: ext) else {
             isStartingBGM = false
             print("❌ Missing BGM: \(fileName).\(ext)")
             return
@@ -223,10 +249,10 @@ final class BackgroundAudioManager: ObservableObject {
         let generation = playbackGeneration
         let volume = bgmVolume
         playback.perform { [weak self] playback in
+            guard let self else { return }
             let played: Bool
-            do {
+            if let player = self.loadAudioPlayer(fileName: fileName, ext: ext) {
                 // Keep the current track until its replacement is ready to play.
-                let player = try AVAudioPlayer(contentsOf: url)
                 player.numberOfLoops = -1
                 player.volume = volume
                 played = player.prepareToPlay() && player.play()
@@ -234,8 +260,8 @@ final class BackgroundAudioManager: ObservableObject {
                     playback.player?.stop()
                     playback.player = player
                 }
-            } catch {
-                print("❌ startBGM error:", error)
+            } else {
+                print("❌ startBGM error: could not load \(fileName).\(ext)")
                 played = false
             }
             Task { @MainActor [weak self] in
@@ -402,7 +428,7 @@ final class BackgroundAudioManager: ObservableObject {
         let unlockedIds = MusicUnlockHelper.getUnlockedMusicIds(from: FireStoreService.shared.gradenModel)
         let unlockedTracks = allMusics.filter { unlockedIds.contains($0.id) }
         let playlist = unlockedTracks.filter {
-            findAudioURL(fileName: $0.sound ?? $0.id) != nil
+            hasAudioFile(fileName: $0.sound ?? $0.id)
         }
         guard !playlist.isEmpty else { return }
 
@@ -440,7 +466,7 @@ final class BackgroundAudioManager: ObservableObject {
         let unlockedIds = MusicUnlockHelper.getUnlockedMusicIds(from: FireStoreService.shared.gradenModel)
         let unlockedTracks = allMusics.filter { unlockedIds.contains($0.id) }
         let playlist = unlockedTracks.filter {
-            findAudioURL(fileName: $0.sound ?? $0.id) != nil
+            hasAudioFile(fileName: $0.sound ?? $0.id)
         }
         guard !playlist.isEmpty else { return }
 
@@ -481,7 +507,7 @@ final class BackgroundAudioManager: ObservableObject {
             }
             return
         }
-        guard let url = findAudioURL(fileName: fileName, ext: ext) else {
+        guard hasAudioFile(fileName: fileName, ext: ext) else {
             pendingSFXIds.remove(id)
             print("❌ Missing SFX: \(fileName).\(ext)")
             return
@@ -490,16 +516,16 @@ final class BackgroundAudioManager: ObservableObject {
         let generation = sfxGenerations[id]
         let volume = (sfxVolumes[id] ?? 1.0) * sfxVolume
         playback.perform { [weak self] playback in
+            guard let self else { return }
             let played: Bool
-            do {
-                playback.sfxPlayers.removeValue(forKey: id)?.stop()
-                let player = try AVAudioPlayer(contentsOf: url)
+            playback.sfxPlayers.removeValue(forKey: id)?.stop()
+            if let player = self.loadAudioPlayer(fileName: fileName, ext: ext) {
                 player.numberOfLoops = -1
                 player.volume = volume
                 played = player.prepareToPlay() && player.play()
                 if played { playback.sfxPlayers[id] = player }
-            } catch {
-                print("❌ SFX error:", error)
+            } else {
+                print("❌ SFX error: could not load \(fileName).\(ext)")
                 played = false
             }
             Task { @MainActor [weak self] in
@@ -579,7 +605,7 @@ final class BackgroundAudioManager: ObservableObject {
             return
         }
 
-        guard let url = findAudioURL(fileName: fileName, ext: ext) else {
+        guard hasAudioFile(fileName: fileName, ext: ext) else {
             activeWeatherFileName = nil
             print("❌ Missing weather audio: \(fileName).\(ext)")
             return
@@ -589,17 +615,17 @@ final class BackgroundAudioManager: ObservableObject {
         let generation = weatherGeneration
         let volume = sfxVolume
         playback.perform { [weak self] playback in
+            guard let self else { return }
             let played: Bool
-            do {
-                playback.weatherPlayer?.stop()
-                playback.weatherPlayer = nil
-                let player = try AVAudioPlayer(contentsOf: url)
+            playback.weatherPlayer?.stop()
+            playback.weatherPlayer = nil
+            if let player = self.loadAudioPlayer(fileName: fileName, ext: ext) {
                 player.numberOfLoops = -1
                 player.volume = volume
                 played = player.prepareToPlay() && player.play()
                 if played { playback.weatherPlayer = player }
-            } catch {
-                print("❌ Weather audio error:", error)
+            } else {
+                print("❌ Weather audio error: could not load \(fileName).\(ext)")
                 played = false
             }
             Task { @MainActor [weak self] in

@@ -15,6 +15,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        EncryptedResourceLoader.installImageHooksIfNeeded()
         FirebaseApp.configure()
 
         AudioSessionController.activate()
