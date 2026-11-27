@@ -7,8 +7,10 @@ struct AccountView: View {
     @StateObject private var fireStore: FireStoreService = .shared
     @ObservedObject private var subscriptionManager = SubscriptionManager.shared
     @ObservedObject private var localization = LocalizationManager.shared
+    @ObservedObject private var appIconManager = AppIconManager.shared
     @State private var showOnboardingGuide = false
     @State private var showWatchSettings = false
+    @State private var showAppIconPicker = false
     @State private var showAvatarPicker = false
     @State private var selectedAvatarItem: PhotosPickerItem?
 
@@ -104,6 +106,7 @@ struct AccountView: View {
             .environmentObject(router)
         }
         .sheet(isPresented: $showWatchSettings) { WatchCompanionSettingsView() }
+        .sheet(isPresented: $showAppIconPicker) { AppIconPickerSheet() }
         .sheet(item: $viewModel.activeHTMLDocument) { document in
             AccountHTMLSheet(document: document)
         }
@@ -173,6 +176,8 @@ struct AccountView: View {
 
     private var settingsSection: some View {
         section(title: "Thiết lập khu vườn".tr, icon: "slider.horizontal.3") {
+            appIconRow
+            rowDivider
             languagePickerRow
             rowDivider
             SettingsRow(title: "Apple Watch", icon: "applewatch") { showWatchSettings = true }
@@ -201,6 +206,56 @@ struct AccountView: View {
                 ))
             )
         }
+    }
+
+    private var appIconRow: some View {
+        Button {
+            if isVIP {
+                showAppIconPicker = true
+            } else {
+                router.push(.subscriptionView)
+            }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "app.badge.fill")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(AccountStyle.green)
+                    .frame(width: 36, height: 36)
+                    .background(AccountStyle.green.opacity(0.10), in: RoundedRectangle(cornerRadius: 12))
+
+                Text("Biểu tượng ứng dụng".tr)
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(AccountStyle.ink)
+
+                Spacer(minLength: 4)
+
+                if isVIP {
+                    HStack(spacing: 6) {
+                        Text(appIconManager.currentIcon.title)
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(AccountStyle.muted)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(AccountStyle.muted)
+                            .frame(width: 26, height: 26)
+                            .background(AccountStyle.border.opacity(0.28), in: Circle())
+                    }
+                } else {
+                    HStack(spacing: 6) {
+                        VIPCrownBadge(compact: true)
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(AccountStyle.muted)
+                            .frame(width: 26, height: 26)
+                            .background(AccountStyle.border.opacity(0.28), in: Circle())
+                    }
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private var languagePickerRow: some View {

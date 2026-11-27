@@ -10,6 +10,7 @@ import SwiftUI
 struct SplashView: View {
     @ObservedObject var router: AppRouter
     @StateObject private var splashViewModel: SplashViewModel
+    @ObservedObject private var appIconManager = AppIconManager.shared
 
     init(router: AppRouter, auth: AuthService = .shared) {
         self.router = router
@@ -20,8 +21,14 @@ struct SplashView: View {
         Group {
             GeometryReader { geometry in
                 VStack {
-                    Image("logo").resizable()
-                        .scaledToFit().frame(
+                    Image(appIconManager.currentSplashImageName).resizable()
+                        .scaledToFit()
+                        .clipShape(
+                            RoundedRectangle(
+                                cornerRadius: appIconManager.currentIcon == .defaultIcon ? 0 : 36
+                            )
+                        )
+                        .frame(
                             width: 200, // 30% chiều rộng màn hình
                             height: 200 // 30% chiều rộng màn hình
                         ).padding(20)
