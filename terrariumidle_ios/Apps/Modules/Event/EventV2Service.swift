@@ -11,18 +11,98 @@ final class EventV2Service {
     private let collectionName = "user-event"
     private let maxStoredReceipts = 15
 
+    private struct RewardSpec {
+        let id: String
+        let quantity: Int
+
+        init(_ id: String, quantity: Int = 1) {
+            self.id = id
+            self.quantity = max(1, quantity)
+        }
+
+        func toDictionary(milestone: Int? = nil) -> [String: Any] {
+            var dict: [String: Any] = [
+                "id": id,
+                "quantity": quantity
+            ]
+            if let milestone {
+                dict["milestone"] = milestone
+            }
+            return dict
+        }
+    }
+
     private struct EventSpec {
-        let rewardIds: [String]
+        let rewards: [RewardSpec]
         let milestones: [Int]?
+
+        var rewardIds: [String] { rewards.map(\.id) }
+
+        func toWebList() -> [[String: Any]] {
+            rewards.enumerated().map { index, reward in
+                let milestone = (milestones != nil && index < milestones!.count) ? milestones![index] : nil
+                return reward.toDictionary(milestone: milestone)
+            }
+        }
     }
 
     private let specs: [String: EventSpec] = [
-        "slot": EventSpec(rewardIds: ["plant20", "pot1", "oxygen"], milestones: nil),
-        "match": EventSpec(rewardIds: ["plant2", "pot1", "fertilizer", "oxygen"], milestones: nil),
-        "oxygen": EventSpec(rewardIds: ["fertilizer", "pot1", "plant20"], milestones: [1000, 5000, 10000]),
-        "level": EventSpec(rewardIds: ["oxygen", "pot1", "plant20"], milestones: [5, 10, 20]),
-        "daily": EventSpec(rewardIds: ["oxygen", "fertilizer", "oxygen", "pot1", "oxygen", "fertilizer", "plant20"], milestones: nil),
-        "monthly": EventSpec(rewardIds: ["oxygen", "fertilizer", "shovel", "gemstone", "ticket"], milestones: nil)
+        "slot": EventSpec(
+            rewards: [
+                RewardSpec("plant30", quantity: 1),
+                RewardSpec("pot30", quantity: 1),
+                RewardSpec("oxygen", quantity: 5000)
+            ],
+            milestones: nil
+        ),
+        "match": EventSpec(
+            rewards: [
+                RewardSpec("plant11", quantity: 1),
+                RewardSpec("pot11", quantity: 1),
+                RewardSpec("fertilizer", quantity: 1),
+                RewardSpec("oxygen", quantity: 3000)
+            ],
+            milestones: nil
+        ),
+        "oxygen": EventSpec(
+            rewards: [
+                RewardSpec("fertilizer", quantity: 1),
+                RewardSpec("pot21", quantity: 1),
+                RewardSpec("plant21", quantity: 1),
+                RewardSpec("gemstone", quantity: 500)
+            ],
+            milestones: [10000, 50000, 100000, 500000]
+        ),
+        "level": EventSpec(
+            rewards: [
+                RewardSpec("oxygen", quantity: 3000),
+                RewardSpec("pot20", quantity: 1),
+                RewardSpec("plant20", quantity: 1)
+            ],
+            milestones: [5, 15, 50]
+        ),
+        "daily": EventSpec(
+            rewards: [
+                RewardSpec("oxygen", quantity: 300),
+                RewardSpec("fertilizer", quantity: 1),
+                RewardSpec("oxygen", quantity: 300),
+                RewardSpec("pot8", quantity: 1),
+                RewardSpec("oxygen", quantity: 300),
+                RewardSpec("fertilizer", quantity: 1),
+                RewardSpec("plant8", quantity: 1)
+            ],
+            milestones: nil
+        ),
+        "monthly": EventSpec(
+            rewards: [
+                RewardSpec("oxygen", quantity: 300),
+                RewardSpec("fertilizer", quantity: 1),
+                RewardSpec("shovel", quantity: 1),
+                RewardSpec("gemstone", quantity: 10),
+                RewardSpec("ticket", quantity: 1)
+            ],
+            milestones: nil
+        )
     ]
 
     private init() {}
@@ -65,11 +145,13 @@ final class EventV2Service {
                 let pool = self.specs["slot"]!.rewardIds
                 let symbols = (0..<3).map { _ in pool.randomElement()! }
                 let wonId: String? = (symbols[0] == symbols[1] && symbols[1] == symbols[2]) ? symbols[0] : nil
-                if let wonId {
+                if let wonId,
+                   let wonSpec = self.specs["slot"]!.rewards.first(where: { $0.id == wonId }) {
                     var pending = state["pending"] as? [[String: Any]] ?? []
                     pending.append([
                         "id": "spin-\(seq)",
-                        "rewardId": wonId,
+                        "rewardId": wonSpec.id,
+                        "quantity": wonSpec.quantity,
                         "eventId": "slot"
                     ])
                     state["pending"] = pending
@@ -143,10 +225,12 @@ final class EventV2Service {
                     let second = board[open[1]]
                     if !first.isEmpty && first == second {
                         ended = true
+                        let matchedQty = self.specs["match"]!.rewards.first(where: { $0.id == first })?.quantity ?? 1
                         var pending = state["pending"] as? [[String: Any]] ?? []
                         pending.append([
                             "id": currentId,
                             "rewardId": first,
+                            "quantity": matchedQty,
                             "eventId": "match"
                         ])
                         state["pending"] = pending
@@ -192,12 +276,14 @@ final class EventV2Service {
         let claims = preState["claims"] as? [String] ?? []
 
         let rewardIdToGrant: String
+        let quantityToGrant: Int?
         let claimKey: String
         var pendingIdToRemove: String?
 
         if let milestones = spec.milestones {
             guard let milestone = (payload["milestone"] as? NSNumber)?.intValue,
-                  let idx = milestones.firstIndex(of: milestone) else {
+                  let idx = milestones.firstIndex(of: milestone),
+                  idx < spec.rewards.count else {
                 throw EventReward.failure("Chưa đạt mốc.".tr)
             }
             let progress = eventId == "oxygen"
@@ -210,7 +296,9 @@ final class EventV2Service {
             guard !claims.contains(claimKey) else {
                 throw EventReward.failure("Quà đã nhận.".tr)
             }
-            rewardIdToGrant = spec.rewardIds[idx]
+            let targetReward = spec.rewards[idx]
+            rewardIdToGrant = targetReward.id
+            quantityToGrant = targetReward.quantity
         } else {
             let pendingId = payload["rewardId"] as? String ?? ""
             let pending = preState["pending"] as? [[String: Any]] ?? []
@@ -223,11 +311,17 @@ final class EventV2Service {
                 throw EventReward.failure("Quà đã nhận.".tr)
             }
             rewardIdToGrant = actualRewardId
+            quantityToGrant = (match["quantity"] as? NSNumber)?.intValue
+                ?? spec.rewards.first(where: { $0.id == actualRewardId })?.quantity
             pendingIdToRemove = pendingId
         }
 
         // 2. Apply to GardenModel and persist to users/{uid} first
-        let (updatedGarden, qty) = try EventReward.applyV2Reward(rewardId: rewardIdToGrant, to: garden)
+        let (updatedGarden, qty) = try EventReward.applyV2Reward(
+            rewardId: rewardIdToGrant,
+            quantityOverride: quantityToGrant,
+            to: garden
+        )
         let saved = await FireStoreService.shared.saveEventReward(gardenModel: updatedGarden)
         guard saved else {
             throw EventReward.failure("Chưa lưu được phần thưởng. Vui lòng kiểm tra kết nối rồi thử lại.".tr)
@@ -270,11 +364,16 @@ final class EventV2Service {
             throw EventReward.failure("Bạn đã điểm danh hôm nay hoặc hoàn thành chuỗi.".tr)
         }
 
-        let dailyRewards = specs["daily"]!.rewardIds
-        let rewardId = dailyRewards[day]
+        let dailyRewards = specs["daily"]!.rewards
+        let rewardSpec = dailyRewards[day]
+        let rewardId = rewardSpec.id
         let claimKey = "daily-\(day)"
 
-        let (updatedGarden, qty) = try EventReward.applyV2Reward(rewardId: rewardId, to: garden)
+        let (updatedGarden, qty) = try EventReward.applyV2Reward(
+            rewardId: rewardId,
+            quantityOverride: rewardSpec.quantity,
+            to: garden
+        )
         let saved = await FireStoreService.shared.saveEventReward(gardenModel: updatedGarden)
         guard saved else {
             throw EventReward.failure("Chưa lưu được phần thưởng. Vui lòng kiểm tra kết nối rồi thử lại.".tr)
@@ -529,7 +628,8 @@ final class EventV2Service {
             "monthlyCheckedToday": state["monthlyCheckedToday"] as? Bool ?? false,
             "monthlyRewards": state["monthlyRewards"] as? [[String: Any]] ?? [],
             "pending": state["pending"] as? [[String: Any]] ?? [],
-            "wallet": state["wallet"] as? [[String: Any]] ?? []
+            "wallet": state["wallet"] as? [[String: Any]] ?? [],
+            "eventSpecs": specs.mapValues { $0.toWebList() }
         ]
 
         if let lastSpin = state["lastSpin"] as? [String: Any] {
