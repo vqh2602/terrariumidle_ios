@@ -1,4 +1,5 @@
 import Combine
+import FirebaseAuth
 import Foundation
 
 @MainActor
@@ -107,6 +108,7 @@ final class VisitorGardenViewModel: ObservableObject {
     func like() async {
         guard let garden, let liking, canLike else { return }
         let token = generation
+        let viewerID = Auth.auth().currentUser?.uid
         isLiking = true
         likeMessage = nil
         defer { isLiking = false }
@@ -116,6 +118,9 @@ final class VisitorGardenViewModel: ObservableObject {
             guard token == generation else { return }
             likeCount = total
             hasLiked = true
+            if let viewerID, viewerID == Auth.auth().currentUser?.uid {
+                AchievementStore.shared.recordGarden(garden.profile.id, liked: true)
+            }
             likeMessage = "Đã gửi một trái tim cho khu vườn này!".tr
         } catch {
             guard token == generation else { return }
@@ -126,6 +131,7 @@ final class VisitorGardenViewModel: ObservableObject {
     func load(id: String) async {
         guard !isLiking else { return }
         let token = UUID()
+        let viewerID = Auth.auth().currentUser?.uid
         generation = token
         garden = nil
         error = nil
@@ -139,6 +145,9 @@ final class VisitorGardenViewModel: ObservableObject {
             try Task.checkCancellation()
             guard generation == token else { return }
             garden = snapshot
+            if let viewerID, viewerID == Auth.auth().currentUser?.uid {
+                AchievementStore.shared.recordGarden(snapshot.profile.id)
+            }
             likeCount = snapshot.profile.likes
             hasLiked = liking?.hasLiked(gardenID: snapshot.profile.id) ?? false
         } catch {

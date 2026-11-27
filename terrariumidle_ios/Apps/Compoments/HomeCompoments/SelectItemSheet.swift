@@ -533,6 +533,7 @@ struct SelectItemSheet: View {
 
         // Update Firestore asynchronously
         fireStore.saveGarden(gardenModel: updatedModel, debounce: false)
+        if selectionMode == .plantCombo { AchievementStore.shared.record(.plantings) }
         isPresented = false
     }
 }

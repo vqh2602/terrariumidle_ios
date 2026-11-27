@@ -324,6 +324,10 @@ struct AccountView: View {
 
     private var servicesSection: some View {
         section(title: "Đồng hành cùng bạn".tr, icon: "sparkles") {
+            SettingsRow(title: "Thành tích".tr, icon: "trophy.fill") {
+                router.push(.achievementsView)
+            }
+            rowDivider
             SettingsRow(title: "Hướng dẫn khu vườn".tr, icon: "sparkles.rectangle.stack.fill") {
                 showOnboardingGuide = true
             }

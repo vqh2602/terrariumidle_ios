@@ -120,6 +120,7 @@ struct SpeedDial: View {
         case .music: showMusicSheet = true
         case .store: router.push(.storeView)
         case .account: router.push(.accountView)
+        case .achievements: router.push(.achievementsView)
         case .layout: isEditing = true
         case .events: router.push(.eventView)
         case .mailbox: router.push(.mailboxView)
@@ -141,6 +142,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
     case music = "Âm nhạc"
     case store = "Cửa hàng"
     case events = "Sự kiện"
+    case achievements = "Thành tích"
     case mailbox = "Hòm thư"
     case discovery = "Khám phá"
     case layout = "Bố cục"
@@ -156,6 +158,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
         case .music: return "music.note"
         case .store: return "basket.fill"
         case .events: return "gift.fill"
+        case .achievements: return "trophy.fill"
         case .mailbox: return "envelope.fill"
         case .discovery: return "globe.asia.australia.fill"
         case .vip: return "crown.fill"
@@ -171,6 +174,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
         case .music: return Color(hex: "AC7862")
         case .store, .layout: return AccountStyle.green
         case .events: return Color(hex: "9A8A71")
+        case .achievements: return Color(hex: "B18A45")
         case .mailbox: return Color(hex: "C07A53")
         case .discovery: return Color(hex: "648C86")
         case .vip: return Color(hex: "D79922")

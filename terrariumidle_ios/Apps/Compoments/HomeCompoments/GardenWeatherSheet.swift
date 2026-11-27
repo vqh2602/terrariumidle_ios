@@ -77,6 +77,7 @@ struct GardenWeatherSheet: View {
         switch garden.startWeather(kind, now: Date().timeIntervalSince1970) {
         case .started:
             fireStore.saveGarden(gardenModel: garden, debounce: false)
+            AchievementStore.shared.record(.weather)
             dismiss()
         case .insufficientTickets:
             message = "Bạn cần 1 ticket để tạo %@.".tr(kind.title.lowercased())

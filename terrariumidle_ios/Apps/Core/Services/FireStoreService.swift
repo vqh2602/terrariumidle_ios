@@ -325,6 +325,9 @@ class FireStoreService: ObservableObject {
 
         // Cập nhật model và debounce lưu Firestore
         saveGarden(gardenModel: garden, debounce: true)
+        if ItemDataManager.shared.getPlant(byId: plant.idPlant) != nil {
+            AchievementStore.shared.recordHarvest(oxygen: oxygenDrop)
+        }
 
         return PlantTapResult(
             oxygenGained: oxygenDrop,

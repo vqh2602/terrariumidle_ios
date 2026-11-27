@@ -436,6 +436,7 @@ struct PlantItemView: View {
                 careAnimation = PlantCareAnimationRequest(action: .water)
             } else {
                 fireStoreService.saveGarden(gardenModel: garden, debounce: false)
+                AchievementStore.shared.record(.watering)
                 AudioPlayer.shared.playSFX(fileName: "mixkit-water-surface-hit-1320", ext: "wav")
                 showFloatingText("💧 Tự tap trong 60 giây!".tr)
             }
@@ -512,6 +513,7 @@ struct PlantItemView: View {
 
         // Save to Firestore asynchronously
         fireStoreService.saveGarden(gardenModel: gardenModel, debounce: false)
+        AchievementStore.shared.record(.fertilizing)
     }
 
     /// Remove plant - costs 1 shovel, removes the plant

@@ -345,6 +345,9 @@
 					36DB4E8C2F2B3D19002A539B = {
 						CreatedOnToolsVersion = 26.2;
 						SystemCapabilities = {
+							com.apple.GameCenter = {
+								enabled = 1;
+							};
 							com.apple.HealthKit = {
 								enabled = 1;
 							};
