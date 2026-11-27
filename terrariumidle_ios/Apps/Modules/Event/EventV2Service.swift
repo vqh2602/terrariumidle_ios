@@ -102,7 +102,26 @@ final class EventV2Service {
                 RewardSpec("ticket", quantity: 1)
             ],
             milestones: nil
+        ),
+        "harvest": EventSpec(
+            rewards: [
+                RewardSpec("sticker3", quantity: 1),
+                RewardSpec("gemstone", quantity: 50),
+                RewardSpec("oxygen", quantity: 5000)
+            ],
+            milestones: nil
         )
+    ]
+
+    private struct HarvestRequirement {
+        let plantId: String
+        let required: Int
+    }
+
+    private let harvestRequirements: [HarvestRequirement] = [
+        HarvestRequirement(plantId: "plant10", required: 3),
+        HarvestRequirement(plantId: "plant2", required: 2),
+        HarvestRequirement(plantId: "plant5", required: 2)
     ]
 
     private init() {}
@@ -248,7 +267,14 @@ final class EventV2Service {
             }
 
         case "claimReward":
+            if eventId == "harvest" {
+                return try await handleHarvestClaimReward(uid: uid, garden: garden, requestId: requestId)
+            }
             return try await handleClaimReward(uid: uid, eventId: eventId, payload: payload, garden: garden, requestId: requestId)
+
+        case "harvestPlant":
+            guard eventId == "harvest" else { throw EventReward.failure("Sự kiện không hợp lệ.".tr) }
+            return try await handleHarvestPlant(uid: uid, payload: payload, garden: garden, requestId: requestId)
 
         case "checkIn":
             guard eventId == "daily" else { throw EventReward.failure("Sự kiện không hợp lệ.".tr) }
@@ -462,6 +488,166 @@ final class EventV2Service {
         }
     }
 
+    // MARK: - Harvest Event (cuts mature plant back to Lv.1 and places on shelf)
+
+    private func handleHarvestPlant(uid: String, payload: [String: Any], garden: GardenModel, requestId: String?) async throws -> [String: Any] {
+        let preState = try await fetchOrInitState(uid: uid, level: garden.user.userLevel)
+        if let requestId, let receipts = preState["receipts"] as? [String: Any], let cached = receipts[requestId] as? [String: Any] {
+            return cached
+        }
+
+        guard let plantId = payload["plantId"] as? String,
+              let requirement = harvestRequirements.first(where: { $0.plantId == plantId }) else {
+            throw EventReward.failure("Cây không nằm trong danh sách thu hoạch.".tr)
+        }
+
+        let progress = preState["harvestProgress"] as? [String: Any] ?? [:]
+        let currentCollected = (progress[plantId] as? NSNumber)?.intValue ?? 0
+        guard currentCollected < requirement.required else {
+            throw EventReward.failure("Kệ vật phẩm cho cây này đã đủ số lượng.".tr)
+        }
+
+        let preferredPosition = payload["position"] as? String
+        guard let targetIndex = activeMaturePlantIndex(for: plantId, preferredPosition: preferredPosition, in: garden) else {
+            throw EventReward.failure("Bạn chưa có cây trưởng thành phù hợp trong khu vườn.".tr)
+        }
+
+        var updatedGarden = garden
+        updatedGarden.plants[targetIndex].plantLevel = 1
+        updatedGarden.plants[targetIndex].platLevelExp = 0
+
+        let saved = await FireStoreService.shared.saveEventReward(gardenModel: updatedGarden)
+        guard saved else {
+            throw EventReward.failure("Chưa lưu được tiến trình thu hoạch. Vui lòng kiểm tra kết nối rồi thử lại.".tr)
+        }
+
+        return try await runDocumentTransaction(uid: uid, level: updatedGarden.user.userLevel, requestId: requestId) { state in
+            var currentProgress = state["harvestProgress"] as? [String: Any] ?? [:]
+            let latestCount = (currentProgress[plantId] as? NSNumber)?.intValue ?? 0
+            guard latestCount < requirement.required else {
+                throw EventReward.failure("Kệ vật phẩm cho cây này đã đủ số lượng.".tr)
+            }
+            currentProgress[plantId] = latestCount + 1
+            state["harvestProgress"] = currentProgress
+        }
+    }
+
+    private func handleHarvestClaimReward(uid: String, garden: GardenModel, requestId: String?) async throws -> [String: Any] {
+        let preState = try await fetchOrInitState(uid: uid, level: garden.user.userLevel)
+        if let requestId, let receipts = preState["receipts"] as? [String: Any], let cached = receipts[requestId] as? [String: Any] {
+            return cached
+        }
+
+        let claims = preState["claims"] as? [String] ?? []
+        let claimKey = "harvest-complete"
+        guard !claims.contains(claimKey) else {
+            throw EventReward.failure("Quà đã nhận.".tr)
+        }
+
+        let progress = preState["harvestProgress"] as? [String: Any] ?? [:]
+        let isComplete = harvestRequirements.allSatisfy { req in
+            ((progress[req.plantId] as? NSNumber)?.intValue ?? 0) >= req.required
+        }
+        guard isComplete else {
+            throw EventReward.failure("Bạn chưa hoàn thiện đủ kệ vật phẩm.".tr)
+        }
+
+        let harvestRewards = specs["harvest"]!.rewards
+        var updatedGarden = garden
+        var grantedItems: [(id: String, qty: Int)] = []
+        for reward in harvestRewards {
+            let result = try EventReward.applyV2Reward(
+                rewardId: reward.id,
+                quantityOverride: reward.quantity,
+                to: updatedGarden
+            )
+            updatedGarden = result.garden
+            grantedItems.append((reward.id, result.quantity))
+        }
+
+        let saved = await FireStoreService.shared.saveEventReward(gardenModel: updatedGarden)
+        guard saved else {
+            throw EventReward.failure("Chưa lưu được phần thưởng. Vui lòng kiểm tra kết nối rồi thử lại.".tr)
+        }
+
+        return try await runDocumentTransaction(uid: uid, level: updatedGarden.user.userLevel, requestId: requestId) { state in
+            var currentClaims = state["claims"] as? [String] ?? []
+            guard !currentClaims.contains(claimKey) else {
+                throw EventReward.failure("Quà đã nhận.".tr)
+            }
+            currentClaims.append(claimKey)
+            state["claims"] = currentClaims
+
+            var wallet = state["wallet"] as? [[String: Any]] ?? []
+            for item in grantedItems {
+                wallet.append([
+                    "id": item.id,
+                    "name": self.displayName(for: item.id),
+                    "quantity": item.qty
+                ])
+            }
+            state["wallet"] = wallet
+        }
+    }
+
+    private func activeMaturePlantIndex(for plantId: String, preferredPosition: String?, in garden: GardenModel) -> Int? {
+        // Only the last record at each socket position is active in the garden.
+        var latestIndexByPosition: [String: Int] = [:]
+        for (index, plant) in garden.plants.enumerated() {
+            latestIndexByPosition[plant.position] = index
+        }
+
+        let activeIndices = latestIndexByPosition.values.sorted()
+        if let preferredPosition,
+           let preferredIdx = latestIndexByPosition[preferredPosition] {
+            let plant = garden.plants[preferredIdx]
+            if plant.idPlant == plantId && !plant.idPot.isEmpty && plant.plantLevel >= 3 {
+                return preferredIdx
+            }
+        }
+
+        return activeIndices.first { idx in
+            let plant = garden.plants[idx]
+            return plant.idPlant == plantId && !plant.idPot.isEmpty && plant.plantLevel >= 3
+        }
+    }
+
+    private func harvestSnapshot(from state: [String: Any], garden: GardenModel?) -> [String: Any] {
+        let progress = state["harvestProgress"] as? [String: Any] ?? [:]
+        let claims = state["claims"] as? [String] ?? []
+
+        var matureCounts: [String: Int] = [:]
+        if let garden {
+            for plant in garden.weatherPlants where plant.plantLevel >= 3 {
+                matureCounts[plant.idPlant, default: 0] += 1
+            }
+        }
+
+        let requirementsPayload: [[String: Any]] = harvestRequirements.map { req in
+            let collected = min(req.required, (progress[req.plantId] as? NSNumber)?.intValue ?? 0)
+            let remaining = max(0, req.required - collected)
+            return [
+                "plantId": req.plantId,
+                "required": req.required,
+                "collected": collected,
+                "remaining": remaining,
+                "matureInGarden": matureCounts[req.plantId] ?? 0
+            ]
+        }
+
+        let isComplete = harvestRequirements.allSatisfy { req in
+            ((progress[req.plantId] as? NSNumber)?.intValue ?? 0) >= req.required
+        }
+
+        return [
+            "requirements": requirementsPayload,
+            "maturePlants": matureCounts,
+            "isComplete": isComplete,
+            "claimed": claims.contains("harvest-complete"),
+            "rewards": specs["harvest"]!.toWebList()
+        ]
+    }
+
     // MARK: - Firestore Transaction Core
 
     private func fetchOrInitState(uid: String, level: Int, isVIP: Bool = false) async throws -> [String: Any] {
@@ -606,6 +792,7 @@ final class EventV2Service {
             "monthlyRewardsVIP": isVIP,
             "pending": [[String: Any]](),
             "wallet": [[String: Any]](),
+            "harvestProgress": [String: Int](),
             "lastResetDate": today,
             "receipts": [String: Any](),
             "receiptOrder": [String]()
@@ -629,7 +816,8 @@ final class EventV2Service {
             "monthlyRewards": state["monthlyRewards"] as? [[String: Any]] ?? [],
             "pending": state["pending"] as? [[String: Any]] ?? [],
             "wallet": state["wallet"] as? [[String: Any]] ?? [],
-            "eventSpecs": specs.mapValues { $0.toWebList() }
+            "eventSpecs": specs.mapValues { $0.toWebList() },
+            "harvest": harvestSnapshot(from: state, garden: FireStoreService.shared.gradenModel)
         ]
 
         if let lastSpin = state["lastSpin"] as? [String: Any] {

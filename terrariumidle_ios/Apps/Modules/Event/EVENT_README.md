@@ -42,6 +42,7 @@ Các sự kiện trong `terrarium-events-web/events/` sử dụng `WKScriptMessa
 | `level.html` | `level` | `getContext`, `claimReward` (mốc Level tài khoản) |
 | `daily.html` | `daily` | `getContext`, `checkIn` (chuỗi 7 ngày) |
 | `monthly.html` | `monthly` | `getContext`, `monthlyCheckIn`, `openVIP` (chuỗi 30 ngày theo tháng) |
+| `harvest.html` | `harvest` | `getContext`, `harvestPlant`, `claimReward` (thu hoạch cây trưởng thành lên kệ) |
 
 ### Sự kiện Điểm danh 30 ngày hàng tháng (`monthly`)
 - Mỗi tháng (`yyyy-MM`, `Asia/Ho_Chi_Minh`), `MonthlyRewardGenerator.swift` tạo ngẫu nhiên 30 phần thưởng:
