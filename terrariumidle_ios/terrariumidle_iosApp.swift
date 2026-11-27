@@ -25,6 +25,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         Task { @MainActor in
             SubscriptionManager.shared.start()
+            GemStoreManager.shared.start()
         }
 
         return true

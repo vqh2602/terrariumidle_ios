@@ -22,6 +22,7 @@ enum AppRoute: Hashable {
     case mailboxView
     case discoveryView
     case subscriptionView
+    case gemStoreView
 }
 
 @MainActor
@@ -88,6 +89,8 @@ struct AppRouterView: View {
                         DiscoveryView()
                     case .subscriptionView:
                         SubscriptionView()
+                    case .gemStoreView:
+                        GemStoreView()
                     }
                 }
         }

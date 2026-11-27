@@ -701,5 +701,75 @@ class FireStoreService: ObservableObject {
             print("❌ VIP sync error: \(error.localizedDescription)")
         }
     }
+
+    /// Credits purchased consumable gemstones atomically and idempotently by StoreKit transaction ID.
+    @MainActor
+    func creditPurchasedGems(
+        amount: Int,
+        transactionId: String,
+        productId: String
+    ) async throws -> Bool {
+        guard amount > 0, !transactionId.isEmpty else { return false }
+        guard let uid = auth.currentUser?.uid, !uid.isEmpty else {
+            throw NSError(
+                domain: "GemStore",
+                code: 401,
+                userInfo: [NSLocalizedDescriptionKey: "Chưa đăng nhập tài khoản".tr]
+            )
+        }
+
+        let docRef = db.collection("users").document(uid)
+        let now = Date().timeIntervalSince1970
+
+        let credited = try await GardenWriteQueue.shared.perform {
+            let result = try await self.db.runTransaction { transaction, errorPointer -> Any? in
+                do {
+                    let snapshot = try transaction.getDocument(docRef)
+                    let data = snapshot.data() ?? [:]
+                    let receipts = data["gemPurchases"] as? [String: Any] ?? [:]
+                    if receipts[transactionId] != nil {
+                        return false
+                    }
+
+                    let receiptPayload: [String: Any] = [
+                        "amount": amount,
+                        "productId": productId,
+                        "purchasedAt": now,
+                    ]
+
+                    if snapshot.exists {
+                        transaction.updateData([
+                            "gemPurchases.\(transactionId)": receiptPayload,
+                            "money.gemstone": FieldValue.increment(Int64(amount)),
+                        ], forDocument: docRef)
+                    } else {
+                        transaction.setData([
+                            "gemPurchases": [transactionId: receiptPayload],
+                            "money": ["gemstone": amount],
+                        ], forDocument: docRef, merge: true)
+                    }
+
+                    return true
+                } catch {
+                    errorPointer?.pointee = error as NSError
+                    return nil
+                }
+            }
+            return result as? Bool ?? false
+        }
+
+        if credited {
+            if var garden = self.gradenModel, garden.user.userID == uid {
+                garden.money.gemstone += amount
+                self.gradenModel = garden
+            }
+            if var pending = self.pendingGardenModel, pending.user.userID == uid {
+                pending.money.gemstone += amount
+                self.pendingGardenModel = pending
+            }
+        }
+
+        return credited
+    }
 }
 

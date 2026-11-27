@@ -1,741 +1,6 @@
 {
   "sourceLanguage" : "vi",
   "strings" : {
-    "%d / %d thành tích" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d / %d thành tích"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d / %d achievements"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "実績 %d / %d"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d / %d 项成就"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "업적 %d / %d"
-          }
-        }
-      }
-    },
-    "%d điểm Game Center" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d điểm Game Center"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d Game Center points"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Game Centerポイント：%d"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d 点 Game Center 积分"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Game Center 포인트 %d"
-          }
-        }
-      }
-    },
-    "Chưa có thành tích hoàn tất" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chưa có thành tích hoàn tất"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No achievements completed yet"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "まだ達成した実績はありません"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "尚未完成任何成就"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "아직 달성한 업적이 없어요"
-          }
-        }
-      }
-    },
-    "Chưa kết nối Game Center. Bạn vẫn có thể tiếp tục chăm vườn." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chưa kết nối Game Center. Bạn vẫn có thể tiếp tục chăm vườn."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Game Center is not connected. You can keep tending your garden."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Game Centerに接続していません。庭のお手入れは続けられます。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "尚未连接 Game Center。你仍可继续照料花园。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Game Center에 연결되지 않았어요. 정원은 계속 가꿀 수 있어요."
-          }
-        }
-      }
-    },
-    "Chưa tải được thành tích Game Center. Hãy kiểm tra kết nối và thử lại." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chưa tải được thành tích Game Center. Hãy kiểm tra kết nối và thử lại."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not load Game Center achievements. Check your connection and try again."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Game Centerの実績を読み込めませんでした。接続を確認して再試行してください。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无法加载 Game Center 成就。请检查网络后重试。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Game Center 업적을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요."
-          }
-        }
-      }
-    },
-    "Hành trình khu vườn" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hành trình khu vườn"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your garden journey"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "庭のあゆみ"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "花园之旅"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "정원의 여정"
-          }
-        }
-      }
-    },
-    "Khu vườn này đã liên kết với tài khoản Game Center khác." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Khu vườn này đã liên kết với tài khoản Game Center khác."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This garden is already linked to another Game Center account."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "この庭は別のGame Centerアカウントに連携済みです。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此花园已关联其他 Game Center 账户。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이 정원은 이미 다른 Game Center 계정에 연결되어 있어요."
-          }
-        }
-      }
-    },
-    "Kết nối Game Center" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kết nối Game Center"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect Game Center"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Game Centerに接続"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "连接 Game Center"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Game Center 연결"
-          }
-        }
-      }
-    },
-    "Kết nối để lưu thành tích vào tài khoản Game Center và xem huy hiệu của Apple." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kết nối để lưu thành tích vào tài khoản Game Center và xem huy hiệu của Apple."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect to save achievements to your Game Center account and view Apple badges."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "接続して実績をGame Centerアカウントに保存し、Appleのバッジを確認しましょう。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "连接后可将成就保存到 Game Center 账户，并查看 Apple 徽章。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "연결하면 Game Center 계정에 업적을 저장하고 Apple 배지를 볼 수 있어요."
-          }
-        }
-      }
-    },
-    "Lọc thành tích" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lọc thành tích"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filter achievements"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "実績の絞り込み"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "筛选成就"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "업적 필터"
-          }
-        }
-      }
-    },
-    "Mỗi bước chăm vườn đều đưa bạn gần hơn tới huy hiệu đầu tiên." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mỗi bước chăm vườn đều đưa bạn gần hơn tới huy hiệu đầu tiên."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Every act of care brings you closer to your first badge."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "お手入れを重ねるたびに、最初のバッジに近づきます。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "每一次照料，都让你离第一枚徽章更近一步。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "정원을 돌볼 때마다 첫 배지에 한 걸음 더 가까워져요."
-          }
-        }
-      }
-    },
-    "Một số thành tích chưa được cấu hình trên Game Center." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Một số thành tích chưa được cấu hình trên Game Center."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Some achievements are not configured in Game Center yet."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "一部の実績はGame Centerでまだ設定されていません。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "部分成就尚未在 Game Center 中配置。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "일부 업적이 아직 Game Center에 설정되지 않았어요."
-          }
-        }
-      }
-    },
-    "Ngắt kết nối" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ngắt kết nối"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disconnect"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "接続を解除"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "断开连接"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "연결 해제"
-          }
-        }
-      }
-    },
-    "Thành tích" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Thành tích"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Achievements"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "実績"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "成就"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "업적"
-          }
-        }
-      }
-    },
-    "Thành tích đã đạt luôn được giữ lại khi bạn thay đổi khu vườn." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Thành tích đã đạt luôn được giữ lại khi bạn thay đổi khu vườn."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Earned achievements are kept when you change your garden."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "庭の配置を変えても、獲得した実績は保持されます。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更改花园布局后，已获得的成就仍会保留。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "정원을 바꾸어도 달성한 업적은 유지돼요."
-          }
-        }
-      }
-    },
-    "Tiến độ đã lưu trên máy. Chưa đồng bộ được khu vườn." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tiến độ đã lưu trên máy. Chưa đồng bộ được khu vườn."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Progress is saved on this device. Garden sync is currently unavailable."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "進捗は端末に保存済みです。庭をまだ同期できていません。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "进度已保存在此设备上，暂时无法同步花园。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "진행 상황은 기기에 저장되었어요. 아직 정원을 동기화하지 못했어요."
-          }
-        }
-      }
-    },
-    "Tiến độ đã lưu. Chưa gửi được lên Game Center, app sẽ thử lại khi bạn tiếp tục chơi." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tiến độ đã lưu. Chưa gửi được lên Game Center, app sẽ thử lại khi bạn tiếp tục chơi."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Progress is saved. Game Center sync will retry as you continue playing."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "進捗は保存済みです。プレイを続けるとGame Centerへの送信を再試行します。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "进度已保存。继续游玩时，应用会重试同步到 Game Center。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "진행 상황은 저장되었어요. 계속 플레이하면 Game Center 동기화를 다시 시도해요."
-          }
-        }
-      }
-    },
-    "Xem thành tích trên Game Center" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Xem thành tích trên Game Center"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "View Game Center achievements"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Game Centerで実績を見る"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "查看 Game Center 成就"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Game Center 업적 보기"
-          }
-        }
-      }
-    },
-    "Đang tiến hành" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đang tiến hành"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In progress"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "進行中"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "进行中"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "진행 중"
-          }
-        }
-      }
-    },
-    "Đã đạt" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đã đạt"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Completed"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "達成済み"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已完成"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "달성 완료"
-          }
-        }
-      }
-    },
-    "Đồng bộ lại" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đồng bộ lại"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sync again"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "再同期"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重新同步"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "다시 동기화"
-          }
-        }
-      }
-    },
     "·" : {
       "comment" : "A period used to separate two items in a list.",
       "isCommentAutoGenerated" : true
@@ -1010,6 +275,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%d / %d 个选项"
+          }
+        }
+      }
+    },
+    "%d / %d thành tích" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d / %d achievements"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "実績 %d / %d"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업적 %d / %d"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d / %d thành tích"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d / %d 项成就"
+          }
+        }
+      }
+    },
+    "%d điểm Game Center" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d Game Center points"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Centerポイント：%d"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Center 포인트 %d"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d điểm Game Center"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d 点 Game Center 积分"
           }
         }
       }
@@ -10645,6 +9980,41 @@
         }
       }
     },
+    "Chưa có thành tích hoàn tất" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No achievements completed yet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ達成した実績はありません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아직 달성한 업적이 없어요"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa có thành tích hoàn tất"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未完成任何成就"
+          }
+        }
+      }
+    },
     "Chưa đặt được lời nhắc. Hãy thử tắt rồi bật lại." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11026,6 +10396,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apple Watch 未连接"
+          }
+        }
+      }
+    },
+    "Chưa kết nối Game Center. Bạn vẫn có thể tiếp tục chăm vườn." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Center is not connected. You can keep tending your garden."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Centerに接続していません。庭のお手入れは続けられます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Center에 연결되지 않았어요. 정원은 계속 가꿀 수 있어요."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa kết nối Game Center. Bạn vẫn có thể tiếp tục chăm vườn."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未连接 Game Center。你仍可继续照料花园。"
           }
         }
       }
@@ -11446,6 +10851,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未能加载领奖记录。领取时应用会再次校验以防重复。"
+          }
+        }
+      }
+    },
+    "Chưa tải được thành tích Game Center. Hãy kiểm tra kết nối và thử lại." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not load Game Center achievements. Check your connection and try again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Centerの実績を読み込めませんでした。接続を確認して再試行してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Center 업적을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa tải được thành tích Game Center. Hãy kiểm tra kết nối và thử lại."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法加载 Game Center 成就。请检查网络后重试。"
           }
         }
       }
@@ -12133,6 +11573,41 @@
     "Đã chạm: %lld lần (chạm để đu đưa chậu)" : {
       "comment" : "A label displaying the number of times the user has tapped the pot.",
       "isCommentAutoGenerated" : true
+    },
+    "Đã đạt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "達成済み"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "달성 완료"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã đạt"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成"
+          }
+        }
+      }
     },
     "Đã đặt lời nhắc hằng ngày." : {
       "extractionState" : "manual",
@@ -13675,6 +13150,41 @@
         }
       }
     },
+    "Đang tiến hành" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In progress"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "進行中"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진행 중"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang tiến hành"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进行中"
+          }
+        }
+      }
+    },
     "Đang tìm những góc xanh…" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15079,6 +14589,41 @@
         }
       }
     },
+    "Đồng bộ lại" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync again"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再同期"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 동기화"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đồng bộ lại"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新同步"
+          }
+        }
+      }
+    },
     "Đồng bộ ngay" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15992,6 +15537,14 @@
           }
         }
       }
+    },
+    "Game Center" : {
+      "comment" : "The name of the Game Center section.",
+      "isCommentAutoGenerated" : true
+    },
+    "GEM STORE" : {
+      "comment" : "The name of the gem store.",
+      "isCommentAutoGenerated" : true
     },
     "Ghé cửa hàng để thêm đồ cho khu vườn nhé." : {
       "extractionState" : "manual",
@@ -17328,6 +16881,41 @@
         }
       }
     },
+    "Hành trình khu vườn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your garden journey"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "庭のあゆみ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정원의 여정"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hành trình khu vườn"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "花园之旅"
+          }
+        }
+      }
+    },
     "Hào quang mặt trời, bụi nắng vàng lơ lửng" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18028,41 +17616,6 @@
         }
       }
     },
-    "Hồng đào" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rose"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ローズ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "로즈"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hồng đào"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "樱花粉"
-          }
-        }
-      }
-    },
     "Hoàng hôn buông xuống rực rỡ sắc cam tím ấm áp trên bầu trời chiều tà." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18129,6 +17682,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "粉色"
+          }
+        }
+      }
+    },
+    "Hồng đào" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rose"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ローズ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로즈"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hồng đào"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "樱花粉"
           }
         }
       }
@@ -18557,6 +18145,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "将照料花园与良好作息、探索世界结合起来。"
+          }
+        }
+      }
+    },
+    "Kết nối để lưu thành tích vào tài khoản Game Center và xem huy hiệu của Apple." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect to save achievements to your Game Center account and view Apple badges."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続して実績をGame Centerアカウントに保存し、Appleのバッジを確認しましょう。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결하면 Game Center 계정에 업적을 저장하고 Apple 배지를 볼 수 있어요."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết nối để lưu thành tích vào tài khoản Game Center và xem huy hiệu của Apple."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接后可将成就保存到 Game Center 账户，并查看 Apple 徽章。"
+          }
+        }
+      }
+    },
+    "Kết nối Game Center" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect Game Center"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Centerに接続"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Center 연결"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết nối Game Center"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接 Game Center"
           }
         }
       }
@@ -19817,6 +19475,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "该花园不存在或当前无法查看。"
+          }
+        }
+      }
+    },
+    "Khu vườn này đã liên kết với tài khoản Game Center khác." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This garden is already linked to another Game Center account."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この庭は別のGame Centerアカウントに連携済みです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 정원은 이미 다른 Game Center 계정에 연결되어 있어요."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khu vườn này đã liên kết với tài khoản Game Center khác."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此花园已关联其他 Game Center 账户。"
           }
         }
       }
@@ -21116,6 +20809,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "物品类型"
+          }
+        }
+      }
+    },
+    "Lọc thành tích" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter achievements"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "実績の絞り込み"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업적 필터"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lọc thành tích"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筛选成就"
           }
         }
       }
@@ -22486,6 +22214,41 @@
         }
       }
     },
+    "Mỗi bước chăm vườn đều đưa bạn gần hơn tới huy hiệu đầu tiên." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every act of care brings you closer to your first badge."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お手入れを重ねるたびに、最初のバッジに近づきます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정원을 돌볼 때마다 첫 배지에 한 걸음 더 가까워져요."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mỗi bước chăm vườn đều đưa bạn gần hơn tới huy hiệu đầu tiên."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每一次照料，都让你离第一枚徽章更近一步。"
+          }
+        }
+      }
+    },
     "Mọi công cụ trang trí, cửa hàng và túi tài nguyên đều nằm gọn ở hai góc màn hình." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -23011,6 +22774,41 @@
         }
       }
     },
+    "Một số thành tích chưa được cấu hình trên Game Center." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some achievements are not configured in Game Center yet."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一部の実績はGame Centerでまだ設定されていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일부 업적이 아직 Game Center에 설정되지 않았어요."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Một số thành tích chưa được cấu hình trên Game Center."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分成就尚未在 Game Center 中配置。"
+          }
+        }
+      }
+    },
     "Mưa" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -23466,6 +23264,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "虚线：目标 %@ 小时 • 无记录日期不计入平均值。"
+          }
+        }
+      }
+    },
+    "Ngắt kết nối" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnect"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続を解除"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결 해제"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ngắt kết nối"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "断开连接"
           }
         }
       }
@@ -27964,6 +27797,76 @@
         }
       }
     },
+    "Thành tích" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Achievements"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "実績"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업적"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thành tích"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "成就"
+          }
+        }
+      }
+    },
+    "Thành tích đã đạt luôn được giữ lại khi bạn thay đổi khu vườn." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Earned achievements are kept when you change your garden."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "庭の配置を変えても、獲得した実績は保持されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정원을 바꾸어도 달성한 업적은 유지돼요."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thành tích đã đạt luôn được giữ lại khi bạn thay đổi khu vườn."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更改花园布局后，已获得的成就仍会保留。"
+          }
+        }
+      }
+    },
     "Thay đổi phong cảnh, hiệu ứng và nhạc nền theo tâm trạng." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -29150,6 +29053,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "起床"
+          }
+        }
+      }
+    },
+    "Tiến độ đã lưu trên máy. Chưa đồng bộ được khu vườn." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress is saved on this device. Garden sync is currently unavailable."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "進捗は端末に保存済みです。庭をまだ同期できていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진행 상황은 기기에 저장되었어요. 아직 정원을 동기화하지 못했어요."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiến độ đã lưu trên máy. Chưa đồng bộ được khu vườn."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进度已保存在此设备上，暂时无法同步花园。"
+          }
+        }
+      }
+    },
+    "Tiến độ đã lưu. Chưa gửi được lên Game Center, app sẽ thử lại khi bạn tiếp tục chơi." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress is saved. Game Center sync will retry as you continue playing."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "進捗は保存済みです。プレイを続けるとGame Centerへの送信を再試行します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진행 상황은 저장되었어요. 계속 플레이하면 Game Center 동기화를 다시 시도해요."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiến độ đã lưu. Chưa gửi được lên Game Center, app sẽ thử lại khi bạn tiếp tục chơi."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进度已保存。继续游玩时，应用会重试同步到 Game Center。"
           }
         }
       }
@@ -32184,6 +32157,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "查看全部睡眠日志"
+          }
+        }
+      }
+    },
+    "Xem thành tích trên Game Center" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View Game Center achievements"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Centerで実績を見る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Center 업적 보기"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xem thành tích trên Game Center"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看 Game Center 成就"
           }
         }
       }

@@ -4,7 +4,66 @@
 
   ],
   "products" : [
-
+    {
+      "displayPrice" : "29000",
+      "familyShareable" : false,
+      "internalID" : "6740000301",
+      "localizations" : [
+        {
+          "description" : "Gói khởi đầu 1.000 Đá quý dùng mua cây, chậu và vật phẩm",
+          "displayName" : "1.000 Đá quý",
+          "locale" : "vi"
+        },
+        {
+          "description" : "Starter pack of 1,000 Gemstones for plants, pots & items",
+          "displayName" : "1,000 Gemstones",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vqhapp.terrariumidle_ios.gem.1000",
+      "referenceName" : "1000 Gemstones",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "119000",
+      "familyShareable" : false,
+      "internalID" : "6740000302",
+      "localizations" : [
+        {
+          "description" : "Tiết kiệm 18% · 5.000 Đá quý cho khu vườn của bạn",
+          "displayName" : "5.000 Đá quý",
+          "locale" : "vi"
+        },
+        {
+          "description" : "Save 18% · 5,000 Gemstones for your garden",
+          "displayName" : "5,000 Gemstones",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vqhapp.terrariumidle_ios.gem.5000",
+      "referenceName" : "5000 Gemstones",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "199000",
+      "familyShareable" : false,
+      "internalID" : "6740000303",
+      "localizations" : [
+        {
+          "description" : "Tiết kiệm 31% · Gói 10.000 Đá quý ưu đãi tốt nhất",
+          "displayName" : "10.000 Đá quý",
+          "locale" : "vi"
+        },
+        {
+          "description" : "Save 31% · Best value pack of 10,000 Gemstones",
+          "displayName" : "10,000 Gemstones",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "vqhapp.terrariumidle_ios.gem.10000",
+      "referenceName" : "10000 Gemstones",
+      "type" : "Consumable"
+    }
   ],
   "settings" : {
     "_applicationInternalID" : "6740000001",

@@ -21,9 +21,11 @@ struct StoreView: View {
                 .padding(.bottom, 20)
             tabSelector
                 .padding(.bottom, 16)
-            searchBar
-                .padding(.horizontal, 20)
-                .padding(.bottom, 16)
+            if viewModel.selectedTab != .gemstones {
+                searchBar
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 16)
+            }
             if viewModel.isLoading {
                 Spacer()
                 ProgressView("Đang chăm chút gian hàng…".tr)
@@ -46,29 +48,39 @@ struct StoreView: View {
                                 .font(.system(.headline, design: .rounded, weight: .bold))
                                 .foregroundStyle(AccountStyle.ink)
                             Spacer()
-                            Text("%d vật phẩm".tr(viewModel.filteredItems.count))
-                                .font(.system(.caption, design: .rounded, weight: .medium))
-                                .foregroundStyle(AccountStyle.muted)
+                            if viewModel.selectedTab == .gemstones {
+                                Text("%d gói".tr(GemPackageKind.allCases.count))
+                                    .font(.system(.caption, design: .rounded, weight: .medium))
+                                    .foregroundStyle(AccountStyle.muted)
+                            } else {
+                                Text("%d vật phẩm".tr(viewModel.filteredItems.count))
+                                    .font(.system(.caption, design: .rounded, weight: .medium))
+                                    .foregroundStyle(AccountStyle.muted)
+                            }
                         }
                         .padding(.horizontal, 4)
-                        if viewModel.filteredItems.isEmpty {
-                            emptyState
-                        }
-                        ForEach(viewModel.filteredItems) { item in
-                            StoreItemCard(
-                                item: item,
-                                isOwned: viewModel.isOwned(item: item),
-                                canAfford: viewModel.canAfford(item: item),
-                                meetsLevelRequirement: viewModel.meetsLevelRequirement(item: item),
-                                isSilhouette: viewModel.isSilhouette(item: item),
-                                onPurchase: { item in
-                                    if item.supportsPurchaseQuantity {
-                                        quantityItem = item
-                                    } else {
-                                        Task { await viewModel.purchaseItem(item) }
+                        if viewModel.selectedTab == .gemstones {
+                            GemPackagesSection()
+                        } else {
+                            if viewModel.filteredItems.isEmpty {
+                                emptyState
+                            }
+                            ForEach(viewModel.filteredItems) { item in
+                                StoreItemCard(
+                                    item: item,
+                                    isOwned: viewModel.isOwned(item: item),
+                                    canAfford: viewModel.canAfford(item: item),
+                                    meetsLevelRequirement: viewModel.meetsLevelRequirement(item: item),
+                                    isSilhouette: viewModel.isSilhouette(item: item),
+                                    onPurchase: { item in
+                                        if item.supportsPurchaseQuantity {
+                                            quantityItem = item
+                                        } else {
+                                            Task { await viewModel.purchaseItem(item) }
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                     .frame(maxWidth: 600)
@@ -162,7 +174,12 @@ struct StoreView: View {
         // and single-line values keep all five resources inside narrow screens.
         HStack(spacing: 6) {
             StoreResourceBadge(icon: "oxygen", title: "Oxy", value: fireStore.gradenModel?.money.oxygen ?? 0)
-            StoreResourceBadge(icon: "gemstone", title: "Đá quý".tr, value: fireStore.gradenModel?.money.gemstone ?? 0)
+            Button {
+                viewModel.loadItems(for: .gemstones)
+            } label: {
+                StoreResourceBadge(icon: "gemstone", title: "Đá quý".tr, value: fireStore.gradenModel?.money.gemstone ?? 0, showPlusBadge: true)
+            }
+            .buttonStyle(.plain)
             StoreResourceBadge(icon: "ticket", title: "Vé".tr, value: fireStore.gradenModel?.money.ticket ?? 0)
             StoreResourceBadge(icon: "shovel", title: "Xẻng".tr, value: fireStore.gradenModel?.item.shovel ?? 0)
             StoreResourceBadge(icon: "fertilizer", title: "Phân bón".tr, value: fireStore.gradenModel?.item.fertilizer ?? 0)
@@ -249,6 +266,7 @@ struct StoreResourceBadge: View {
     let icon: String
     let title: String
     let value: Int
+    var showPlusBadge: Bool = false
 
     var body: some View {
         VStack(spacing: 5) {
@@ -256,6 +274,15 @@ struct StoreResourceBadge: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 25, height: 25)
+                .overlay(alignment: .topTrailing) {
+                    if showPlusBadge {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(AccountStyle.green)
+                            .background(Circle().fill(AccountStyle.cream))
+                            .offset(x: 6, y: -4)
+                    }
+                }
             Text(compactValue)
                 .font(.system(size: 13, weight: .heavy, design: .rounded))
                 .monospacedDigit()
