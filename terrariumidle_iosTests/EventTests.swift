@@ -76,4 +76,30 @@ struct EventTests {
         #expect(plant.money.oxygen == 100)
         #expect(throws: Error.self) { try EventReward.apply(handler: "clam-lavender-plant", argument: ["code": "plant24"], to: plant) }
     }
+
+    @Test func monthlyRewardsExcludeRareAndLegendaryForNonVIP() throws {
+        let nonVIPRewards = MonthlyRewardGenerator.generate(monthKey: "2026-11", seedSalt: "user-1", isVIP: false)
+        #expect(nonVIPRewards.count == 30)
+        #expect(!nonVIPRewards.contains { $0.rarity == "rare" || $0.rarity == "legendary" })
+        #expect(!nonVIPRewards.contains { $0.rewardId == "shovel" || $0.rewardId == "ticket" })
+        #expect(nonVIPRewards.last?.rewardId == "gemstone")
+        let nonVIPIds = Set(nonVIPRewards.map(\.rewardId))
+        #expect(nonVIPIds == Set(["oxygen", "fertilizer", "gemstone"]))
+
+        let vipRewards = MonthlyRewardGenerator.generate(monthKey: "2026-11", seedSalt: "user-1", isVIP: true)
+        #expect(vipRewards.count == 30)
+        let vipIds = Set(vipRewards.map(\.rewardId))
+        #expect(vipIds == Set(["oxygen", "fertilizer", "shovel", "gemstone", "ticket"]))
+
+        let reconciled = MonthlyRewardGenerator.reconcileRewards(
+            vipRewards,
+            monthKey: "2026-11",
+            seedSalt: "user-2",
+            currentDay: 5,
+            isVIP: false
+        )
+        #expect(reconciled.count == 30)
+        #expect(Array(reconciled.prefix(5)) == Array(vipRewards.prefix(5)))
+        #expect(!reconciled.dropFirst(5).contains { $0.rarity == "rare" || $0.rarity == "legendary" })
+    }
 }

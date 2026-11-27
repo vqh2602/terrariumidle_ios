@@ -91,8 +91,8 @@ struct VIPAndMonthlyTests {
     }
 
     @Test func monthlyGeneratorCreates30RewardsWithAllFiveTypesAndRarityBounds() {
-        let novRewards = MonthlyRewardGenerator.generate(monthKey: "2026-11", seedSalt: "userA")
-        let decRewards = MonthlyRewardGenerator.generate(monthKey: "2026-12", seedSalt: "userA")
+        let novRewards = MonthlyRewardGenerator.generate(monthKey: "2026-11", seedSalt: "userA", isVIP: true)
+        let decRewards = MonthlyRewardGenerator.generate(monthKey: "2026-12", seedSalt: "userA", isVIP: true)
 
         #expect(novRewards.count == 30)
         #expect(decRewards.count == 30)

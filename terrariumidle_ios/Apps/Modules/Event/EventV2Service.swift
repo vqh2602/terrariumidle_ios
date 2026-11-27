@@ -387,7 +387,7 @@ final class EventV2Service {
             let result = try await db.runTransaction { transaction, errorPointer -> Any? in
                 do {
                     let snapshot = try transaction.getDocument(docRef)
-                    var state = snapshot.data() ?? self.defaultState(uid: uid, today: today, monthKey: currentMonth)
+                    var state = snapshot.data() ?? self.defaultState(uid: uid, today: today, monthKey: currentMonth, isVIP: resolvedVIP)
                     let isNew = !snapshot.exists
 
                     if oxygenDelta > 0 {
@@ -397,16 +397,35 @@ final class EventV2Service {
 
                     var didMonthlyReset = false
                     let storedMonth = state["monthlyMonthKey"] as? String
+                    let currentMonthlyDay = (state["monthlyDay"] as? NSNumber)?.intValue ?? 0
                     let existingRewards = (state["monthlyRewards"] as? [[String: Any]] ?? []).compactMap(MonthlyRewardItem.init(dict:))
+                    let storedRewardsVIP = state["monthlyRewardsVIP"] as? Bool
+                    let hasDisallowedUpcoming = !resolvedVIP && existingRewards.contains {
+                        $0.day > currentMonthlyDay && !MonthlyRewardGenerator.isAllowed(rarity: $0.rarity, isVIP: false)
+                    }
+
                     if storedMonth != currentMonth || existingRewards.count != 30 {
                         let generated = MonthlyRewardGenerator.generate(
                             monthKey: currentMonth,
-                            seedSalt: "\(uid)-\(UUID().uuidString.prefix(8))"
+                            seedSalt: "\(uid)-\(UUID().uuidString.prefix(8))",
+                            isVIP: resolvedVIP
                         )
                         state["monthlyMonthKey"] = currentMonth
                         state["monthlyDay"] = 0
                         state["monthlyCheckedToday"] = false
                         state["monthlyRewards"] = generated.map { $0.toDictionary() }
+                        state["monthlyRewardsVIP"] = resolvedVIP
+                        didMonthlyReset = true
+                    } else if hasDisallowedUpcoming || (storedRewardsVIP != resolvedVIP && currentMonthlyDay < 30) {
+                        let reconciled = MonthlyRewardGenerator.reconcileRewards(
+                            existingRewards,
+                            monthKey: currentMonth,
+                            seedSalt: "\(uid)-\(UUID().uuidString.prefix(8))",
+                            currentDay: currentMonthlyDay,
+                            isVIP: resolvedVIP
+                        )
+                        state["monthlyRewards"] = reconciled.map { $0.toDictionary() }
+                        state["monthlyRewardsVIP"] = resolvedVIP
                         didMonthlyReset = true
                     }
 
@@ -469,8 +488,8 @@ final class EventV2Service {
         }
     }
 
-    private func defaultState(uid: String, today: String, monthKey: String) -> [String: Any] {
-        let monthlyRewards = MonthlyRewardGenerator.generate(monthKey: monthKey, seedSalt: uid)
+    private func defaultState(uid: String, today: String, monthKey: String, isVIP: Bool) -> [String: Any] {
+        let monthlyRewards = MonthlyRewardGenerator.generate(monthKey: monthKey, seedSalt: uid, isVIP: isVIP)
         return [
             "userId": uid,
             "oxygenCollected": 0,
@@ -485,6 +504,7 @@ final class EventV2Service {
             "monthlyDay": 0,
             "monthlyCheckedToday": false,
             "monthlyRewards": monthlyRewards.map { $0.toDictionary() },
+            "monthlyRewardsVIP": isVIP,
             "pending": [[String: Any]](),
             "wallet": [[String: Any]](),
             "lastResetDate": today,

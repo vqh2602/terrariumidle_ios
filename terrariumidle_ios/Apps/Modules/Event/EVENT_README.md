@@ -44,6 +44,7 @@ Các sự kiện trong `terrarium-events-web/events/` sử dụng `WKScriptMessa
 | `monthly.html` | `monthly` | `getContext`, `monthlyCheckIn`, `openVIP` (chuỗi 30 ngày theo tháng) |
 
 ### Sự kiện Điểm danh 30 ngày hàng tháng (`monthly`)
-- Mỗi tháng (`yyyy-MM`, `Asia/Ho_Chi_Minh`), `MonthlyRewardGenerator.swift` tạo ngẫu nhiên 30 phần thưởng gồm đủ 5 loại tài nguyên với số lượng tỉ lệ theo độ quý hiếm: `oxygen` (250–1.200), `fertilizer` (2–8), `shovel` (1–4), `gemstone` (5–25), `ticket` (1–3).
-- Thành viên có gói **Terrarium VIP** (`SubscriptionManager.isVIP(gardenModel:)`) tự động được **nhân đôi (×2)** số lượng quà khi gọi `monthlyCheckIn`.
+- Mỗi tháng (`yyyy-MM`, `Asia/Ho_Chi_Minh`), `MonthlyRewardGenerator.swift` tạo ngẫu nhiên 30 phần thưởng:
+  - Người thường (`isVIP == false`): không có vật phẩm hiếm (`rare` - `shovel`) và huyền thoại (`legendary` - `ticket`), chỉ gồm `oxygen` (250–1.200), `fertilizer` (2–8), `gemstone` (5–25).
+  - Thành viên **Terrarium VIP** (`SubscriptionManager.isVIP(gardenModel:)`): có đủ 5 loại tài nguyên gồm `shovel` (1–4) và `ticket` (1–3), đồng thời được **nhân đôi (×2)** số lượng quà khi gọi `monthlyCheckIn`.
 - Action `openVIP` mở trực tiếp màn hình `SubscriptionView` dưới dạng sheet từ `EventWebScreen`; khi trạng thái VIP thay đổi (`Notification.Name.terrariumVIPDidChange`), WebView tự động phát lại `terrariumEventUpdated` để làm mới giao diện web.

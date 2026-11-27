@@ -53,14 +53,20 @@ enum MonthlyRewardGenerator {
     ]
 
     static let milestoneDays: Set<Int> = [7, 14, 21, 28, 30]
+    static let nonVIPDisallowedRarities: Set<String> = ["rare", "legendary"]
 
     static func rarity(for rewardId: String) -> String {
         specs.first(where: { $0.id == rewardId })?.rarity ?? "common"
     }
 
-    static func generate(monthKey: String, seedSalt: String = "") -> [MonthlyRewardItem] {
+    static func isAllowed(rarity: String, isVIP: Bool) -> Bool {
+        isVIP || !nonVIPDisallowedRarities.contains(rarity)
+    }
+
+    static func generate(monthKey: String, seedSalt: String = "", isVIP: Bool = false) -> [MonthlyRewardItem] {
         var rng = SeededGenerator(seed: "\(monthKey):\(seedSalt)")
-        let milestonePool = specs.filter { ["shovel", "gemstone", "ticket", "oxygen"].contains($0.id) }
+        let availableSpecs = isVIP ? specs : specs.filter { isAllowed(rarity: $0.rarity, isVIP: false) }
+        let milestonePool = availableSpecs.filter { ["shovel", "gemstone", "ticket", "oxygen"].contains($0.id) }
 
         var items: [MonthlyRewardItem] = []
         items.reserveCapacity(30)
@@ -69,12 +75,16 @@ enum MonthlyRewardGenerator {
             let isMilestone = milestoneDays.contains(day)
             let spec: Spec
             if day == 30 {
-                let roll = rng.nextUnit()
-                spec = roll < 0.55 ? specFor("ticket") : specFor("gemstone")
+                if isVIP {
+                    let roll = rng.nextUnit()
+                    spec = roll < 0.55 ? specFor("ticket") : specFor("gemstone")
+                } else {
+                    spec = specFor("gemstone")
+                }
             } else if isMilestone {
                 spec = pickWeighted(from: milestonePool, using: &rng)
             } else {
-                spec = pickWeighted(from: specs, using: &rng)
+                spec = pickWeighted(from: availableSpecs, using: &rng)
             }
 
             let qtyPool = isMilestone ? spec.milestoneQuantities : spec.quantities
@@ -82,8 +92,8 @@ enum MonthlyRewardGenerator {
             items.append(MonthlyRewardItem(day: day, rewardId: spec.id, quantity: qty, rarity: spec.rarity))
         }
 
-        // Guarantee all 5 item categories appear in every generated month.
-        let required = ["oxygen", "fertilizer", "shovel", "gemstone", "ticket"]
+        // Guarantee all eligible item categories appear in every generated month.
+        let required = availableSpecs.map(\.id)
         var present = Set(items.map(\.rewardId))
         let normalIndices = items.indices.filter { !milestoneDays.contains(items[$0].day) }
         var cursor = 0
@@ -97,6 +107,27 @@ enum MonthlyRewardGenerator {
         }
 
         return items
+    }
+
+    /// Reconciles an existing 30-day schedule when VIP status changes or legacy data contains disallowed rarities.
+    /// Already-claimed days (`day <= currentDay`) remain untouched; only upcoming days are updated.
+    static func reconcileRewards(
+        _ existing: [MonthlyRewardItem],
+        monthKey: String,
+        seedSalt: String,
+        currentDay: Int,
+        isVIP: Bool
+    ) -> [MonthlyRewardItem] {
+        let fresh = generate(monthKey: monthKey, seedSalt: seedSalt, isVIP: isVIP)
+        guard existing.count == 30 else { return fresh }
+
+        return zip(existing, fresh).map { current, replacement in
+            guard current.day > currentDay else { return current }
+            if !isVIP {
+                return isAllowed(rarity: current.rarity, isVIP: false) ? current : replacement
+            }
+            return replacement
+        }
     }
 
     private static func specFor(_ id: String) -> Spec {
