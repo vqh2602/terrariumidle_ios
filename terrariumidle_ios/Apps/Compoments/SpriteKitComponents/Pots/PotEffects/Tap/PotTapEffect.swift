@@ -69,6 +69,10 @@ public enum PotTapEffectType: String, CaseIterable {
     case bambooMist = "bambooMist"
     case bambooMorningSky = "bambooMorningSky"
     case bambooAutumnZen = "bambooAutumnZen"
+    /// Chậu 31: Nước bắn ra ngoài (Water Splash)
+    case waterSplash = "waterSplash"
+    case waterSplashLotus = "waterSplashLotus"
+    case waterSplashOcean = "waterSplashOcean"
 
     /// Khởi tạo instance hiệu ứng tương ứng
     public func createEffect() -> PotTapEffect {
@@ -135,6 +139,12 @@ public enum PotTapEffectType: String, CaseIterable {
             return BambooMistEffect(theme: .morningSky)
         case .bambooAutumnZen:
             return BambooMistEffect(theme: .autumnZen)
+        case .waterSplash:
+            return WaterSplashEffect(theme: .crystalAqua)
+        case .waterSplashLotus:
+            return WaterSplashEffect(theme: .lotusDew)
+        case .waterSplashOcean:
+            return WaterSplashEffect(theme: .oceanSpray)
         }
     }
 }

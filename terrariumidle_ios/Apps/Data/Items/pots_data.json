@@ -598,5 +598,25 @@
         "effectLandscapeDescription": "",
         "effectSfx": "",
         "effectSfxDescription": ""
+    },
+    {
+        "id": "pot31",
+        "name": "Chậu nước gốm men sen",
+        "description": "Chậu nước gốm men rộng miệng thanh tao dành riêng cho sen và cây thủy sinh, chạm nhẹ sẽ có giọt nước bắn ra ngoài.",
+        "image": "pot31-1@4.167x",
+        "priceStore": 90000,
+        "priceOxygen": 70000,
+        "currencyUnit": "gemstone",
+        "type": "pot",
+        "effect": "waterSplash",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 55,
+        "effectDescription": "Nước bắn ra ngoài",
+        "music": "",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     }
 ]
