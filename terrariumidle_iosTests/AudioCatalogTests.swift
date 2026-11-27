@@ -41,6 +41,25 @@ struct AudioCatalogTests {
 @Suite(.serialized)
 @MainActor
 struct AudioSleepTimerTests {
+    @Test func addingTimeExtendsDeadlineBeyondTwoHours() throws {
+        let audio = BackgroundAudioManager.shared
+        defer { audio.cancelSleepTimer() }
+        audio.cancelSleepTimer()
+        audio.addSleepTimer(minutes: 120)
+        let firstDeadline = try #require(audio.sleepTimerDeadline)
+        audio.addSleepTimer(minutes: 60)
+        let extendedDeadline = try #require(audio.sleepTimerDeadline)
+        #expect(abs(extendedDeadline.timeIntervalSince(firstDeadline) - 3600) < 0.001)
+        audio.addSleepTimer(minutes: 15)
+        let finalDeadline = try #require(audio.sleepTimerDeadline)
+        #expect(abs(finalDeadline.timeIntervalSince(extendedDeadline) - 900) < 0.001)
+        audio.expireSleepTimerIfNeeded(now: firstDeadline)
+        #expect(audio.sleepTimerDeadline == finalDeadline)
+        audio.addSleepTimer(minutes: 0)
+        audio.addSleepTimer(minutes: -5)
+        #expect(audio.sleepTimerDeadline == finalDeadline)
+    }
+
     @Test func replacingAndCancellingTimerDoesNotStopPlayback() throws {
         let audio = BackgroundAudioManager.shared
         defer { audio.cancelSleepTimer() }

@@ -147,10 +147,20 @@ final class BackgroundAudioManager: ObservableObject {
 
     /// Owned by the audio manager, so closing the sheet or backgrounding the app keeps it armed.
     func setSleepTimer(minutes: Int) {
-        guard (1...120).contains(minutes) else { return }
+        guard minutes > 0 else { return }
+        scheduleSleepTimer(deadline: Date().addingTimeInterval(TimeInterval(minutes) * 60))
+    }
+
+    /// Extend the current deadline; the first tap starts a new timer.
+    func addSleepTimer(minutes: Int) {
+        guard minutes > 0 else { return }
+        let start = max(Date(), sleepTimerDeadline ?? .distantPast)
+        scheduleSleepTimer(deadline: start.addingTimeInterval(TimeInterval(minutes) * 60))
+    }
+
+    private func scheduleSleepTimer(deadline: Date) {
         cancelSleepTimer()
-        let interval = TimeInterval(minutes * 60)
-        let deadline = Date().addingTimeInterval(interval)
+        let interval = max(0, deadline.timeIntervalSinceNow)
         sleepTimerDeadline = deadline
         let timer = DispatchSource.makeTimerSource(queue: .main)
         timer.schedule(wallDeadline: .now() + interval, leeway: .milliseconds(100))

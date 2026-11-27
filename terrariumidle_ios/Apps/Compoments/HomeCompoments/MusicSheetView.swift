@@ -157,7 +157,7 @@ struct MusicSheetView: View {
 
 private struct SleepTimerSection: View {
     @ObservedObject var audioManager: BackgroundAudioManager
-    private let durations = [15, 30, 45, 60, 90, 120]
+    private let durations = [5, 15, 30, 60, 90, 120]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -201,9 +201,9 @@ private struct SleepTimerSection: View {
         HStack(spacing: 8) {
             ForEach(values, id: \.self) { minutes in
                 Button {
-                    audioManager.setSleepTimer(minutes: minutes)
+                    audioManager.addSleepTimer(minutes: minutes)
                 } label: {
-                    Text("%d phút".tr(minutes))
+                    Text("+" + "%d phút".tr(minutes))
                         .font(.system(size: 12, weight: .semibold))
                         .fixedSize()
                         .frame(maxWidth: .infinity, minHeight: 44)
