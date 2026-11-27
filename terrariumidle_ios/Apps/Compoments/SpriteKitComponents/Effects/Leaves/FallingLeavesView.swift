@@ -37,9 +37,14 @@ public struct FallingLeavesView: View {
     /// Tạm dừng animation (tiết kiệm pin khi không cần hiển thị)
     public var isPaused: Bool = false
 
-    // MARK: - State
+    // MARK: - Environment & State
 
+    @Environment(\.scenePhase) private var scenePhase
     @State private var scene: FallingLeavesScene?
+
+    private var effectivePaused: Bool {
+        isPaused || scenePhase != .active
+    }
 
     // MARK: - Initializer
 
@@ -66,7 +71,7 @@ public struct FallingLeavesView: View {
     public var body: some View {
         GeometryReader { geometry in
             if let scene = scene {
-                SpriteView(scene: scene, isPaused: isPaused, options: [.allowsTransparency])
+                SpriteView(scene: scene, isPaused: effectivePaused, options: [.allowsTransparency])
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .background(Color.clear)
                     .ignoresSafeArea(.all)
@@ -74,13 +79,14 @@ public struct FallingLeavesView: View {
                     .onChange(of: geometry.size) { newSize in
                         scene.size = newSize
                     }
-                    .onChange(of: isPaused) { paused in
+                    .onChange(of: effectivePaused) { paused in
                         scene.isPaused = paused
                     }
             } else {
                 Color.clear
                     .onAppear {
                         let newScene = FallingLeavesScene(size: geometry.size)
+                        newScene.isPaused = effectivePaused
                         newScene.configure(
                             imageNames: leafImages,
                             customImages: customImages,

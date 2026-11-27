@@ -14,7 +14,12 @@ public struct FirefliesView: View {
     public var customImages: [UIImage] = []
     public var isPaused: Bool = false
 
+    @Environment(\.scenePhase) private var scenePhase
     @State private var scene: FirefliesScene?
+
+    private var effectivePaused: Bool {
+        isPaused || scenePhase != .active
+    }
 
     public init(count: Int = 26, customImages: [UIImage] = [], isPaused: Bool = false) {
         self.count = count
@@ -25,7 +30,7 @@ public struct FirefliesView: View {
     public var body: some View {
         GeometryReader { geometry in
             if let scene = scene {
-                SpriteView(scene: scene, isPaused: isPaused, options: [.allowsTransparency])
+                SpriteView(scene: scene, isPaused: effectivePaused, options: [.allowsTransparency])
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .background(Color.clear)
                     .ignoresSafeArea(.all)
@@ -33,13 +38,14 @@ public struct FirefliesView: View {
                     .onChange(of: geometry.size) { newSize in
                         scene.size = newSize
                     }
-                    .onChange(of: isPaused) { paused in
+                    .onChange(of: effectivePaused) { paused in
                         scene.isPaused = paused
                     }
             } else {
                 Color.clear
                     .onAppear {
                         let newScene = FirefliesScene(size: geometry.size)
+                        newScene.isPaused = effectivePaused
                         newScene.configure(count: count, customImages: customImages)
                         self.scene = newScene
                     }

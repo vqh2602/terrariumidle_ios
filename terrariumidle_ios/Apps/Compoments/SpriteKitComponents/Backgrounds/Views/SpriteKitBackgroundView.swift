@@ -22,7 +22,12 @@ public struct SpriteKitBackgroundView: View {
 
     public var onReady: (() -> Void)?
 
+    @Environment(\.scenePhase) private var scenePhase
     @State private var scene: SpriteKitBackgroundScene?
+
+    private var effectivePaused: Bool {
+        isPaused || scenePhase != .active
+    }
 
     public init(backgroundId: String = "sky_sun_day", isPaused: Bool = false, onReady: (() -> Void)? = nil) {
         self.backgroundId = backgroundId
@@ -34,14 +39,14 @@ public struct SpriteKitBackgroundView: View {
         GeometryReader { geometry in
             let currentScene = getOrCreateScene(size: geometry.size)
 
-            SpriteView(scene: currentScene, isPaused: isPaused, options: [.allowsTransparency])
+            SpriteView(scene: currentScene, isPaused: effectivePaused, options: [.allowsTransparency])
                 .frame(width: geometry.size.width, height: geometry.size.height)
                 .background(Color.clear)
                 .ignoresSafeArea(.all)
                 .allowsHitTesting(false)
                 .id("\(backgroundId)-\(geometry.size.width)-\(geometry.size.height)")
                 .onAppear {
-                    currentScene.isPaused = false
+                    currentScene.isPaused = effectivePaused
                     currentScene.configure(themeId: backgroundId)
                     reportPreparedScene(currentScene)
                 }
@@ -52,7 +57,7 @@ public struct SpriteKitBackgroundView: View {
                 .onChange(of: backgroundId) { newId in
                     currentScene.configure(themeId: newId)
                 }
-                .onChange(of: isPaused) { paused in
+                .onChange(of: effectivePaused) { paused in
                     currentScene.isPaused = paused
                 }
         }

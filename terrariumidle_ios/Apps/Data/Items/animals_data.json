@@ -7,15 +7,15 @@
         "priceStore": 20000000000,
         "priceOxygen": 225000,
         "currencyUnit": "oxygen",
-        "levelUnlock": 17,
+        "levelUnlock": 50,
         "type": "animal",
         "effect": "",
         "effectDescription": "Mật ong bắn tỏa & Đàn 4 chú ong bay lấy mật",
         "itemTypeAttribute": "hanging,front",
         "maximum": 1,
-        "tapSound": "mixkit-clinking-coins-1993",
+        "tapSound": "cloth-rustle-106346",
         "tapSoundChild": {
-            "bee": "mixkit-clinking-coins-1993"
+            "bee": "bee-wasp-passing-on-field-96485"
         },
         "music": "",
         "musicDescription": "",
@@ -23,7 +23,8 @@
         "effectLandscapeDescription": "",
         "effectSfx": "",
         "effectSfxDescription": ""
-    },  {
+    },
+    {
         "id": "animal2",
         "name": "Lazybug",
         "description": "Gốc cây gỗ mục ấm áp, ngôi nhà của chú bọ rùa chăm chỉ bay lượn và dạo chơi trên những tán lá.",
@@ -31,15 +32,15 @@
         "priceStore": 20000000000,
         "priceOxygen": 225000,
         "currencyUnit": "oxygen",
-        "levelUnlock": 17,
+        "levelUnlock": 70,
         "type": "animal",
         "effect": "",
         "effectDescription": "Rơi mảnh vỏ gỗ & Bọ rùa bay đậu trên lá",
         "itemTypeAttribute": "front",
         "maximum": 1,
-        "tapSound": "mixkit-clinking-coins-1993",
+        "tapSound": "wood-block-105066",
         "tapSoundChild": {
-            "lazybug": "mixkit-clinking-coins-1993"
+            "lazybug": "lazaybugtap"
         },
         "music": "",
         "musicDescription": "",

@@ -63,6 +63,14 @@ public enum LeafDensity: Sendable {
         }
     }
 
+    var maxActiveLeaves: Int {
+        switch self {
+        case .low: return 14
+        case .medium: return 24
+        case .high: return 36
+        }
+    }
+
     public static func fromString(_ str: String?) -> LeafDensity {
         switch str?.lowercased() {
         case "low": return .low
@@ -215,7 +223,8 @@ public final class FallingLeavesScene: SKScene {
 
         // Vòng lặp sinh lá mới liên tục
         let spawnAction = SKAction.run { [weak self] in
-            self?.spawnLeaf()
+            guard let self = self, !self.isPaused else { return }
+            self.spawnLeaf()
         }
         let waitAction = SKAction.wait(forDuration: density.spawnInterval, withRange: density.spawnInterval * 0.4)
         let loop = SKAction.sequence([spawnAction, waitAction])
@@ -264,7 +273,10 @@ public final class FallingLeavesScene: SKScene {
     // MARK: - Spawn Single Leaf
 
     private func spawnLeaf(atY startY: CGFloat? = nil, atX startX: CGFloat? = nil) {
-        guard !leafTextures.isEmpty, size.width > 0, size.height > 0 else { return }
+        guard !leafTextures.isEmpty,
+              size.width > 0,
+              size.height > 0,
+              children.count < density.maxActiveLeaves else { return }
 
         // Chọn ngẫu nhiên 1 trong các texture lá được truyền vào
         let texture = leafTextures.randomElement()!
