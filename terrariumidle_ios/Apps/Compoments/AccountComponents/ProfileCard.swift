@@ -8,6 +8,8 @@ struct ProfileCard: View {
     let userLikes: Int
     let userAvatar: String?
     var isVIP: Bool = false
+    var isUploadingAvatar: Bool = false
+    var onEditAvatar: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 16) {
@@ -22,16 +24,7 @@ struct ProfileCard: View {
             .font(.system(size: 10, weight: .heavy, design: .rounded))
             .foregroundStyle(AccountStyle.green)
 
-            avatar
-                .frame(width: 88, height: 88)
-                .clipShape(RoundedRectangle(cornerRadius: 26))
-                .padding(5)
-                .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 31))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 31)
-                        .strokeBorder(AccountStyle.border, lineWidth: 2)
-                }
-                .shadow(color: AccountStyle.border.opacity(0.6), radius: 0, y: 4)
+            avatarView
 
             VStack(spacing: 6) {
                 Text(userName)
@@ -67,14 +60,59 @@ struct ProfileCard: View {
     }
 
     @ViewBuilder
-    private var avatar: some View {
-        if let userAvatar, let url = URL(string: userAvatar), !userAvatar.isEmpty {
-            AsyncImage(url: url) { phase in
-                if let image = phase.image {
-                    image.resizable().scaledToFill()
-                } else {
-                    defaultAvatar
+    private var avatarView: some View {
+        let baseAvatar = avatar
+            .frame(width: 88, height: 88)
+            .clipShape(RoundedRectangle(cornerRadius: 26))
+            .overlay {
+                if isUploadingAvatar {
+                    RoundedRectangle(cornerRadius: 26)
+                        .fill(.black.opacity(0.42))
+                    ProgressView()
+                        .tint(.white)
                 }
+            }
+            .padding(5)
+            .background(AccountStyle.cream, in: RoundedRectangle(cornerRadius: 31))
+            .overlay {
+                RoundedRectangle(cornerRadius: 31)
+                    .strokeBorder(AccountStyle.border, lineWidth: 2)
+            }
+            .shadow(color: AccountStyle.border.opacity(0.6), radius: 0, y: 4)
+            .overlay(alignment: .bottomTrailing) {
+                if onEditAvatar != nil && !isUploadingAvatar {
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 28, height: 28)
+                        .background(AccountStyle.green, in: Circle())
+                        .overlay {
+                            Circle()
+                                .strokeBorder(AccountStyle.cream, lineWidth: 2)
+                        }
+                        .offset(x: 4, y: 4)
+                }
+            }
+
+        if let onEditAvatar {
+            Button(action: onEditAvatar) {
+                baseAvatar
+            }
+            .buttonStyle(.plain)
+            .disabled(isUploadingAvatar)
+            .accessibilityLabel("Đổi ảnh đại diện".tr)
+        } else {
+            baseAvatar
+        }
+    }
+
+    @ViewBuilder
+    private var avatar: some View {
+        if let userAvatar, !userAvatar.isEmpty {
+            CachedAsyncImage(named: userAvatar) { image in
+                image.resizable().scaledToFill()
+            } placeholder: {
+                defaultAvatar
             }
         } else {
             defaultAvatar

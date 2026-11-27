@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Điều khoản sử dụng · Terms of Use</title>
+  <style>
+    :root {
+      --bg: #F7EEDB;
+      --card: #FFFDF7;
+      --border: #D9CBB0;
+      --green: #4F6F42;
+      --ink: #2C3527;
+      --muted: #6C7564;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 18px 16px 36px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Helvetica Neue", sans-serif;
+      background: linear-gradient(180deg, #E9EED9 0%, var(--bg) 100%);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+    .container { max-width: 640px; margin: 0 auto; }
+    .card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 3px 0 rgba(217, 203, 176, 0.7);
+    }
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 6px;
+    }
+    h1 { font-size: 21px; margin: 0 0 6px; }
+    h2 { font-size: 16px; margin: 0 0 8px; color: var(--green); }
+    p, li { font-size: 14px; color: var(--ink); margin: 0 0 8px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    ul { margin: 0; padding-left: 18px; }
+    li:last-child, p:last-child { margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <div class="container" data-lang="vi">
+    <div class="card">
+      <div class="eyebrow">Terrarium Idle</div>
+      <h1>Điều khoản sử dụng</h1>
+      <p class="muted">Cập nhật lần cuối: 2026</p>
+      <p>Khi sử dụng Terrarium Idle, bạn đồng ý tuân thủ các điều khoản dưới đây.</p>
+    </div>
+
+    <div class="card">
+      <h2>1. Sử dụng ứng dụng</h2>
+      <ul>
+        <li>Ứng dụng phục vụ mục đích giải trí và thư giãn cá nhân.</li>
+        <li>Không tải lên ảnh đại diện hoặc nội dung vi phạm pháp luật, phản cảm hoặc xâm phạm quyền của người khác.</li>
+        <li>Không can thiệp, khai thác lỗi hoặc phá hoại hệ thống máy chủ trò chơi.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>2. Vật phẩm ảo &amp; Gói hội viên VIP</h2>
+      <ul>
+        <li>Tài nguyên và vật phẩm trong game (Oxy, Đá quý, Cây, Chậu...) chỉ có giá trị sử dụng trong ứng dụng và không thể quy đổi thành tiền mặt.</li>
+        <li>Gói hội viên Terrarium VIP được thanh toán và quản lý qua Apple App Store theo chu kỳ gia hạn bạn đã chọn.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>3. Thay đổi &amp; Liên hệ</h2>
+      <p>Chúng tôi có thể cập nhật nội dung ứng dụng và điều khoản theo thời gian để cải thiện trải nghiệm. Nếu có thắc mắc, vui lòng gửi phản hồi qua mục Liên hệ hỗ trợ.</p>
+    </div>
+  </div>
+
+  <div class="container" data-lang="en" style="display:none;">
+    <div class="card">
+      <div class="eyebrow">Terrarium Idle</div>
+      <h1>Terms of Use</h1>
+      <p class="muted">Last updated: 2026</p>
+      <p>By using Terrarium Idle, you agree to the terms outlined below.</p>
+    </div>
+
+    <div class="card">
+      <h2>1. Acceptable Use</h2>
+      <ul>
+        <li>The app is provided for personal entertainment and relaxation.</li>
+        <li>Do not upload avatars or content that is unlawful, offensive, or infringes on others' rights.</li>
+        <li>Do not exploit bugs, tamper with, or disrupt game servers.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>2. Virtual Items &amp; VIP Subscription</h2>
+      <ul>
+        <li>In-game currencies and items (Oxygen, Gemstones, Plants, Pots, etc.) have no real-world monetary value and cannot be exchanged for cash.</li>
+        <li>Terrarium VIP subscriptions are billed and managed through the Apple App Store according to your chosen renewal plan.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>3. Updates &amp; Contact</h2>
+      <p>We may update the app and these terms over time to improve the experience. For questions, please reach out via Contact Support.</p>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var lang = params.get("lang") || "vi";
+      var showEn = lang !== "vi";
+      var viEl = document.querySelector('[data-lang="vi"]');
+      var enEl = document.querySelector('[data-lang="en"]');
+      if (viEl && enEl) {
+        viEl.style.display = showEn ? "none" : "block";
+        enEl.style.display = showEn ? "block" : "none";
+      }
+    })();
+  </script>
+</body>
+</html>

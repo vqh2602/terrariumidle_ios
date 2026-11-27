@@ -553,6 +553,32 @@ class FireStoreService: ObservableObject {
         return await performFirestoreUpdate(gardenModel: gardenModel)
     }
 
+    /// Cập nhật đường dẫn ảnh đại diện của user lên Firestore và đồng bộ state cục bộ
+    @MainActor
+    func updateUserAvatar(_ avatarURL: String) async throws {
+        guard let uid = auth.currentUser?.uid ?? gradenModel?.user.userID, !uid.isEmpty else {
+            throw NSError(
+                domain: "FireStoreService",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Không tìm thấy tài khoản để cập nhật ảnh đại diện.".tr]
+            )
+        }
+
+        let docRef = db.collection("users").document(uid)
+        try await GardenWriteQueue.shared.perform {
+            try await docRef.updateData(["user.userAvatar": avatarURL])
+        }
+
+        if var garden = gradenModel, garden.user.userID == uid {
+            garden.user.userAvatar = avatarURL
+            gradenModel = garden
+        }
+        if var pending = pendingGardenModel, pending.user.userID == uid {
+            pending.user.userAvatar = avatarURL
+            pendingGardenModel = pending
+        }
+    }
+
     // MARK: - VIP Subscription Sync
 
     func isVIPTransactionOwnedByAnotherUser(originalTransactionId: String, currentUID: String) async throws -> Bool {

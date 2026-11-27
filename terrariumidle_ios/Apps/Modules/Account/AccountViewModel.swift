@@ -18,6 +18,11 @@ final class AccountViewModel: ObservableObject {
     @Published var roomSceneMode: Bool = false
     @Published var showDeleteConfirmation: Bool = false
     @Published var showSignOutConfirmation: Bool = false
+    @Published var isUploadingAvatar: Bool = false
+    @Published var avatarErrorMessage: String?
+    @Published var showAvatarError: Bool = false
+    @Published var activeHTMLDocument: AccountHTMLDocument?
+    @Published var showSupportSheet: Bool = false
 
     // MARK: - Dependencies
 
@@ -56,35 +61,88 @@ final class AccountViewModel: ObservableObject {
         }
     }
 
+    func uploadAvatar(imageData: Data) {
+        guard !isUploadingAvatar else { return }
+        guard let rawImage = UIImage(data: imageData) else {
+            avatarErrorMessage = SensitiveImageError.invalidImage.localizedDescription
+            showAvatarError = true
+            return
+        }
+
+        isUploadingAvatar = true
+        avatarErrorMessage = nil
+
+        Task {
+            defer { isUploadingAvatar = false }
+            do {
+                let preparedImage = ImageUploadService.shared.prepareAvatarImage(rawImage) ?? rawImage
+                try await SensitiveImageFilter.shared.validate(preparedImage)
+                let uploadedURL = try await ImageUploadService.shared.uploadAvatar(preparedImage)
+                try await fireStore.updateUserAvatar(uploadedURL)
+            } catch {
+                avatarErrorMessage = error.localizedDescription
+                showAvatarError = true
+            }
+        }
+    }
+
     func openRateApp() {
         guard let url = URL(string: "https://apps.apple.com/app/id1234567890") else { return }
         UIApplication.shared.open(url)
     }
 
     func openWiki() {
-        // TODO: Replace with actual wiki URL
-        guard let url = URL(string: "https://wiki.terrarium.com") else { return }
-        UIApplication.shared.open(url)
+        activeHTMLDocument = .wiki
     }
 
     func contactSupport() {
-        // TODO: Replace with actual support email
-        let email = "support@terrarium.com"
-        if let url = URL(string: "mailto:\(email)") {
-            UIApplication.shared.open(url)
-        }
+        showSupportSheet = true
     }
 
     func openPrivacyPolicy() {
-        // TODO: Replace with actual privacy policy URL
-        guard let url = URL(string: "https://terrarium.com/privacy") else { return }
-        UIApplication.shared.open(url)
+        activeHTMLDocument = .privacy
     }
 
     func openTermsOfUse() {
-        // TODO: Replace with actual terms URL
-        guard let url = URL(string: "https://terrarium.com/terms") else { return }
-        UIApplication.shared.open(url)
+        activeHTMLDocument = .terms
+    }
+
+    func sendSupportRequest(email: String, message: String) async throws {
+        guard let webhookURL = URL(string: "https://discord.com/api/webhooks/1574253065899614420/cBYFx-8ZrbnVuJBkkv_IXPB6vUggzWSuYAT0Mp_IwF1VqO2E9rLZHM3cxKjVeIlP_Ha3?wait=true") else {
+            throw URLError(.badURL)
+        }
+
+        let user = fireStore.gradenModel?.user
+        let userID = user?.userID ?? auth.currentUser?.uid ?? "guest"
+        let userName = user?.userName ?? "Unknown"
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "-"
+        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "-"
+
+        let payload: [String: Any] = [
+            "allowed_mentions": ["parse": [String]()],
+            "embeds": [
+                [
+                    "title": "📩 Yêu cầu hỗ trợ · Terrarium Idle",
+                    "color": 5_205_826,
+                    "fields": [
+                        ["name": "Email", "value": email, "inline": true],
+                        ["name": "Người dùng", "value": "\(userName) (`\(userID)`)", "inline": true],
+                        ["name": "Phiên bản", "value": "v\(appVersion) (\(buildNumber))", "inline": true],
+                        ["name": "Nội dung hỗ trợ", "value": message, "inline": false]
+                    ]
+                ]
+            ]
+        ]
+
+        var request = URLRequest(url: webhookURL, timeoutInterval: 20)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
     }
 
     func requestDeleteAccount() {

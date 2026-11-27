@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 
 struct AccountView: View {
@@ -8,6 +9,8 @@ struct AccountView: View {
     @ObservedObject private var localization = LocalizationManager.shared
     @State private var showOnboardingGuide = false
     @State private var showWatchSettings = false
+    @State private var showAvatarPicker = false
+    @State private var selectedAvatarItem: PhotosPickerItem?
 
     private var isVIP: Bool {
         SubscriptionManager.isVIP(gardenModel: fireStore.gradenModel)
@@ -26,7 +29,9 @@ struct AccountView: View {
                             userLevel: user.userLevel,
                             userLikes: user.userTotalLike,
                             userAvatar: user.userAvatar,
-                            isVIP: isVIP
+                            isVIP: isVIP,
+                            isUploadingAvatar: viewModel.isUploadingAvatar,
+                            onEditAvatar: { showAvatarPicker = true }
                         )
                     }
                     VIPPromoBanner(
@@ -99,6 +104,38 @@ struct AccountView: View {
             .environmentObject(router)
         }
         .sheet(isPresented: $showWatchSettings) { WatchCompanionSettingsView() }
+        .sheet(item: $viewModel.activeHTMLDocument) { document in
+            AccountHTMLSheet(document: document)
+        }
+        .sheet(isPresented: $viewModel.showSupportSheet) {
+            SupportContactSheet(
+                viewModel: viewModel,
+                initialEmail: fireStore.gradenModel?.user.userEmail ?? ""
+            )
+        }
+        .photosPicker(
+            isPresented: $showAvatarPicker,
+            selection: $selectedAvatarItem,
+            matching: .images,
+            photoLibrary: .shared()
+        )
+        .onChange(of: selectedAvatarItem) { _, newItem in
+            guard let newItem else { return }
+            selectedAvatarItem = nil
+            Task {
+                if let data = try? await newItem.loadTransferable(type: Data.self) {
+                    viewModel.uploadAvatar(imageData: data)
+                } else {
+                    viewModel.avatarErrorMessage = SensitiveImageError.invalidImage.localizedDescription
+                    viewModel.showAvatarError = true
+                }
+            }
+        }
+        .alert("Không thể cập nhật ảnh đại diện".tr, isPresented: $viewModel.showAvatarError) {
+            Button("Đóng".tr, role: .cancel) {}
+        } message: {
+            Text(viewModel.avatarErrorMessage ?? "Đã xảy ra lỗi khi tải ảnh lên.".tr)
+        }
     }
 
     private var header: some View {

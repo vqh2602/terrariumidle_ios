@@ -76,7 +76,7 @@ struct GardenModel {
         let bag: [BagItem]
         let identifier: String?
         let latestPurchaseDate: String?
-        let userAvatar: String?
+        var userAvatar: String?
         let userEmail: String?
 
         var userFloor: Int // Made mutable for user leveling
