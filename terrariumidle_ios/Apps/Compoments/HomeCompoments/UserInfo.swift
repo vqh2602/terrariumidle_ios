@@ -173,12 +173,7 @@ private struct GardenResourceValue: View {
     let value: Int
 
     private var compactValue: String {
-        for (threshold, suffix) in [(1_000_000_000.0, "b"), (1_000_000.0, "m"), (1_000.0, "k")] {
-            if Double(value) >= threshold {
-                return String(format: "%.1f%@", Double(value) / threshold, suffix)
-            }
-        }
-        return "\(value)"
+        FormatNumber.formatNumber(value)
     }
 
     var body: some View {

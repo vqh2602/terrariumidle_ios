@@ -280,13 +280,7 @@ struct StoreResourceBadge: View {
     }
 
     private var compactValue: String {
-        let magnitude = Double(value)
-        for (threshold, suffix) in [(1_000_000_000.0, "b"), (1_000_000.0, "m"), (1_000.0, "k")] {
-            if magnitude >= threshold {
-                return String(format: "%.1f%@", magnitude / threshold, suffix)
-            }
-        }
-        return "\(value)"
+        FormatNumber.formatNumber(value)
     }
 }
 

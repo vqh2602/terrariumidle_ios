@@ -8,6 +8,7 @@ struct AccountView: View {
     @ObservedObject private var subscriptionManager = SubscriptionManager.shared
     @ObservedObject private var localization = LocalizationManager.shared
     @ObservedObject private var appIconManager = AppIconManager.shared
+    @ObservedObject private var updateChecker = AppUpdateChecker.shared
     @State private var showOnboardingGuide = false
     @State private var showWatchSettings = false
     @State private var showAppIconPicker = false
@@ -307,6 +308,16 @@ struct AccountView: View {
             }
             rowDivider
             SettingsRow(title: "Đánh giá ứng dụng".tr, icon: "star.fill") { viewModel.openRateApp() }
+            rowDivider
+            SettingsRow(
+                title: "Kiểm tra cập nhật".tr,
+                icon: "arrow.down.app.fill",
+                trailingContent: .value(updateChecker.isChecking ? "Đang kiểm tra...".tr : "v\(AppUpdateChecker.currentAppVersion)")
+            ) {
+                Task {
+                    await updateChecker.checkForUpdate(manual: true)
+                }
+            }
             rowDivider
             SettingsRow(title: "Cẩm nang khu vườn · Wiki".tr, icon: "book.closed.fill") { viewModel.openWiki() }
             rowDivider

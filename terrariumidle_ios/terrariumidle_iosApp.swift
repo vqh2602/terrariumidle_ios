@@ -49,11 +49,13 @@ struct terrariumidle_iosApp: App {
                 .preferredColorScheme(.light)
                 .environmentObject(localization)
                 .environment(\.locale, localization.currentLanguage.locale)
+                .appUpdateAlert()
                 .task(id: scenePhase) {
                     if scenePhase == .active {
                         _ = await GardenReminderScheduler.shared.update(.saved())
                         await SleepHealthStore.shared.sync()
                         await SubscriptionManager.shared.refreshEntitlements()
+                        await AppUpdateChecker.shared.checkForUpdateIfNeeded()
                     }
                 }
                 .task(id: "\(scenePhase == .active)-\(atmosphere.hasInitialized)-\(atmosphere.timerGeneration)") {
