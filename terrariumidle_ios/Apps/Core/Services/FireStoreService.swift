@@ -252,6 +252,12 @@ class FireStoreService: ObservableObject {
         }
     }
 
+    static let baseTapExpGain = 100
+
+    static func tapExpGain(isVIP: Bool) -> Int {
+        isVIP ? baseTapExpGain * 2 : baseTapExpGain
+    }
+
     /// Xử lý tap cây một cách nguyên tử (atomic), ngăn chặn race condition khi tap nhiều cây cùng lúc,
     /// gom toàn bộ các lần tap đồng thời vào cùng một snapshot dữ liệu duy nhất và debounce Firestore.
     @MainActor
@@ -281,16 +287,18 @@ class FireStoreService: ObservableObject {
         let baseOxygenDrop = ItemDataManager.shared.collectionOxygen(
             level: currentLevel, plantId: plant.idPlant, potId: plant.idPot
         )
-        let oxygenDrop = SubscriptionManager.isVIP(gardenModel: garden)
+        let isVIP = SubscriptionManager.isVIP(gardenModel: garden)
+        let oxygenDrop = isVIP
             ? Int((Double(baseOxygenDrop) * 1.5).rounded())
             : baseOxygenDrop
+        let expGain = Self.tapExpGain(isVIP: isVIP)
 
         // 1. Tăng oxy
         garden.money.oxygen += oxygenDrop
         recordEventOxygen(oxygenDrop)
 
         // 2. Tăng EXP cho cây
-        plant.platLevelExp += 100
+        plant.platLevelExp += expGain
         var didPlantLevelUp = false
         if currentLevel < 3 {
             let maxExp = ShareFunc.calculatePlantMaxExp(level: currentLevel)
@@ -306,7 +314,7 @@ class FireStoreService: ObservableObject {
         garden.plants.append(plant)
 
         // 3. Tăng EXP cho người dùng
-        garden.user.userLevelEXP += 100
+        garden.user.userLevelEXP += expGain
         var didUserLevelUp = false
         let userMaxExp = ShareFunc.calculateUserMaxExp(level: garden.user.userLevel)
         if garden.user.userLevelEXP >= userMaxExp {

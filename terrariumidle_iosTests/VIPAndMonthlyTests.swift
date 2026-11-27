@@ -156,4 +156,34 @@ struct VIPAndMonthlyTests {
         )
         #expect(event.v2EventId == "monthly")
     }
+
+    @Test func vipDoublesTapExpGain() {
+        #expect(FireStoreService.tapExpGain(isVIP: false) == 100)
+        #expect(FireStoreService.tapExpGain(isVIP: true) == 200)
+    }
+
+    @Test func storeHidesDistantLockedPlantsAsSilhouettes() {
+        let allPlants = ItemDataManager.shared.getAllPlants()
+        let hiddenForLevel1 = StoreViewModel.silhouettePlantIds(
+            allPlants: allPlants,
+            ownedIds: ["plant1"],
+            userLevel: 1,
+            upcomingLimit: 3
+        )
+        // Level 1 has plants at level 1 (unlocked) and 2, 3, 4 (next 3 upcoming); level 50 plants must be silhouettes.
+        #expect(!hiddenForLevel1.contains("plant2"))
+        #expect(!hiddenForLevel1.contains("plant3"))
+        #expect(!hiddenForLevel1.contains("plant4"))
+        #expect(!hiddenForLevel1.contains("plant5"))
+        #expect(hiddenForLevel1.contains("plant29"))
+        #expect(hiddenForLevel1.contains("plant31"))
+
+        let hiddenForMaxLevel = StoreViewModel.silhouettePlantIds(
+            allPlants: allPlants,
+            ownedIds: [],
+            userLevel: 50,
+            upcomingLimit: 3
+        )
+        #expect(hiddenForMaxLevel.isEmpty)
+    }
 }

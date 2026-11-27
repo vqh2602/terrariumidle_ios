@@ -60,6 +60,7 @@ struct StoreView: View {
                                 isOwned: viewModel.isOwned(item: item),
                                 canAfford: viewModel.canAfford(item: item),
                                 meetsLevelRequirement: viewModel.meetsLevelRequirement(item: item),
+                                isSilhouette: viewModel.isSilhouette(item: item),
                                 onPurchase: { item in
                                     if item.supportsPurchaseQuantity {
                                         quantityItem = item

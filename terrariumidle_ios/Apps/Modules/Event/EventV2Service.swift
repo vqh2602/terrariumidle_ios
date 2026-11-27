@@ -372,7 +372,8 @@ final class EventV2Service {
             wallet.append([
                 "id": rewardIdToGrant,
                 "name": self.displayName(for: rewardIdToGrant),
-                "quantity": qty
+                "quantity": qty,
+                "claimedAt": self.currentVietnamTimestampString()
             ])
             state["wallet"] = wallet
         }
@@ -424,7 +425,8 @@ final class EventV2Service {
             wallet.append([
                 "id": rewardId,
                 "name": self.displayName(for: rewardId),
-                "quantity": qty
+                "quantity": qty,
+                "claimedAt": self.currentVietnamTimestampString()
             ])
             state["wallet"] = wallet
         }
@@ -482,7 +484,8 @@ final class EventV2Service {
             wallet.append([
                 "id": targetReward.rewardId,
                 "name": self.displayName(for: targetReward.rewardId),
-                "quantity": qty
+                "quantity": qty,
+                "claimedAt": self.currentVietnamTimestampString()
             ])
             state["wallet"] = wallet
         }
@@ -579,11 +582,13 @@ final class EventV2Service {
             state["claims"] = currentClaims
 
             var wallet = state["wallet"] as? [[String: Any]] ?? []
+            let claimedAt = self.currentVietnamTimestampString()
             for item in grantedItems {
                 wallet.append([
                     "id": item.id,
                     "name": self.displayName(for: item.id),
-                    "quantity": item.qty
+                    "quantity": item.qty,
+                    "claimedAt": claimedAt
                 ])
             }
             state["wallet"] = wallet
@@ -718,6 +723,8 @@ final class EventV2Service {
                     if (state["lastResetDate"] as? String) != today {
                         state["spins"] = 3
                         state["matchAvailable"] = true
+                        state.removeValue(forKey: "round")
+                        state.removeValue(forKey: "lastSpin")
                         state["checkedToday"] = false
                         state["monthlyCheckedToday"] = false
                         state["lastResetDate"] = today
@@ -824,7 +831,9 @@ final class EventV2Service {
             result["lastSpin"] = lastSpin
         }
 
-        if var round = state["round"] as? [String: Any] {
+        if (state["matchAvailable"] as? Bool ?? false) {
+            result["round"] = NSNull()
+        } else if var round = state["round"] as? [String: Any] {
             round.removeValue(forKey: "board")
             result["round"] = round
         } else {
@@ -849,6 +858,15 @@ final class EventV2Service {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(identifier: "Asia/Ho_Chi_Minh")
         formatter.dateFormat = "yyyy-MM"
+        return formatter.string(from: Date())
+    }
+
+    private func currentVietnamTimestampString() -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "Asia/Ho_Chi_Minh")
+        formatter.dateFormat = "dd/MM/yyyy HH:mm"
         return formatter.string(from: Date())
     }
 

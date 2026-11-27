@@ -38,9 +38,15 @@ struct PlantItemView: View {
     @State private var floatingTexts: [(id: UUID, text: String, offset: CGFloat)] = []
     private let fireStoreService: FireStoreService = .shared
 
-    // Confirmation alerts
+    // Confirmation alerts & sheets
     @State private var showFertilizeAlert = false
     @State private var showRemoveAlert = false
+    @State private var showChangePotSheet = false
+    @State private var showVIPSheet = false
+
+    private var isVIP: Bool {
+        SubscriptionManager.isVIP(gardenModel: fireStoreService.gradenModel)
+    }
     
     private var isSticker: Bool {
         plantData?.idPlant.contains("sticker") == true && plantData?.idPlant == plantData?.idPot
@@ -226,6 +232,19 @@ struct PlantItemView: View {
                                                   subtitle: "10 phân bón · Tăng 1 cấp".tr) {
                                 showFertilizeAlert = true
                             })
+                            items.append(MenuItem(
+                                title: "Đổi chậu".tr,
+                                icon: isVIP ? "arrow.triangle.2.circlepath" : "crown.fill",
+                                subtitle: isVIP
+                                    ? "VIP · Thay chậu mới (không hoàn chậu cũ)".tr
+                                    : "Chỉ khả dụng cho VIP · Nâng cấp ngay".tr
+                            ) {
+                                if isVIP {
+                                    showChangePotSheet = true
+                                } else {
+                                    showVIPSheet = true
+                                }
+                            })
                         }
                         items.append(MenuItem(title: "Loại bỏ".tr, assetIcon: "shovel",
                                               subtitle: "1 xẻng · Xúc cây khỏi kệ".tr, role: .destructive) {
@@ -277,6 +296,27 @@ struct PlantItemView: View {
                 rowIndex: rowIndex,
                 columnIndex: columnIndex,
                 onOpenStore: { pendingStoreItemId = $0 }
+            )
+        }
+        .sheet(isPresented: $showChangePotSheet) {
+            if let plant = plantData, !hasEmptyIds, !isStandaloneItem {
+                ChangePotSheet(
+                    plantId: plant.idPlant,
+                    currentPotId: plant.idPot,
+                    isHanging: isHanging,
+                    cartPots: cartPots,
+                    rowIndex: rowIndex,
+                    columnIndex: columnIndex,
+                    onPotChanged: {
+                        showFloatingText("🪴 Đã đổi chậu!".tr)
+                    }
+                )
+            }
+        }
+        .sheet(isPresented: $showVIPSheet) {
+            SubscriptionView(
+                isSheet: true,
+                highlightContext: "Nâng cấp Terrarium VIP để mở khóa tính năng đổi chậu cho cây trên khu vườn!".tr
             )
         }
 

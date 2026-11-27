@@ -14,7 +14,9 @@ struct SubscriptionView: View {
     @State private var previewAudioTimer: Task<Void, Never>?
     @State private var previousAudioSnapshot: BackgroundAudioManager.AudioSnapshot?
     @State private var previewEffectIndex = 0
+    @State private var didRandomizePreviewEffect = false
     @State private var showSuccessAlert = false
+    @State private var activeHTMLDocument: AccountHTMLDocument?
 
     private var isVIPActive: Bool {
         SubscriptionManager.isVIP(gardenModel: fireStore.gradenModel)
@@ -27,6 +29,11 @@ struct SubscriptionView: View {
 
     private var previewEffects: [ItemData] {
         allEffects.isEmpty ? [] : allEffects
+    }
+
+    private var currentPreviewOverlayId: String? {
+        guard !previewEffects.isEmpty else { return nil }
+        return previewEffects[previewEffectIndex % previewEffects.count].id
     }
 
     private var lockedSampleTracks: [ItemData] {
@@ -74,6 +81,17 @@ struct SubscriptionView: View {
             .ignoresSafeArea()
         }
         .navigationBarHidden(true)
+        .overlay {
+            OverlayEffectView(overlayId: currentPreviewOverlayId)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+        }
+        .onAppear {
+            if !didRandomizePreviewEffect, !previewEffects.isEmpty {
+                previewEffectIndex = Int.random(in: 0..<previewEffects.count)
+                didRandomizePreviewEffect = true
+            }
+        }
         .task {
             if subscriptionManager.products.isEmpty {
                 await subscriptionManager.loadProducts()
@@ -82,6 +100,9 @@ struct SubscriptionView: View {
         }
         .onDisappear {
             stopAudioPreviewIfNeeded()
+        }
+        .sheet(item: $activeHTMLDocument) { document in
+            AccountHTMLSheet(document: document)
         }
         .alert("Terrarium VIP", isPresented: $showSuccessAlert) {
             Button("Tuyệt vời!".tr, role: .cancel) {
@@ -177,6 +198,7 @@ struct SubscriptionView: View {
                 heroStatChip(icon: "music.note.list", text: "%d Nhạc & SFX".tr(allMusics.count + allSFX.count))
                 heroStatChip(icon: "sparkles", text: "%d Hiệu ứng".tr(allLandscapes.count + allEffects.count))
                 heroStatChip(icon: "gift.fill", text: "×2 Quà tháng".tr)
+                heroStatChip(icon: "arrow.up.forward.circle.fill", text: "×2 EXP".tr)
             }
         }
         .padding(20)
@@ -580,8 +602,15 @@ struct SubscriptionView: View {
                 perkRow(
                     icon: "bolt.heart.fill",
                     tint: Color(hex: "5E99B5"),
-                    title: "+50% Oxygen khi chăm vườn".tr,
-                    detail: "Mỗi lần chạm chăm cây thu hoạch thêm 50% Oxygen và nổi bật với huy hiệu Hoàng gia VIP.".tr
+                    title: "+50% Oxygen & Huy hiệu Hoàng gia VIP".tr,
+                    detail: "Mỗi lần chạm thu thập Oxygen nhận thêm 50% Oxygen và nổi bật với huy hiệu Hoàng gia VIP.".tr
+                )
+                Divider()
+                perkRow(
+                    icon: "arrow.up.forward.circle.fill",
+                    tint: VIPPalette.gold,
+                    title: "Nhận ×2 EXP khi chăm sóc cây".tr,
+                    detail: "Mỗi lần chạm cây nhận gấp đôi (×2) EXP cho cả cây và cấp độ tài khoản để thăng cấp nhanh hơn.".tr
                 )
             }
             .padding(18)
@@ -651,14 +680,10 @@ struct SubscriptionView: View {
 
             HStack(spacing: 18) {
                 Button("Điều khoản sử dụng".tr) {
-                    if let url = URL(string: "https://terrarium.com/terms") {
-                        UIApplication.shared.open(url)
-                    }
+                    activeHTMLDocument = .terms
                 }
                 Button("Chính sách bảo mật".tr) {
-                    if let url = URL(string: "https://terrarium.com/privacy") {
-                        UIApplication.shared.open(url)
-                    }
+                    activeHTMLDocument = .privacy
                 }
             }
             .font(.system(.caption2, design: .rounded, weight: .bold))

@@ -5,6 +5,7 @@ struct StoreItemCard: View {
     let isOwned: Bool
     let canAfford: Bool
     let meetsLevelRequirement: Bool
+    var isSilhouette: Bool = false
     let onPurchase: (ItemData) -> Void
 
     var body: some View {
@@ -12,23 +13,23 @@ struct StoreItemCard: View {
             HStack(alignment: .top, spacing: 14) {
                 itemArtwork
                 VStack(alignment: .leading, spacing: 7) {
-                    Text(item.name.tr)
+                    Text(isSilhouette ? "Cây bí ẩn".tr : item.name.tr)
                         .font(.system(.headline, design: .rounded, weight: .bold))
-                        .foregroundStyle(AccountStyle.ink)
+                        .foregroundStyle(isSilhouette ? AccountStyle.muted : AccountStyle.ink)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(item.description.tr)
+                    Text(isSilhouette ? "Tiếp tục chăm sóc khu vườn để khám phá loài cây này.".tr : item.description.tr)
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(AccountStyle.muted)
                         .lineLimit(3)
                     if !meetsLevelRequirement {
                         Label("Mở khóa cấp %d".tr(item.levelUnlock), systemImage: "lock.fill")
                             .font(.system(.caption2, design: .rounded, weight: .bold))
-                            .foregroundStyle(AccountStyle.danger)
+                            .foregroundStyle(isSilhouette ? AccountStyle.muted : AccountStyle.danger)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            if item.displayEffect != "N.A" && !item.displayEffect.isEmpty {
+            if !isSilhouette, item.displayEffect != "N.A" && !item.displayEffect.isEmpty {
                 Label(item.displayEffect, systemImage: "sparkles")
                     .font(.system(.caption, design: .rounded, weight: .medium))
                     .foregroundStyle(AccountStyle.green)
@@ -45,17 +46,34 @@ struct StoreItemCard: View {
 
     private var itemArtwork: some View {
         CachedAsyncImage(named: item.image) { image in
-            image.resizable().scaledToFit()
+            if isSilhouette {
+                image
+                    .resizable()
+                    .renderingMode(.template)
+                    .scaledToFit()
+                    .foregroundStyle(AccountStyle.ink.opacity(0.28))
+                    .blur(radius: 1.5)
+            } else {
+                image.resizable().scaledToFit()
+            }
         } placeholder: {
             Image(systemName: item.type == "plant" ? "leaf.fill" : "shippingbox.fill")
                 .font(.system(size: 28))
-                .foregroundStyle(AccountStyle.green.opacity(0.45))
+                .foregroundStyle(AccountStyle.green.opacity(isSilhouette ? 0.25 : 0.45))
         }
         .padding(10)
         .frame(width: 88, height: 100)
         .background {
             LinearGradient(colors: [Color(hex: "E6EBCF"), Color(hex: "F5EDD4")],
                            startPoint: .topLeading, endPoint: .bottomTrailing)
+                .opacity(isSilhouette ? 0.65 : 1.0)
+        }
+        .overlay {
+            if isSilhouette {
+                Image(systemName: "questionmark")
+                    .font(.system(size: 22, weight: .heavy, design: .rounded))
+                    .foregroundStyle(AccountStyle.ink.opacity(0.45))
+            }
         }
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(AccountStyle.border.opacity(0.65), lineWidth: 1) }

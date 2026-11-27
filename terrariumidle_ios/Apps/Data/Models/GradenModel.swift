@@ -122,6 +122,38 @@ extension GardenModel {
     }
 }
 
+// MARK: - Change Pot (VIP)
+
+extension GardenModel {
+    enum ChangePotResult {
+        case changed, vipRequired, insufficientOxygen, samePot, invalidPlant, invalidPot
+    }
+
+    /// Replace a plant's pot by paying the new pot's oxygen price without refunding the old pot.
+    mutating func changePot(
+        at position: String,
+        plantId: String,
+        to newPotId: String,
+        cost: Int,
+        isVIP: Bool
+    ) -> ChangePotResult {
+        guard isVIP else { return .vipRequired }
+        guard !newPotId.isEmpty, cost >= 0 else { return .invalidPot }
+        guard let index = plants.lastIndex(where: {
+            $0.position == position &&
+            $0.idPlant == plantId &&
+            !$0.idPlant.isEmpty &&
+            !$0.idPot.isEmpty &&
+            $0.idPlant != $0.idPot
+        }) else { return .invalidPlant }
+        guard plants[index].idPot != newPotId else { return .samePot }
+        guard money.oxygen >= cost else { return .insufficientOxygen }
+        money.oxygen -= cost
+        plants[index].idPot = newPotId
+        return .changed
+    }
+}
+
 // MARK: - Garden weather
 
 extension GardenModel {

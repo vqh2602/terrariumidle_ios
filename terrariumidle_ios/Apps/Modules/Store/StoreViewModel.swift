@@ -37,30 +37,76 @@ final class StoreViewModel: ObservableObject {
 
     // MARK: - Computed Properties
 
+    nonisolated static let visibleUpcomingPlantCount = 3
+
     var filteredItems: [ItemData] {
         guard let gardenModel = fireStore.gradenModel else {
             print("Không có data gradenModel trong StoreViewModel")
             return []
         }
 
-        var items = availableItems
+        // Filter by ownership (exclude items already owned)
+        let ownedIds = Set(getOwnedIds(for: selectedTab, from: gardenModel))
+        var items = availableItems.filter { !ownedIds.contains($0.id) }
 
-        // Filter by search text
+        if selectedTab == .plants {
+            items.sort { lhs, rhs in
+                if lhs.levelUnlock != rhs.levelUnlock {
+                    return lhs.levelUnlock < rhs.levelUnlock
+                }
+                return lhs.id.localizedStandardCompare(rhs.id) == .orderedAscending
+            }
+        }
+
+        // Filter by search text (skip silhouette plants so hidden names are not spoiled)
         if !searchText.isEmpty {
+            let hiddenIds = selectedTab == .plants
+                ? Self.silhouettePlantIds(
+                    allPlants: items,
+                    ownedIds: ownedIds,
+                    userLevel: gardenModel.user.userLevel
+                )
+                : []
             items = items.filter { item in
-                item.name.tr.localizedCaseInsensitiveContains(searchText) ||
+                guard !hiddenIds.contains(item.id) else { return false }
+                return item.name.tr.localizedCaseInsensitiveContains(searchText) ||
                     item.description.tr.localizedCaseInsensitiveContains(searchText)
             }
         }
 
-        // Filter by level unlock
-//        items = items.filter { $0.levelUnlock <= gardenModel.user.userLevel }
-
-        // Filter by ownership (exclude items already owned)
-        let ownedIds = getOwnedIds(for: selectedTab, from: gardenModel)
-        items = items.filter { !ownedIds.contains($0.id) }
-
         return items
+    }
+
+    func isSilhouette(item: ItemData) -> Bool {
+        guard selectedTab == .plants,
+              let gardenModel = fireStore.gradenModel else { return false }
+        let ownedIds = Set(getOwnedIds(for: .plants, from: gardenModel))
+        return Self.silhouettePlantIds(
+            allPlants: availableItems,
+            ownedIds: ownedIds,
+            userLevel: gardenModel.user.userLevel
+        ).contains(item.id)
+    }
+
+    /// Keeps unlocked plants and the next few upcoming plants visible;
+    /// hides distant locked plants as silhouettes to preserve a sense of discovery.
+    static func silhouettePlantIds(
+        allPlants: [ItemData],
+        ownedIds: Set<String>,
+        userLevel: Int,
+        upcomingLimit: Int = visibleUpcomingPlantCount
+    ) -> Set<String> {
+        let lockedUnowned = allPlants
+            .filter { $0.type == "plant" && !ownedIds.contains($0.id) && $0.levelUnlock > userLevel }
+            .sorted { lhs, rhs in
+                if lhs.levelUnlock != rhs.levelUnlock {
+                    return lhs.levelUnlock < rhs.levelUnlock
+                }
+                return lhs.id.localizedStandardCompare(rhs.id) == .orderedAscending
+            }
+
+        guard lockedUnowned.count > upcomingLimit else { return [] }
+        return Set(lockedUnowned.dropFirst(upcomingLimit).map(\.id))
     }
 
     // MARK: - Init
