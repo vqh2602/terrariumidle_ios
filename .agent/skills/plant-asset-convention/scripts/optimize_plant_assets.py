@@ -113,9 +113,19 @@ class Scene:
         width, height = self.canvas()
         info = self.get(self.root.get('_info'))
         if not isinstance(info, dict):
-            # Scene templates normally have editor metadata. Reuse the keyed dictionary class.
-            dictionary = next(x for x in self.objects if isinstance(x, dict) and 'NS.keys' in x)
-            info = {'$class': dictionary['$class'], 'NS.keys': [], 'NS.objects': []}
+            # Scene templates expect _info to be an NSMutableDictionary for Xcode Scene Editor.
+            mutable_cls = next(
+                (plistlib.UID(i)
+                 for i, x in enumerate(self.objects)
+                 if isinstance(x, dict) and x.get('$classname') == 'NSMutableDictionary'),
+                None,
+            )
+            if mutable_cls is None:
+                mutable_cls = self.add({
+                    '$classname': 'NSMutableDictionary',
+                    '$classes': ['NSMutableDictionary', 'NSDictionary', 'NSObject'],
+                })
+            info = {'$class': mutable_cls, 'NS.keys': [], 'NS.objects': []}
             self.root['_info'] = self.add(info)
         for name, value in (('_PB_previewSKEditorSceneSizeWidth', width),
                             ('_PB_previewSKEditorSceneSizeHeight', height)):
