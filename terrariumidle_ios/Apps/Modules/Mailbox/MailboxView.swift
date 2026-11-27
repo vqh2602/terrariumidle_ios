@@ -310,17 +310,14 @@ private struct MailboxDetailSheet: View {
                         .font(.caption)
                         .foregroundStyle(AccountStyle.muted)
 
-                    if let imageStr = localized?.image, !imageStr.isEmpty, let url = URL(string: imageStr) {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .scaledToFit()
-                                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                            default:
-                                EmptyView()
-                            }
+                    if let imageStr = localized?.image, !imageStr.isEmpty {
+                        CachedAsyncImage(named: imageStr) { image in
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                        } placeholder: {
+                            EmptyView()
                         }
                     }
 

@@ -101,7 +101,7 @@ struct EventView: View {
             else { selectedEvent = event }
         } label: {
             VStack(alignment: .leading, spacing: 12) {
-                AsyncImage(url: URL(string: content?.image ?? "")) { image in
+                CachedAsyncImage(named: content?.image) { image in
                     image.resizable().scaledToFit()
                 } placeholder: {
                     Image(systemName: "gift.fill").font(.largeTitle)
