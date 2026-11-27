@@ -12,6 +12,7 @@ struct SpeedDial: View {
     @Binding var backgroundRive: String
     @Binding var overlayRive: String?
     @EnvironmentObject var router: AppRouter
+    @ObservedObject private var mailboxStore = MailboxStore.shared
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -40,6 +41,9 @@ struct SpeedDial: View {
                 .padding(16)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+        }
+        .task {
+            await mailboxStore.loadIfNeeded()
         }
         .task(id: idleTimerKey) {
             isIdle = false
@@ -91,6 +95,15 @@ struct SpeedDial: View {
                 .shadow(color: .black.opacity(0.12), radius: 6, y: 5)
                 // Fade the artwork, keeping the Button's hit region fully active.
                 .opacity(isIdle && !isOpen ? 0.35 : 1)
+                .overlay(alignment: .topTrailing) {
+                    if !isOpen && mailboxStore.unreadCount > 0 {
+                        Circle()
+                            .fill(Color(hex: "D95D39"))
+                            .frame(width: 13, height: 13)
+                            .overlay { Circle().strokeBorder(AccountStyle.cream, lineWidth: 2) }
+                            .offset(x: 1, y: -1)
+                    }
+                }
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
@@ -109,6 +122,7 @@ struct SpeedDial: View {
         case .account: router.push(.accountView)
         case .layout: isEditing = true
         case .events: router.push(.eventView)
+        case .mailbox: router.push(.mailboxView)
         case .discovery: router.push(.discoveryView)
         case .vip: router.push(.subscriptionView)
         }
@@ -127,6 +141,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
     case music = "Âm nhạc"
     case store = "Cửa hàng"
     case events = "Sự kiện"
+    case mailbox = "Hòm thư"
     case discovery = "Khám phá"
     case layout = "Bố cục"
     case vip = "Gói VIP"
@@ -141,6 +156,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
         case .music: return "music.note"
         case .store: return "basket.fill"
         case .events: return "gift.fill"
+        case .mailbox: return "envelope.fill"
         case .discovery: return "globe.asia.australia.fill"
         case .vip: return "crown.fill"
         case .account: return "person.crop.circle.fill"
@@ -155,6 +171,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
         case .music: return Color(hex: "AC7862")
         case .store, .layout: return AccountStyle.green
         case .events: return Color(hex: "9A8A71")
+        case .mailbox: return Color(hex: "C07A53")
         case .discovery: return Color(hex: "648C86")
         case .vip: return Color(hex: "D79922")
         case .account: return Color(hex: "648C86")
@@ -164,6 +181,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
 
 struct GardenMenuPanel: View {
     let onSelect: (GardenMenuDestination) -> Void
+    @ObservedObject private var mailboxStore = MailboxStore.shared
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var canScrollDown = false
 
@@ -225,6 +243,17 @@ struct GardenMenuPanel: View {
                     .foregroundStyle(destination.tint)
                     .frame(width: 40, height: 36)
                     .background(destination.tint.opacity(0.11), in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(alignment: .topTrailing) {
+                        if destination == .mailbox && mailboxStore.unreadCount > 0 {
+                            Text(mailboxStore.unreadCount > 9 ? "9+" : "\(mailboxStore.unreadCount)")
+                                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(Color(hex: "D95D39"), in: Capsule())
+                                .offset(x: 6, y: -5)
+                        }
+                    }
                 Text(destination.rawValue.tr)
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
                     .foregroundStyle(AccountStyle.ink)

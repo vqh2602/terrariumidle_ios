@@ -18,6 +18,7 @@ enum AppRoute: Hashable {
     case storeItem(itemId: String)
     case accountView
     case eventView
+    case mailboxView
     case discoveryView
     case subscriptionView
 }
@@ -78,6 +79,8 @@ struct AppRouterView: View {
                         AccountView()
                     case .eventView:
                         EventView()
+                    case .mailboxView:
+                        MailboxView()
                     case .discoveryView:
                         DiscoveryView()
                     case .subscriptionView:
