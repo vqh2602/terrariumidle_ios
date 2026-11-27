@@ -628,6 +628,7 @@
 		36DB4EAF2F2B3D1B002A539B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconNoel AppIconHalloween AppIconWinter AppIconNeon AppIconWatercolor";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = terrariumidle_ios/terrariumidle_ios.entitlements;
@@ -664,6 +665,7 @@
 		36DB4EB02F2B3D1B002A539B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconNoel AppIconHalloween AppIconWinter AppIconNeon AppIconWatercolor";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = terrariumidle_ios/terrariumidle_ios.entitlements;
