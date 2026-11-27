@@ -140,6 +140,22 @@ struct AccountView: View {
         } message: {
             Text(viewModel.avatarErrorMessage ?? "Đã xảy ra lỗi khi tải ảnh lên.".tr)
         }
+        .alert(item: $viewModel.syncAlertStatus) { status in
+            switch status {
+            case .success:
+                Alert(
+                    title: Text("Đồng bộ dữ liệu thành công".tr),
+                    message: Text("Dữ liệu khu vườn của bạn đã được cập nhật mới nhất.".tr),
+                    dismissButton: .default(Text("Đóng".tr))
+                )
+            case .failure(let message):
+                Alert(
+                    title: Text("Đồng bộ dữ liệu thất bại".tr),
+                    message: Text(message),
+                    dismissButton: .default(Text("Đóng".tr))
+                )
+            }
+        }
     }
 
     private var header: some View {
@@ -183,9 +199,14 @@ struct AccountView: View {
             rowDivider
             SettingsRow(title: "Apple Watch", icon: "applewatch") { showWatchSettings = true }
             rowDivider
-            SettingsRow(title: "Đồng bộ dữ liệu".tr, icon: "arrow.triangle.2.circlepath") {
+            SettingsRow(
+                title: "Đồng bộ dữ liệu".tr,
+                icon: "arrow.triangle.2.circlepath",
+                trailingContent: viewModel.isSyncingData ? .value("Đang đồng bộ...".tr) : .chevron
+            ) {
                 viewModel.syncData()
             }
+            .disabled(viewModel.isSyncingData)
             rowDivider
             SettingsRow(
                 title: "Hiệu suất cao".tr, icon: "bolt.fill",
@@ -345,7 +366,7 @@ struct AccountView: View {
         VStack(spacing: 6) {
             Text("Nguồn tài nguyên đồ họa".tr)
                 .font(.system(.caption, design: .rounded, weight: .semibold))
-            Text("Hình ảnh của rattanachomphoo trên Magnific".tr)
+            Text("Image by magnific")
                 .font(.system(.caption2, design: .rounded))
         }
         .foregroundStyle(AccountStyle.muted)

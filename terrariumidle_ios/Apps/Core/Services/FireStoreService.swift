@@ -131,6 +131,21 @@ class FireStoreService: ObservableObject {
         }
     }
 
+    /// Đồng bộ thủ công dữ liệu khu vườn trực tiếp từ máy chủ Firestore.
+    func syncGardenData(userId: String) async throws -> GardenModel {
+        flushPendingUpdates()
+        let docRef = db.collection("users").document(userId)
+        let snapshot = try await docRef.getDocument(source: .server)
+        let dict = snapshot.data() ?? [:]
+        dataGraden = dict
+        let model = try GardenModel(dict: dict)
+        let sanitized = sanitizeGardenModel(model)
+        await MainActor.run {
+            self.gradenModel = sanitized
+        }
+        return sanitized
+    }
+
     // MARK: - Create User Data
 
     /// Tạo dữ liệu mặc định cho tài khoản mới

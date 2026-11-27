@@ -23,15 +23,38 @@ final class AccountViewModel: ObservableObject {
     @Published var showAvatarError: Bool = false
     @Published var activeHTMLDocument: AccountHTMLDocument?
     @Published var showSupportSheet: Bool = false
+    @Published var isSyncingData: Bool = false
+    @Published var syncAlertStatus: SyncAlertStatus?
+
+    enum SyncAlertStatus: Identifiable, Equatable {
+        case success
+        case failure(String)
+
+        var id: String {
+            switch self {
+            case .success: return "sync-success"
+            case .failure(let message): return "sync-failure-\(message)"
+            }
+        }
+    }
 
     // MARK: - Dependencies
 
     private let fireStore: FireStoreService = FireStoreService.shared
     private let auth: AuthService = AuthService.shared
+    private let userIdProvider: () -> String?
+    private let syncHandler: (String) async throws -> Void
 
     // MARK: - Init
 
-    init() {
+    init(
+        userIdProvider: (() -> String?)? = nil,
+        syncHandler: ((String) async throws -> Void)? = nil
+    ) {
+        self.userIdProvider = userIdProvider ?? { AuthService.shared.currentUser?.uid }
+        self.syncHandler = syncHandler ?? { userId in
+            _ = try await FireStoreService.shared.syncGardenData(userId: userId)
+        }
         // Load saved preferences
         loadPreferences()
     }
@@ -53,11 +76,26 @@ final class AccountViewModel: ObservableObject {
     // MARK: - Service Actions
 
     func syncData() {
-        print("Syncing data...")
         Task {
-            guard let userId = auth.currentUser?.uid else { return }
-            _ = await fireStore.getDataById(userId: userId)
-            print("Data synced successfully")
+            await performSyncData()
+        }
+    }
+
+    func performSyncData() async {
+        guard !isSyncingData else { return }
+        guard let userId = userIdProvider(), !userId.isEmpty else {
+            syncAlertStatus = .failure("Không tìm thấy thông tin tài khoản để đồng bộ.".tr)
+            return
+        }
+
+        isSyncingData = true
+        defer { isSyncingData = false }
+
+        do {
+            try await syncHandler(userId)
+            syncAlertStatus = .success
+        } catch {
+            syncAlertStatus = .failure("Không thể đồng bộ dữ liệu lúc này. Vui lòng kiểm tra kết nối mạng và thử lại.".tr)
         }
     }
 
