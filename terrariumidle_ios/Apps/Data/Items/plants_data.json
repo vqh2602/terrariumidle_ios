@@ -614,7 +614,7 @@
         "description": "Cây trúc phú quý (Lucky Bamboo) với những đốt thân xanh mướt vươn thẳng tắp, mang ý nghĩa bình an và tài lộc.",
         "image": "plant30-2@4.167x",
         "priceStore": 1000,
-        "priceOxygen": 35000,
+        "priceOxygen": 45000,
         "currencyUnit": "gemstone",
         "type": "plant",
         "effect": "",
@@ -628,5 +628,26 @@
         "effectLandscapeDescription": "",
         "effectSfx": "sfx11",
         "effectSfxDescription": "Tiếng dế"
+    },
+    {
+        "id": "plant31",
+        "name": "Lotus",
+        "description": "Hoa sen hồng (Lotus) thanh tao với những cánh hoa mềm mại và tán lá sen xanh mướt vươn mình nhẹ nhàng.",
+        "image": "plant31-1@4.167x",
+        "priceStore": 1000,
+        "priceOxygen": 55000,
+        "currencyUnit": "ticket",
+        "type": "plant",
+        "effect": "",
+        "itemTypeAttribute": "none",
+        "levelUnlock": 50,
+        "sound": "tap",
+        "effectDescription": "",
+        "music": "music9",
+        "musicDescription": "",
+        "effectLandscape": "",
+        "effectLandscapeDescription": "",
+        "effectSfx": "",
+        "effectSfxDescription": ""
     }
 ]

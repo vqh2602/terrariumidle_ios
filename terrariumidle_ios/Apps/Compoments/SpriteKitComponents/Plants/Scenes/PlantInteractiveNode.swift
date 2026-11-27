@@ -78,3 +78,4 @@ extension Plant27Node: PlantInteractiveNode {}
 extension Plant28Node: PlantInteractiveNode {}
 extension Plant29Node: PlantInteractiveNode {}
 extension Plant30Node: PlantInteractiveNode {}
+extension Plant31Node: PlantInteractiveNode {}
