@@ -19029,6 +19029,41 @@
         }
       }
     },
+    "Mở khóa tính năng Đổi chậu" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock Change Pot feature"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "鉢の変更機能をアンロック"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화분 변경 기능 잠금 해제"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở khóa tính năng Đổi chậu"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解锁更换花盆功能"
+          }
+        }
+      }
+    },
     "Mở khóa tầng %d" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -23344,6 +23379,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "状态栏 · 320pt"
+          }
+        }
+      }
+    },
+    "Thay đổi chậu mới cho cây đang trồng trực tiếp trong vườn (nhấn giữ cây → Đổi chậu) mà không cần xúc bỏ cây." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swap to a new pot for planted plants directly in your garden (long press plant → Change Pot) without digging them up."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "植えている植物を掘り起こすことなく、庭で直接新しい鉢に変更できます（植物を長押し → 鉢を変更）。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "심어진 식물을 파내지 않고 정원에서 바로 새 화분으로 바꿀 수 있어요(식물 길게 누르기 → 화분 변경)."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thay đổi chậu mới cho cây đang trồng trực tiếp trong vườn (nhấn giữ cây → Đổi chậu) mà không cần xúc bỏ cây."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无需挖出植物，直接在花园中为已种植的植物更换新花盆（长按植物 → 更换花盆）。"
           }
         }
       }

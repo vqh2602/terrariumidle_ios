@@ -619,6 +619,13 @@ struct SubscriptionView: View {
                     title: "Xịt hóa chất miễn phí 5 lần/ngày".tr,
                     detail: "Nhận 5 lượt xịt hóa chất miễn phí mỗi ngày (thay vì 1 lượt) để tiêu diệt toàn bộ sâu bọ bảo vệ cây trồng.".tr
                 )
+                Divider()
+                perkRow(
+                    icon: "arrow.triangle.2.circlepath",
+                    tint: Color(hex: "C07A53"),
+                    title: "Mở khóa tính năng Đổi chậu".tr,
+                    detail: "Thay đổi chậu mới cho cây đang trồng trực tiếp trong vườn (nhấn giữ cây → Đổi chậu) mà không cần xúc bỏ cây.".tr
+                )
             }
             .padding(18)
             .modifier(AccountPanel())
