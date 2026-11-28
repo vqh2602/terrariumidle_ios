@@ -365,7 +365,7 @@ struct OnboardingView: View {
     private var wildlifeIllustration: some View {
         VStack(spacing: 14) {
             HStack(spacing: 14) {
-                Image("greenmeshbag-1@4.167x")
+                Image.bundle("greenmeshbag-1@4.167x")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 58, height: 82)
@@ -374,11 +374,11 @@ struct OnboardingView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
-                        Image("bug1@2.083x")
+                        Image.bundle("bug1@2.083x")
                             .resizable()
                             .scaledToFit()
                             .frame(width: 30, height: 22)
-                        Image("grasshopper@2.083x")
+                        Image.bundle("grasshopper@2.083x")
                             .resizable()
                             .scaledToFit()
                             .frame(width: 32, height: 22)
@@ -389,7 +389,7 @@ struct OnboardingView: View {
                             .padding(.vertical, 4)
                             .background(AccountStyle.green.opacity(0.12), in: Capsule())
                     }
-                    Text("Chạm sâu trên cây: +300 Oxy & bắt vào túi. Khi túi đầy sâu sẽ rơi mất.".tr)
+                    Text("Chạm sâu trên cây: +50 Oxy & bắt vào túi. Khi túi đầy sâu sẽ rơi mất.".tr)
                         .font(.system(.caption, design: .rounded, weight: .medium))
                         .foregroundStyle(AccountStyle.muted)
                         .fixedSize(horizontal: false, vertical: true)

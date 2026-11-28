@@ -460,3 +460,11 @@ Mỗi Phong cảnh `LandscapeX` được đặt trong thư mục `Apps/Compoment
   * `TerrariumSlotScene.handleTap()` **BẮT BUỘC** gọi `AudioPlayer.shared.playClickSound(named: soundName)`.
   * `soundName` ưu tiên lấy từ thuộc tính `plant.clickSound` (mặc định `"tap"`), nếu ô không có cây (chỉ có chậu/sticker) thì fallback sang `pot.clickSound` hoặc `"tap"`.
 
+## Quy chuẩn Nạp Ảnh SwiftUI với Bản Build Mã Hóa Asset (`EncryptedResourceLoader` - BẮT BUỘC TUÂN THỦ)
+
+- Trong các bản build Release/mã hóa asset (`EncryptedVault/` + `scripts/encrypt_vault.swift`), ảnh trong `Assets.xcassets` được mã hóa AES-256-GCM vào `EncryptedVault/` và loại khỏi `Assets.car`.
+- `EncryptedResourceLoader` chỉ swizzle `UIImage(named:)` và `SKTexture(imageNamed:)`. Hàm khởi tạo `SwiftUI.Image("ten_anh")` đọc trực tiếp từ Asset Catalog của hệ thống nên sẽ **BỊ TRỐNG / KHÔNG HIỂN THỊ** ở bản build mã hóa asset.
+- **BẮT BUỘC** trong mọi SwiftUI View khi nạp ảnh asset nội bộ (ảnh tĩnh, icon cây/chậu/sâu bọ/vật phẩm):
+  * Dùng `Image.bundle("ten_anh")` (khai báo trong `EncryptedResourceLoader.swift`) hoặc `CachedAsyncImage(named: "ten_anh")`.
+  * **TUYỆT ĐỐI KHÔNG** dùng `Image("ten_anh")` trực tiếp cho các asset nằm trong `Assets.xcassets` (chỉ dùng `Image(systemName:)` cho SF Symbols).
+

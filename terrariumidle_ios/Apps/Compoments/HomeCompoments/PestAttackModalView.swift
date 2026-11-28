@@ -49,7 +49,7 @@ struct PestAttackModalView: View {
                     Image(systemName: "hand.tap.fill")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(AccountStyle.green)
-                    Text("Chạm vào sâu trên cây để bắt (+300 Oxy) hoặc dùng Xịt hóa chất!".tr)
+                    Text("Chạm vào sâu trên cây để bắt (+50 Oxy) hoặc dùng Xịt hóa chất!".tr)
                         .font(.system(.caption, design: .rounded, weight: .semibold))
                         .foregroundStyle(AccountStyle.ink.opacity(0.85))
                         .fixedSize(horizontal: false, vertical: true)
@@ -110,12 +110,12 @@ struct PestAttackModalView: View {
                         Circle().strokeBorder(Color(hex: "D95D39").opacity(0.35), lineWidth: 2)
                     }
                 HStack(spacing: -4) {
-                    Image("bug1@2.083x")
+                    Image.bundle("bug1@2.083x")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 30, height: 22)
                         .rotationEffect(.degrees(-10))
-                    Image("grasshopper@2.083x")
+                    Image.bundle("grasshopper@2.083x")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 32, height: 22)
@@ -171,7 +171,7 @@ struct PestAttackModalView: View {
 
     private func pestCountPill(imageName: String, count: Int) -> some View {
         HStack(spacing: 4) {
-            Image(imageName)
+            Image.bundle(imageName)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 18, height: 14)

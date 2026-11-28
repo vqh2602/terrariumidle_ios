@@ -917,7 +917,7 @@ class FireStoreService: ObservableObject {
         locallyRemovedPestIds.formUnion(pestIds)
     }
 
-    /// Tap tiêu diệt hoặc bắt sâu vào túi `Bugsnet` (nhận 300 oxygen/con).
+    /// Tap tiêu diệt hoặc bắt sâu vào túi `Bugsnet` (nhận 50 oxygen/con).
     @MainActor
     func resolvePestTap(pestId: String) -> (caughtInBag: Bool, oxygenGained: Int, pest: GardenPest)? {
         guard var garden = self.gradenModel,

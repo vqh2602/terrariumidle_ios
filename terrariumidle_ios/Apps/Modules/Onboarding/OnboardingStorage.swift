@@ -141,8 +141,8 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
                 Highlight(
                     icon: "ladybug.fill",
                     assetImage: "greenmeshbag-1@4.167x",
-                    title: "Túi Bugsnet & Bắt sâu (+300 Oxy)".tr,
-                    detail: "Sâu bọ làm cây tối màu và giảm 70% Oxy/EXP. Chạm sâu để nhận 300 Oxy và cất vào túi (tối đa 5 con).".tr
+                    title: "Túi Bugsnet & Bắt sâu (+50 Oxy)".tr,
+                    detail: "Sâu bọ làm cây tối màu và giảm 70% Oxy/EXP. Chạm sâu để nhận 50 Oxy và cất vào túi (tối đa 5 con).".tr
                 ),
                 Highlight(
                     icon: "aqi.medium",

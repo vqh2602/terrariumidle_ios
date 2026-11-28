@@ -133,7 +133,7 @@ struct GardenModel {
     static let maxBagCapacity = 5
     static let maxDailyVisitorPestDrops = 10
     static let visitorDropOxygenReward = 350
-    static let pestKillOxygenReward = 300
+    static let pestKillOxygenReward = 50
     static let pestPenaltyMultiplier = 0.3
     static let autoPestSpawnCooldown: TimeInterval = 55
     static let maxActiveAutoPests = 3
