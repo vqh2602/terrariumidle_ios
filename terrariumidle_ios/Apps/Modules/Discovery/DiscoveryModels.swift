@@ -58,12 +58,16 @@ struct VisitorGarden {
     let profile: DiscoveredProfile
     let topFloor: Int
     let slots: [String: Slot]
+    var pests: [GardenPest]
+    let capturedPests: [PestSpecies]
 
     init(documentID: String, data: [String: Any]) throws {
         guard let profile = DiscoveredProfile(documentID: documentID, data: data) else {
             throw DiscoveryError.unavailable
         }
         self.profile = profile
+        self.pests = (data["pests"] as? [[String: Any]] ?? []).compactMap { GardenPest(dict: $0) }
+        self.capturedPests = Array((data["capturedPests"] as? [String] ?? []).compactMap { PestSpecies(rawValue: $0) }.prefix(GardenModel.maxBagCapacity))
         // Phân tích cú pháp snapshot độc lập: tuyệt đối không chuẩn hoá hay phát tán qua store của chủ vườn.
         var indexed: [String: Slot] = [:]
         let plants = data["plants"] as? [Any] ?? []

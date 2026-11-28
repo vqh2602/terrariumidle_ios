@@ -24,6 +24,8 @@ struct PlantItemView: View {
     let cartPots: [String]
     let cartStickers: [String]
     var cartAnimals: [String] = []
+    var isInfested: Bool = false
+    var capturedPests: [PestSpecies] = []
     @Binding var isEditing: Bool
     @Binding var draggedPlant: DraggedPlantData?
     let onDrop: (Int, Int) -> Void
@@ -173,6 +175,7 @@ struct PlantItemView: View {
                         isHanging: isHanging,
                         width: itemWidth,
                         height: slotHeight,
+                        capturedPests: animalId == "animal3" ? capturedPests : [],
                         onTap: {
                             onAnimalTap?()
                         }
@@ -205,6 +208,7 @@ struct PlantItemView: View {
                     isHanging: isHanging,
                     width: itemWidth,
                     height: slotHeight,
+                    isInfested: isInfested,
                     onTap: {
                         handleDetailTap()
                     },
@@ -216,6 +220,22 @@ struct PlantItemView: View {
                 )
                 .id("\(plantData?.idPlant ?? "")-\(plantData?.idPot ?? "")-\(plantData?.plantLevel ?? 1)-\(isHanging)")
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isHanging ? .top : .bottom)
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if isInfested && !isStandaloneItem && !hasEmptyIds {
+                HStack(spacing: 3) {
+                    Image(systemName: "ladybug.fill")
+                        .font(.system(size: 9, weight: .bold))
+                    Text("-70%")
+                        .font(.system(size: 9, weight: .heavy, design: .rounded))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(Color(hex: "B83B2E").opacity(0.88), in: Capsule())
+                .padding(4)
+                .allowsHitTesting(false)
             }
         }
             .customContextMenu(menuItems: {

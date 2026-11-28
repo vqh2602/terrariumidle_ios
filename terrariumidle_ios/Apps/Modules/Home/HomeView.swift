@@ -70,6 +70,11 @@ struct HomeView: View {
     @State private var draggedPlant: DraggedPlantData? = nil
     @ObservedObject private var atmosphere = GardenAtmosphereManager.shared
     @StateObject private var beeCoordinator = GardenBeeSwarmCoordinator()
+    @State private var pestToastMessage: String? = nil
+    @State private var pestToastTask: Task<Void, Never>? = nil
+    @State private var showPestAttackAlert: Bool = false
+    @State private var pestAttackAlertMessage: String = ""
+    @State private var lastHandledSprayDeadline: TimeInterval = 0
 
     init() {
         // BGM và landscape được khởi tạo xuyên suốt 1 lần khi vào app, không reset khi chuyển màn hình hoặc re-render.
@@ -170,6 +175,8 @@ struct HomeView: View {
                                                         cartPots: fireStoreService.gradenModel?.cart.cartPots ?? [],
                                                         cartStickers: fireStoreService.gradenModel?.cart.cartStickers ?? [],
                                                         cartAnimals: fireStoreService.gradenModel?.cart.cartAnimals ?? [],
+                                                        isInfested: fireStoreService.gradenModel?.isPlantInfested(at: "\(rowIndex),\(columnIndex)") ?? false,
+                                                        capturedPests: fireStoreService.gradenModel?.capturedPests ?? [],
                                                         isEditing: $isEdit,
                                                         draggedPlant: $draggedPlant,
                                                         onDrop: handleDrop,
@@ -184,7 +191,10 @@ struct HomeView: View {
                                         }
                                         .frame(maxWidth: .infinity, alignment: .center)
                                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("gardenViewport")) } action: { rect in
-                                            guard beeCoordinator.hivePositionKey != nil || beeCoordinator.ladybugHomePositionKey != nil else { return }
+                                            guard beeCoordinator.hivePositionKey != nil
+                                                || beeCoordinator.ladybugHomePositionKey != nil
+                                                || beeCoordinator.bugsNetPositionKey != nil
+                                                || !beeCoordinator.activePests.isEmpty else { return }
                                             beeCoordinator.layout.calibrate(row: rowIndex, viewportMinY: rect.minY)
                                         }
                                         // SpriteKit particle zPositions cannot cross SwiftUI siblings.
@@ -280,8 +290,57 @@ struct HomeView: View {
                 onRetry: { reloadID += 1 }
             )
         }
-        .task(id: "weather-\(fireStoreService.gradenModel?.weatherUntil ?? 0)-\(scenePhase)-\(dataReady)") {
+        .task(id: "weather-\(fireStoreService.gradenModel?.weatherUntil ?? 0)-\(fireStoreService.gradenModel?.weatherKind.rawValue ?? "")-\(scenePhase)-\(dataReady)") {
+            if let garden = fireStoreService.gradenModel,
+               garden.weatherKind == .spray,
+               garden.weatherUntil > Date().timeIntervalSince1970,
+               lastHandledSprayDeadline != garden.weatherUntil {
+                lastHandledSprayDeadline = garden.weatherUntil
+                beeCoordinator.triggerChemicalSprayKillAll()
+                showPestToast("💨 Xịt hóa chất tiêu diệt toàn bộ sâu bọ!".tr)
+            }
             await runWeatherAutoTap()
+        }
+        .task(id: "autopest-\(dataReady)-\(scenePhase)-\(isEdit)-\(fireStoreService.gradenModel?.hasBugsNet ?? false)") {
+            guard dataReady,
+                  scenePhase == .active,
+                  !isEdit,
+                  fireStoreService.gradenModel?.hasBugsNet == true else { return }
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(for: .seconds(18))
+                    try Task.checkCancellation()
+                    fireStoreService.spawnAutoPestIfNeeded()
+                } catch {
+                    return
+                }
+            }
+        }
+        .onChange(of: pestNotificationKey) { _, _ in
+            presentPendingPestNotificationsIfNeeded()
+        }
+        .overlay(alignment: .bottom) {
+            if let toast = pestToastMessage {
+                Text(toast)
+                    .font(.system(.caption, design: .rounded, weight: .bold))
+                    .foregroundStyle(AccountStyle.ink)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .overlay { Capsule().strokeBorder(AccountStyle.border, lineWidth: 1) }
+                    .shadow(color: .black.opacity(0.08), radius: 8, y: 3)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 86)
+                    .allowsHitTesting(false)
+            }
+        }
+        .alert("Khu vườn bị thả sâu!".tr, isPresented: $showPestAttackAlert) {
+            Button("Đã hiểu".tr, role: .cancel) {
+                fireStoreService.clearPestNotifications()
+            }
+        } message: {
+            Text(pestAttackAlertMessage)
         }
         .task(id: reloadID) { await loadGarden() }
         .task(id: "load-\(reloadID)-\(dataReady)-\(backgroundReady)") {
@@ -323,9 +382,13 @@ struct HomeView: View {
     @MainActor
     private func runWeatherAutoTap() async {
         guard dataReady, scenePhase == .active,
+              let kind = fireStoreService.gradenModel?.weatherKind,
+              kind.autoTapsPlants,
               let deadline = fireStoreService.gradenModel?.weatherUntil else { return }
         while !Task.isCancelled, Date().timeIntervalSince1970 < deadline {
-            guard let garden = fireStoreService.gradenModel, garden.weatherUntil == deadline else { return }
+            guard let garden = fireStoreService.gradenModel,
+                  garden.weatherKind.autoTapsPlants,
+                  garden.weatherUntil == deadline else { return }
             // Award every planted socket, including floors outside the lazy scroll viewport.
             for plant in garden.weatherPlants {
                 fireStoreService.recordPlantTap(at: plant.position, plantId: plant.idPlant)
@@ -363,6 +426,7 @@ struct HomeView: View {
         atmosphere.initializeIfNeeded(gardenModel: fireStoreService.gradenModel)
         fireStoreService.realtimeChangeDataGraden(userId: userId)
         dataReady = true
+        presentPendingPestNotificationsIfNeeded()
 
         // Safety fallback: Đảm bảo không bị treo màn loading nếu SpriteKit view delay render
         Task { @MainActor in
@@ -395,18 +459,71 @@ struct HomeView: View {
 
     // MARK: - Helper Function
 
+    private var pestNotificationKey: String {
+        (fireStoreService.gradenModel?.pestNotifications ?? [])
+            .map(\.id)
+            .joined(separator: ",")
+    }
+
+    private func presentPendingPestNotificationsIfNeeded() {
+        guard dataReady,
+              !showPestAttackAlert,
+              let notifications = fireStoreService.gradenModel?.pestNotifications,
+              !notifications.isEmpty else { return }
+
+        var grouped: [String: (bug1: Int, grasshopper: Int)] = [:]
+        var senderOrder: [String] = []
+        for item in notifications {
+            if grouped[item.senderName] == nil {
+                senderOrder.append(item.senderName)
+            }
+            var counts = grouped[item.senderName] ?? (0, 0)
+            switch item.kind {
+            case .bug1: counts.bug1 += 1
+            case .grasshopper: counts.grasshopper += 1
+            }
+            grouped[item.senderName] = counts
+        }
+
+        let summaryLines = senderOrder.map { sender -> String in
+            let counts = grouped[sender] ?? (0, 0)
+            var parts: [String] = []
+            if counts.bug1 > 0 { parts.append("%d sâu xanh".tr(counts.bug1)) }
+            if counts.grasshopper > 0 { parts.append("%d châu chấu".tr(counts.grasshopper)) }
+            return "• %@: %@".tr(sender, parts.joined(separator: ", "))
+        }.joined(separator: "\n")
+
+        pestAttackAlertMessage = "Trong lúc bạn vắng mặt, khu vườn đã bị thả sâu:\n%@\n\nHãy chạm vào sâu trên cây để tiêu diệt (+300 Oxy) hoặc dùng Xịt hóa chất!".tr(summaryLines)
+        showPestAttackAlert = true
+    }
+
+    private func showPestToast(_ text: String) {
+        pestToastTask?.cancel()
+        pestToastMessage = text
+        pestToastTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2.4))
+            guard !Task.isCancelled else { return }
+            pestToastMessage = nil
+        }
+    }
+
     private var gardenBeeSyncKey: String {
         let floor = fireStoreService.gradenModel?.user.userFloor ?? 1
         let items = (fireStoreService.gradenModel?.plants ?? [])
             .map { "\($0.position):\($0.idPlant):\($0.idPot):\($0.isHanging)" }
             .sorted()
             .joined(separator: "|")
-        return "\(floor)#\(items)"
+        let pests = (fireStoreService.gradenModel?.pests ?? [])
+            .map { "\($0.id):\($0.position):\($0.kind.rawValue)" }
+            .sorted()
+            .joined(separator: "|")
+        return "\(floor)#\(items)#\(pests)"
     }
 
     private func syncGardenBees() {
         guard let garden = fireStoreService.gradenModel else {
-            beeCoordinator.syncGarden(hivePosition: nil, plantTargets: [], userFloors: 1)
+            beeCoordinator.onPestTapped = nil
+            beeCoordinator.syncGarden(hivePosition: nil, plantTargets: [], pests: [], userFloors: 1)
             return
         }
         var latestByPos: [String: GardenModel.Plant] = [:]
@@ -420,18 +537,36 @@ struct HomeView: View {
         let ladybugHome = validSlots.first(where: {
             $0.idPlant == "animal2" && $0.idPlant == $0.idPot && AnimalAvailability.isAvailable(animalId: $0.idPlant)
         })
+        let bugsNet = validSlots.first(where: {
+            $0.idPlant == "animal3" && $0.idPlant == $0.idPot && AnimalAvailability.isAvailable(animalId: $0.idPlant)
+        })
         let targets: [BeePlantTarget] = validSlots.compactMap { plant in
             guard plant.idPlant.hasPrefix("plant"), !plant.idPot.isEmpty,
                   let pos = PlantPosition(from: plant.position) else { return nil }
             let hanging = ItemDataManager.shared.getPlant(byId: plant.idPlant)?.itemTypeAttribute.isHanging ?? plant.isHanging
             return BeePlantTarget(positionKey: plant.position, row: pos.row, column: pos.column, isHanging: hanging)
         }
+        beeCoordinator.onPestTapped = { [weak fireStoreService] pest in
+            guard let fireStoreService,
+                  let result = fireStoreService.resolvePestTap(pestId: pest.id) else {
+                return false
+            }
+            if result.caughtInBag {
+                let count = fireStoreService.gradenModel?.capturedPests.count ?? 0
+                showPestToast("+%d 💨 · Đã bắt %@ vào túi (%d/5)".tr(result.oxygenGained, pest.kind.displayName, count))
+            } else {
+                showPestToast("+%d 💨 · Đã tiêu diệt %@".tr(result.oxygenGained, pest.kind.displayName))
+            }
+            return result.caughtInBag
+        }
         beeCoordinator.syncGarden(
             hivePosition: hive?.position,
             ladybugHomePosition: ladybugHome?.position,
+            bugsNetPosition: bugsNet?.position,
             plantTargets: targets,
+            pests: garden.pests,
             userFloors: garden.user.userFloor,
-            animalId: hive?.idPlant ?? ladybugHome?.idPlant ?? "animal1"
+            animalId: hive?.idPlant ?? ladybugHome?.idPlant ?? bugsNet?.idPlant ?? "animal1"
         )
     }
 

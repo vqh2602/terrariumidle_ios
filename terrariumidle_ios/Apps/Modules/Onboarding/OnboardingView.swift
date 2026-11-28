@@ -220,6 +220,8 @@ struct OnboardingView: View {
             careIllustration
         case .gardenMenu:
             gardenMenuIllustration
+        case .wildlife:
+            wildlifeIllustration
         case .relax:
             relaxIllustration
         }
@@ -354,6 +356,51 @@ struct OnboardingView: View {
             }
             .padding(12)
             .background(AccountStyle.green.opacity(0.07), in: RoundedRectangle(cornerRadius: 16))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(18)
+        .modifier(AccountPanel())
+    }
+
+    private var wildlifeIllustration: some View {
+        VStack(spacing: 14) {
+            HStack(spacing: 14) {
+                Image("greenmeshbag-1@4.167x")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 58, height: 82)
+                    .padding(8)
+                    .background(AccountStyle.green.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Image("bug1@2.083x")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 30, height: 22)
+                        Image("grasshopper@2.083x")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 32, height: 22)
+                        Text("Túi 0/5".tr)
+                            .font(.system(.caption2, design: .rounded, weight: .bold))
+                            .foregroundStyle(AccountStyle.green)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(AccountStyle.green.opacity(0.12), in: Capsule())
+                    }
+                    Text("Chạm sâu trên cây: +300 Oxy & bắt vào túi. Khi túi đầy sâu sẽ rơi mất.".tr)
+                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .foregroundStyle(AccountStyle.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            HStack(spacing: 8) {
+                miniBadgePill(icon: "aqi.medium", text: "Xịt hóa chất 5s".tr)
+                miniBadgePill(icon: "ladybug.fill", text: "Thả sâu +350 💨".tr)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(18)

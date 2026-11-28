@@ -21,6 +21,8 @@ public enum AnimalFactory {
             return Animal1Node(containerSize: containerSize, isHanging: isHanging)
         case "animal2":
             return Animal2Node(containerSize: containerSize, isHanging: isHanging)
+        case "animal3":
+            return Animal3Node(containerSize: containerSize, isHanging: isHanging)
         default:
             return Animal1Node(containerSize: containerSize, isHanging: isHanging)
         }

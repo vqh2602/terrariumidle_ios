@@ -7,9 +7,137 @@
 
 import Foundation
 
+// MARK: - Garden Pest & Notification Models
+
+struct GardenPest: Identifiable, Equatable, Codable {
+    enum Source: String, Codable, Equatable {
+        case auto
+        case visitor
+    }
+
+    let id: String
+    let kind: PestSpecies
+    let position: String
+    let plantId: String
+    let source: Source
+    let senderId: String?
+    let senderName: String?
+    let createdAt: TimeInterval
+
+    init(
+        id: String = UUID().uuidString,
+        kind: PestSpecies,
+        position: String,
+        plantId: String,
+        source: Source,
+        senderId: String? = nil,
+        senderName: String? = nil,
+        createdAt: TimeInterval = Date().timeIntervalSince1970
+    ) {
+        self.id = id
+        self.kind = kind
+        self.position = position
+        self.plantId = plantId
+        self.source = source
+        self.senderId = senderId
+        self.senderName = senderName
+        self.createdAt = createdAt
+    }
+
+    init?(dict: [String: Any]) {
+        guard let id = dict["id"] as? String, !id.isEmpty,
+              let kindRaw = dict["kind"] as? String,
+              let kind = PestSpecies(rawValue: kindRaw),
+              let position = dict["position"] as? String, !position.isEmpty else {
+            return nil
+        }
+        self.id = id
+        self.kind = kind
+        self.position = position
+        self.plantId = (dict["plantId"] as? String) ?? ""
+        self.source = Source(rawValue: (dict["source"] as? String) ?? "auto") ?? .auto
+        self.senderId = dict["senderId"] as? String
+        self.senderName = dict["senderName"] as? String
+        self.createdAt = (dict["createdAt"] as? NSNumber)?.doubleValue ?? 0
+    }
+
+    func toDictionary() -> [String: Any] {
+        var dict: [String: Any] = [
+            "id": id,
+            "kind": kind.rawValue,
+            "position": position,
+            "plantId": plantId,
+            "source": source.rawValue,
+            "createdAt": createdAt
+        ]
+        if let senderId { dict["senderId"] = senderId }
+        if let senderName { dict["senderName"] = senderName }
+        return dict
+    }
+}
+
+struct GardenPestNotification: Identifiable, Equatable, Codable {
+    let id: String
+    let senderId: String
+    let senderName: String
+    let kind: PestSpecies
+    let position: String
+    let createdAt: TimeInterval
+
+    init(
+        id: String = UUID().uuidString,
+        senderId: String,
+        senderName: String,
+        kind: PestSpecies,
+        position: String,
+        createdAt: TimeInterval = Date().timeIntervalSince1970
+    ) {
+        self.id = id
+        self.senderId = senderId
+        self.senderName = senderName
+        self.kind = kind
+        self.position = position
+        self.createdAt = createdAt
+    }
+
+    init?(dict: [String: Any]) {
+        guard let id = dict["id"] as? String, !id.isEmpty,
+              let kindRaw = dict["kind"] as? String,
+              let kind = PestSpecies(rawValue: kindRaw) else {
+            return nil
+        }
+        self.id = id
+        self.senderId = (dict["senderId"] as? String) ?? ""
+        let rawName = (dict["senderName"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        self.senderName = rawName.isEmpty ? "Người chơi khác".tr : rawName
+        self.kind = kind
+        self.position = (dict["position"] as? String) ?? ""
+        self.createdAt = (dict["createdAt"] as? NSNumber)?.doubleValue ?? 0
+    }
+
+    func toDictionary() -> [String: Any] {
+        [
+            "id": id,
+            "senderId": senderId,
+            "senderName": senderName,
+            "kind": kind.rawValue,
+            "position": position,
+            "createdAt": createdAt
+        ]
+    }
+}
+
 // MARK: - Model
 
 struct GardenModel {
+    static let maxBagCapacity = 5
+    static let maxDailyVisitorPestDrops = 10
+    static let visitorDropOxygenReward = 350
+    static let pestKillOxygenReward = 300
+    static let pestPenaltyMultiplier = 0.3
+    static let autoPestSpawnCooldown: TimeInterval = 55
+    static let maxActiveAutoPests = 3
+
     let isBan: Int
     let isServerUpdate: Int
 
@@ -25,6 +153,14 @@ struct GardenModel {
     var weatherUntil: TimeInterval = 0
     var weatherKind: WeatherKind = .rain
     var vipStatus: VIPStatus = VIPStatus()
+    var pests: [GardenPest] = []
+    var capturedPests: [PestSpecies] = []
+    var pestNotifications: [GardenPestNotification] = []
+    var sprayUsageDate: String = ""
+    var sprayUsageCount: Int = 0
+    var pestDropDate: String = ""
+    var pestDropCount: Int = 0
+    var lastAutoPestSpawnAt: TimeInterval = 0
 
     struct VIPStatus: Equatable {
         var isActive: Bool = false
@@ -154,20 +290,54 @@ extension GardenModel {
     }
 }
 
-// MARK: - Garden weather
+// MARK: - Garden weather & Pests
 
 extension GardenModel {
     enum WeatherKind: String, CaseIterable, Identifiable {
-        case rain, wind
+        case rain, wind, spray
 
         var id: Self { self }
-        var title: String { self == .rain ? "Mưa".tr : "Gió".tr }
-        var icon: String { self == .rain ? "cloud.rain.fill" : "wind" }
+
+        var title: String {
+            switch self {
+            case .rain: return "Mưa".tr
+            case .wind: return "Gió".tr
+            case .spray: return "Xịt hóa chất".tr
+            }
+        }
+
+        var icon: String {
+            switch self {
+            case .rain: return "cloud.rain.fill"
+            case .wind: return "wind"
+            case .spray: return "aqi.medium"
+            }
+        }
+
         var soundFileName: String {
             switch self {
             case .rain: return "mixkit-light-rain-loop-2393"
             case .wind: return "mixkit-wind-in-the-forest-loop-1233"
+            case .spray: return "soundreality-spray-178360"
             }
+        }
+
+        var soundFileExtension: String {
+            switch self {
+            case .rain, .wind: return "wav"
+            case .spray: return "mp3"
+            }
+        }
+
+        var duration: TimeInterval {
+            switch self {
+            case .rain, .wind: return 60
+            case .spray: return 5
+            }
+        }
+
+        var autoTapsPlants: Bool {
+            self != .spray
         }
     }
 
@@ -184,14 +354,82 @@ extension GardenModel {
         }
     }
 
-    mutating func startWeather(_ kind: WeatherKind, now: TimeInterval) -> WeatherResult {
+    static func todayDateKey(date: Date = Date()) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar.current
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+
+    static func sprayFreeLimit(isVIP: Bool) -> Int {
+        isVIP ? 5 : 1
+    }
+
+    func usedFreeSpraysToday(now: Date = Date()) -> Int {
+        let today = Self.todayDateKey(date: now)
+        return sprayUsageDate == today ? max(0, sprayUsageCount) : 0
+    }
+
+    func remainingFreeSprays(isVIP: Bool, now: Date = Date()) -> Int {
+        let limit = Self.sprayFreeLimit(isVIP: isVIP)
+        return max(0, limit - usedFreeSpraysToday(now: now))
+    }
+
+    func usedVisitorPestDropsToday(now: Date = Date()) -> Int {
+        let today = Self.todayDateKey(date: now)
+        return pestDropDate == today ? max(0, pestDropCount) : 0
+    }
+
+    func remainingVisitorPestDrops(now: Date = Date()) -> Int {
+        max(0, Self.maxDailyVisitorPestDrops - usedVisitorPestDropsToday(now: now))
+    }
+
+    var bugsNetPosition: String? {
+        var latestByPos: [String: Plant] = [:]
+        for plant in plants where !plant.idPlant.isEmpty && !plant.idPot.isEmpty {
+            latestByPos[plant.position] = plant
+        }
+        return latestByPos.values.first(where: { $0.idPlant == "animal3" && $0.idPot == "animal3" })?.position
+    }
+
+    var hasBugsNet: Bool {
+        bugsNetPosition != nil
+    }
+
+    func isPlantInfested(at position: String) -> Bool {
+        pests.contains { $0.position == position }
+    }
+
+    mutating func startWeather(_ kind: WeatherKind, isVIP: Bool = false, now: TimeInterval, date: Date = Date()) -> WeatherResult {
         guard weatherUntil <= now else { return .alreadyActive }
-        guard !weatherPlants.isEmpty else { return .noPlants }
-        guard money.ticket >= 1 else { return .insufficientTickets }
-        money.ticket -= 1
-        weatherKind = kind
-        weatherUntil = now + 60
-        return .started
+        if kind == .spray {
+            guard !weatherPlants.isEmpty || !pests.isEmpty else { return .noPlants }
+            let today = Self.todayDateKey(date: date)
+            if sprayUsageDate != today {
+                sprayUsageDate = today
+                sprayUsageCount = 0
+            }
+            let freeRemaining = Self.sprayFreeLimit(isVIP: isVIP) - sprayUsageCount
+            if freeRemaining <= 0 {
+                guard money.ticket >= 1 else { return .insufficientTickets }
+                money.ticket -= 1
+            }
+            sprayUsageCount += 1
+            weatherKind = .spray
+            weatherUntil = now + kind.duration
+            // Xịt hóa chất tiêu diệt toàn bộ côn trùng và không thu thập vào túi
+            pests.removeAll()
+            return .started
+        } else {
+            guard !weatherPlants.isEmpty else { return .noPlants }
+            guard money.ticket >= 1 else { return .insufficientTickets }
+            money.ticket -= 1
+            weatherKind = kind
+            weatherUntil = now + kind.duration
+            return .started
+        }
     }
 }
 
@@ -253,6 +491,18 @@ extension GardenModel {
         if let vipDict = dict["vip"] as? [String: Any] {
             vipStatus = VIPStatus(dict: vipDict)
         }
+        pests = (dict["pests"] as? [[String: Any]] ?? []).compactMap { GardenPest(dict: $0) }
+        capturedPests = Array((dict["capturedPests"] as? [String] ?? []).compactMap { PestSpecies(rawValue: $0) }.prefix(Self.maxBagCapacity))
+        pestNotifications = (dict["pestNotifications"] as? [[String: Any]] ?? []).compactMap { GardenPestNotification(dict: $0) }
+        if let sprayDict = dict["sprayUsage"] as? [String: Any] {
+            sprayUsageDate = (sprayDict["date"] as? String) ?? ""
+            sprayUsageCount = (sprayDict["count"] as? NSNumber)?.intValue ?? 0
+        }
+        if let dropDict = dict["pestDropLog"] as? [String: Any] {
+            pestDropDate = (dropDict["date"] as? String) ?? ""
+            pestDropCount = (dropDict["count"] as? NSNumber)?.intValue ?? 0
+        }
+        lastAutoPestSpawnAt = (dict["lastAutoPestSpawnAt"] as? NSNumber)?.doubleValue ?? 0
         user = try UserProfile(dict: dict.dict("user"))
 
         let plantsAny = dict.array("plants")
@@ -431,6 +681,17 @@ extension GardenModel {
             "user": user.toDictionary(),
             "plants": plants.map { $0.toDictionary() },
             "vip": vipStatus.toDictionary(),
+            "pests": pests.map { $0.toDictionary() },
+            "capturedPests": Array(capturedPests.prefix(Self.maxBagCapacity)).map(\.rawValue),
+            "sprayUsage": [
+                "date": sprayUsageDate,
+                "count": sprayUsageCount
+            ],
+            "pestDropLog": [
+                "date": pestDropDate,
+                "count": pestDropCount
+            ],
+            "lastAutoPestSpawnAt": lastAutoPestSpawnAt
         ]
     }
 }

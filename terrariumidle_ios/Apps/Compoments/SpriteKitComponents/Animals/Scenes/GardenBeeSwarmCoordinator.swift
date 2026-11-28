@@ -121,6 +121,25 @@ public final class GardenSlotLayoutTracker {
         return worldPoint(contentX: cx, contentTopDownY: cy)
     }
 
+    /// Điểm tâm bụng túi lưới `animal3` trong `worldNode`
+    public func bagPocketWorldPoint(for positionKey: String) -> CGPoint? {
+        guard let (row, col) = Self.parsePosition(positionKey),
+              let rowTopY = contentTopY(forRow: row) else { return nil }
+        let offset = Animal3Node.bagPocketOffsetFromSlotTop(slotSize: slotSize)
+        let cx = contentX(forColumn: col) + offset.x
+        let cy = rowTopY + offset.y
+        return worldPoint(contentX: cx, contentTopDownY: cy)
+    }
+
+    /// Điểm tán cây để sâu/châu chấu bám và bò qua lại trong `worldNode`
+    public func pestPlantWorldPoint(for target: BeePlantTarget) -> CGPoint? {
+        guard let rowTopY = contentTopY(forRow: target.row) else { return nil }
+        let fracY: CGFloat = target.isHanging ? 0.56 : 0.62
+        let cx = contentX(forColumn: target.column)
+        let cy = rowTopY + slotSize.height * fracY
+        return worldPoint(contentX: cx, contentTopDownY: cy)
+    }
+
     /// Điểm tán lá cây để bọ rùa đáp xuống và bò trên lá trong `worldNode`
     public func plantLeafWorldPoint(for target: BeePlantTarget) -> CGPoint? {
         guard let rowTopY = contentTopY(forRow: target.row) else { return nil }
@@ -167,7 +186,12 @@ public final class GardenBeeSwarmCoordinator: ObservableObject {
     public private(set) var animalId: String = "animal1"
     public private(set) var hivePositionKey: String?
     public private(set) var ladybugHomePositionKey: String?
+    public private(set) var bugsNetPositionKey: String?
     public private(set) var plantTargets: [BeePlantTarget] = []
+    public private(set) var activePests: [GardenPest] = []
+
+    /// Callback khi người dùng chạm vào một con sâu/châu chấu trên cây; trả về `true` nếu bắt được vào túi Bugsnet
+    public var onPestTapped: ((GardenPest) -> Bool)?
 
     weak var overlayScene: GardenBeeOverlayScene?
 
@@ -176,7 +200,9 @@ public final class GardenBeeSwarmCoordinator: ObservableObject {
     public func syncGarden(
         hivePosition: String?,
         ladybugHomePosition: String? = nil,
+        bugsNetPosition: String? = nil,
         plantTargets: [BeePlantTarget],
+        pests: [GardenPest] = [],
         userFloors: Int,
         animalId: String = "animal1"
     ) {
@@ -185,12 +211,23 @@ public final class GardenBeeSwarmCoordinator: ObservableObject {
 
         let changedHive = (self.hivePositionKey != resolvedHive) || (self.animalId != animalId)
         let changedLadybug = (self.ladybugHomePositionKey != resolvedLadybug)
+        let changedPests = (self.activePests != pests)
         self.animalId = animalId
         self.hivePositionKey = resolvedHive
         self.ladybugHomePositionKey = resolvedLadybug
+        self.bugsNetPositionKey = bugsNetPosition
         self.plantTargets = plantTargets
+        self.activePests = pests
         self.layout.userFloors = userFloors
-        overlayScene?.syncSwarmConfiguration(hiveChanged: changedHive, ladybugChanged: changedLadybug)
+        overlayScene?.syncSwarmConfiguration(
+            hiveChanged: changedHive,
+            ladybugChanged: changedLadybug,
+            pestsChanged: changedPests
+        )
+    }
+
+    public func triggerChemicalSprayKillAll() {
+        overlayScene?.sprayKillAllPests()
     }
 
     /// Khi người dùng click vào tổ ong: nếu hiện không có chú ong nào ngoài vườn thì thả ra 1 chú ong đi lấy mật
@@ -224,6 +261,9 @@ public final class GardenBeeOverlayScene: SKScene {
     private var ladybug: LazybugAgentNode?
     private var ladybugNeedsInitialPlacement: Bool = false
     private var ladybugTimerWorkItem: DispatchWorkItem?
+
+    private var pestNodes: [String: PestAgentNode] = [:]
+    private var pestsNeedingPlacement: Set<String> = []
 
     var isEditing: Bool = false {
         didSet {
@@ -285,12 +325,12 @@ public final class GardenBeeOverlayScene: SKScene {
     public override func didMove(to view: SKView) {
         super.didMove(to: view)
         view.allowsTransparency = true
-        syncSwarmConfiguration(hiveChanged: true, ladybugChanged: true)
+        syncSwarmConfiguration(hiveChanged: true, ladybugChanged: true, pestsChanged: true)
     }
 
     // MARK: - Configuration & Pool
 
-    func syncSwarmConfiguration(hiveChanged: Bool, ladybugChanged: Bool = false) {
+    func syncSwarmConfiguration(hiveChanged: Bool, ladybugChanged: Bool = false, pestsChanged: Bool = false) {
         guard let coordinator else { return }
 
         if coordinator.hivePositionKey == nil {
@@ -340,7 +380,74 @@ public final class GardenBeeOverlayScene: SKScene {
             scheduleNextLadybugAction(delay: Double.random(in: 5.0...9.0))
         }
 
+        if pestsChanged || pestNodes.count != coordinator.activePests.count {
+            syncActivePestNodes()
+        }
+
         refreshActiveRenderingState()
+    }
+
+    private func syncActivePestNodes() {
+        guard let coordinator else { return }
+        let targetMap = Dictionary(uniqueKeysWithValues: coordinator.activePests.map { ($0.id, $0) })
+
+        // Xóa những sâu không còn trong danh sách (trừ node đang chạy hiệu ứng bay vào túi / rơi xuống)
+        for (id, node) in pestNodes where targetMap[id] == nil {
+            if !node.isDisposed {
+                node.removeAllActions()
+                node.removeFromParent()
+            }
+            pestNodes.removeValue(forKey: id)
+            pestsNeedingPlacement.remove(id)
+        }
+
+        let slotW = coordinator.layout.slotSize.width > 0 ? coordinator.layout.slotSize.width : 110.0
+        let pestWidth = max(28.0, min(38.0, slotW * 0.30))
+
+        for pest in coordinator.activePests {
+            if let existing = pestNodes[pest.id] {
+                if existing.plantPositionKey != pest.position {
+                    pestsNeedingPlacement.insert(pest.id)
+                }
+                continue
+            }
+            let node = PestAgentNode(
+                pestId: pest.id,
+                species: pest.kind,
+                plantPositionKey: pest.position,
+                displayWidth: pestWidth
+            )
+            node.zPosition = 315
+            worldNode.addChild(node)
+            pestNodes[pest.id] = node
+            placePestIfPossible(node: node, pest: pest)
+        }
+    }
+
+    private func placePestIfPossible(node: PestAgentNode, pest: GardenPest) {
+        guard let coordinator else { return }
+        if coordinator.layout.isCalibrated,
+           let target = coordinator.plantTargets.first(where: { $0.positionKey == pest.position }),
+           let anchor = coordinator.layout.pestPlantWorldPoint(for: target) {
+            node.isHidden = false
+            let spreadX = max(12.0, coordinator.layout.slotSize.width * 0.16)
+            node.startPatrolOnPlant(center: anchor, spreadX: spreadX, spreadY: 7.0)
+            pestsNeedingPlacement.remove(pest.id)
+        } else {
+            node.isHidden = true
+            pestsNeedingPlacement.insert(pest.id)
+        }
+    }
+
+    func sprayKillAllPests() {
+        let activeNodes = Array(pestNodes.values)
+        pestNodes.removeAll()
+        pestsNeedingPlacement.removeAll()
+        for node in activeNodes where !node.isDisposed {
+            node.animateFallAndDisappear(isSpray: true) { [weak self] in
+                self?.refreshActiveRenderingState()
+            }
+        }
     }
 
     private func removeLadybug() {
@@ -381,7 +488,8 @@ public final class GardenBeeOverlayScene: SKScene {
     private func refreshActiveRenderingState() {
         let hasHive = coordinator?.hivePositionKey != nil
         let hasLadybug = coordinator?.ladybugHomePositionKey != nil
-        let shouldRun = !isEditing && !isScenePausedByLifecycle && ((hasHive && activeBeeCount > 0) || hasLadybug)
+        let hasPests = !pestNodes.isEmpty || worldNode.children.contains { ($0 as? PestAgentNode) != nil }
+        let shouldRun = !isEditing && !isScenePausedByLifecycle && ((hasHive && activeBeeCount > 0) || hasLadybug || hasPests)
         worldNode.isHidden = !shouldRun
         self.isPaused = !shouldRun
         if shouldRun, let coordinator {
@@ -451,6 +559,18 @@ public final class GardenBeeOverlayScene: SKScene {
                 }
             } else if bug.behaviorState == .flyingToPlant || bug.behaviorState == .flyingBetweenPlants || bug.behaviorState == .flyingHome {
                 bug.syncFacingToHorizontalMotion()
+            }
+        }
+
+        if !pestNodes.isEmpty {
+            for pest in coordinator.activePests {
+                guard let node = pestNodes[pest.id], !node.isDisposed else { continue }
+                if pestsNeedingPlacement.contains(pest.id) {
+                    placePestIfPossible(node: node, pest: pest)
+                } else if let target = coordinator.plantTargets.first(where: { $0.positionKey == pest.position }),
+                          let anchor = coordinator.layout.pestPlantWorldPoint(for: target) {
+                    node.updatePatrolAnchor(center: anchor)
+                }
             }
         }
     }
@@ -658,7 +778,27 @@ public final class GardenBeeOverlayScene: SKScene {
     func hasTappableBee(atViewPoint viewPoint: CGPoint) -> Bool {
         guard !isEditing, !isScenePausedByLifecycle else { return false }
         let scenePoint = convertPoint(fromView: viewPoint)
+        if coordinator?.onPestTapped != nil, findTappablePest(atScenePoint: scenePoint) != nil {
+            return true
+        }
         return findTappableBee(atScenePoint: scenePoint) != nil || findTappableLadybug(atScenePoint: scenePoint) != nil
+    }
+
+    private func findTappablePest(atScenePoint scenePoint: CGPoint) -> PestAgentNode? {
+        let worldPoint = convert(scenePoint, to: worldNode)
+        var closest: (pest: PestAgentNode, dist: CGFloat)?
+
+        for pest in pestNodes.values {
+            guard !pest.isHidden, !pest.isDisposed else { continue }
+            let hitRadius = max(34.0, pest.displayWidth * 1.4)
+            let d = hypot(worldPoint.x - pest.position.x, worldPoint.y - pest.position.y)
+            if d <= hitRadius {
+                if closest == nil || d < closest!.dist {
+                    closest = (pest, d)
+                }
+            }
+        }
+        return closest?.pest
     }
 
     private func findTappableLadybug(atScenePoint scenePoint: CGPoint) -> LazybugAgentNode? {
@@ -694,6 +834,31 @@ public final class GardenBeeOverlayScene: SKScene {
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first, let coordinator else { return }
         let scenePoint = touch.location(in: self)
+
+        if let pestHandler = coordinator.onPestTapped,
+           let pestNode = findTappablePest(atScenePoint: scenePoint),
+           let pestModel = coordinator.activePests.first(where: { $0.id == pestNode.pestId }) {
+            let soundName = ItemDataManager.shared.getAnimal(byId: "animal3")?.childClickSound(for: pestModel.kind.rawValue)
+                ?? "virtual_vibes-pop-tap-click-fx-383733"
+            AudioPlayer.shared.playClickSound(named: soundName)
+
+            let caughtInBag = pestHandler(pestModel)
+            pestNodes.removeValue(forKey: pestModel.id)
+            pestsNeedingPlacement.remove(pestModel.id)
+
+            if caughtInBag,
+               let bagKey = coordinator.bugsNetPositionKey,
+               let bagPt = coordinator.layout.bagPocketWorldPoint(for: bagKey) {
+                pestNode.animateFlyIntoBag(to: bagPt) { [weak self] in
+                    self?.refreshActiveRenderingState()
+                }
+            } else {
+                pestNode.animateFallAndDisappear(isSpray: false) { [weak self] in
+                    self?.refreshActiveRenderingState()
+                }
+            }
+            return
+        }
 
         if let bug = findTappableLadybug(atScenePoint: scenePoint) {
             cancelLadybugTimer()

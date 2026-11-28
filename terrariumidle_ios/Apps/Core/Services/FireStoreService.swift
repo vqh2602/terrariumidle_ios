@@ -24,6 +24,7 @@ class FireStoreService: ObservableObject {
     private var isClaimingSleepReward = false
     private let eventOxygenLock = NSLock()
     private var pendingEventOxygen: Int = 0
+    private var locallyRemovedPestIds: Set<String> = []
 
     func recordEventOxygen(_ amount: Int) {
         guard amount > 0 else { return }
@@ -48,6 +49,7 @@ class FireStoreService: ObservableObject {
         gradenModel = nil
         dataGraden = nil
         currentUser = nil
+        locallyRemovedPestIds.removeAll()
         _ = consumePendingEventOxygen()
     }
 
@@ -288,10 +290,18 @@ class FireStoreService: ObservableObject {
             level: currentLevel, plantId: plant.idPlant, potId: plant.idPot
         )
         let isVIP = SubscriptionManager.isVIP(gardenModel: garden)
-        let oxygenDrop = isVIP
+        let vipAdjustedOxygen = isVIP
             ? Int((Double(baseOxygenDrop) * 1.5).rounded())
             : baseOxygenDrop
-        let expGain = Self.tapExpGain(isVIP: isVIP)
+        let baseExpGain = Self.tapExpGain(isVIP: isVIP)
+
+        let isInfested = garden.isPlantInfested(at: targetPos)
+        let oxygenDrop = isInfested
+            ? max(1, Int((Double(vipAdjustedOxygen) * GardenModel.pestPenaltyMultiplier).rounded()))
+            : vipAdjustedOxygen
+        let expGain = isInfested
+            ? max(1, Int((Double(baseExpGain) * GardenModel.pestPenaltyMultiplier).rounded()))
+            : baseExpGain
 
         // 1. Tăng oxy
         garden.money.oxygen += oxygenDrop
@@ -523,13 +533,15 @@ class FireStoreService: ObservableObject {
             let docRef = db.collection("users").document(userId)
             // Protect sleep credits from garden snapshots created before the reward transaction.
             let payload = updateData
+            let removedIds = await MainActor.run { self.locallyRemovedPestIds }
             try await GardenWriteQueue.shared.perform {
                 _ = try await self.db.runTransaction { transaction, errorPointer -> Any? in
                     do {
                         let snapshot = try transaction.getDocument(docRef)
-                        let remoteCredit = (snapshot.data()?["sleepRewardOxygen"] as? NSNumber)?.intValue ?? 0
-                        let remoteGems = (snapshot.data()?["sleepRewardGems"] as? NSNumber)?.intValue ?? 0
-                        let remoteTickets = (snapshot.data()?["sleepRewardTickets"] as? NSNumber)?.intValue ?? 0
+                        let remoteData = snapshot.data()
+                        let remoteCredit = (remoteData?["sleepRewardOxygen"] as? NSNumber)?.intValue ?? 0
+                        let remoteGems = (remoteData?["sleepRewardGems"] as? NSNumber)?.intValue ?? 0
+                        let remoteTickets = (remoteData?["sleepRewardTickets"] as? NSNumber)?.intValue ?? 0
                         var protectedPayload = payload
                         if var money = protectedPayload["money"] as? [String: Any] {
                             // A delayed snapshot must not erase a reward credited since it was created.
@@ -538,6 +550,19 @@ class FireStoreService: ObservableObject {
                             money["ticket"] = gardenModel.money.ticket + max(0, remoteTickets - gardenModel.sleepRewardTickets)
                             protectedPayload["money"] = money
                         }
+
+                        // Preserve remote visitor-dropped pests that arrived concurrently and were not removed locally.
+                        let remotePests = (remoteData?["pests"] as? [[String: Any]] ?? []).compactMap { GardenPest(dict: $0) }
+                        var mergedPests = gardenModel.pests
+                        var seenPestIds = Set(mergedPests.map(\.id))
+                        for remotePest in remotePests where remotePest.source == .visitor {
+                            if !seenPestIds.contains(remotePest.id) && !removedIds.contains(remotePest.id) {
+                                mergedPests.append(remotePest)
+                                seenPestIds.insert(remotePest.id)
+                            }
+                        }
+                        protectedPayload["pests"] = mergedPests.map { $0.toDictionary() }
+
                         transaction.setData(protectedPayload, forDocument: docRef, merge: true)
                         return nil
                     } catch {
@@ -545,6 +570,9 @@ class FireStoreService: ObservableObject {
                         return nil
                     }
                 }
+            }
+            await MainActor.run {
+                self.locallyRemovedPestIds.subtract(removedIds)
             }
             print("✅ Update Firestore thành công cho user: \(gardenModel.user.userName)")
             let eventOxygenDelta = consumePendingEventOxygen()
@@ -770,6 +798,233 @@ class FireStoreService: ObservableObject {
         }
 
         return credited
+    }
+
+    // MARK: - Pest & Bugsnet Management
+
+    enum VisitorPestDropError: LocalizedError {
+        case signInRequired
+        case ownGarden
+        case dailyLimitReached
+        case noPlantsAvailable
+        case allPlantsInfested
+        case unavailable
+
+        var errorDescription: String? {
+            switch self {
+            case .signInRequired:
+                return "Vui lòng đăng nhập để thả sâu.".tr
+            case .ownGarden:
+                return "Bạn không thể thả sâu vào khu vườn của chính mình.".tr
+            case .dailyLimitReached:
+                return "Bạn đã thả tối đa 10 con sâu hôm nay. Hãy quay lại vào ngày mai nhé!".tr
+            case .noPlantsAvailable:
+                return "Khu vườn này chưa có cây để thả sâu.".tr
+            case .allPlantsInfested:
+                return "Tất cả cây trong khu vườn này đã có sâu bám rồi!".tr
+            case .unavailable:
+                return "Không thể thả sâu vào khu vườn này lúc này.".tr
+            }
+        }
+    }
+
+    @MainActor
+    func markAllPestsRemovedLocally(_ pestIds: [String]) {
+        locallyRemovedPestIds.formUnion(pestIds)
+    }
+
+    /// Tap tiêu diệt hoặc bắt sâu vào túi `Bugsnet` (nhận 300 oxygen/con).
+    @MainActor
+    func resolvePestTap(pestId: String) -> (caughtInBag: Bool, oxygenGained: Int, pest: GardenPest)? {
+        guard var garden = self.gradenModel,
+              let index = garden.pests.firstIndex(where: { $0.id == pestId }) else {
+            return nil
+        }
+
+        let removed = garden.pests.remove(at: index)
+        locallyRemovedPestIds.insert(removed.id)
+
+        let reward = GardenModel.pestKillOxygenReward
+        garden.money.oxygen += reward
+        recordEventOxygen(reward)
+
+        let caughtInBag: Bool
+        if garden.hasBugsNet && garden.capturedPests.count < GardenModel.maxBagCapacity {
+            garden.capturedPests.append(removed.kind)
+            caughtInBag = true
+        } else {
+            caughtInBag = false
+        }
+
+        saveGarden(gardenModel: garden, debounce: false)
+        return (caughtInBag, reward, removed)
+    }
+
+    /// Tự động sản sinh sâu/châu chấu khi có `Bugsnet` (`animal3`), có giới hạn tần suất và số lượng để tránh spam.
+    @MainActor
+    @discardableResult
+    func spawnAutoPestIfNeeded(now: TimeInterval = Date().timeIntervalSince1970) -> GardenPest? {
+        guard var garden = self.gradenModel,
+              garden.hasBugsNet,
+              garden.weatherUntil <= now || garden.weatherKind != .spray else {
+            return nil
+        }
+
+        // Tránh spam: tôn trọng thời gian hồi và giới hạn tối đa sâu tự sinh đang bám trên vườn
+        guard now - garden.lastAutoPestSpawnAt >= GardenModel.autoPestSpawnCooldown else {
+            return nil
+        }
+
+        let activeAutoCount = garden.pests.filter { $0.source == .auto }.count
+        guard activeAutoCount < GardenModel.maxActiveAutoPests else {
+            return nil
+        }
+
+        let occupiedPositions = Set(garden.pests.map(\.position))
+        let candidatePlants = garden.weatherPlants.filter { !occupiedPositions.contains($0.position) }
+        guard let chosenPlant = candidatePlants.randomElement() else {
+            return nil
+        }
+
+        // Xác suất vừa phải (~60%) mỗi chu kỳ để tự nhiên, không bị dồn dập
+        guard Double.random(in: 0...1) <= 0.60 else {
+            garden.lastAutoPestSpawnAt = now - (GardenModel.autoPestSpawnCooldown * 0.5)
+            saveGarden(gardenModel: garden, debounce: true)
+            return nil
+        }
+
+        let species = PestSpecies.allCases.randomElement() ?? .bug1
+        let newPest = GardenPest(
+            kind: species,
+            position: chosenPlant.position,
+            plantId: chosenPlant.idPlant,
+            source: .auto,
+            createdAt: now
+        )
+        garden.pests.append(newPest)
+        garden.lastAutoPestSpawnAt = now
+        saveGarden(gardenModel: garden, debounce: false)
+        return newPest
+    }
+
+    /// Xóa danh sách thông báo bị thả sâu sau khi người dùng đã xem khi đăng nhập.
+    @MainActor
+    func clearPestNotifications() {
+        guard var garden = self.gradenModel, !garden.pestNotifications.isEmpty else { return }
+        let uid = garden.user.userID
+        garden.pestNotifications.removeAll()
+        self.gradenModel = garden
+        if var pending = self.pendingGardenModel {
+            pending.pestNotifications.removeAll()
+            self.pendingGardenModel = pending
+        }
+        guard !uid.isEmpty else { return }
+        db.collection("users").document(uid).updateData(["pestNotifications": []])
+    }
+
+    /// Thả sâu vào vườn nhà người khác (tối đa 10 con/ngày, bám ngẫu nhiên vào 1 cây, nhận +350 oxygen/con).
+    @MainActor
+    func dropPestInVisitorGarden(
+        targetGardenId: String,
+        targetSlots: [VisitorGarden.Slot],
+        existingTargetPests: [GardenPest]
+    ) async throws -> (pest: GardenPest, oxygenReward: Int) {
+        guard let senderId = auth.currentUser?.uid,
+              var senderGarden = self.gradenModel else {
+            throw VisitorPestDropError.signInRequired
+        }
+        guard senderId != targetGardenId else {
+            throw VisitorPestDropError.ownGarden
+        }
+        guard senderGarden.remainingVisitorPestDrops() > 0 else {
+            throw VisitorPestDropError.dailyLimitReached
+        }
+
+        let plantSlots = targetSlots.filter { !$0.isSticker && !$0.isAnimal && !$0.plantID.isEmpty && !$0.potID.isEmpty }
+        guard !plantSlots.isEmpty else {
+            throw VisitorPestDropError.noPlantsAvailable
+        }
+
+        // Lấy loài sâu từ túi Bugsnet nếu đang có sẵn (giải phóng chỗ trong túi), ngược lại chọn ngẫu nhiên
+        let speciesToSend: PestSpecies = senderGarden.capturedPests.first ?? (PestSpecies.allCases.randomElement() ?? .bug1)
+        let senderName = senderGarden.user.userName.isEmpty ? "Người chơi khác".tr : senderGarden.user.userName
+        let now = Date().timeIntervalSince1970
+
+        let targetRef = db.collection("users").document(targetGardenId)
+        let createdPest: GardenPest = try await GardenWriteQueue.shared.perform {
+            let result = try await self.db.runTransaction { transaction, errorPointer -> Any? in
+                do {
+                    let snapshot = try transaction.getDocument(targetRef)
+                    guard let data = snapshot.data() else {
+                        throw VisitorPestDropError.unavailable
+                    }
+                    let banned = (data["isBan"] as? NSNumber)?.boolValue == true
+                        || ["true", "1"].contains(data["isBan"] as? String ?? "")
+                    guard !banned else { throw VisitorPestDropError.unavailable }
+
+                    var remotePests = (data["pests"] as? [[String: Any]] ?? []).compactMap { GardenPest(dict: $0) }
+                    let occupied = Set(remotePests.map(\.position))
+                    let available = plantSlots.filter { !occupied.contains($0.id) }
+                    guard let chosenSlot = available.randomElement() else {
+                        throw VisitorPestDropError.allPlantsInfested
+                    }
+
+                    let newPest = GardenPest(
+                        kind: speciesToSend,
+                        position: chosenSlot.id,
+                        plantId: chosenSlot.plantID,
+                        source: .visitor,
+                        senderId: senderId,
+                        senderName: senderName,
+                        createdAt: now
+                    )
+                    remotePests.append(newPest)
+
+                    var remoteNotifs = (data["pestNotifications"] as? [[String: Any]] ?? []).compactMap { GardenPestNotification(dict: $0) }
+                    remoteNotifs.append(GardenPestNotification(
+                        senderId: senderId,
+                        senderName: senderName,
+                        kind: speciesToSend,
+                        position: chosenSlot.id,
+                        createdAt: now
+                    ))
+                    if remoteNotifs.count > 25 {
+                        remoteNotifs = Array(remoteNotifs.suffix(25))
+                    }
+
+                    transaction.updateData([
+                        "pests": remotePests.map { $0.toDictionary() },
+                        "pestNotifications": remoteNotifs.map { $0.toDictionary() }
+                    ], forDocument: targetRef)
+
+                    return newPest.toDictionary()
+                } catch {
+                    errorPointer?.pointee = error as NSError
+                    return nil
+                }
+            }
+            guard let dict = result as? [String: Any], let parsed = GardenPest(dict: dict) else {
+                throw VisitorPestDropError.unavailable
+            }
+            return parsed
+        }
+
+        // Thưởng +350 oxygen, cập nhật giới hạn 10 con/ngày, và lấy 1 con ra khỏi túi nếu túi có sâu
+        let today = GardenModel.todayDateKey()
+        if senderGarden.pestDropDate != today {
+            senderGarden.pestDropDate = today
+            senderGarden.pestDropCount = 0
+        }
+        senderGarden.pestDropCount += 1
+        if !senderGarden.capturedPests.isEmpty {
+            senderGarden.capturedPests.removeFirst()
+        }
+        let reward = GardenModel.visitorDropOxygenReward
+        senderGarden.money.oxygen += reward
+        recordEventOxygen(reward)
+        saveGarden(gardenModel: senderGarden, debounce: false)
+
+        return (createdPest, reward)
     }
 }
 

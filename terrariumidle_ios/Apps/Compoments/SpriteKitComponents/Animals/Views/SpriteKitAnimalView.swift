@@ -16,7 +16,8 @@ public typealias AnimalView = SpriteKitAnimalView
 public enum AnimalAvailability {
     public static let supportedAnimalIds: Set<String> = [
         "animal1",
-        "animal2"
+        "animal2",
+        "animal3"
     ]
 
     public static func isAvailable(animalId: String) -> Bool {
@@ -32,6 +33,7 @@ public enum AnimalRegistry {
         switch cleanId {
         case "animal1": return Animal1View.defaultFitRatio
         case "animal2": return Animal2View.defaultFitRatio
+        case "animal3": return Animal3View.defaultFitRatio
         default: return 0.62
         }
     }
@@ -48,6 +50,7 @@ public struct SpriteKitAnimalView: View {
     public var height: CGFloat
     public var overflowRatioX: CGFloat = 0.25
     public var overflowRatioY: CGFloat = 0.18
+    public var capturedPests: [PestSpecies] = []
     public var onTap: (() -> Void)? = nil
 
     private var renderWidth: CGFloat {
@@ -76,6 +79,7 @@ public struct SpriteKitAnimalView: View {
         height: CGFloat = 220,
         overflowRatioX: CGFloat = 0.25,
         overflowRatioY: CGFloat = 0.18,
+        capturedPests: [PestSpecies] = [],
         onTap: (() -> Void)? = nil
     ) {
         self.animalId = animalId
@@ -84,6 +88,7 @@ public struct SpriteKitAnimalView: View {
         self.height = height
         self.overflowRatioX = overflowRatioX
         self.overflowRatioY = overflowRatioY
+        self.capturedPests = capturedPests
         self.onTap = onTap
 
         let cleanId = animalId.lowercased().trimmingCharacters(in: .whitespaces)
@@ -92,7 +97,7 @@ public struct SpriteKitAnimalView: View {
         let rW = width * (1.0 + overflowRatioX)
         let rH = height * (1.0 + overflowRatioY)
         let s = SpriteKitAnimalScene(size: CGSize(width: rW, height: rH))
-        s.configure(animalId: cleanId, isHanging: resolved, slotSize: CGSize(width: width, height: height))
+        s.configure(animalId: cleanId, isHanging: resolved, slotSize: CGSize(width: width, height: height), capturedPests: capturedPests)
         _scene = State(initialValue: s)
     }
 
@@ -114,15 +119,18 @@ public struct SpriteKitAnimalView: View {
                 onTap?()
             }
             .onAppear {
-                scene.configure(animalId: cleanId, isHanging: activeHanging, slotSize: CGSize(width: width, height: height))
+                scene.configure(animalId: cleanId, isHanging: activeHanging, slotSize: CGSize(width: width, height: height), capturedPests: capturedPests)
             }
             .onChange(of: animalId) { _, newId in
                 let newCleanId = newId.lowercased().trimmingCharacters(in: .whitespaces)
                 let newResolved = ItemDataManager.shared.getItem(byId: newCleanId)?.itemTypeAttribute.isHanging ?? isHanging
-                scene.configure(animalId: newCleanId, isHanging: newResolved, slotSize: CGSize(width: width, height: height))
+                scene.configure(animalId: newCleanId, isHanging: newResolved, slotSize: CGSize(width: width, height: height), capturedPests: capturedPests)
             }
             .onChange(of: isHanging) { _, _ in
-                scene.configure(animalId: cleanId, isHanging: activeHanging, slotSize: CGSize(width: width, height: height))
+                scene.configure(animalId: cleanId, isHanging: activeHanging, slotSize: CGSize(width: width, height: height), capturedPests: capturedPests)
+            }
+            .onChange(of: capturedPests) { _, newPests in
+                scene.updateCapturedPests(newPests)
             }
     }
 }

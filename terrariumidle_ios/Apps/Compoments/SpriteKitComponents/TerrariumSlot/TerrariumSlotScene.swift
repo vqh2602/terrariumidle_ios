@@ -23,6 +23,7 @@ public final class TerrariumSlotScene: SKScene {
     private var slotSize: CGSize = .zero
     private var widthFill: CGFloat = 0.0
     private var itemTypeAttribute: ItemTypeAttribute = .none
+    private var isInfested: Bool = false
 
     private var potNode: PotInteractiveNode?
     private var plantNode: PlantInteractiveNode?
@@ -67,6 +68,7 @@ public final class TerrariumSlotScene: SKScene {
         slotSize: CGSize = .zero,
         widthFill: CGFloat = 0.0,
         itemTypeAttribute: ItemTypeAttribute? = nil,
+        isInfested: Bool = false,
         onTap: (() -> Void)? = nil
     ) {
         let cleanPot = potId.lowercased().trimmingCharacters(in: .whitespaces)
@@ -84,6 +86,8 @@ public final class TerrariumSlotScene: SKScene {
                       abs(self.slotSize.height - slotSize.height) > 1 ||
                       abs(self.widthFill - cleanFill) > 0.001
 
+        let infestationChanged = self.isInfested != isInfested
+
         self.potId = cleanPot
         self.plantId = cleanPlant
         self.plantLevel = plantLevel
@@ -91,10 +95,13 @@ public final class TerrariumSlotScene: SKScene {
         self.slotSize = slotSize
         self.widthFill = cleanFill
         self.itemTypeAttribute = resolvedAttribute
+        self.isInfested = isInfested
         self.onTap = onTap
 
         if (changed || (potNode == nil && plantNode == nil)) && size.width > 0 && size.height > 0 {
             buildSlot()
+        } else if infestationChanged {
+            applyInfestationTint()
         }
     }
 
@@ -238,7 +245,19 @@ public final class TerrariumSlotScene: SKScene {
                     addChild(plant.asNode)
                 }
                 self.plantNode = plant
+                applyInfestationTint()
             }
+        }
+    }
+
+    private func applyInfestationTint() {
+        guard let plantRoot = plantNode?.asNode else { return }
+        let tintColor = UIColor(red: 0.06, green: 0.09, blue: 0.05, alpha: 1.0)
+        let factor: CGFloat = isInfested ? 0.56 : 0.0
+        plantRoot.enumerateChildNodes(withName: "//*") { node, _ in
+            guard let sprite = node as? SKSpriteNode, sprite.zPosition < 150 else { return }
+            sprite.color = tintColor
+            sprite.colorBlendFactor = factor
         }
     }
 

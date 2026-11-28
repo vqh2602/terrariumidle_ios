@@ -612,6 +612,13 @@ struct SubscriptionView: View {
                     title: "Nhận ×2 EXP khi chăm sóc cây".tr,
                     detail: "Mỗi lần chạm cây nhận gấp đôi (×2) EXP cho cả cây và cấp độ tài khoản để thăng cấp nhanh hơn.".tr
                 )
+                Divider()
+                perkRow(
+                    icon: "aqi.medium",
+                    tint: Color(hex: "4B9B7A"),
+                    title: "Xịt hóa chất miễn phí 5 lần/ngày".tr,
+                    detail: "Nhận 5 lượt xịt hóa chất miễn phí mỗi ngày (thay vì 1 lượt) để tiêu diệt toàn bộ sâu bọ bảo vệ cây trồng.".tr
+                )
             }
             .padding(18)
             .modifier(AccountPanel())

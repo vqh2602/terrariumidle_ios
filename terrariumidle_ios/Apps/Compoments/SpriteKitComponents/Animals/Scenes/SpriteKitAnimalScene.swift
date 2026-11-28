@@ -15,6 +15,7 @@ public final class SpriteKitAnimalScene: SKScene {
     private var animalId: String = "animal1"
     private var isHanging: Bool = true
     private var slotSize: CGSize = .zero
+    private var capturedPests: [PestSpecies] = []
     public var onTap: (() -> Void)?
 
     public override init() {
@@ -38,7 +39,7 @@ public final class SpriteKitAnimalScene: SKScene {
         anchorPoint = CGPoint(x: 0.5, y: 1.0)
     }
 
-    public func configure(animalId: String, isHanging: Bool = true, slotSize: CGSize = .zero) {
+    public func configure(animalId: String, isHanging: Bool = true, slotSize: CGSize = .zero, capturedPests: [PestSpecies] = []) {
         let cleanId = animalId.lowercased().trimmingCharacters(in: .whitespaces)
         let resolved = ItemDataManager.shared.getItem(byId: cleanId)?.itemTypeAttribute.isHanging ?? isHanging
         let changed = self.animalId != cleanId ||
@@ -49,11 +50,21 @@ public final class SpriteKitAnimalScene: SKScene {
         self.animalId = cleanId
         self.isHanging = resolved
         self.slotSize = slotSize
+        self.capturedPests = Array(capturedPests.prefix(5))
 
         anchorPoint = CGPoint(x: 0.5, y: resolved ? 1.0 : 0.0)
 
         if (changed || customAnimalInteractive == nil) && size.width > 0 && size.height > 0 {
             buildAnimal()
+        } else {
+            updateCapturedPests(self.capturedPests)
+        }
+    }
+
+    public func updateCapturedPests(_ pests: [PestSpecies]) {
+        self.capturedPests = Array(pests.prefix(5))
+        if let bagNode = customAnimalInteractive as? Animal3Node {
+            bagNode.updateCapturedPests(self.capturedPests)
         }
     }
 
@@ -89,6 +100,9 @@ public final class SpriteKitAnimalScene: SKScene {
             containerSize: CGSize(width: baseW, height: baseH),
             isHanging: isHanging
         )
+        if let bagNode = animal as? Animal3Node {
+            bagNode.updateCapturedPests(capturedPests)
+        }
         animal.asNode.position = .zero
         animal.asNode.zPosition = 10
         addChild(animal.asNode)

@@ -26,6 +26,8 @@ struct GardenWeatherOverlay: View {
                             let time = context.date.timeIntervalSince1970
                             if kind == .wind {
                                 drawWind(in: &canvas, size: size, time: time)
+                            } else if kind == .spray {
+                                drawChemicalSpray(in: &canvas, size: size, time: time)
                             } else {
                                 drawRain(in: &canvas, size: size, time: time)
                             }
@@ -40,8 +42,10 @@ struct GardenWeatherOverlay: View {
                     HStack(spacing: 8) {
                         Image(systemName: kind.icon)
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(kind == .rain ? Color(red: 0.35, green: 0.75, blue: 1.0) : Color(red: 0.40, green: 0.85, blue: 0.55))
-                        Text("%@ · Tự tap toàn vườn · %ds".tr(kind.title, seconds))
+                            .foregroundStyle(bannerIconColor)
+                        Text(kind == .spray
+                             ? "%@ · Tiêu diệt sâu bọ · %ds".tr(kind.title, seconds)
+                             : "%@ · Tự tap toàn vườn · %ds".tr(kind.title, seconds))
                             .font(.caption.bold())
                             .foregroundStyle(.primary)
                     }
@@ -78,9 +82,17 @@ struct GardenWeatherOverlay: View {
         }
     }
 
+    private var bannerIconColor: Color {
+        switch kind {
+        case .rain: return Color(red: 0.35, green: 0.75, blue: 1.0)
+        case .wind: return Color(red: 0.40, green: 0.85, blue: 0.55)
+        case .spray: return Color(red: 0.34, green: 0.78, blue: 0.65)
+        }
+    }
+
     private func syncWeatherAudio(active: Bool) {
         if active {
-            BackgroundAudioManager.shared.startWeatherSound(fileName: kind.soundFileName, ext: "wav")
+            BackgroundAudioManager.shared.startWeatherSound(fileName: kind.soundFileName, ext: kind.soundFileExtension)
         } else {
             BackgroundAudioManager.shared.stopWeatherSound()
         }
@@ -101,6 +113,17 @@ struct GardenWeatherOverlay: View {
                 ],
                 startPoint: .top,
                 endPoint: .bottom
+            )
+        } else if kind == .spray {
+            // Màn khói sương hóa chất dịu mát phủ khắp khu vườn
+            LinearGradient(
+                colors: [
+                    Color(red: 0.74, green: 0.92, blue: 0.84).opacity(0.24),
+                    Color(red: 0.82, green: 0.95, blue: 0.89).opacity(0.16),
+                    Color(red: 0.88, green: 0.96, blue: 0.92).opacity(0.08)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
             )
         } else {
             // Ngày lộng gió tươi sáng, ánh nắng dịu nhẹ hòa cùng không khí trong lành
@@ -392,6 +415,60 @@ struct GardenWeatherOverlay: View {
             canvas.fill(
                 Path(ellipseIn: CGRect(x: px - r, y: py - r, width: r * 2.0, height: r * 2.0)),
                 with: .color(Color(red: 1.0, green: 0.95, blue: 0.72).opacity(shimmer * 0.70))
+            )
+        }
+    }
+
+    // MARK: - Chemical Spray Simulation (Khói sương xịt thuốc côn trùng)
+
+    private func drawChemicalSpray(in canvas: inout GraphicsContext, size: CGSize, time: TimeInterval) {
+        guard size.width > 0, size.height > 0 else { return }
+
+        // 1. Đám mây khói sương mịn phun ra từ 2 bên và cuộn xoáy lan tỏa toàn màn hình
+        for i in 0..<26 {
+            let seed = Double(i)
+            let period = 1.6 + (seed.truncatingRemainder(dividingBy: 5)) * 0.28
+            let phase = (time + seed * 0.37).truncatingRemainder(dividingBy: period) / period
+            let fromLeft = (i % 2 == 0)
+            let startX: CGFloat = fromLeft ? -20.0 : size.width + 20.0
+            let dir: CGFloat = fromLeft ? 1.0 : -1.0
+            let travelX = dir * (size.width * (0.28 + CGFloat(seed.truncatingRemainder(dividingBy: 7)) * 0.09)) * phase
+            let baseY = size.height * (0.18 + CGFloat(seed.truncatingRemainder(dividingBy: 9)) * 0.085)
+            let driftY = sin(phase * .pi * 2.0 + seed) * 18.0 - phase * 16.0
+            let cx = startX + travelX
+            let cy = baseY + driftY
+
+            let radius = 34.0 + phase * 58.0 + CGFloat(seed.truncatingRemainder(dividingBy: 4)) * 12.0
+            let fade = sin(phase * .pi) * 0.24
+            guard fade > 0.005 else { continue }
+
+            let rect = CGRect(x: cx - radius, y: cy - radius * 0.72, width: radius * 2.0, height: radius * 1.44)
+            let tint = (i % 3 == 0)
+                ? Color(red: 0.78, green: 0.96, blue: 0.88).opacity(fade)
+                : Color.white.opacity(fade * 0.88)
+            canvas.fill(Path(ellipseIn: rect), with: .color(tint))
+        }
+
+        // 2. Luồng tia phun sương mảnh bắn xéo từ các vòi phun
+        for i in 0..<48 {
+            let seed = Double(i + 100)
+            let period = 0.85 + (seed.truncatingRemainder(dividingBy: 4)) * 0.15
+            let phase = (time * 1.4 + seed * 0.19).truncatingRemainder(dividingBy: period) / period
+            let fromLeft = (i % 2 == 0)
+            let nozzleX: CGFloat = fromLeft ? 0.0 : size.width
+            let nozzleY: CGFloat = size.height * (0.28 + CGFloat(Int(seed) % 4) * 0.16)
+            let spreadAngle = (seed.truncatingRemainder(dividingBy: 11) - 5.0) * 0.065
+            let reach = size.width * (0.45 + CGFloat(seed.truncatingRemainder(dividingBy: 5)) * 0.10) * phase
+            let dir: CGFloat = fromLeft ? 1.0 : -1.0
+
+            let px = nozzleX + dir * cos(spreadAngle) * reach
+            let py = nozzleY + sin(spreadAngle) * reach + phase * 14.0
+            let r: CGFloat = 1.4 + CGFloat(Int(seed) % 3) * 0.9
+            let alpha = (1.0 - phase) * 0.55
+
+            canvas.fill(
+                Path(ellipseIn: CGRect(x: px - r, y: py - r, width: r * 2.0, height: r * 2.0)),
+                with: .color(Color(red: 0.86, green: 0.98, blue: 0.92).opacity(alpha))
             )
         }
     }

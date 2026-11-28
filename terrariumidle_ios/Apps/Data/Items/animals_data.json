@@ -48,24 +48,25 @@
         "effectLandscapeDescription": "",
         "effectSfx": "",
         "effectSfxDescription": ""
-    }, {
-        "id": "animal2",
-        "name": "Bugs net",
-        "description": "Gốc cây gỗ mục ấm áp, ngôi nhà của chú bọ rùa chăm chỉ bay lượn và dạo chơi trên những tán lá.",
-        "image": "rotten-wooden-base-1@4.167x",
+    },
+    {
+        "id": "animal3",
+        "name": "Bugsnet",
+        "description": "Túi lưới xanh bắt sâu bọ bảo vệ khu vườn. Tự động sản sinh sâu và châu chấu, thu thập tối đa 5 con vào túi.",
+        "image": "greenmeshbag-1@4.167x",
         "priceStore": 20000000000,
         "priceOxygen": 225000,
         "currencyUnit": "oxygen",
         "levelUnlock": 70,
         "type": "animal",
         "effect": "",
-        "effectDescription": "Rơi mảnh vỏ gỗ & Bọ rùa bay đậu trên lá",
+        "effectDescription": "Túi giãn nở & Thu thập sâu bọ bám cây (tối đa 5 con)",
         "itemTypeAttribute": "hanging,front",
         "maximum": 1,
-        "tapSound": "wood-block-105066",
+        "tapSound": "dragon-studio-dry-grass-rustling-478361",
         "tapSoundChild": {
-            "bug1": "lazaybugtap",
-            "grasshopper": "lazaybugtap"
+            "bug1": "virtual_vibes-pop-tap-click-fx-383733",
+            "grasshopper": "virtual_vibes-pop-tap-click-fx-383733"
         },
         "music": "",
         "musicDescription": "",

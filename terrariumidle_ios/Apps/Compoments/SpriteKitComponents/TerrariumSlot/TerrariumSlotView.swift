@@ -25,6 +25,7 @@ public struct TerrariumSlotView: View {
     public var width: CGFloat
     public var height: CGFloat
     public var widthFill: CGFloat? = nil
+    public var isInfested: Bool = false
     /// Tỉ lệ vùng đệm an toàn để cành lá đung đưa không chạm biên render (Anti-Clipping Padding)
     public var overflowRatioX: CGFloat = 0.12
     public var overflowRatioY: CGFloat = 0.08
@@ -60,6 +61,7 @@ public struct TerrariumSlotView: View {
         width: CGFloat,
         height: CGFloat,
         widthFill: CGFloat? = nil,
+        isInfested: Bool = false,
         overflowRatioX: CGFloat = 0.12,
         overflowRatioY: CGFloat = 0.08,
         onTap: (() -> Void)? = nil,
@@ -77,6 +79,7 @@ public struct TerrariumSlotView: View {
         self.width = width
         self.height = height
         self.widthFill = widthFill
+        self.isInfested = isInfested
         self.overflowRatioX = overflowRatioX
         self.overflowRatioY = overflowRatioY
         self.onTap = onTap
@@ -96,6 +99,7 @@ public struct TerrariumSlotView: View {
             isHanging: isHanging,
             itemTypeAttribute: itemTypeAttribute,
             widthFill: activeFill,
+            isInfested: isInfested,
             slotWidth: width,
             slotHeight: height,
             renderWidth: rWidth,
@@ -117,6 +121,7 @@ public struct TerrariumSlotView: View {
             isHanging: isHanging,
             itemTypeAttribute: itemTypeAttribute,
             widthFill: activeFill,
+            isInfested: isInfested,
             slotWidth: width,
             slotHeight: height,
             renderWidth: renderWidth,
@@ -133,6 +138,7 @@ public struct TerrariumSlotView: View {
             slotSize: CGSize(width: width, height: height),
             widthFill: activeFill,
             itemTypeAttribute: itemTypeAttribute,
+            isInfested: isInfested,
             onTap: onTap
         )
         scene.onAutoTap = onAutoTap
@@ -198,6 +204,7 @@ public struct TerrariumSlotView: View {
         isHanging: Bool,
         itemTypeAttribute: ItemTypeAttribute? = nil,
         widthFill: CGFloat,
+        isInfested: Bool = false,
         slotWidth: CGFloat,
         slotHeight: CGFloat,
         renderWidth: CGFloat,
@@ -213,6 +220,7 @@ public struct TerrariumSlotView: View {
             slotSize: CGSize(width: slotWidth, height: slotHeight),
             widthFill: widthFill,
             itemTypeAttribute: itemTypeAttribute,
+            isInfested: isInfested,
             onTap: onTap
         )
         return newScene

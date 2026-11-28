@@ -44,7 +44,7 @@ struct OnboardingTests {
 
     @Test func onboardingStepsHaveExpectedOrderAndNonEmptyContent() {
         let steps = OnboardingStep.allCases
-        #expect(steps == [.welcome, .care, .gardenMenu, .relax])
+        #expect(steps == [.welcome, .care, .gardenMenu, .wildlife, .relax])
 
         for step in steps {
             #expect(!step.eyebrow.isEmpty)

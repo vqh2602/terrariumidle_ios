@@ -88,6 +88,8 @@ final class VisitorGardenViewModel: ObservableObject {
     @Published private(set) var isLiking = false
     @Published private(set) var hasLiked = false
     @Published private(set) var likeMessage: String?
+    @Published private(set) var isDroppingPest = false
+    @Published var pestDropMessage: String?
     private let liking: (any GardenLiking)?
     private let onLike: ((String, Int) -> Void)?
     private let repository: any DiscoveryReading
@@ -103,6 +105,42 @@ final class VisitorGardenViewModel: ObservableObject {
     var canLike: Bool {
         guard let garden, let viewerID = liking?.viewerID else { return false }
         return viewerID != garden.profile.id && !hasLiked && !isLiking
+    }
+
+    var isOwnGarden: Bool {
+        guard let garden, let viewerID = Auth.auth().currentUser?.uid else { return false }
+        return viewerID == garden.profile.id
+    }
+
+    var remainingDailyDrops: Int {
+        FireStoreService.shared.gradenModel?.remainingVisitorPestDrops() ?? 0
+    }
+
+    var hasPlantTargets: Bool {
+        guard let garden else { return false }
+        return garden.slots.values.contains { !$0.isSticker && !$0.isAnimal && !$0.plantID.isEmpty && !$0.potID.isEmpty }
+    }
+
+    func dropPest() async {
+        guard let garden, !isDroppingPest else { return }
+        let token = generation
+        isDroppingPest = true
+        pestDropMessage = nil
+        defer { isDroppingPest = false }
+        do {
+            let result = try await FireStoreService.shared.dropPestInVisitorGarden(
+                targetGardenId: garden.profile.id,
+                targetSlots: Array(garden.slots.values),
+                existingTargetPests: garden.pests
+            )
+            guard token == generation else { return }
+            self.garden?.pests.append(result.pest)
+            AudioPlayer.shared.playClickSound(named: "virtual_vibes-pop-tap-click-fx-383733")
+            pestDropMessage = "Đã thả %@ lên cây · +%d 💨!".tr(result.pest.kind.displayName, result.oxygenReward)
+        } catch {
+            guard token == generation else { return }
+            pestDropMessage = (error as? LocalizedError)?.errorDescription ?? "Chưa thể thả sâu lúc này.".tr
+        }
     }
 
     func like() async {
@@ -136,6 +174,7 @@ final class VisitorGardenViewModel: ObservableObject {
         garden = nil
         error = nil
         likeMessage = nil
+        pestDropMessage = nil
         hasLiked = false
         likeCount = 0
         isLoading = true

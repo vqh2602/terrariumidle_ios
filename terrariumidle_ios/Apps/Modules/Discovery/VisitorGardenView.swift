@@ -7,8 +7,10 @@ struct VisitorGardenView: View {
     @StateObject private var model: VisitorGardenViewModel
     @State private var reloadID = 0
     @State private var showLikeNotice = false
+    @State private var showPestNotice = false
     @State private var atmosphere: VisitorAtmosphere?
     @State private var savedAudioSnapshot: BackgroundAudioManager.AudioSnapshot?
+    @ObservedObject private var fireStore = FireStoreService.shared
 
     init(profile: DiscoveredProfile, repository: any DiscoveryReading,
          onLike: ((String, Int) -> Void)? = nil) {
@@ -43,15 +45,28 @@ struct VisitorGardenView: View {
                 .padding(.top, 6)
         }
         .overlay(alignment: .bottom) {
-            if showLikeNotice, let message = model.likeMessage {
-                Text(message)
-                    .font(.system(.caption, design: .rounded, weight: .semibold))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 18).padding(.vertical, 12)
-                    .modifier(VisitorGlassSurface())
-                    .padding(.horizontal, 24).padding(.bottom, 12)
-                    .accessibilityAddTraits(.updatesFrequently)
+            VStack(spacing: 10) {
+                if showPestNotice, let pestMsg = model.pestDropMessage {
+                    Text(pestMsg)
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 18).padding(.vertical, 12)
+                        .modifier(VisitorGlassSurface())
+                        .accessibilityAddTraits(.updatesFrequently)
+                } else if showLikeNotice, let message = model.likeMessage {
+                    Text(message)
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 18).padding(.vertical, 12)
+                        .modifier(VisitorGlassSurface())
+                        .accessibilityAddTraits(.updatesFrequently)
+                }
+
+                if model.garden != nil && !model.isOwnGarden && model.hasPlantTargets {
+                    dropPestBar
+                }
             }
+            .padding(.horizontal, 24).padding(.bottom, 12)
         }
         .task(id: reloadID) { await model.load(id: profile.id) }
         .task(id: "\(model.garden?.profile.id ?? "")-\(reloadID)") {
@@ -71,6 +86,15 @@ struct VisitorGardenView: View {
                 try await Task.sleep(for: .seconds(3))
                 try Task.checkCancellation()
                 showLikeNotice = false
+            } catch { }
+        }
+        .task(id: model.pestDropMessage) {
+            showPestNotice = model.pestDropMessage != nil
+            guard showPestNotice else { return }
+            do {
+                try await Task.sleep(for: .seconds(3))
+                try Task.checkCancellation()
+                showPestNotice = false
             } catch { }
         }
     }
@@ -136,6 +160,44 @@ struct VisitorGardenView: View {
     }
 
     private var displayedLikes: Int { model.garden == nil ? profile.likes : model.likeCount }
+
+    private var dropPestBar: some View {
+        let remaining = fireStore.gradenModel?.remainingVisitorPestDrops() ?? 0
+        return Button {
+            Task { await model.dropPest() }
+        } label: {
+            HStack(spacing: 8) {
+                if model.isDroppingPest {
+                    ProgressView()
+                        .tint(Color(hex: "4E823C"))
+                } else {
+                    Image(systemName: "ladybug.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(Color(hex: "4E823C"))
+                }
+                Text("Thả sâu".tr)
+                    .font(.system(.subheadline, design: .rounded, weight: .heavy))
+                    .foregroundStyle(AccountStyle.ink)
+                Text("(\(remaining)/10)")
+                    .font(.system(.caption, design: .rounded, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(AccountStyle.muted)
+                Text("+350 💨")
+                    .font(.system(.caption, design: .rounded, weight: .heavy))
+                    .foregroundStyle(AccountStyle.green)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(AccountStyle.green.opacity(0.14), in: Capsule())
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .modifier(VisitorGlassSurface())
+            .contentShape(Capsule())
+        }
+        .buttonStyle(DiscoveryPressStyle())
+        .disabled(model.isDroppingPest || remaining <= 0)
+        .opacity(remaining > 0 ? 1.0 : 0.65)
+    }
 
     private func applyVisitorAtmosphere(for garden: VisitorGarden) {
         let audio = BackgroundAudioManager.shared
@@ -213,9 +275,12 @@ private struct VisitorShelvesView: View {
                                     HStack(spacing: 4) {
                                         ForEach(1...3, id: \.self) { column in
                                             let slot = garden.slot(row: row, column: column)
+                                            let isInfested = slot.map { s in garden.pests.contains { $0.position == s.id } } ?? false
                                             VisitorSlotView(
                                                 slot: slot,
                                                 width: width,
+                                                isInfested: isInfested,
+                                                capturedPests: garden.capturedPests,
                                                 onAnimalTap: {
                                                     beeCoordinator.notifyAnimalTapped(animalId: slot?.plantID ?? "animal1")
                                                 }
@@ -223,7 +288,10 @@ private struct VisitorShelvesView: View {
                                         }
                                     }
                                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("visitorViewport")) } action: { rect in
-                                        guard beeCoordinator.hivePositionKey != nil || beeCoordinator.ladybugHomePositionKey != nil else { return }
+                                        guard beeCoordinator.hivePositionKey != nil
+                                            || beeCoordinator.ladybugHomePositionKey != nil
+                                            || beeCoordinator.bugsNetPositionKey != nil
+                                            || !beeCoordinator.activePests.isEmpty else { return }
                                         beeCoordinator.layout.calibrate(row: row, viewportMinY: rect.minY)
                                     }
                                     Image("r2").resizable().frame(height: 16)
@@ -251,21 +319,27 @@ private struct VisitorShelvesView: View {
             .onAppear {
                 syncVisitorSwarm()
             }
+            .onChange(of: garden.pests) { _, _ in
+                syncVisitorSwarm()
+            }
         }
     }
 
     private func syncVisitorSwarm() {
         let hive = garden.slots.values.first(where: { $0.isAnimal && $0.plantID == "animal1" && AnimalAvailability.isAvailable(animalId: $0.plantID) })
         let ladybugHome = garden.slots.values.first(where: { $0.isAnimal && $0.plantID == "animal2" && AnimalAvailability.isAvailable(animalId: $0.plantID) })
+        let bugsNet = garden.slots.values.first(where: { $0.isAnimal && $0.plantID == "animal3" && AnimalAvailability.isAvailable(animalId: $0.plantID) })
         let targets = garden.slots.values
             .filter { !$0.isSticker && !$0.isAnimal && !$0.plantID.isEmpty && !$0.potID.isEmpty }
             .map { BeePlantTarget(positionKey: $0.id, row: $0.row, column: $0.column, isHanging: $0.isHanging) }
         beeCoordinator.syncGarden(
             hivePosition: hive?.id,
             ladybugHomePosition: ladybugHome?.id,
+            bugsNetPosition: bugsNet?.id,
             plantTargets: targets,
+            pests: garden.pests,
             userFloors: garden.topFloor,
-            animalId: hive?.plantID ?? ladybugHome?.plantID ?? "animal1"
+            animalId: hive?.plantID ?? ladybugHome?.plantID ?? bugsNet?.plantID ?? "animal1"
         )
     }
 }
@@ -273,6 +347,8 @@ private struct VisitorShelvesView: View {
 private struct VisitorSlotView: View {
     let slot: VisitorGarden.Slot?
     let width: CGFloat
+    var isInfested: Bool = false
+    var capturedPests: [PestSpecies] = []
     var onAnimalTap: (() -> Void)? = nil
     private var height: CGFloat { width * 1.95 }
 
@@ -282,11 +358,18 @@ private struct VisitorSlotView: View {
                 if slot.isSticker && StickerAvailability.isAvailable(stickerId: slot.plantID) {
                     SpriteKitStickerView(stickerId: slot.plantID, isHanging: slot.isHanging, width: width, height: height)
                 } else if slot.isAnimal && AnimalAvailability.isAvailable(animalId: slot.plantID) {
-                    SpriteKitAnimalView(animalId: slot.plantID, isHanging: slot.isHanging, width: width, height: height, onTap: onAnimalTap)
+                    SpriteKitAnimalView(
+                        animalId: slot.plantID,
+                        isHanging: slot.isHanging,
+                        width: width,
+                        height: height,
+                        capturedPests: slot.plantID == "animal3" ? capturedPests : [],
+                        onTap: onAnimalTap
+                    )
                 } else if !slot.isSticker && !slot.isAnimal && supported(slot) {
                     // Không gắn onTap: scene chỉ phát hiệu ứng thị giác và không thể thu thập oxy.
                     TerrariumSlotView(potId: slot.potID, plantId: slot.plantID, plantLevel: slot.level,
-                                      isHanging: slot.isHanging, width: width, height: height)
+                                      isHanging: slot.isHanging, width: width, height: height, isInfested: isInfested)
                 } else {
                     fallback(slot)
                 }

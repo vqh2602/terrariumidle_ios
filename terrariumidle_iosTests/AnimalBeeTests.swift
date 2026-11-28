@@ -105,4 +105,70 @@ struct AnimalBeeTests {
         #expect(hive.isHanging)
         hive.playTapAnimation()
     }
+
+    @Test func bugsNetAnimal3AndPestNodesAssembleCleanly() throws {
+        let bugsNet = try #require(ItemDataManager.shared.getAnimal(byId: "animal3"))
+        #expect(bugsNet.name == "Bugsnet")
+        #expect(bugsNet.image == "greenmeshbag-1@4.167x")
+        #expect(bugsNet.itemTypeAttribute.isHanging)
+        #expect(bugsNet.itemTypeAttribute.isInFront)
+        #expect(bugsNet.maximum == 1)
+
+        let bagNode = Animal3Node(
+            containerSize: CGSize(width: 120, height: 220),
+            isHanging: true,
+            capturedPests: [.bug1, .grasshopper, .bug1, .grasshopper, .bug1, .bug1]
+        )
+        #expect(bagNode.capturedPests.count == 5)
+        bagNode.playTapAnimation()
+
+        for species in PestSpecies.allCases {
+            let pestNode = PestAgentNode(species: species, plantPositionKey: "1,1", displayWidth: 32)
+            #expect(!pestNode.isDisposed)
+        }
+    }
+
+    @Test func sprayWeatherRespectsFreeDailyQuotaAndClearsPestsWithoutBagCapture() {
+        let now = Date().timeIntervalSince1970
+        let samplePlant = GardenModel.Plant(
+            harvestTime: 1000,
+            idPlant: "plant1",
+            idPot: "pot1",
+            isHanging: false,
+            plantLevel: 3,
+            platLevelExp: 0,
+            position: "1,1"
+        )
+        let pest = GardenPest(kind: .bug1, position: "1,1", plantId: "plant1", source: .auto, createdAt: now)
+
+        var nonVIP = makeGarden(plants: [samplePlant])
+        nonVIP.pests = [pest]
+        nonVIP.money.ticket = 1
+
+        #expect(nonVIP.remainingFreeSprays(isVIP: false) == 1)
+        let first = nonVIP.startWeather(.spray, isVIP: false, now: now)
+        #expect(first == .started)
+        #expect(nonVIP.weatherKind == .spray)
+        #expect(nonVIP.weatherUntil == now + 5)
+        #expect(nonVIP.pests.isEmpty)
+        #expect(nonVIP.capturedPests.isEmpty)
+        #expect(nonVIP.money.ticket == 1)
+        #expect(nonVIP.remainingFreeSprays(isVIP: false) == 0)
+
+        let second = nonVIP.startWeather(.spray, isVIP: false, now: now + 10)
+        #expect(second == .started)
+        #expect(nonVIP.money.ticket == 0)
+
+        let third = nonVIP.startWeather(.spray, isVIP: false, now: now + 20)
+        #expect(third == .insufficientTickets)
+
+        var vipGarden = makeGarden(plants: [samplePlant])
+        #expect(vipGarden.remainingFreeSprays(isVIP: true) == 5)
+        for step in 0..<5 {
+            let res = vipGarden.startWeather(.spray, isVIP: true, now: now + Double(step * 10))
+            #expect(res == .started)
+        }
+        #expect(vipGarden.remainingFreeSprays(isVIP: true) == 0)
+        #expect(vipGarden.startWeather(.spray, isVIP: true, now: now + 60) == .insufficientTickets)
+    }
 }

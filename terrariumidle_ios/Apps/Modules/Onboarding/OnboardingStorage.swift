@@ -36,6 +36,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
     case welcome = 0
     case care
     case gardenMenu
+    case wildlife
     case relax
 
     var id: Int { rawValue }
@@ -45,6 +46,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
         case .welcome: return "CHÀO MỪNG".tr
         case .care: return "CHĂM SÓC CÂY".tr
         case .gardenMenu: return "KỆ CÂY & GÓC VƯỜN".tr
+        case .wildlife: return "ĐỘNG VẬT & BẢO VỆ VƯỜN".tr
         case .relax: return "THƯ GIÃN MỖI NGÀY".tr
         }
     }
@@ -54,6 +56,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
         case .welcome: return "Góc vườn nhỏ bình yên của riêng bạn".tr
         case .care: return "Chạm để tạo Oxy, giữ để chăm cây".tr
         case .gardenMenu: return "Sắp xếp kệ gỗ & mở rộng tầng mới".tr
+        case .wildlife: return "Túi bắt sâu Bugsnet, xịt thuốc & thả sâu".tr
         case .relax: return "Ngủ ngon, ngắm mưa và thăm bạn bè".tr
         }
     }
@@ -66,6 +69,8 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
             return "Mỗi lần tương tác đều giúp cây xanh tốt hơn và tăng cấp độ khu vườn.".tr
         case .gardenMenu:
             return "Mọi công cụ trang trí, cửa hàng và túi tài nguyên đều nằm gọn ở hai góc màn hình.".tr
+        case .wildlife:
+            return "Đặt Bugsnet để thu thập sâu bọ bám cây (tối đa 5 con), dùng xịt hóa chất hoặc thả sâu sang vườn bạn bè.".tr
         case .relax:
             return "Kết hợp chăm sóc khu vườn cùng thói quen nghỉ ngơi và khám phá thế giới.".tr
         }
@@ -131,6 +136,20 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
                     detail: "Chạm ô + để đặt cây mới, kéo thả đổi chỗ; chạm huy hiệu góc trên trái để xem ví tài nguyên.".tr
                 )
             ]
+        case .wildlife:
+            return [
+                Highlight(
+                    icon: "ladybug.fill",
+                    assetImage: "greenmeshbag-1@4.167x",
+                    title: "Túi Bugsnet & Bắt sâu (+300 Oxy)".tr,
+                    detail: "Sâu bọ làm cây tối màu và giảm 70% Oxy/EXP. Chạm sâu để nhận 300 Oxy và cất vào túi (tối đa 5 con).".tr
+                ),
+                Highlight(
+                    icon: "aqi.medium",
+                    title: "Xịt hóa chất & Thả sâu vườn bạn".tr,
+                    detail: "Xịt hóa chất miễn phí 1 lần/ngày (VIP 5 lần) diệt sạch sâu trong 5s. Thả sâu vườn bạn tối đa 10 lần/ngày nhận 350 Oxy/con.".tr
+                )
+            ]
         case .relax:
             return [
                 Highlight(
@@ -143,7 +162,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
                     icon: "cloud.rain.fill",
                     assetImage: "ticket",
                     title: "Thời tiết & Khám phá".tr,
-                    detail: "Dùng Vé tạo mưa gió tự tap toàn vườn trong 60s và ghé thăm vườn bạn bè.".tr
+                    detail: "Dùng Vé tạo mưa gió tự tap 60s, xịt hóa chất diệt sâu và ghé thăm vườn bạn bè.".tr
                 )
             ]
         }
