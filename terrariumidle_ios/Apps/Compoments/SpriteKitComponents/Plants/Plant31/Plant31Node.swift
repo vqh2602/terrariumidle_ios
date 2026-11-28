@@ -47,7 +47,7 @@ public enum Plant31GrowthState: Equatable {
 
 public final class Plant31Node: SKNode {
 
-    // MARK: - Metadata cấu trúc các bộ phận Hoa sen hồng (Canvas 479.8 x 794.1)
+    // MARK: - Metadata cấu trúc các bộ phận Hoa sen hồng (Canvas 62.014 x 102.637)
 
     private struct LeafData {
         let assetId: Int
@@ -60,42 +60,27 @@ public final class Plant31Node: SKNode {
         let zPos: CGFloat
     }
 
-    private static let stemIds: Set<Int> = [2, 4]
-    private static let lotusLeafIds: Set<Int> = [3, 5]
-    private static let topFlowerPetalIds: Set<Int> = Set(6...13)
-    private static let leftFlowerPetalIds: Set<Int> = Set(14...31)
+    private static let stemIds: Set<Int> = [1, 15]
+    private static let lotusLeafIds: Set<Int> = [2, 16]
+    private static let mainFlowerPetalIds: Set<Int> = Set(3...14)
 
     private static let leavesMetadata: [LeafData] = [
-        LeafData(assetId:  2, imgX:    38.9, imgY:     4.2, width:   40.2, height:  655.2, anchorX: 0.50, anchorY: 0.00, zPos: 11.0),
-        LeafData(assetId:  6, imgX:    41.9, imgY:   675.4, width:   55.6, height:   91.4, anchorX: 0.05, anchorY: 0.05, zPos: 11.5),
-        LeafData(assetId:  7, imgX:    30.8, imgY:   665.4, width:   66.4, height:   89.3, anchorX: 0.95, anchorY: 0.05, zPos: 12.0),
-        LeafData(assetId:  8, imgX:    32.7, imgY:   679.0, width:   64.0, height:   88.1, anchorX: 0.63, anchorY: 0.05, zPos: 12.5),
-        LeafData(assetId:  9, imgX:    34.7, imgY:   720.5, width:   36.6, height:   64.3, anchorX: 0.05, anchorY: 0.05, zPos: 13.0),
-        LeafData(assetId: 10, imgX:    61.8, imgY:   741.0, width:   20.0, height:   26.9, anchorX: 0.05, anchorY: 0.05, zPos: 13.5),
-        LeafData(assetId: 11, imgX:    32.4, imgY:   742.3, width:   47.7, height:   48.6, anchorX: 0.93, anchorY: 0.05, zPos: 14.0),
-        LeafData(assetId: 12, imgX:    32.4, imgY:   664.7, width:   40.7, height:   29.8, anchorX: 0.18, anchorY: 0.23, zPos: 14.5),
-        LeafData(assetId: 13, imgX:    22.8, imgY:   664.8, width:   32.2, height:   10.8, anchorX: 0.95, anchorY: 0.92, zPos: 15.0),
-        LeafData(assetId:  3, imgX:    31.2, imgY:    -5.5, width:  361.9, height:  465.0, anchorX: 0.58, anchorY: 0.00, zPos: 15.5),
-        LeafData(assetId:  4, imgX:   -29.4, imgY:    -1.8, width:   71.3, height:  350.9, anchorX: 0.50, anchorY: 0.00, zPos: 16.0),
-        LeafData(assetId: 14, imgX:   -64.9, imgY:   462.7, width:   71.6, height:   93.2, anchorX: 0.95, anchorY: 0.05, zPos: 16.5),
-        LeafData(assetId: 15, imgX:   -50.3, imgY:   434.5, width:   64.2, height:   32.5, anchorX: 0.44, anchorY: 0.05, zPos: 17.0),
-        LeafData(assetId: 16, imgX:   -46.1, imgY:   401.1, width:   32.2, height:   45.5, anchorX: 0.05, anchorY: 0.05, zPos: 17.5),
-        LeafData(assetId: 17, imgX:   -26.1, imgY:   402.5, width:   84.0, height:  102.6, anchorX: 0.05, anchorY: 0.05, zPos: 18.0),
-        LeafData(assetId: 18, imgX:   -69.8, imgY:   351.0, width:  133.7, height:   77.7, anchorX: 0.95, anchorY: 0.72, zPos: 18.5),
-        LeafData(assetId: 19, imgX:    27.8, imgY:   443.1, width:   93.3, height:   50.7, anchorX: 0.05, anchorY: 0.05, zPos: 19.0),
-        LeafData(assetId: 20, imgX:   -50.0, imgY:   462.4, width:   76.9, height:   92.8, anchorX: 0.07, anchorY: 0.05, zPos: 19.5),
-        LeafData(assetId: 21, imgX:    -6.9, imgY:   378.8, width:   82.5, height:   90.1, anchorX: 0.05, anchorY: 0.05, zPos: 20.0),
-        LeafData(assetId: 22, imgX:    19.0, imgY:   359.9, width:  126.3, height:   96.1, anchorX: 0.05, anchorY: 0.05, zPos: 20.5),
-        LeafData(assetId: 23, imgX:   -50.2, imgY:   351.5, width:   89.4, height:   57.8, anchorX: 0.22, anchorY: 0.18, zPos: 21.0),
-        LeafData(assetId: 24, imgX:  -129.9, imgY:   427.1, width:   36.3, height:  117.3, anchorX: 0.95, anchorY: 0.05, zPos: 21.5),
-        LeafData(assetId: 25, imgX:  -107.8, imgY:   438.2, width:   54.7, height:  104.9, anchorX: 0.95, anchorY: 0.05, zPos: 22.0),
-        LeafData(assetId: 26, imgX:   -50.0, imgY:   367.9, width:   98.7, height:  111.7, anchorX: 0.85, anchorY: 0.05, zPos: 22.5),
-        LeafData(assetId: 27, imgX:  -120.4, imgY:   374.7, width:  118.6, height:   76.3, anchorX: 0.95, anchorY: 0.05, zPos: 23.0),
-        LeafData(assetId: 28, imgX:  -128.9, imgY:   383.5, width:  116.9, height:   97.4, anchorX: 0.95, anchorY: 0.05, zPos: 23.5),
-        LeafData(assetId: 29, imgX:   -66.0, imgY:   349.3, width:  137.7, height:   62.9, anchorX: 0.95, anchorY: 0.95, zPos: 24.0),
-        LeafData(assetId: 30, imgX:   -48.7, imgY:   341.6, width:  107.0, height:   93.3, anchorX: 0.05, anchorY: 0.95, zPos: 24.5),
-        LeafData(assetId: 31, imgX:   -42.1, imgY:   351.3, width:  109.0, height:  103.2, anchorX: 0.05, anchorY: 0.95, zPos: 25.0),
-        LeafData(assetId:  5, imgX:    -4.3, imgY:    -1.8, width:  420.1, height:  252.6, anchorX: 0.42, anchorY: 0.00, zPos: 25.5)
+        LeafData(assetId:  1, imgX:    30.4, imgY:     8.2, width:  124.3, height:  768.0, anchorX: 0.50, anchorY: 0.00, zPos: 11.0),
+        LeafData(assetId:  2, imgX:    30.6, imgY:     2.4, width:  354.4, height:  455.3, anchorX: 0.58, anchorY: 0.00, zPos: 11.5),
+        LeafData(assetId:  3, imgX:   -68.5, imgY:   459.5, width:   70.2, height:   91.3, anchorX: 0.88, anchorY: 0.12, zPos: 12.0),
+        LeafData(assetId:  4, imgX:   -19.8, imgY:   401.2, width:   82.2, height:  100.4, anchorX: 0.12, anchorY: 0.12, zPos: 12.5),
+        LeafData(assetId:  5, imgX:    33.7, imgY:   437.5, width:   91.4, height:   49.6, anchorX: 0.12, anchorY: 0.12, zPos: 13.0),
+        LeafData(assetId:  6, imgX:   -45.2, imgY:   459.2, width:   75.2, height:   90.9, anchorX: 0.12, anchorY: 0.12, zPos: 13.5),
+        LeafData(assetId:  7, imgX:    -1.1, imgY:   401.0, width:   80.8, height:   88.1, anchorX: 0.12, anchorY: 0.39, zPos: 14.0),
+        LeafData(assetId:  8, imgX:    27.2, imgY:   400.4, width:  123.7, height:   94.1, anchorX: 0.12, anchorY: 0.56, zPos: 14.5),
+        LeafData(assetId:  9, imgX:   -51.8, imgY:   383.9, width:   87.5, height:   56.6, anchorX: 0.19, anchorY: 0.88, zPos: 15.0),
+        LeafData(assetId: 10, imgX:  -109.9, imgY:   426.3, width:   58.0, height:  114.8, anchorX: 0.88, anchorY: 0.12, zPos: 15.5),
+        LeafData(assetId: 11, imgX:   -53.9, imgY:   400.8, width:  117.0, height:  109.3, anchorX: 0.66, anchorY: 0.42, zPos: 16.0),
+        LeafData(assetId: 12, imgX:  -126.9, imgY:   400.2, width:  122.8, height:  103.0, anchorX: 0.88, anchorY: 0.36, zPos: 16.5),
+        LeafData(assetId: 13, imgX:   -74.0, imgY:   355.2, width:  134.9, height:   81.6, anchorX: 0.88, anchorY: 0.88, zPos: 17.0),
+        LeafData(assetId: 14, imgX:   -39.3, imgY:   336.9, width:  113.1, height:  101.3, anchorX: 0.12, anchorY: 0.88, zPos: 17.5),
+        LeafData(assetId: 15, imgX:   -40.9, imgY:     1.6, width:   45.9, height:  344.3, anchorX: 0.50, anchorY: 0.00, zPos: 18.0),
+        LeafData(assetId: 16, imgX:    -4.2, imgY:     2.3, width:  411.3, height:  247.4, anchorX: 0.42, anchorY: 0.00, zPos: 18.5)
     ]
 
     // MARK: - Properties
@@ -104,7 +89,7 @@ public final class Plant31Node: SKNode {
     private var containerSize: CGSize = .zero
     private var isHanging: Bool = false
 
-    public var motionEffect: PlantMotionEffect = FlowerSwayMotionEffect()
+    public var motionEffect: PlantMotionEffect = ConnectedPlantSwayMotionEffect(swayAngle: 0.065, bounceScale: 1.12, flowerNodeNames: ["leaf_1", "leaf_15"])
     public var tapEffects: [PlantTapEffect] = [
         FloatingPetalsEffect(theme: .sakuraPink),
         SparklePollenEffect(theme: .golden),
@@ -183,8 +168,8 @@ public final class Plant31Node: SKNode {
     // MARK: - State 100: Hạt giống (Seed)
 
     private func buildSeedState() {
-        let baseCanvasW: CGFloat = 479.8
-        let baseCanvasH: CGFloat = 794.1
+        let baseCanvasW: CGFloat = 469.834533827
+        let baseCanvasH: CGFloat = 777.629081117
         let scaleX = containerSize.width / baseCanvasW
         let scaleY = containerSize.height / baseCanvasH
         self.baseScale = min(scaleX, scaleY) * 0.90
@@ -216,13 +201,13 @@ public final class Plant31Node: SKNode {
         // Fallback procedural
         let fallbackGroup = SKNode()
         fallbackGroup.name = "seedNode"
-        fallbackGroup.position = CGPoint(x: 0, y: 0)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: 0.000000000)
 
         let node = SKSpriteNode(texture: loadSeedTexture())
         node.name = "seedSprite"
-        node.size = CGSize(width: 80, height: 60)
+        node.size = CGSize(width: 10.339952878, height: 7.754964658)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        node.position = CGPoint(x: 0, y: -18.5)
+        node.position = CGPoint(x: 0.000000000, y: -2.391114103)
         node.zPosition = 10
         fallbackGroup.addChild(node)
         plantRootNode.addChild(fallbackGroup)
@@ -233,8 +218,8 @@ public final class Plant31Node: SKNode {
     // MARK: - State 200: Cây con (Sprout)
 
     private func buildSproutState() {
-        let baseCanvasW: CGFloat = 479.8
-        let baseCanvasH: CGFloat = 794.1
+        let baseCanvasW: CGFloat = 469.834533827
+        let baseCanvasH: CGFloat = 777.629081117
         let scaleX = containerSize.width / baseCanvasW
         let scaleY = containerSize.height / baseCanvasH
         self.baseScale = min(scaleX, scaleY) * 0.90
@@ -266,13 +251,13 @@ public final class Plant31Node: SKNode {
         // Fallback procedural
         let fallbackGroup = SKNode()
         fallbackGroup.name = "sproutNode"
-        fallbackGroup.position = CGPoint(x: 0, y: 0)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: 0.000000000)
 
         let node = SKSpriteNode(texture: loadSproutTexture())
         node.name = "sproutSprite"
-        node.size = CGSize(width: 140, height: 160)
+        node.size = CGSize(width: 18.094917536, height: 20.679905756)
         node.anchorPoint = CGPoint(x: 0.5, y: 0.05)
-        node.position = CGPoint(x: 0, y: -18.5)
+        node.position = CGPoint(x: 0.000000000, y: -2.391114103)
         node.zPosition = 10
         fallbackGroup.addChild(node)
         plantRootNode.addChild(fallbackGroup)
@@ -283,8 +268,8 @@ public final class Plant31Node: SKNode {
     // MARK: - State 3+: Trưởng thành (Mature Hoa sen hồng)
 
     private func buildMatureState() {
-        let baseCanvasW: CGFloat = 479.8
-        let baseCanvasH: CGFloat = 794.1
+        let baseCanvasW: CGFloat = 469.834533827
+        let baseCanvasH: CGFloat = 777.629081117
 
         let scaleX = containerSize.width / baseCanvasW
         let scaleY = containerSize.height / baseCanvasH
@@ -327,7 +312,7 @@ public final class Plant31Node: SKNode {
         // 2. Procedural Fallback nếu chưa tải được .sks
         let fallbackGroup = SKNode()
         fallbackGroup.name = "matureNode"
-        fallbackGroup.position = CGPoint(x: 0, y: -5.5)
+        fallbackGroup.position = CGPoint(x: 0.000000000, y: -0.710871760)
         plantRootNode.addChild(fallbackGroup)
 
         for leafData in Self.leavesMetadata {
@@ -359,17 +344,8 @@ public final class Plant31Node: SKNode {
 
         for petal in leafNodes {
             let id = Int(petal.name?.replacingOccurrences(of: "leaf_", with: "") ?? "") ?? 0
-            let stemId: Int?
-            if Self.topFlowerPetalIds.contains(id) {
-                stemId = 2
-            } else if Self.leftFlowerPetalIds.contains(id) {
-                stemId = 4
-            } else {
-                stemId = nil
-            }
-
-            guard let targetStemId = stemId,
-                  let stem = stemById[targetStemId],
+            guard Self.mainFlowerPetalIds.contains(id),
+                  let stem = stemById[15],
                   let parent = petal.parent else { continue }
 
             let convertedPos = stem.convert(petal.position, from: parent)
@@ -406,20 +382,19 @@ public final class Plant31Node: SKNode {
             let phaseDelay: TimeInterval
 
             if Self.stemIds.contains(id) {
-                // Cành hoa đung đưa nhẹ mang theo toàn bộ bông hoa
-                angle = id == 2 ? 0.018 : 0.022
-                duration = id == 2 ? 2.9 : 3.2
-                phaseDelay = id == 2 ? 0.0 : 0.35
+                // Cả cụm hoa chính và nụ hoa trên đung đưa rõ nét theo gió (mang theo toàn bộ cánh hoa không vỡ khớp)
+                angle = id == 1 ? 0.045 : 0.055
+                duration = id == 1 ? 2.1 : 2.3
+                phaseDelay = id == 1 ? 0.0 : 0.25
             } else if Self.lotusLeafIds.contains(id) {
-                // Lá sen đung đưa dịu dàng
-                angle = id == 3 ? 0.025 : 0.020
-                duration = id == 3 ? 2.7 : 3.1
-                phaseDelay = id == 3 ? 0.2 : 0.55
+                // Lá sen đung đưa mạnh mẽ, mềm mại theo gió quanh gốc cuống
+                angle = id == 2 ? 0.060 : 0.050
+                duration = id == 2 ? 2.0 : 2.4
+                phaseDelay = id == 2 ? 0.15 : 0.45
             } else {
-                // Từng cánh hoa đung đưa mềm mại quanh cuống cánh
-                angle = 0.032 + CGFloat(id % 4) * 0.006
-                duration = 2.0 + Double(id % 5) * 0.18
-                phaseDelay = Double(id % 7) * 0.12
+                // Các cánh hoa (3...14) là mảng ghép liền khối gắn trên cành leaf_15:
+                // giữ nguyên góc nghỉ để bông hoa đung đưa đồng bộ theo cành, không bị hở vết cắt giữa các cánh.
+                continue
             }
 
             let swayRight = SKAction.rotate(toAngle: rest + angle, duration: duration)

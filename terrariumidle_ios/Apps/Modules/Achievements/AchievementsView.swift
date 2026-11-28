@@ -89,6 +89,7 @@ struct AchievementsView: View {
                 Text(gameCenter.playerName).font(.subheadline.bold())
                 Button("Xem thành tích trên Game Center".tr) { gameCenter.showDashboard() }
                     .buttonStyle(.borderedProminent)
+                    .foregroundStyle(AccountStyle.cream)
                 HStack {
                     Button("Đồng bộ lại".tr) {
                         store.retrySync()
@@ -104,10 +105,15 @@ struct AchievementsView: View {
                 Text("Kết nối để lưu thành tích vào tài khoản Game Center và xem huy hiệu của Apple.".tr)
                     .font(.subheadline).foregroundStyle(AccountStyle.muted)
                 Button { gameCenter.connect() } label: {
-                    if gameCenter.isConnecting { ProgressView() }
-                    else { Text("Kết nối Game Center".tr) }
+                    if gameCenter.isConnecting {
+                        ProgressView()
+                            .tint(AccountStyle.cream)
+                    } else {
+                        Text("Kết nối Game Center".tr)
+                    }
                 }
                 .buttonStyle(.borderedProminent)
+                .foregroundStyle(AccountStyle.cream)
                 .disabled(gameCenter.isConnecting || store.userID == nil)
             }
             if let message = gameCenter.message {
