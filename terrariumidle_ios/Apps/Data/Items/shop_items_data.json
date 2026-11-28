@@ -13,19 +13,6 @@
         "levelUnlock": 10
     },
     {
-        "id": "item1_100",
-        "name": "Phân bón x100",
-        "description": "Kích thích tăng trưởng cho cây",
-        "image": "https://i.imgur.com/dXKrKlk.png",
-        "priceStore": 1900,
-        "priceOxygen": 1900,
-        "currencyUnit": "gemstone",
-        "type": "item",
-        "effect": "",
-        "itemTypeAttribute": "none",
-        "levelUnlock": 100
-    },
-    {
         "id": "item2_1",
         "name": "Xẻng",
         "description": "Di dời cây và chậu đến vị trí mới",
@@ -39,19 +26,6 @@
         "levelUnlock": 1
     },
     {
-        "id": "item2_50",
-        "name": "Xẻng x50",
-        "description": "Di dời cây và chậu đến vị trí mới",
-        "image": "https://i.imgur.com/nJt20X8.png",
-        "priceStore": 490,
-        "priceOxygen": 490,
-        "currencyUnit": "gemstone",
-        "type": "item",
-        "effect": "N.A",
-        "itemTypeAttribute": "none",
-        "levelUnlock": 50
-    },
-    {
         "id": "item3_100",
         "name": "Oxygen",
         "description": "chuyển 100 đá quý sang oxygen với tỷ lệ 5.5",
@@ -62,33 +36,7 @@
         "type": "item",
         "effect": "N.A",
         "itemTypeAttribute": "none",
-        "levelUnlock": 100
-    },
-    {
-        "id": "item3_1000",
-        "name": "Oxygen",
-        "description": "chuyển 1000 đá quý sang oxygen với tỷ lệ 5.5",
-        "image": "https://i.imgur.com/6n7hREG.png",
-        "priceStore": 1000,
-        "priceOxygen": 1000,
-        "currencyUnit": "gemstone",
-        "type": "item",
-        "effect": "N.A",
-        "itemTypeAttribute": "none",
-        "levelUnlock": 1000
-    },
-    {
-        "id": "item3_10000",
-        "name": "Oxygen",
-        "description": "chuyển 10000 đá quý sang oxygen với tỷ lệ 5.5",
-        "image": "https://i.imgur.com/6n7hREG.png",
-        "priceStore": 10000,
-        "priceOxygen": 10000,
-        "currencyUnit": "gemstone",
-        "type": "item",
-        "effect": "N.A",
-        "itemTypeAttribute": "none",
-        "levelUnlock": 10000
+        "levelUnlock": 5
     },
     {
         "id": "item4",
