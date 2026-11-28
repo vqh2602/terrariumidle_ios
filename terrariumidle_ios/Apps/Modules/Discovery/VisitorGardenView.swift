@@ -11,6 +11,7 @@ struct VisitorGardenView: View {
     @State private var atmosphere: VisitorAtmosphere?
     @State private var savedAudioSnapshot: BackgroundAudioManager.AudioSnapshot?
     @ObservedObject private var fireStore = FireStoreService.shared
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
 
     init(profile: DiscoveredProfile, repository: any DiscoveryReading,
          onLike: ((String, Int) -> Void)? = nil) {
@@ -162,7 +163,9 @@ struct VisitorGardenView: View {
     private var displayedLikes: Int { model.garden == nil ? profile.likes : model.likeCount }
 
     private var dropPestBar: some View {
-        let remaining = fireStore.gradenModel?.remainingVisitorPestDrops() ?? 0
+        let isVIP = SubscriptionManager.isVIP(gardenModel: fireStore.gradenModel)
+        let dailyLimit = GardenModel.visitorPestDropLimit(isVIP: isVIP)
+        let remaining = fireStore.gradenModel?.remainingVisitorPestDrops(isVIP: isVIP) ?? 0
         let bagCount = fireStore.gradenModel?.capturedPests.count ?? 0
         let hasBagPests = bagCount > 0
         return Button {
@@ -184,7 +187,7 @@ struct VisitorGardenView: View {
                     .font(.system(.caption, design: .rounded, weight: .bold))
                     .monospacedDigit()
                     .foregroundStyle(hasBagPests ? AccountStyle.green : Color(hex: "C07A53"))
-                Text("(\(remaining)/10)")
+                Text("(\(remaining)/\(dailyLimit))")
                     .font(.system(.caption, design: .rounded, weight: .bold))
                     .monospacedDigit()
                     .foregroundStyle(AccountStyle.muted)

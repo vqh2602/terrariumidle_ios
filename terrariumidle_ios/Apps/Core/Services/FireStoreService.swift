@@ -886,7 +886,7 @@ class FireStoreService: ObservableObject {
     enum VisitorPestDropError: LocalizedError {
         case signInRequired
         case ownGarden
-        case dailyLimitReached
+        case dailyLimitReached(limit: Int)
         case emptyBag
         case noPlantsAvailable
         case allPlantsInfested
@@ -898,8 +898,8 @@ class FireStoreService: ObservableObject {
                 return "Vui lòng đăng nhập để thả sâu.".tr
             case .ownGarden:
                 return "Bạn không thể thả sâu vào khu vườn của chính mình.".tr
-            case .dailyLimitReached:
-                return "Bạn đã thả tối đa 10 con sâu hôm nay. Hãy quay lại vào ngày mai nhé!".tr
+            case .dailyLimitReached(let limit):
+                return "Bạn đã thả tối đa %d con sâu hôm nay. Hãy quay lại vào ngày mai nhé!".tr(limit)
             case .emptyBag:
                 return "Túi sâu đã hết (0/5). Hãy quay về vườn bắt thêm sâu nhé!".tr
             case .noPlantsAvailable:
@@ -1006,7 +1006,7 @@ class FireStoreService: ObservableObject {
         db.collection("users").document(uid).updateData(["pestNotifications": []])
     }
 
-    /// Thả sâu vào vườn nhà người khác (tối đa 10 con/ngày, bám ngẫu nhiên vào 1 cây, nhận +350 oxygen/con).
+    /// Thả sâu vào vườn nhà người khác (thường 10 con/ngày, VIP 20 con/ngày, bám ngẫu nhiên vào 1 cây, nhận +350 oxygen/con).
     @MainActor
     func dropPestInVisitorGarden(
         targetGardenId: String,
@@ -1020,8 +1020,9 @@ class FireStoreService: ObservableObject {
         guard senderId != targetGardenId else {
             throw VisitorPestDropError.ownGarden
         }
-        guard senderGarden.remainingVisitorPestDrops() > 0 else {
-            throw VisitorPestDropError.dailyLimitReached
+        let isVIP = SubscriptionManager.isVIP(gardenModel: senderGarden)
+        guard senderGarden.remainingVisitorPestDrops(isVIP: isVIP) > 0 else {
+            throw VisitorPestDropError.dailyLimitReached(limit: GardenModel.visitorPestDropLimit(isVIP: isVIP))
         }
         guard let speciesToSend = senderGarden.capturedPests.first else {
             throw VisitorPestDropError.emptyBag
@@ -1094,9 +1095,9 @@ class FireStoreService: ObservableObject {
             return parsed
         }
 
-        // Thưởng +350 oxygen, cập nhật giới hạn 10 con/ngày và trừ 1 sâu đã bắt trong túi Bugsnet
+        // Thưởng +350 oxygen, cập nhật lượt thả trong ngày và trừ 1 sâu đã bắt trong túi Bugsnet
         var latestSender = self.gradenModel ?? senderGarden
-        guard latestSender.recordVisitorPestDrop() != nil else {
+        guard latestSender.recordVisitorPestDrop(isVIP: isVIP) != nil else {
             throw VisitorPestDropError.emptyBag
         }
         let reward = GardenModel.visitorDropOxygenReward

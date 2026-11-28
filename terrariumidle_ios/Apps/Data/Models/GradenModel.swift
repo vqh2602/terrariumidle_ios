@@ -132,6 +132,7 @@ struct GardenPestNotification: Identifiable, Equatable, Codable {
 struct GardenModel {
     static let maxBagCapacity = 5
     static let maxDailyVisitorPestDrops = 10
+    static let maxDailyVIPVisitorPestDrops = 20
     static let visitorDropOxygenReward = 350
     static let pestKillOxygenReward = 50
     static let pestPenaltyMultiplier = 0.3
@@ -386,17 +387,21 @@ extension GardenModel {
         return pestDropDate == today ? max(0, pestDropCount) : 0
     }
 
-    func remainingVisitorPestDrops(now: Date = Date()) -> Int {
-        max(0, Self.maxDailyVisitorPestDrops - usedVisitorPestDropsToday(now: now))
+    static func visitorPestDropLimit(isVIP: Bool) -> Int {
+        isVIP ? maxDailyVIPVisitorPestDrops : maxDailyVisitorPestDrops
+    }
+
+    func remainingVisitorPestDrops(isVIP: Bool = false, now: Date = Date()) -> Int {
+        max(0, Self.visitorPestDropLimit(isVIP: isVIP) - usedVisitorPestDropsToday(now: now))
     }
 
     var canDropPestToVisitor: Bool {
-        remainingVisitorPestDrops() > 0 && !capturedPests.isEmpty
+        remainingVisitorPestDrops(isVIP: vipStatus.isCurrentlyActive) > 0 && !capturedPests.isEmpty
     }
 
     /// Consumes the oldest captured pest in the Bugsnet bag when releasing to a visitor garden.
-    mutating func recordVisitorPestDrop(date: Date = Date()) -> PestSpecies? {
-        guard remainingVisitorPestDrops(now: date) > 0, !capturedPests.isEmpty else {
+    mutating func recordVisitorPestDrop(isVIP: Bool = false, date: Date = Date()) -> PestSpecies? {
+        guard remainingVisitorPestDrops(isVIP: isVIP, now: date) > 0, !capturedPests.isEmpty else {
             return nil
         }
         let today = Self.todayDateKey(date: date)

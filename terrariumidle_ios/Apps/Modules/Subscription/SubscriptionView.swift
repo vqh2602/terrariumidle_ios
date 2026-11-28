@@ -621,6 +621,13 @@ struct SubscriptionView: View {
                 )
                 Divider()
                 perkRow(
+                    icon: "ladybug.fill",
+                    tint: AccountStyle.green,
+                    title: "Thả sâu tối đa 20 lần/ngày".tr,
+                    detail: "Tăng giới hạn thả sâu vào vườn bạn từ 10 lên 20 lần mỗi ngày, nhận 350 Oxygen cho mỗi con sâu.".tr
+                )
+                Divider()
+                perkRow(
                     icon: "arrow.triangle.2.circlepath",
                     tint: Color(hex: "C07A53"),
                     title: "Mở khóa tính năng Đổi chậu".tr,

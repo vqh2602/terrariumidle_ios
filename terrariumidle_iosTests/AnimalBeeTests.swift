@@ -199,4 +199,46 @@ struct AnimalBeeTests {
         #expect(garden.recordVisitorPestDrop() == nil)
         #expect(garden.money.oxygen == initialOxygen + GardenModel.visitorDropOxygenReward * 2)
     }
+
+    @Test func visitorPestDailyLimitsRespectVIPAndDoNotConsumeExtraPests() {
+        let date = Date(timeIntervalSince1970: 1_800_000_000)
+        for isVIP in [false, true] {
+            var garden = makeGarden(plants: [])
+            let initialOxygen = garden.money.oxygen
+            let limit = isVIP ? 20 : 10
+            #expect(garden.remainingVisitorPestDrops(isVIP: isVIP, now: date) == limit)
+            for _ in 0..<limit {
+                garden.capturedPests = [.bug1]
+                #expect(garden.recordVisitorPestDrop(isVIP: isVIP, date: date) == .bug1)
+            }
+            garden.capturedPests = [.grasshopper]
+            #expect(garden.remainingVisitorPestDrops(isVIP: isVIP, now: date) == 0)
+            #expect(garden.recordVisitorPestDrop(isVIP: isVIP, date: date) == nil)
+            #expect(garden.capturedPests == [.grasshopper])
+            #expect(garden.pestDropCount == limit)
+            #expect(garden.money.oxygen == initialOxygen + limit * GardenModel.visitorDropOxygenReward)
+        }
+    }
+
+    @Test func visitorPestDropsKeepUsageWhenVIPChangesAndResetNextDay() {
+        let date = Date(timeIntervalSince1970: 1_800_000_000)
+        var garden = makeGarden(plants: [])
+        garden.pestDropDate = GardenModel.todayDateKey(date: date)
+        garden.pestDropCount = 10
+        garden.capturedPests = [.bug1, .grasshopper]
+        #expect(garden.remainingVisitorPestDrops(isVIP: false, now: date) == 0)
+        #expect(garden.remainingVisitorPestDrops(isVIP: true, now: date) == 10)
+        #expect(garden.recordVisitorPestDrop(isVIP: true, date: date) == .bug1)
+        #expect(garden.remainingVisitorPestDrops(isVIP: false, now: date) == 0)
+        #expect(garden.recordVisitorPestDrop(isVIP: false, date: date) == nil)
+        #expect(garden.capturedPests == [.grasshopper])
+
+        let nextDay = Calendar.current.date(byAdding: .day, value: 1, to: date)!
+        #expect(garden.remainingVisitorPestDrops(isVIP: true, now: nextDay) == 20)
+        #expect(garden.remainingVisitorPestDrops(isVIP: false, now: nextDay) == 10)
+        #expect(garden.recordVisitorPestDrop(isVIP: true, date: nextDay) == .grasshopper)
+        #expect(garden.pestDropCount == 1)
+        #expect(garden.pestDropDate == GardenModel.todayDateKey(date: nextDay))
+    }
+
 }

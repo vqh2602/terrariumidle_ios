@@ -112,8 +112,13 @@ final class VisitorGardenViewModel: ObservableObject {
         return viewerID == garden.profile.id
     }
 
+    var dailyDropLimit: Int {
+        GardenModel.visitorPestDropLimit(isVIP: SubscriptionManager.isVIP(gardenModel: FireStoreService.shared.gradenModel))
+    }
+
     var remainingDailyDrops: Int {
-        FireStoreService.shared.gradenModel?.remainingVisitorPestDrops() ?? 0
+        let garden = FireStoreService.shared.gradenModel
+        return garden?.remainingVisitorPestDrops(isVIP: SubscriptionManager.isVIP(gardenModel: garden)) ?? 0
     }
 
     var capturedPestCount: Int {
@@ -128,7 +133,7 @@ final class VisitorGardenViewModel: ObservableObject {
     func dropPest() async {
         guard let garden, !isDroppingPest else { return }
         guard remainingDailyDrops > 0 else {
-            pestDropMessage = FireStoreService.VisitorPestDropError.dailyLimitReached.errorDescription
+            pestDropMessage = FireStoreService.VisitorPestDropError.dailyLimitReached(limit: dailyDropLimit).errorDescription
             return
         }
         guard capturedPestCount > 0 else {

@@ -1,6 +1,111 @@
 {
   "sourceLanguage" : "vi",
   "strings" : {
+    "Tăng giới hạn thả sâu vào vườn bạn từ 10 lên 20 lần mỗi ngày, nhận 350 Oxygen cho mỗi con sâu." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Increase your daily pest release limit in friends' gardens from 10 to 20, earning 350 Oxygen for each pest."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "友達の庭に虫を放せる回数が1日10回から20回に増え、1匹につき酸素350を獲得できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "친구 정원에 벌레를 놓는 일일 한도가 10회에서 20회로 늘어나며, 마리당 산소 350을 얻습니다."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tăng giới hạn thả sâu vào vườn bạn từ 10 lên 20 lần mỗi ngày, nhận 350 Oxygen cho mỗi con sâu."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每日向好友花园放虫的次数从10次增加到20次，每只可获得350氧气。"
+          }
+        }
+      }
+    },
+    "Thả sâu tối đa 20 lần/ngày" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Release pests up to 20 times/day"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1日最大20回、虫を放せます"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "하루 최대 20회 벌레 놓기"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thả sâu tối đa 20 lần/ngày"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每日最多放虫20次"
+          }
+        }
+      }
+    },
+    "Bạn đã thả tối đa %d con sâu hôm nay. Hãy quay lại vào ngày mai nhé!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You've released the daily maximum of %d pests today. Come back tomorrow!"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本日の虫の放出上限%d匹に達しました。また明日お越しください！"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오늘 벌레 놓기 한도 %d마리에 도달했어요. 내일 다시 와 주세요!"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bạn đã thả tối đa %d con sâu hôm nay. Hãy quay lại vào ngày mai nhé!"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天已达到放虫上限 %d 只。明天再来吧！"
+          }
+        }
+      }
+    },
     "-70%" : {
 
     },
@@ -34891,37 +34996,37 @@
         }
       }
     },
-    "Xịt hóa chất miễn phí 1 lần/ngày (VIP 5 lần) diệt sạch sâu trong 5s. Bắt sâu vào túi Bugsnet để thả vườn bạn tối đa 10 lần/ngày nhận 350 Oxy/con." : {
+    "Xịt hóa chất miễn phí 1 lần/ngày (VIP 5 lần) diệt sạch sâu trong 5s. Bắt sâu vào túi Bugsnet để thả vườn bạn tối đa 10 lần/ngày (VIP 20 lần) nhận 350 Oxy/con." : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Free chemical spray 1/day (VIP 5/day) clears all pests in 5s. Catch pests in your Bugsnet bag to drop in friends' gardens up to 10/day for 350 Oxygen each."
+            "value" : "Free chemical spray 1/day (VIP 5/day) clears all pests in 5s. Catch pests in your Bugsnet bag to drop in friends' gardens up to 10/day (VIP 20/day) for 350 Oxygen each."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1日1回無料の薬剤スプレー（VIPは5回）で5秒以内に害虫を一掃。Bugsnetに捕まえた虫を友達の庭へ1日最大10回放して、1匹につき酸素350を獲得できます。"
+            "value" : "1日1回無料の薬剤スプレー（VIPは5回）で5秒以内に害虫を一掃。Bugsnetに捕まえた虫を友達の庭へ1日最大10回（VIPは20回）放して、1匹につき酸素350を獲得できます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "하루 1회 무료 살충 스프레이(VIP 5회)로 5초 만에 해충을 제거하세요. Bugsnet 가방에 잡은 벌레를 친구 정원에 하루 최대 10회 놓아 마리당 산소 350을 얻을 수 있습니다."
+            "value" : "하루 1회 무료 살충 스프레이(VIP 5회)로 5초 만에 해충을 제거하세요. Bugsnet 가방에 잡은 벌레를 친구 정원에 하루 최대 10회(VIP 20회) 놓아 마리당 산소 350을 얻을 수 있습니다."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Xịt hóa chất miễn phí 1 lần/ngày (VIP 5 lần) diệt sạch sâu trong 5s. Bắt sâu vào túi Bugsnet để thả vườn bạn tối đa 10 lần/ngày nhận 350 Oxy/con."
+            "value" : "Xịt hóa chất miễn phí 1 lần/ngày (VIP 5 lần) diệt sạch sâu trong 5s. Bắt sâu vào túi Bugsnet để thả vườn bạn tối đa 10 lần/ngày (VIP 20 lần) nhận 350 Oxy/con."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "每日免费喷雾 1 次（VIP 5 次）可在 5 秒内清除所有害虫。将抓入 Bugsnet 虫袋的虫子放到好友花园，每日最多 10 次，每次得 350 氧气。"
+            "value" : "每日免费喷雾 1 次（VIP 5 次）可在 5 秒内清除所有害虫。将抓入 Bugsnet 虫袋的虫子放到好友花园，每日最多 10 次（VIP 20 次），每次得 350 氧气。"
           }
         }
       }
