@@ -222,7 +222,7 @@ struct PlantItemView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isHanging ? .top : .bottom)
             }
         }
-        .overlay(alignment: isHanging ? .top : .bottom) {
+        .overlay(alignment: .top) {
             if isInfested && !isStandaloneItem && !hasEmptyIds {
                 HStack(spacing: 3) {
                     Image(systemName: "ladybug.fill")
@@ -234,7 +234,8 @@ struct PlantItemView: View {
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3)
                 .background(Color(hex: "B83B2E").opacity(0.90), in: Capsule())
-                .padding(isHanging ? .top : .bottom, 6)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.top, 6)
                 .allowsHitTesting(false)
             }
         }

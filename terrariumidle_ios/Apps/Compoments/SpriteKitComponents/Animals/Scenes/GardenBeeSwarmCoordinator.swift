@@ -789,13 +789,10 @@ public final class GardenBeeOverlayScene: SKScene {
         var closest: (pest: PestAgentNode, dist: CGFloat)?
 
         for pest in pestNodes.values {
-            guard !pest.isHidden, !pest.isDisposed else { continue }
-            let hitRadius = max(34.0, pest.displayWidth * 1.4)
+            guard pest.containsWorldPoint(worldPoint) else { continue }
             let d = hypot(worldPoint.x - pest.position.x, worldPoint.y - pest.position.y)
-            if d <= hitRadius {
-                if closest == nil || d < closest!.dist {
-                    closest = (pest, d)
-                }
+            if closest == nil || d < closest!.dist {
+                closest = (pest, d)
             }
         }
         return closest?.pest

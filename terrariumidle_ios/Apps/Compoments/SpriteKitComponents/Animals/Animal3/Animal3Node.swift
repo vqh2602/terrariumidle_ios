@@ -188,16 +188,16 @@ public final class Animal3Node: SKNode, AnimalInteractiveNode {
 
         let bagW = 320.0 * currentScale
         let bagH = 604.0 * currentScale
-        // 5 vị trí gọn gàng bên trong bụng túi lưới
+        // 5 vị trí xếp theo dáng giọt nước (1 trên - 2 giữa - 2 dưới) để luôn nằm gọn trong lưới
         let layoutOffsets: [(dx: CGFloat, dy: CGFloat, rot: CGFloat, flipX: CGFloat)] = [
-            (-0.15, -0.06,  0.18,  1.0),
-            ( 0.14, -0.04, -0.22, -1.0),
-            (-0.02, -0.01,  0.05,  1.0),
-            (-0.12,  0.06, -0.14, -1.0),
-            ( 0.12,  0.07,  0.16,  1.0)
+            ( 0.00,  0.06,  0.05,  1.0),
+            (-0.15, -0.03,  0.14,  1.0),
+            ( 0.15, -0.03, -0.14, -1.0),
+            (-0.14, -0.13, -0.12, -1.0),
+            ( 0.14, -0.13,  0.12,  1.0)
         ]
 
-        let bugDisplayW = max(16.0, bagW * 0.30)
+        let bugDisplayW = max(14.0, bagW * 0.22)
 
         for (index, species) in capturedPests.prefix(5).enumerated() {
             let tex = PestTextureCache.shared.texture(named: species.previewImageName)

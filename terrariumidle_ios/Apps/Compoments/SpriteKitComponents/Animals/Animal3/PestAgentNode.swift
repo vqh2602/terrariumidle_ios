@@ -77,6 +77,27 @@ public final class PestAgentNode: SKNode {
     public private(set) var isFacingRight: Bool = false
     public private(set) var isDisposed: Bool = false
 
+    /// Kiểm tra điểm chạm (trong hệ tọa độ `parent` / `worldNode`) có trúng thân sâu hay không.
+    public func containsWorldPoint(_ worldPoint: CGPoint, padding: CGFloat = 6.0) -> Bool {
+        guard !isHidden, !isDisposed else { return false }
+        let localPoint: CGPoint
+        if let parent {
+            localPoint = convert(worldPoint, from: parent)
+        } else {
+            localPoint = CGPoint(x: worldPoint.x - position.x, y: worldPoint.y - position.y)
+        }
+        var bounds = facingNode.calculateAccumulatedFrame()
+        if bounds.isEmpty {
+            bounds = CGRect(
+                x: -displayWidth * 0.5,
+                y: -displayWidth * 0.35,
+                width: displayWidth,
+                height: displayWidth * 0.7
+            )
+        }
+        return bounds.insetBy(dx: -padding, dy: -padding).contains(localPoint)
+    }
+
     private var patrolCenter: CGPoint = .zero
     private var patrolSpreadX: CGFloat = 18.0
     private var patrolSpreadY: CGFloat = 6.0

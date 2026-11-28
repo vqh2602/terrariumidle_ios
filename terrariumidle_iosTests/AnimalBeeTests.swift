@@ -124,7 +124,11 @@ struct AnimalBeeTests {
 
         for species in PestSpecies.allCases {
             let pestNode = PestAgentNode(species: species, plantPositionKey: "1,1", displayWidth: 32)
+            pestNode.position = CGPoint(x: 100, y: 100)
             #expect(!pestNode.isDisposed)
+            #expect(pestNode.containsWorldPoint(CGPoint(x: 100, y: 100)))
+            #expect(!pestNode.containsWorldPoint(CGPoint(x: 145, y: 100)))
+            #expect(!pestNode.containsWorldPoint(CGPoint(x: 100, y: 140)))
         }
     }
 
