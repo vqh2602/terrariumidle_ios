@@ -163,6 +163,8 @@ struct VisitorGardenView: View {
 
     private var dropPestBar: some View {
         let remaining = fireStore.gradenModel?.remainingVisitorPestDrops() ?? 0
+        let bagCount = fireStore.gradenModel?.capturedPests.count ?? 0
+        let hasBagPests = bagCount > 0
         return Button {
             Task { await model.dropPest() }
         } label: {
@@ -171,23 +173,29 @@ struct VisitorGardenView: View {
                     ProgressView()
                         .tint(Color(hex: "4E823C"))
                 } else {
-                    Image(systemName: "ladybug.fill")
+                    Image(systemName: hasBagPests ? "ladybug.fill" : "exclamationmark.triangle.fill")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(Color(hex: "4E823C"))
+                        .foregroundStyle(hasBagPests ? Color(hex: "4E823C") : Color(hex: "C07A53"))
                 }
-                Text("Thả sâu".tr)
+                Text(hasBagPests ? "Thả sâu".tr : "Hết sâu · Bắt mới".tr)
                     .font(.system(.subheadline, design: .rounded, weight: .heavy))
                     .foregroundStyle(AccountStyle.ink)
+                Text("Túi %d/%d".tr(bagCount, GardenModel.maxBagCapacity))
+                    .font(.system(.caption, design: .rounded, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(hasBagPests ? AccountStyle.green : Color(hex: "C07A53"))
                 Text("(\(remaining)/10)")
                     .font(.system(.caption, design: .rounded, weight: .bold))
                     .monospacedDigit()
                     .foregroundStyle(AccountStyle.muted)
-                Text("+350 💨")
-                    .font(.system(.caption, design: .rounded, weight: .heavy))
-                    .foregroundStyle(AccountStyle.green)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(AccountStyle.green.opacity(0.14), in: Capsule())
+                if hasBagPests {
+                    Text("+350 💨")
+                        .font(.system(.caption, design: .rounded, weight: .heavy))
+                        .foregroundStyle(AccountStyle.green)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(AccountStyle.green.opacity(0.14), in: Capsule())
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -196,7 +204,7 @@ struct VisitorGardenView: View {
         }
         .buttonStyle(DiscoveryPressStyle())
         .disabled(model.isDroppingPest || remaining <= 0)
-        .opacity(remaining > 0 ? 1.0 : 0.65)
+        .opacity(remaining > 0 ? (hasBagPests ? 1.0 : 0.85) : 0.65)
     }
 
     private func applyVisitorAtmosphere(for garden: VisitorGarden) {

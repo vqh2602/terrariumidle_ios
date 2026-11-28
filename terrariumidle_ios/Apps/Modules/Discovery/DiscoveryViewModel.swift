@@ -116,6 +116,10 @@ final class VisitorGardenViewModel: ObservableObject {
         FireStoreService.shared.gradenModel?.remainingVisitorPestDrops() ?? 0
     }
 
+    var capturedPestCount: Int {
+        FireStoreService.shared.gradenModel?.capturedPests.count ?? 0
+    }
+
     var hasPlantTargets: Bool {
         guard let garden else { return false }
         return garden.slots.values.contains { !$0.isSticker && !$0.isAnimal && !$0.plantID.isEmpty && !$0.potID.isEmpty }
@@ -123,6 +127,14 @@ final class VisitorGardenViewModel: ObservableObject {
 
     func dropPest() async {
         guard let garden, !isDroppingPest else { return }
+        guard remainingDailyDrops > 0 else {
+            pestDropMessage = FireStoreService.VisitorPestDropError.dailyLimitReached.errorDescription
+            return
+        }
+        guard capturedPestCount > 0 else {
+            pestDropMessage = FireStoreService.VisitorPestDropError.emptyBag.errorDescription
+            return
+        }
         let token = generation
         isDroppingPest = true
         pestDropMessage = nil
@@ -136,7 +148,16 @@ final class VisitorGardenViewModel: ObservableObject {
             guard token == generation else { return }
             self.garden?.pests.append(result.pest)
             AudioPlayer.shared.playClickSound(named: "virtual_vibes-pop-tap-click-fx-383733")
-            pestDropMessage = "Đã thả %@ lên cây · +%d 💨!".tr(result.pest.kind.displayName, result.oxygenReward)
+            let remainingInBag = FireStoreService.shared.gradenModel?.capturedPests.count ?? 0
+            if remainingInBag == 0 {
+                pestDropMessage = "Đã thả %@ lên cây · +%d 💨! Túi đã hết sâu, hãy về vườn bắt thêm nhé.".tr(
+                    result.pest.kind.displayName, result.oxygenReward
+                )
+            } else {
+                pestDropMessage = "Đã thả %@ lên cây · +%d 💨! (Túi còn %d/%d)".tr(
+                    result.pest.kind.displayName, result.oxygenReward, remainingInBag, GardenModel.maxBagCapacity
+                )
+            }
         } catch {
             guard token == generation else { return }
             pestDropMessage = (error as? LocalizedError)?.errorDescription ?? "Chưa thể thả sâu lúc này.".tr

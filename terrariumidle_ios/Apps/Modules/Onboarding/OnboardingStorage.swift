@@ -147,7 +147,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
                 Highlight(
                     icon: "aqi.medium",
                     title: "Xịt hóa chất & Thả sâu vườn bạn".tr,
-                    detail: "Xịt hóa chất miễn phí 1 lần/ngày (VIP 5 lần) diệt sạch sâu trong 5s. Thả sâu vườn bạn tối đa 10 lần/ngày nhận 350 Oxy/con.".tr
+                    detail: "Xịt hóa chất miễn phí 1 lần/ngày (VIP 5 lần) diệt sạch sâu trong 5s. Bắt sâu vào túi Bugsnet để thả vườn bạn tối đa 10 lần/ngày nhận 350 Oxy/con.".tr
                 )
             ]
         case .relax:

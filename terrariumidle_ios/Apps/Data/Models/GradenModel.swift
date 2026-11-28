@@ -390,6 +390,26 @@ extension GardenModel {
         max(0, Self.maxDailyVisitorPestDrops - usedVisitorPestDropsToday(now: now))
     }
 
+    var canDropPestToVisitor: Bool {
+        remainingVisitorPestDrops() > 0 && !capturedPests.isEmpty
+    }
+
+    /// Consumes the oldest captured pest in the Bugsnet bag when releasing to a visitor garden.
+    mutating func recordVisitorPestDrop(date: Date = Date()) -> PestSpecies? {
+        guard remainingVisitorPestDrops(now: date) > 0, !capturedPests.isEmpty else {
+            return nil
+        }
+        let today = Self.todayDateKey(date: date)
+        if pestDropDate != today {
+            pestDropDate = today
+            pestDropCount = 0
+        }
+        pestDropCount += 1
+        let sent = capturedPests.removeFirst()
+        money.oxygen += Self.visitorDropOxygenReward
+        return sent
+    }
+
     var bugsNetPosition: String? {
         var latestByPos: [String: Plant] = [:]
         for plant in plants where !plant.idPlant.isEmpty && !plant.idPot.isEmpty {

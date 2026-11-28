@@ -887,6 +887,7 @@ class FireStoreService: ObservableObject {
         case signInRequired
         case ownGarden
         case dailyLimitReached
+        case emptyBag
         case noPlantsAvailable
         case allPlantsInfested
         case unavailable
@@ -899,6 +900,8 @@ class FireStoreService: ObservableObject {
                 return "Bạn không thể thả sâu vào khu vườn của chính mình.".tr
             case .dailyLimitReached:
                 return "Bạn đã thả tối đa 10 con sâu hôm nay. Hãy quay lại vào ngày mai nhé!".tr
+            case .emptyBag:
+                return "Túi sâu đã hết (0/5). Hãy quay về vườn bắt thêm sâu nhé!".tr
             case .noPlantsAvailable:
                 return "Khu vườn này chưa có cây để thả sâu.".tr
             case .allPlantsInfested:
@@ -1011,7 +1014,7 @@ class FireStoreService: ObservableObject {
         existingTargetPests: [GardenPest]
     ) async throws -> (pest: GardenPest, oxygenReward: Int) {
         guard let senderId = auth.currentUser?.uid,
-              var senderGarden = self.gradenModel else {
+              let senderGarden = self.gradenModel else {
             throw VisitorPestDropError.signInRequired
         }
         guard senderId != targetGardenId else {
@@ -1020,14 +1023,15 @@ class FireStoreService: ObservableObject {
         guard senderGarden.remainingVisitorPestDrops() > 0 else {
             throw VisitorPestDropError.dailyLimitReached
         }
+        guard let speciesToSend = senderGarden.capturedPests.first else {
+            throw VisitorPestDropError.emptyBag
+        }
 
         let plantSlots = targetSlots.filter { !$0.isSticker && !$0.isAnimal && !$0.plantID.isEmpty && !$0.potID.isEmpty }
         guard !plantSlots.isEmpty else {
             throw VisitorPestDropError.noPlantsAvailable
         }
 
-        // Lấy loài sâu từ túi Bugsnet nếu đang có sẵn (giải phóng chỗ trong túi), ngược lại chọn ngẫu nhiên
-        let speciesToSend: PestSpecies = senderGarden.capturedPests.first ?? (PestSpecies.allCases.randomElement() ?? .bug1)
         let senderName = senderGarden.user.userName.isEmpty ? "Người chơi khác".tr : senderGarden.user.userName
         let now = Date().timeIntervalSince1970
 
@@ -1090,20 +1094,14 @@ class FireStoreService: ObservableObject {
             return parsed
         }
 
-        // Thưởng +350 oxygen, cập nhật giới hạn 10 con/ngày, và lấy 1 con ra khỏi túi nếu túi có sâu
-        let today = GardenModel.todayDateKey()
-        if senderGarden.pestDropDate != today {
-            senderGarden.pestDropDate = today
-            senderGarden.pestDropCount = 0
-        }
-        senderGarden.pestDropCount += 1
-        if !senderGarden.capturedPests.isEmpty {
-            senderGarden.capturedPests.removeFirst()
+        // Thưởng +350 oxygen, cập nhật giới hạn 10 con/ngày và trừ 1 sâu đã bắt trong túi Bugsnet
+        var latestSender = self.gradenModel ?? senderGarden
+        guard latestSender.recordVisitorPestDrop() != nil else {
+            throw VisitorPestDropError.emptyBag
         }
         let reward = GardenModel.visitorDropOxygenReward
-        senderGarden.money.oxygen += reward
         recordEventOxygen(reward)
-        saveGarden(gardenModel: senderGarden, debounce: false)
+        saveGarden(gardenModel: latestSender, debounce: false)
 
         return (createdPest, reward)
     }

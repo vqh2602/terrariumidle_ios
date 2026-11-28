@@ -171,4 +171,28 @@ struct AnimalBeeTests {
         #expect(vipGarden.remainingFreeSprays(isVIP: true) == 0)
         #expect(vipGarden.startWeather(.spray, isVIP: true, now: now + 60) == .insufficientTickets)
     }
+
+    @Test func visitorPestDropRequiresCapturedPestsAndConsumesFromBag() {
+        var garden = makeGarden(plants: [])
+        let initialOxygen = garden.money.oxygen
+        #expect(!garden.canDropPestToVisitor)
+        #expect(garden.recordVisitorPestDrop() == nil)
+        #expect(garden.money.oxygen == initialOxygen)
+
+        garden.capturedPests = [.bug1, .grasshopper]
+        #expect(garden.canDropPestToVisitor)
+
+        let firstSent = garden.recordVisitorPestDrop()
+        #expect(firstSent == .bug1)
+        #expect(garden.capturedPests == [.grasshopper])
+        #expect(garden.remainingVisitorPestDrops() == 9)
+        #expect(garden.money.oxygen == initialOxygen + GardenModel.visitorDropOxygenReward)
+
+        let secondSent = garden.recordVisitorPestDrop()
+        #expect(secondSent == .grasshopper)
+        #expect(garden.capturedPests.isEmpty)
+        #expect(!garden.canDropPestToVisitor)
+        #expect(garden.recordVisitorPestDrop() == nil)
+        #expect(garden.money.oxygen == initialOxygen + GardenModel.visitorDropOxygenReward * 2)
+    }
 }
