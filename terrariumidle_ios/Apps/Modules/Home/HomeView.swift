@@ -74,7 +74,7 @@ struct HomeView: View {
     @State private var pestToastMessage: String? = nil
     @State private var pestToastTask: Task<Void, Never>? = nil
     @State private var showPestAttackAlert: Bool = false
-    @State private var pestAttackAlertMessage: String = ""
+    @State private var pestAttackSummaries: [PestAttackSummary] = []
     @State private var lastHandledSprayDeadline: TimeInterval = 0
 
     init() {
@@ -354,12 +354,17 @@ struct HomeView: View {
                 }
             } catch { /* Dismissed or replaced earlier. */ }
         }
-        .alert("Khu vườn bị thả sâu!".tr, isPresented: $showPestAttackAlert) {
-            Button("Đã hiểu".tr, role: .cancel) {
-                fireStoreService.clearPestNotifications()
+        .overlay {
+            if showPestAttackAlert {
+                PestAttackModalView(summaries: pestAttackSummaries) {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        showPestAttackAlert = false
+                    }
+                    fireStoreService.clearPestNotifications()
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.94)))
+                .zIndex(50)
             }
-        } message: {
-            Text(pestAttackAlertMessage)
         }
         .task(id: reloadID) { await loadGarden() }
         .task(id: "load-\(reloadID)-\(dataReady)-\(backgroundReady)") {
@@ -560,16 +565,20 @@ struct HomeView: View {
             grouped[item.senderName] = counts
         }
 
-        let summaryLines = senderOrder.map { sender -> String in
+        let summaries = senderOrder.map { sender -> PestAttackSummary in
             let counts = grouped[sender] ?? (0, 0)
-            var parts: [String] = []
-            if counts.bug1 > 0 { parts.append("%d sâu xanh".tr(counts.bug1)) }
-            if counts.grasshopper > 0 { parts.append("%d châu chấu".tr(counts.grasshopper)) }
-            return "• %@: %@".tr(sender, parts.joined(separator: ", "))
-        }.joined(separator: "\n")
+            return PestAttackSummary(
+                id: sender,
+                senderName: sender,
+                bug1Count: counts.bug1,
+                grasshopperCount: counts.grasshopper
+            )
+        }
 
-        pestAttackAlertMessage = "Trong lúc bạn vắng mặt, khu vườn đã bị thả sâu:\n%@\n\nHãy chạm vào sâu trên cây để tiêu diệt (+300 Oxy) hoặc dùng Xịt hóa chất!".tr(summaryLines)
-        showPestAttackAlert = true
+        pestAttackSummaries = summaries
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+            showPestAttackAlert = true
+        }
     }
 
     private func showPestToast(_ text: String) {
