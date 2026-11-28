@@ -419,56 +419,108 @@ struct GardenWeatherOverlay: View {
         }
     }
 
-    // MARK: - Chemical Spray Simulation (Khói sương xịt thuốc côn trùng)
+    // MARK: - Chemical Spray Simulation (Khói sương xịt thuốc côn trùng chân thực)
 
     private func drawChemicalSpray(in canvas: inout GraphicsContext, size: CGSize, time: TimeInterval) {
         guard size.width > 0, size.height > 0 else { return }
 
-        // 1. Đám mây khói sương mịn phun ra từ 2 bên và cuộn xoáy lan tỏa toàn màn hình
-        for i in 0..<26 {
+        let remaining = max(0.0, weatherUntil - time)
+        let elapsed = max(0.0, GardenModel.WeatherKind.spray.duration - remaining)
+        let fadeIn = min(1.0, elapsed / 0.45)
+        let fadeOut = min(1.0, remaining / 1.1)
+        let masterAlpha = fadeIn * fadeOut
+        guard masterAlpha > 0.01 else { return }
+
+        // 1. Sương mù nền mềm mại lan tỏa (Soft Volumetric Ambient Mist)
+        for i in 0..<12 {
             let seed = Double(i)
-            let period = 1.6 + (seed.truncatingRemainder(dividingBy: 5)) * 0.28
-            let phase = (time + seed * 0.37).truncatingRemainder(dividingBy: period) / period
-            let fromLeft = (i % 2 == 0)
-            let startX: CGFloat = fromLeft ? -20.0 : size.width + 20.0
-            let dir: CGFloat = fromLeft ? 1.0 : -1.0
-            let travelX = dir * (size.width * (0.28 + CGFloat(seed.truncatingRemainder(dividingBy: 7)) * 0.09)) * phase
-            let baseY = size.height * (0.18 + CGFloat(seed.truncatingRemainder(dividingBy: 9)) * 0.085)
-            let driftY = sin(phase * .pi * 2.0 + seed) * 18.0 - phase * 16.0
-            let cx = startX + travelX
-            let cy = baseY + driftY
+            let period = 3.2 + (seed.truncatingRemainder(dividingBy: 4)) * 0.45
+            let phase = (time * 0.85 + seed * 0.53).truncatingRemainder(dividingBy: period) / period
+            let cx = size.width * (0.12 + CGFloat((i * 29) % 76) / 100.0) + sin(time * 0.9 + seed) * 28.0
+            let cy = size.height * (0.20 + CGFloat((i * 41) % 64) / 100.0) - CGFloat(phase) * 32.0
+            let r = max(size.width, size.height) * (0.16 + CGFloat(phase) * 0.14)
+            let a = sin(phase * .pi) * 0.15 * masterAlpha
+            guard a > 0.004 else { continue }
 
-            let radius = 34.0 + phase * 58.0 + CGFloat(seed.truncatingRemainder(dividingBy: 4)) * 12.0
-            let fade = sin(phase * .pi) * 0.24
-            guard fade > 0.005 else { continue }
-
-            let rect = CGRect(x: cx - radius, y: cy - radius * 0.72, width: radius * 2.0, height: radius * 1.44)
-            let tint = (i % 3 == 0)
-                ? Color(red: 0.78, green: 0.96, blue: 0.88).opacity(fade)
-                : Color.white.opacity(fade * 0.88)
-            canvas.fill(Path(ellipseIn: rect), with: .color(tint))
+            let baseColor = (i % 2 == 0)
+                ? Color(red: 0.86, green: 0.99, blue: 0.93)
+                : Color(red: 0.94, green: 1.0, blue: 0.97)
+            let gradient = Gradient(stops: [
+                .init(color: baseColor.opacity(a), location: 0.0),
+                .init(color: baseColor.opacity(a * 0.45), location: 0.48),
+                .init(color: baseColor.opacity(0.0), location: 1.0)
+            ])
+            let rect = CGRect(x: cx - r, y: cy - r, width: r * 2.0, height: r * 2.0)
+            canvas.fill(
+                Path(ellipseIn: rect),
+                with: .radialGradient(gradient, center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: r)
+            )
         }
 
-        // 2. Luồng tia phun sương mảnh bắn xéo từ các vòi phun
-        for i in 0..<48 {
-            let seed = Double(i + 100)
-            let period = 0.85 + (seed.truncatingRemainder(dividingBy: 4)) * 0.15
-            let phase = (time * 1.4 + seed * 0.19).truncatingRemainder(dividingBy: period) / period
+        // 2. Hai luồng vòi phun sương quét ngang vườn (Sweeping Aerosol Nozzle Plumes)
+        let nozzles: [(x: CGFloat, y: CGFloat, dir: CGFloat, baseAngle: Double, phaseShift: Double)] = [
+            (-12.0, size.height * 0.62,  1.0, -0.38, 0.0),
+            (size.width + 12.0, size.height * 0.46, -1.0, -0.32, 1.4)
+        ]
+        for (nIdx, nozzle) in nozzles.enumerated() {
+            let sweep = sin(time * 2.1 + nozzle.phaseShift) * 0.36
+            for i in 0..<20 {
+                let seed = Double(i + nIdx * 40)
+                let period = 1.25
+                let phase = (time * 1.15 + Double(i) * (period / 20.0)).truncatingRemainder(dividingBy: period) / period
+                let spread = (sin(seed * 3.7) * 0.18)
+                let angle = nozzle.baseAngle + sweep + spread
+                let reach = size.width * 0.88 * pow(phase, 0.72)
+
+                let cx = nozzle.x + nozzle.dir * cos(angle) * reach
+                let cy = nozzle.y + sin(angle) * reach + sin(time * 3.0 + seed) * 10.0 * phase
+                let radius = 16.0 + CGFloat(pow(phase, 0.85)) * 115.0
+
+                // Lõi vòi phun đậm nét hơn, tan dần thành khói sương mịn ở rìa
+                let alpha = (1.0 - phase) * (0.28 - 0.12 * phase) * masterAlpha
+                guard alpha > 0.004 else { continue }
+
+                let mistColor = (i % 3 == 0)
+                    ? Color(red: 0.78, green: 0.97, blue: 0.89)
+                    : Color.white
+                let gradient = Gradient(stops: [
+                    .init(color: mistColor.opacity(alpha), location: 0.0),
+                    .init(color: mistColor.opacity(alpha * 0.42), location: 0.45),
+                    .init(color: mistColor.opacity(0.0), location: 1.0)
+                ])
+                let rect = CGRect(x: cx - radius, y: cy - radius, width: radius * 2.0, height: radius * 2.0)
+                canvas.fill(
+                    Path(ellipseIn: rect),
+                    with: .radialGradient(gradient, center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: radius)
+                )
+            }
+        }
+
+        // 3. Hạt sương mịn li ti bay lơ lửng & lắng nhẹ (Fine Aerosol Micro-Droplets)
+        for i in 0..<44 {
+            let seed = Double(i + 200)
+            let period = 1.35 + (seed.truncatingRemainder(dividingBy: 5)) * 0.22
+            let phase = (time * 1.1 + seed * 0.23).truncatingRemainder(dividingBy: period) / period
             let fromLeft = (i % 2 == 0)
-            let nozzleX: CGFloat = fromLeft ? 0.0 : size.width
-            let nozzleY: CGFloat = size.height * (0.28 + CGFloat(Int(seed) % 4) * 0.16)
-            let spreadAngle = (seed.truncatingRemainder(dividingBy: 11) - 5.0) * 0.065
-            let reach = size.width * (0.45 + CGFloat(seed.truncatingRemainder(dividingBy: 5)) * 0.10) * phase
+            let startX: CGFloat = fromLeft ? 0.0 : size.width
             let dir: CGFloat = fromLeft ? 1.0 : -1.0
+            let startY = size.height * (0.22 + CGFloat((i * 19) % 56) / 100.0)
 
-            let px = nozzleX + dir * cos(spreadAngle) * reach
-            let py = nozzleY + sin(spreadAngle) * reach + phase * 14.0
-            let r: CGFloat = 1.4 + CGFloat(Int(seed) % 3) * 0.9
-            let alpha = (1.0 - phase) * 0.55
+            let px = startX + dir * (size.width * (0.25 + CGFloat((i * 13) % 65) / 100.0)) * pow(phase, 0.75)
+            let py = startY + sin(phase * .pi * 2.0 + seed) * 18.0 + CGFloat(phase * phase) * 26.0
+            let r: CGFloat = 1.2 + CGFloat(i % 3) * 0.85
+            let alpha = sin(phase * .pi) * 0.42 * masterAlpha
+            guard alpha > 0.01 else { continue }
 
+            let dotColor = Color(red: 0.90, green: 1.0, blue: 0.95)
+            let gradient = Gradient(stops: [
+                .init(color: dotColor.opacity(alpha), location: 0.0),
+                .init(color: dotColor.opacity(0.0), location: 1.0)
+            ])
+            let rect = CGRect(x: px - r * 2.0, y: py - r * 2.0, width: r * 4.0, height: r * 4.0)
             canvas.fill(
-                Path(ellipseIn: CGRect(x: px - r, y: py - r, width: r * 2.0, height: r * 2.0)),
-                with: .color(Color(red: 0.86, green: 0.98, blue: 0.92).opacity(alpha))
+                Path(ellipseIn: rect),
+                with: .radialGradient(gradient, center: CGPoint(x: px, y: py), startRadius: 0, endRadius: r * 2.0)
             )
         }
     }

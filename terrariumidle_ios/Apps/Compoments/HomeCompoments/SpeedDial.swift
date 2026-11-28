@@ -144,15 +144,15 @@ struct SpeedDial: View {
 
 enum GardenMenuDestination: String, CaseIterable, Identifiable {
     case weather = "Thời tiết"
-    case health = "Sức khỏe"
+    case events = "Sự kiện"
     case landscape = "Phong cảnh"
     case music = "Âm nhạc"
+    case health = "Sức khỏe"
     case store = "Cửa hàng"
-    case events = "Sự kiện"
-    case achievements = "Thành tích"
-    case mailbox = "Hòm thư"
     case discovery = "Khám phá"
     case layout = "Bố cục"
+    case mailbox = "Hòm thư"
+    case achievements = "Thành tích"
     case vip = "Gói VIP"
     case account = "Tài khoản"
 
