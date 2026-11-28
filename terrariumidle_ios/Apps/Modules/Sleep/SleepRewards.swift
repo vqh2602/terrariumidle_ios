@@ -16,7 +16,10 @@ final class SleepRewards: ObservableObject {
         self.userID = userID
         claimed = []
         weeklyDays = []
-        guard let userID, !userID.isEmpty else { return }
+        guard let userID, !userID.isEmpty else {
+            HealthRewardStatusStore.shared.updateSleepReceipts(claimed: [], weeklyDays: [], userID: nil)
+            return
+        }
         isLoading = true
         defer { isLoading = false }
         do {
@@ -25,6 +28,7 @@ final class SleepRewards: ObservableObject {
             claimed = Set((data?["sleepRewardDays"] as? [String: Any] ?? [:]).keys)
                 .union((data?["sleepRewardMilestones"] as? [String: Any] ?? [:]).keys)
             weeklyDays = Set((data?["sleepRewardWeekDays"] as? [String: Any] ?? [:]).keys)
+            HealthRewardStatusStore.shared.updateSleepReceipts(claimed: claimed, weeklyDays: weeklyDays, userID: userID)
         } catch {
             message = "Chưa tải được lịch sử nhận thưởng. Khi nhận, app sẽ kiểm tra lại để tránh trùng.".tr
         }
@@ -47,6 +51,7 @@ final class SleepRewards: ObservableObject {
             if grant.kind == .weekly {
                 weeklyDays.formUnion(grant.days.map(\.id))
             }
+            HealthRewardStatusStore.shared.updateSleepReceipts(claimed: claimed, weeklyDays: weeklyDays, userID: uid)
             message = "Khu vườn đã nhận %@ từ giấc ngủ của bạn!".tr(grant.prize)
         } catch { message = error.localizedDescription }
     }

@@ -79,6 +79,9 @@ struct SleepGardenView: View {
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { Task { await health.sync() } }
             }
+            .onChange(of: goal) { _, _ in
+                HealthRewardStatusStore.shared.recalculate(notifyIfNeeded: true)
+            }
             .alert("Quà từ giấc ngủ".tr, isPresented: Binding(
                 get: { rewards.message != nil }, set: { if !$0 { rewards.message = nil } }
             )) { Button("Đã hiểu".tr) { rewards.message = nil } }

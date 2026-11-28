@@ -7,12 +7,13 @@ struct SpeedDial: View {
     @State private var showMusicSheet = false
     @State private var showEffectsSheet = false
     @State private var showWeatherSheet = false
-    @State private var showSleepSheet = false
+    @State private var showHealthSheet = false
     @Binding var isEditing: Bool
     @Binding var backgroundRive: String
     @Binding var overlayRive: String?
     @EnvironmentObject var router: AppRouter
     @ObservedObject private var mailboxStore = MailboxStore.shared
+    @ObservedObject private var healthRewardStatus = HealthRewardStatusStore.shared
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -47,15 +48,21 @@ struct SpeedDial: View {
         }
         .task(id: idleTimerKey) {
             isIdle = false
-            guard !isOpen, !showMusicSheet, !showEffectsSheet, !showWeatherSheet, !showSleepSheet, scenePhase == .active else { return }
+            guard !isOpen, !showMusicSheet, !showEffectsSheet, !showWeatherSheet, !showHealthSheet, scenePhase == .active else { return }
             do {
                 try await Task.sleep(for: .seconds(4))
                 try Task.checkCancellation()
                 withAnimation(.easeInOut(duration: 0.6)) { isIdle = true }
             } catch { /* View disappearance or interaction cancels the idle delay. */ }
         }
-        .sheet(isPresented: $showSleepSheet) {
-            SleepGardenView()
+        .onChange(of: healthRewardStatus.shouldOpenHealthHub) { _, shouldOpen in
+            guard shouldOpen else { return }
+            healthRewardStatus.shouldOpenHealthHub = false
+            isOpen = false
+            showHealthSheet = true
+        }
+        .sheet(isPresented: $showHealthSheet) {
+            HealthHubSheet()
         }
         .sheet(isPresented: $showWeatherSheet) {
             GardenWeatherSheet()
@@ -69,7 +76,7 @@ struct SpeedDial: View {
     }
 
     private var idleTimerKey: String {
-        "\(isOpen)-\(showMusicSheet)-\(showEffectsSheet)-\(showWeatherSheet)-\(showSleepSheet)-\(scenePhase)"
+        "\(isOpen)-\(showMusicSheet)-\(showEffectsSheet)-\(showWeatherSheet)-\(showHealthSheet)-\(scenePhase)"
     }
 
     private var launcher: some View {
@@ -96,7 +103,7 @@ struct SpeedDial: View {
                 // Fade the artwork, keeping the Button's hit region fully active.
                 .opacity(isIdle && !isOpen ? 0.35 : 1)
                 .overlay(alignment: .topTrailing) {
-                    if !isOpen && mailboxStore.unreadCount > 0 {
+                    if !isOpen && (mailboxStore.unreadCount > 0 || healthRewardStatus.totalUnclaimedCount > 0) {
                         Circle()
                             .fill(Color(hex: "D95D39"))
                             .frame(width: 13, height: 13)
@@ -115,7 +122,7 @@ struct SpeedDial: View {
         close()
         switch destination {
         case .weather: showWeatherSheet = true
-        case .sleep: showSleepSheet = true
+        case .health: showHealthSheet = true
         case .landscape: showEffectsSheet = true
         case .music: showMusicSheet = true
         case .store: router.push(.storeView)
@@ -137,7 +144,7 @@ struct SpeedDial: View {
 
 enum GardenMenuDestination: String, CaseIterable, Identifiable {
     case weather = "Thời tiết"
-    case sleep = "Giấc ngủ"
+    case health = "Sức khỏe"
     case landscape = "Phong cảnh"
     case music = "Âm nhạc"
     case store = "Cửa hàng"
@@ -153,7 +160,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .weather: return "cloud.sun.fill"
-        case .sleep: return "moon.stars.fill"
+        case .health: return "heart.text.square.fill"
         case .landscape: return "sun.horizon.fill"
         case .music: return "music.note"
         case .store: return "basket.fill"
@@ -169,7 +176,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
     var tint: Color {
         switch self {
         case .weather: return Color(hex: "5E99B5")
-        case .sleep: return Color(hex: "8D9360")
+        case .health: return Color(hex: "C26A63")
         case .landscape: return Color(hex: "B18A45")
         case .music: return Color(hex: "AC7862")
         case .store, .layout: return AccountStyle.green
@@ -186,6 +193,7 @@ enum GardenMenuDestination: String, CaseIterable, Identifiable {
 struct GardenMenuPanel: View {
     let onSelect: (GardenMenuDestination) -> Void
     @ObservedObject private var mailboxStore = MailboxStore.shared
+    @ObservedObject private var healthRewardStatus = HealthRewardStatusStore.shared
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var canScrollDown = false
 
@@ -248,8 +256,9 @@ struct GardenMenuPanel: View {
                     .frame(width: 40, height: 36)
                     .background(destination.tint.opacity(0.11), in: RoundedRectangle(cornerRadius: 12))
                     .overlay(alignment: .topTrailing) {
-                        if destination == .mailbox && mailboxStore.unreadCount > 0 {
-                            Text(mailboxStore.unreadCount > 9 ? "9+" : "\(mailboxStore.unreadCount)")
+                        let badgeCount = badgeCount(for: destination)
+                        if badgeCount > 0 {
+                            Text(badgeCount > 9 ? "9+" : "\(badgeCount)")
                                 .font(.system(size: 10, weight: .heavy, design: .rounded))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 5)
@@ -281,6 +290,14 @@ struct GardenMenuPanel: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(destination.rawValue.tr)
+    }
+
+    private func badgeCount(for destination: GardenMenuDestination) -> Int {
+        switch destination {
+        case .mailbox: return mailboxStore.unreadCount
+        case .health: return healthRewardStatus.totalUnclaimedCount
+        default: return 0
+        }
     }
 }
 

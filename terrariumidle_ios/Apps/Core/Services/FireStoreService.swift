@@ -21,7 +21,7 @@ class FireStoreService: ObservableObject {
     // MARK: - Debounce & Background Persistence Properties
     private var debounceTask: Task<Void, Never>?
     private var pendingGardenModel: GardenModel?
-    private var isClaimingSleepReward = false
+    private var isClaimingHealthReward = false
     private let eventOxygenLock = NSLock()
     private var pendingEventOxygen: Int = 0
     private var locallyRemovedPestIds: Set<String> = []
@@ -51,6 +51,9 @@ class FireStoreService: ObservableObject {
         currentUser = nil
         locallyRemovedPestIds.removeAll()
         _ = consumePendingEventOxygen()
+        Task { @MainActor in
+            HealthRewardStatusStore.shared.resetSession()
+        }
     }
 
     // MARK: - Dependencies
@@ -89,7 +92,7 @@ class FireStoreService: ObservableObject {
                 }
                 // Nếu snapshot này sinh ra do local write của chính thiết bị (hasPendingWrites),
                 // hoặc đang có thay đổi local đang chờ debounce, bỏ qua để tránh re-render giật lag
-                if document.metadata.hasPendingWrites || self.pendingGardenModel != nil || self.isClaimingSleepReward {
+                if document.metadata.hasPendingWrites || self.pendingGardenModel != nil || self.isClaimingHealthReward {
                     return
                 }
                 guard let data = document.data() else {
@@ -359,7 +362,7 @@ class FireStoreService: ObservableObject {
         // Cập nhật ngay local model để UI phản hồi ngay lập tức
         self.gradenModel = sanitized
         self.pendingGardenModel = sanitized
-        guard !isClaimingSleepReward else { return }
+        guard !isClaimingHealthReward else { return }
 
         if debounce {
             debounceTask?.cancel()
@@ -387,22 +390,76 @@ class FireStoreService: ObservableObject {
         }
     }
 
+    private enum HealthRewardKind {
+        case sleep, steps
+
+        var dailyField: String { self == .sleep ? "sleepRewardDays" : "stepsRewardDays" }
+        var milestoneField: String { self == .sleep ? "sleepRewardMilestones" : "stepsRewardMilestones" }
+        var weekDaysField: String { self == .sleep ? "sleepRewardWeekDays" : "stepsRewardWeekDays" }
+        var oxygenField: String { self == .sleep ? "sleepRewardOxygen" : "stepsRewardOxygen" }
+        var gemsField: String { self == .sleep ? "sleepRewardGems" : "stepsRewardGems" }
+        var ticketsField: String { self == .sleep ? "sleepRewardTickets" : "stepsRewardTickets" }
+    }
+
     /// The receipt and currency credit commit together. No sleep samples leave the device.
     @MainActor
     func claimSleepReward(grant: SleepRewardGrant, goal: Double) async throws -> Bool {
-        guard !isClaimingSleepReward,
-              SleepRewardRules.isValid(grant, goal: goal),
+        guard SleepRewardRules.isValid(grant, goal: goal) else {
+            throw EventReward.failure("Chưa thể nhận phần thưởng lúc này.".tr)
+        }
+        return try await claimHealthReward(
+            kind: .sleep,
+            id: grant.id,
+            isDaily: grant.kind == .daily,
+            isWeekly: grant.kind == .weekly,
+            dayIds: grant.days.map(\.id),
+            oxygen: grant.oxygen,
+            gems: grant.gems,
+            tickets: grant.tickets
+        )
+    }
+
+    /// The receipt and currency credit commit together. No raw step samples leave the device.
+    @MainActor
+    func claimStepsReward(grant: StepsRewardGrant, goal: Int) async throws -> Bool {
+        guard StepsRewardRules.isValid(grant, goal: goal) else {
+            throw EventReward.failure("Chưa thể nhận phần thưởng lúc này.".tr)
+        }
+        return try await claimHealthReward(
+            kind: .steps,
+            id: grant.id,
+            isDaily: grant.kind == .daily,
+            isWeekly: grant.kind == .weekly,
+            dayIds: grant.days.map(\.id),
+            oxygen: grant.oxygen,
+            gems: grant.gems,
+            tickets: grant.tickets
+        )
+    }
+
+    @MainActor
+    private func claimHealthReward(
+        kind: HealthRewardKind,
+        id key: String,
+        isDaily: Bool,
+        isWeekly: Bool,
+        dayIds: [String],
+        oxygen grantOxygen: Int,
+        gems grantGems: Int,
+        tickets grantTickets: Int
+    ) async throws -> Bool {
+        guard !isClaimingHealthReward,
               let garden = gradenModel,
               Auth.auth().currentUser?.uid == garden.user.userID else {
             throw EventReward.failure("Chưa thể nhận phần thưởng lúc này.".tr)
         }
         let uid = garden.user.userID
-        isClaimingSleepReward = true
+        isClaimingHealthReward = true
         debounceTask?.cancel()
         debounceTask = nil
         pendingGardenModel = nil
         defer {
-            isClaimingSleepReward = false
+            isClaimingHealthReward = false
             flushPendingUpdates()
         }
         // Drain previously queued garden writes and persist the current local balance first.
@@ -411,7 +468,6 @@ class FireStoreService: ObservableObject {
             throw EventReward.failure("Chưa lưu được khu vườn. Hãy kiểm tra mạng và thử lại.".tr)
         }
         let target = db.collection("users").document(uid)
-        let key = grant.id
         do {
             let outcome: [String: Int] = try await GardenWriteQueue.shared.perform {
                 let result = try await self.db.runTransaction { transaction, errorPointer -> Any? in
@@ -420,31 +476,31 @@ class FireStoreService: ObservableObject {
                         guard let data = snapshot.data() else {
                             throw EventReward.failure("Không tìm thấy khu vườn.".tr)
                         }
-                        let receiptField = grant.kind == .daily ? "sleepRewardDays" : "sleepRewardMilestones"
+                        let receiptField = isDaily ? kind.dailyField : kind.milestoneField
                         let receipts = data[receiptField] as? [String: Any] ?? [:]
-                        let oxygen = (data["sleepRewardOxygen"] as? NSNumber)?.intValue ?? 0
-                        let gems = (data["sleepRewardGems"] as? NSNumber)?.intValue ?? 0
-                        let tickets = (data["sleepRewardTickets"] as? NSNumber)?.intValue ?? 0
-                        let covered = data["sleepRewardWeekDays"] as? [String: Any] ?? [:]
-                        let overlaps = grant.kind == .weekly && grant.days.contains { covered[$0.id] != nil }
+                        let oxygen = (data[kind.oxygenField] as? NSNumber)?.intValue ?? 0
+                        let gems = (data[kind.gemsField] as? NSNumber)?.intValue ?? 0
+                        let tickets = (data[kind.ticketsField] as? NSNumber)?.intValue ?? 0
+                        let covered = data[kind.weekDaysField] as? [String: Any] ?? [:]
+                        let overlaps = isWeekly && dayIds.contains { covered[$0] != nil }
                         guard receipts[key] == nil, !overlaps else {
                             return ["credited": 0, "oxygen": oxygen, "gems": gems, "tickets": tickets]
                         }
                         var updates: [String: Any] = [
                             "\(receiptField).\(key)": FieldValue.serverTimestamp(),
-                            "money.oxygen": FieldValue.increment(Int64(grant.oxygen)),
-                            "money.gemstone": FieldValue.increment(Int64(grant.gems)),
-                            "money.ticket": FieldValue.increment(Int64(grant.tickets)),
-                            "sleepRewardOxygen": FieldValue.increment(Int64(grant.oxygen)),
-                            "sleepRewardGems": FieldValue.increment(Int64(grant.gems)),
-                            "sleepRewardTickets": FieldValue.increment(Int64(grant.tickets))
+                            "money.oxygen": FieldValue.increment(Int64(grantOxygen)),
+                            "money.gemstone": FieldValue.increment(Int64(grantGems)),
+                            "money.ticket": FieldValue.increment(Int64(grantTickets)),
+                            kind.oxygenField: FieldValue.increment(Int64(grantOxygen)),
+                            kind.gemsField: FieldValue.increment(Int64(grantGems)),
+                            kind.ticketsField: FieldValue.increment(Int64(grantTickets))
                         ]
-                        if grant.kind == .weekly {
-                            for day in grant.days { updates["sleepRewardWeekDays.\(day.id)"] = true }
+                        if isWeekly {
+                            for dayId in dayIds { updates["\(kind.weekDaysField).\(dayId)"] = true }
                         }
                         transaction.updateData(updates, forDocument: target)
-                        return ["credited": 1, "oxygen": oxygen + grant.oxygen,
-                                "gems": gems + grant.gems, "tickets": tickets + grant.tickets]
+                        return ["credited": 1, "oxygen": oxygen + grantOxygen,
+                                "gems": gems + grantGems, "tickets": tickets + grantTickets]
                     } catch {
                         errorPointer?.pointee = error as NSError
                         return nil
@@ -457,17 +513,32 @@ class FireStoreService: ObservableObject {
             }
             // Retain taps/edits made while waiting, then persist them after crediting locally.
             if var latest = gradenModel, latest.user.userID == uid {
-                let oxygen = outcome["oxygen"] ?? latest.sleepRewardOxygen
-                let gems = outcome["gems"] ?? latest.sleepRewardGems
-                let tickets = outcome["tickets"] ?? latest.sleepRewardTickets
-                let oxygenDelta = max(0, oxygen - latest.sleepRewardOxygen)
-                latest.money.oxygen += oxygenDelta
-                recordEventOxygen(oxygenDelta)
-                latest.money.gemstone += max(0, gems - latest.sleepRewardGems)
-                latest.money.ticket += max(0, tickets - latest.sleepRewardTickets)
-                latest.sleepRewardOxygen = max(latest.sleepRewardOxygen, oxygen)
-                latest.sleepRewardGems = max(latest.sleepRewardGems, gems)
-                latest.sleepRewardTickets = max(latest.sleepRewardTickets, tickets)
+                switch kind {
+                case .sleep:
+                    let oxygen = outcome["oxygen"] ?? latest.sleepRewardOxygen
+                    let gems = outcome["gems"] ?? latest.sleepRewardGems
+                    let tickets = outcome["tickets"] ?? latest.sleepRewardTickets
+                    let oxygenDelta = max(0, oxygen - latest.sleepRewardOxygen)
+                    latest.money.oxygen += oxygenDelta
+                    recordEventOxygen(oxygenDelta)
+                    latest.money.gemstone += max(0, gems - latest.sleepRewardGems)
+                    latest.money.ticket += max(0, tickets - latest.sleepRewardTickets)
+                    latest.sleepRewardOxygen = max(latest.sleepRewardOxygen, oxygen)
+                    latest.sleepRewardGems = max(latest.sleepRewardGems, gems)
+                    latest.sleepRewardTickets = max(latest.sleepRewardTickets, tickets)
+                case .steps:
+                    let oxygen = outcome["oxygen"] ?? latest.stepsRewardOxygen
+                    let gems = outcome["gems"] ?? latest.stepsRewardGems
+                    let tickets = outcome["tickets"] ?? latest.stepsRewardTickets
+                    let oxygenDelta = max(0, oxygen - latest.stepsRewardOxygen)
+                    latest.money.oxygen += oxygenDelta
+                    recordEventOxygen(oxygenDelta)
+                    latest.money.gemstone += max(0, gems - latest.stepsRewardGems)
+                    latest.money.ticket += max(0, tickets - latest.stepsRewardTickets)
+                    latest.stepsRewardOxygen = max(latest.stepsRewardOxygen, oxygen)
+                    latest.stepsRewardGems = max(latest.stepsRewardGems, gems)
+                    latest.stepsRewardTickets = max(latest.stepsRewardTickets, tickets)
+                }
                 gradenModel = latest
                 pendingGardenModel = latest
             }
@@ -481,7 +552,7 @@ class FireStoreService: ObservableObject {
     /// Event pages wait for persistence before acknowledging the JS callback.
     @MainActor
     func saveEventReward(gardenModel: GardenModel) async -> Bool {
-        guard !isClaimingSleepReward else { return false }
+        guard !isClaimingHealthReward else { return false }
         debounceTask?.cancel()
         debounceTask = nil
         let previousPending = pendingGardenModel
@@ -499,7 +570,7 @@ class FireStoreService: ObservableObject {
 
     /// Lưu ngay lập tức các thay đổi đang chờ debounce (khi app chuẩn bị vào background hoặc thoát)
     func flushPendingUpdates() {
-        guard !isClaimingSleepReward else { return }
+        guard !isClaimingHealthReward else { return }
         debounceTask?.cancel()
         debounceTask = nil
         guard let model = pendingGardenModel else { return }
@@ -539,15 +610,25 @@ class FireStoreService: ObservableObject {
                     do {
                         let snapshot = try transaction.getDocument(docRef)
                         let remoteData = snapshot.data()
+                        // Protect health reward credits from garden snapshots created before the reward transaction.
                         let remoteCredit = (remoteData?["sleepRewardOxygen"] as? NSNumber)?.intValue ?? 0
                         let remoteGems = (remoteData?["sleepRewardGems"] as? NSNumber)?.intValue ?? 0
                         let remoteTickets = (remoteData?["sleepRewardTickets"] as? NSNumber)?.intValue ?? 0
+                        let remoteStepsOxygen = (remoteData?["stepsRewardOxygen"] as? NSNumber)?.intValue ?? 0
+                        let remoteStepsGems = (remoteData?["stepsRewardGems"] as? NSNumber)?.intValue ?? 0
+                        let remoteStepsTickets = (remoteData?["stepsRewardTickets"] as? NSNumber)?.intValue ?? 0
                         var protectedPayload = payload
                         if var money = protectedPayload["money"] as? [String: Any] {
                             // A delayed snapshot must not erase a reward credited since it was created.
-                            money["oxygen"] = gardenModel.money.oxygen + max(0, remoteCredit - gardenModel.sleepRewardOxygen)
-                            money["gemstone"] = gardenModel.money.gemstone + max(0, remoteGems - gardenModel.sleepRewardGems)
-                            money["ticket"] = gardenModel.money.ticket + max(0, remoteTickets - gardenModel.sleepRewardTickets)
+                            money["oxygen"] = gardenModel.money.oxygen
+                                + max(0, remoteCredit - gardenModel.sleepRewardOxygen)
+                                + max(0, remoteStepsOxygen - gardenModel.stepsRewardOxygen)
+                            money["gemstone"] = gardenModel.money.gemstone
+                                + max(0, remoteGems - gardenModel.sleepRewardGems)
+                                + max(0, remoteStepsGems - gardenModel.stepsRewardGems)
+                            money["ticket"] = gardenModel.money.ticket
+                                + max(0, remoteTickets - gardenModel.sleepRewardTickets)
+                                + max(0, remoteStepsTickets - gardenModel.stepsRewardTickets)
                             protectedPayload["money"] = money
                         }
 

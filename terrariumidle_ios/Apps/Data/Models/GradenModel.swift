@@ -150,6 +150,10 @@ struct GardenModel {
     var sleepRewardOxygen: Int = 0
     var sleepRewardGems: Int = 0
     var sleepRewardTickets: Int = 0
+    /// Cumulative steps credit already reflected in this local wallet snapshot.
+    var stepsRewardOxygen: Int = 0
+    var stepsRewardGems: Int = 0
+    var stepsRewardTickets: Int = 0
     var weatherUntil: TimeInterval = 0
     var weatherKind: WeatherKind = .rain
     var vipStatus: VIPStatus = VIPStatus()
@@ -488,6 +492,9 @@ extension GardenModel {
         sleepRewardOxygen = dict.int("sleepRewardOxygen")
         sleepRewardGems = dict.int("sleepRewardGems")
         sleepRewardTickets = dict.int("sleepRewardTickets")
+        stepsRewardOxygen = dict.int("stepsRewardOxygen")
+        stepsRewardGems = dict.int("stepsRewardGems")
+        stepsRewardTickets = dict.int("stepsRewardTickets")
         if let vipDict = dict["vip"] as? [String: Any] {
             vipStatus = VIPStatus(dict: vipDict)
         }

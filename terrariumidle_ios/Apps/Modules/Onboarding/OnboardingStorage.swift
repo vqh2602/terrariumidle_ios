@@ -128,7 +128,7 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
                 Highlight(
                     icon: "square.grid.2x2.fill",
                     title: "Nút Góc vườn (góc dưới phải)".tr,
-                    detail: "Mở Cửa hàng, Bố cục, Thời tiết, Giấc ngủ, Âm nhạc và Sự kiện.".tr
+                    detail: "Mở Cửa hàng, Bố cục, Thời tiết, Sức khỏe, Âm nhạc và Sự kiện.".tr
                 ),
                 Highlight(
                     icon: "square.grid.3x3.fill",
@@ -153,10 +153,10 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
         case .relax:
             return [
                 Highlight(
-                    icon: "moon.stars.fill",
+                    icon: "heart.text.square.fill",
                     assetImage: "gemstone",
-                    title: "Giấc ngủ nhận thưởng".tr,
-                    detail: "Đạt mục tiêu ngủ mỗi ngày để nhận Oxy, Đá quý và Vé thời tiết.".tr
+                    title: "Sức khỏe nhận thưởng".tr,
+                    detail: "Đạt mục tiêu Giấc ngủ và Bước chân mỗi ngày để nhận Oxy, Đá quý và Vé thời tiết.".tr
                 ),
                 Highlight(
                     icon: "cloud.rain.fill",

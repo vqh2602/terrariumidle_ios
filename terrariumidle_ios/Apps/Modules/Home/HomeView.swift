@@ -69,6 +69,7 @@ struct HomeView: View {
     @State private var isEdit: Bool = false
     @State private var draggedPlant: DraggedPlantData? = nil
     @ObservedObject private var atmosphere = GardenAtmosphereManager.shared
+    @ObservedObject private var healthRewardStatus = HealthRewardStatusStore.shared
     @StateObject private var beeCoordinator = GardenBeeSwarmCoordinator()
     @State private var pestToastMessage: String? = nil
     @State private var pestToastTask: Task<Void, Never>? = nil
@@ -335,6 +336,24 @@ struct HomeView: View {
                     .allowsHitTesting(false)
             }
         }
+        .overlay(alignment: .top) {
+            if dataReady && backgroundReady && !isEdit, let banner = healthRewardStatus.activeBanner {
+                healthRewardBannerView(banner)
+                    .padding(.horizontal, 16)
+                    .padding(.top, hudHeight + 16)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .task(id: healthRewardStatus.activeBanner?.id) {
+            guard healthRewardStatus.activeBanner != nil else { return }
+            do {
+                try await Task.sleep(for: .seconds(8))
+                try Task.checkCancellation()
+                withAnimation(.easeOut(duration: 0.25)) {
+                    healthRewardStatus.dismissBanner()
+                }
+            } catch { /* Dismissed or replaced earlier. */ }
+        }
         .alert("Khu vườn bị thả sâu!".tr, isPresented: $showPestAttackAlert) {
             Button("Đã hiểu".tr, role: .cancel) {
                 fireStoreService.clearPestNotifications()
@@ -427,6 +446,7 @@ struct HomeView: View {
         fireStoreService.realtimeChangeDataGraden(userId: userId)
         dataReady = true
         presentPendingPestNotificationsIfNeeded()
+        await healthRewardStatus.loadReceiptsIfNeeded(userID: userId)
 
         // Safety fallback: Đảm bảo không bị treo màn loading nếu SpriteKit view delay render
         Task { @MainActor in
@@ -458,6 +478,61 @@ struct HomeView: View {
     }
 
     // MARK: - Helper Function
+
+    private func healthRewardBannerView(_ banner: HealthRewardBanner) -> some View {
+        HStack(spacing: 12) {
+            Button {
+                AudioPlayer.shared.playTap()
+                healthRewardStatus.dismissBanner()
+                healthRewardStatus.shouldOpenHealthHub = true
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "heart.text.square.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(Color(hex: "D95D39"))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(banner.title)
+                            .font(.system(.subheadline, design: .rounded, weight: .bold))
+                            .foregroundStyle(AccountStyle.ink)
+                        Text(banner.message)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(AccountStyle.muted)
+                            .lineLimit(2)
+                    }
+                    Spacer(minLength: 0)
+                    Text("Nhận".tr)
+                        .font(.system(.caption, design: .rounded, weight: .heavy))
+                        .foregroundStyle(AccountStyle.cream)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(AccountStyle.green, in: Capsule())
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    healthRewardStatus.dismissBanner()
+                }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(AccountStyle.muted)
+                    .padding(6)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Đóng thông báo".tr)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(AccountStyle.cream.opacity(0.97), in: RoundedRectangle(cornerRadius: 18))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .strokeBorder(AccountStyle.border, lineWidth: 1.5)
+        }
+        .shadow(color: Color(hex: "354D2C").opacity(0.16), radius: 10, y: 4)
+    }
 
     private var pestNotificationKey: String {
         (fireStoreService.gradenModel?.pestNotifications ?? [])

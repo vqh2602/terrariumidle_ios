@@ -55,6 +55,7 @@ final class SleepHealthStore: ObservableObject {
             return false
         }
         if export { await exportPending() }
+        HealthRewardStatusStore.shared.recalculate(notifyIfNeeded: true)
         return true
     }
 
@@ -155,11 +156,13 @@ final class SleepHealthStore: ObservableObject {
             healthIntervals = intervals
             rebuildDays()
             lastSync = now
+            HealthRewardStatusStore.shared.recalculate(notifyIfNeeded: true)
         } catch {
             // Do not keep stale records eligible for rewards after a failed query.
             healthIntervals = []
             rebuildDays()
             message = "Chưa đồng bộ được. Hãy kiểm tra kết nối Apple Health rồi thử lại.".tr
+            HealthRewardStatusStore.shared.recalculate(notifyIfNeeded: false)
         }
     }
 }

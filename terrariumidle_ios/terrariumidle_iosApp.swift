@@ -9,14 +9,16 @@ import AVFoundation
 import FirebaseAuth
 import FirebaseCore
 import SwiftUI
+import UserNotifications
 
-class AppDelegate: NSObject, UIApplicationDelegate {
+class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         EncryptedResourceLoader.installImageHooksIfNeeded()
         FirebaseApp.configure()
+        UNUserNotificationCenter.current().delegate = self
 
         AudioSessionController.activate()
 
@@ -33,6 +35,24 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
         return Auth.auth().canHandle(url)
+    }
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification
+    ) async -> UNNotificationPresentationOptions {
+        [.banner, .sound, .list]
+    }
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        if response.notification.request.content.userInfo["destination"] as? String == "healthHub" {
+            await MainActor.run {
+                HealthRewardStatusStore.shared.shouldOpenHealthHub = true
+            }
+        }
     }
 }
 
@@ -55,7 +75,7 @@ struct terrariumidle_iosApp: App {
                 .task(id: scenePhase) {
                     if scenePhase == .active {
                         _ = await GardenReminderScheduler.shared.update(.saved())
-                        await SleepHealthStore.shared.sync()
+                        await HealthRewardStatusStore.shared.syncAndRefresh()
                         await SubscriptionManager.shared.refreshEntitlements()
                         await AppUpdateChecker.shared.checkForUpdateIfNeeded()
                     }

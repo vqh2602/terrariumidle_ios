@@ -411,10 +411,10 @@ struct OnboardingView: View {
         VStack(spacing: 12) {
             HStack(spacing: 10) {
                 featurePreviewTile(
-                    icon: "moon.stars.fill",
-                    tint: Color(hex: "8D9360"),
-                    title: "Giấc ngủ".tr,
-                    subtitle: "Quà mỗi ngày".tr
+                    icon: "heart.text.square.fill",
+                    tint: Color(hex: "C26A63"),
+                    title: "Sức khỏe".tr,
+                    subtitle: "Ngủ & Bước chân".tr
                 )
                 featurePreviewTile(
                     icon: "cloud.rain.fill",

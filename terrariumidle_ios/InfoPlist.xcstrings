@@ -19,31 +19,31 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Terrarium reads sleep data to show your journal and calculate rest rewards. If you enable the Apple Watch connection, aggregated sleep duration is sent to your paired Watch."
+            "value" : "Terrarium reads sleep and step count data to show your wellness journals and calculate garden rewards. If you enable the Apple Watch connection, aggregated sleep duration is sent to your paired Watch."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Terrariumは睡眠データを読み取り、日記の表示と休息の報酬計算に使用します。Apple Watchとの接続を有効にすると、集計した睡眠時間をペアリング済みのWatchに送信します。"
+            "value" : "Terrariumは睡眠と歩数のデータを読み取り、日記の表示と報酬の計算に使用します。Apple Watchとの接続を有効にすると、集計した睡眠時間がペアリング済みのWatchに送信されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Terrarium은 수면 데이터를 읽어 일지를 표시하고 휴식 보상을 계산합니다. Apple Watch 연결을 켜면 집계된 수면 시간이 페어링된 Watch로 전송됩니다."
+            "value" : "Terrarium은 수면 및 걸음 수 데이터를 읽어 기록을 표시하고 보상을 계산합니다. Apple Watch 연결을 켜면 집계된 수면 시간이 페어링된 Watch로 전송됩니다."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Terrarium đọc giấc ngủ để hiển thị nhật ký và tính phần thưởng nghỉ ngơi. Nếu bạn bật kết nối Apple Watch, thời lượng ngủ tổng hợp được gửi tới Watch đã ghép đôi."
+            "value" : "Terrarium đọc dữ liệu giấc ngủ và số bước chân để hiển thị nhật ký sức khỏe và tính phần thưởng cho khu vườn. Nếu bạn bật kết nối Apple Watch, thời lượng ngủ tổng hợp được gửi tới Watch đã ghép đôi."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Terrarium 读取睡眠数据以显示日记并计算休息奖励。如果启用 Apple Watch 连接，汇总的睡眠时长会发送到已配对的 Watch。"
+            "value" : "Terrarium 读取睡眠和步数数据以显示健康日志并计算花园奖励。如果启用 Apple Watch 连接，汇总的睡眠时长会发送到已配对的 Watch。"
           }
         }
       }
