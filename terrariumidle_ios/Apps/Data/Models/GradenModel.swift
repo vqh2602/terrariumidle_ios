@@ -9,22 +9,22 @@ import Foundation
 
 // MARK: - Garden Pest & Notification Models
 
-struct GardenPest: Identifiable, Equatable, Codable {
-    enum Source: String, Codable, Equatable {
+public struct GardenPest: Identifiable, Equatable, Codable {
+    public enum Source: String, Codable, Equatable {
         case auto
         case visitor
     }
 
-    let id: String
-    let kind: PestSpecies
-    let position: String
-    let plantId: String
-    let source: Source
-    let senderId: String?
-    let senderName: String?
-    let createdAt: TimeInterval
+    public let id: String
+    public let kind: PestSpecies
+    public let position: String
+    public let plantId: String
+    public let source: Source
+    public let senderId: String?
+    public let senderName: String?
+    public let createdAt: TimeInterval
 
-    init(
+    public init(
         id: String = UUID().uuidString,
         kind: PestSpecies,
         position: String,
@@ -44,7 +44,7 @@ struct GardenPest: Identifiable, Equatable, Codable {
         self.createdAt = createdAt
     }
 
-    init?(dict: [String: Any]) {
+    public init?(dict: [String: Any]) {
         guard let id = dict["id"] as? String, !id.isEmpty,
               let kindRaw = dict["kind"] as? String,
               let kind = PestSpecies(rawValue: kindRaw),
@@ -61,7 +61,7 @@ struct GardenPest: Identifiable, Equatable, Codable {
         self.createdAt = (dict["createdAt"] as? NSNumber)?.doubleValue ?? 0
     }
 
-    func toDictionary() -> [String: Any] {
+    public func toDictionary() -> [String: Any] {
         var dict: [String: Any] = [
             "id": id,
             "kind": kind.rawValue,

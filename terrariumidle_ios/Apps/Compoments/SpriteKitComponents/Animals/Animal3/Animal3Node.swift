@@ -143,10 +143,9 @@ public final class Animal3Node: SKNode, AnimalInteractiveNode {
             buildProceduralMissing(scale: scale, baseCanvasW: baseCanvasW, baseCanvasH: baseCanvasH)
         }
 
-        // Đặt lớp sâu đã bắt nằm trong phần lưới bán trong suốt của túi (z = 8 < bagNode 10 nếu muốn nằm trong lưới,
-        // hoặc z = 12 với alpha nhẹ nếu túi đặc; phần lưới xanh có lỗ trong suốt, đặt z = 11 + alpha 0.92 để nhìn rõ trong túi)
+        // Đặt lớp sâu đã bắt nằm SAU lưới của túi (z = 8 < bagNode 10) để nhìn xuyên qua các ô lưới như đang ở bên trong túi
         bagContentsNode.position = storageSocket?.position ?? CGPoint(x: 0, y: -400.0 * scale)
-        bagContentsNode.zPosition = 11
+        bagContentsNode.zPosition = 8
         bagRigNode.addChild(bagContentsNode)
         renderCapturedPestsInsideBag()
 

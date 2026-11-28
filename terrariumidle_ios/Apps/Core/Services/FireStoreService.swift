@@ -967,8 +967,8 @@ class FireStoreService: ObservableObject {
             return nil
         }
 
-        // Xác suất vừa phải (~60%) mỗi chu kỳ để tự nhiên, không bị dồn dập
-        guard Double.random(in: 0...1) <= 0.60 else {
+        // Xác suất vừa phải (40%) mỗi chu kỳ để tự nhiên, không bị dồn dập
+        guard Double.random(in: 0...1) <= 0.40 else {
             garden.lastAutoPestSpawnAt = now - (GardenModel.autoPestSpawnCooldown * 0.5)
             saveGarden(gardenModel: garden, debounce: true)
             return nil
